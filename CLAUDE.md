@@ -75,9 +75,16 @@ fi
 - **PHASE-APPROPRIATE AGENTS**: Only use agents listed for current phase
 - **MANDATORY FILE NAMING**: Follow exact output naming conventions
 
+### 🗺️ Codemap Navigation (ALL Phases)
+- **CODEMAP FIRST**: Always use `codemap find` before reading full files or using grep/glob
+- **TARGETED READS**: Use `codemap show` to get file structure, then read only the relevant line ranges
+- **INIT ON SETUP**: Run `codemap init .` when starting any new project, then `codemap watch . -q &`
+- **VALIDATE BEFORE TRUSTING**: Run `codemap validate` before using cached line numbers after compaction
+- **See `.claude/skills/codemap/SKILL.md`** for full usage guide
+
 ### ⚡ Development Efficiency (ALL Phases)
 - **PARALLEL DEVELOPMENT**: Run compatible agents simultaneously when possible
-- **TOKEN EFFICIENCY**: Use `ref:filename.yaml` instead of pasting content
+- **TOKEN EFFICIENCY**: Use `ref:filename.yaml` instead of pasting content. Use `codemap find` + targeted line reads instead of full file scans
 - **ONE FEATURE AT A TIME**: Never batch features in Phase 3
 
 ## 🔄 Phase Navigation System
