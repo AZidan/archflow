@@ -116,16 +116,24 @@ For projects without `current-phase.yaml`:
 
 ## 🚀 Getting Started
 
+**On Every New Session (ALWAYS do this first):**
+```bash
+# Start codemap watch if not already running
+pgrep -f "codemap watch" > /dev/null || codemap watch . -q &
+```
+
 **Normal Operation (current-phase.yaml exists):**
-1. Load current phase from `current-phase.yaml`
-2. Load detailed instructions from `ref:phases/phase-{current}.md`
-3. Follow phase-specific execution steps
-4. Complete approval gates before proceeding to next phase
+1. Start codemap watch (above)
+2. Load current phase from `current-phase.yaml`
+3. Load detailed instructions from `ref:phases/phase-{current}.md`
+4. Follow phase-specific execution steps
+5. Complete approval gates before proceeding to next phase
 
 **Project Setup (current-phase.yaml missing):**
-1. Load setup system from `ref:phases/phase-setup.md`
-2. Auto-detect phase from project state or start Phase 1
-3. Create `current-phase.yaml` and continue with normal operation
+1. Start codemap watch (above)
+2. Load setup system from `ref:phases/phase-setup.md`
+3. Auto-detect phase from project state or start Phase 1
+4. Create `current-phase.yaml` and continue with normal operation
 
 **File Structure:**
 - `current-phase.yaml` - Project phase state (auto-created if missing)
