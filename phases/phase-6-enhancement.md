@@ -42,11 +42,19 @@ performance-optimizer: implement optimizations → updated codebase + docs/perfo
 ### 🆕 Feature Enhancements
 For new features based on user feedback:
 ```bash
-# Return to appropriate phase for new features:
+# First: Use Codemap to understand the existing codebase before making changes
+codemap stats                          # Overview of codebase size and coverage
+codemap find "RelatedFeature"          # Find related existing code
+codemap show src/components/           # Understand current structure
+codemap show backend/src/              # Map backend modules
+
+# Then return to appropriate phase for new features:
 # Phase 2.5: api-contract-architect (if API changes needed)
 # Phase 3: ui-engineer + api-engineer (for implementation)
 # Phase 4: qa-engineer + code-reviewer (for quality assurance)
 ```
+
+**Codemap is essential in Phase 6** — the codebase is mature and large at this point. Every agent must use `codemap find` and `codemap show` to navigate efficiently instead of scanning full files.
 
 ## 📤 Expected Outputs (Varies by Enhancement Type)
 - `locales/[lang]/` - Translation files for each supported language

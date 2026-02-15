@@ -92,6 +92,25 @@ echo "6. Enhancement"
 - **Ambiguous keywords**: Ask user to clarify
 - **Multiple high scores**: Choose earliest phase (safer)
 
+## 🗺️ Codemap Initialization
+
+When setting up any project, initialize Codemap for token-efficient navigation:
+
+```bash
+# Install codemap (if not available)
+pip install git+https://github.com/AZidan/codemap.git
+
+# Initialize index for the project
+codemap init .
+
+# Start watch mode for live index updates
+codemap watch . -q &
+```
+
+This enables all agents to use `codemap find` and `codemap show` instead of scanning full files, reducing token consumption by 60-80%.
+
+For existing projects with code already in place, run `codemap stats` after init to verify the index covers the codebase.
+
 ## 📋 Phase Template Creation
 
 ### Generated current-phase.yaml

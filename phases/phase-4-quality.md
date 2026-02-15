@@ -16,6 +16,18 @@ Comprehensive quality review, performance optimization, and final testing across
 
 ## 🚀 Execution Steps
 
+### Pre-Review: Codebase Overview with Codemap
+Before any agent starts reviewing, get the lay of the land:
+```bash
+# Codebase overview — size, languages, coverage
+codemap stats
+
+# Understand project structure
+codemap show src/
+codemap show backend/src/
+```
+All review agents should use `codemap find` to trace dependencies and `codemap show` to navigate files efficiently instead of reading entire files.
+
 ### Parallel Quality Assessment
 All agents work simultaneously for comprehensive review:
 
