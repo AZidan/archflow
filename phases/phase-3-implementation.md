@@ -16,15 +16,38 @@ Build frontend and backend simultaneously using API contracts, then integrate an
 
 ## 🚀 Execution Steps
 
+### 🗺️ Pre-Implementation: Codemap Setup
+Before writing any code, ensure Codemap is initialized and running:
+```bash
+# Verify codemap is active (should already be from phase-setup)
+codemap stats
+
+# If not initialized:
+codemap init . && codemap watch . -q &
+```
+
 ### ⚡ FEATURE-BY-FEATURE DEVELOPMENT (ONE AT A TIME)
 For EACH feature in `roadmap.yaml`, execute this 3-step process:
 
 ### 🔄 Step 3A: PARALLEL DEVELOPMENT
 **Run simultaneously - both agents work at same time:**
 
+**Before writing code, BOTH agents must:**
+```bash
+# Check what already exists — avoid duplicating code
+codemap find "[FeatureName]"
+codemap find "related-symbol-name"
+
+# Understand existing file structures before creating new ones
+codemap show src/components/  # or relevant directory
+codemap show backend/src/
+```
+
 ```bash
 # Frontend Development
 ui-engineer: ref:design-artifacts/styled-dsl.yaml + docs/api-contract.md → src/components/[FeatureName]/
+  - Use `codemap find` to check for existing shared components before creating new ones
+  - Use `codemap show` to understand existing service layer patterns
   - Build frontend components using contract for API integration points
   - Create service layers that match contract endpoints exactly
   - Implement UI logic and user interactions
@@ -32,6 +55,8 @@ ui-engineer: ref:design-artifacts/styled-dsl.yaml + docs/api-contract.md → src
 
 # Backend Development (CONTRACT SACRED!)
 🚨 api-engineer: MUST READ + FOLLOW docs/api-contract.md EXACTLY → backend/src/[feature-name]/
+   - Use `codemap find` to locate existing models, services, and utilities before creating new ones
+   - Use `codemap show` on existing feature modules to follow established patterns
    - VERIFY: All endpoints match contract paths, methods, parameters
    - VERIFY: All response structures match contract schemas  
    - VERIFY: All error codes match contract specifications
