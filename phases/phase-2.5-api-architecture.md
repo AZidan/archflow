@@ -8,8 +8,9 @@ Create comprehensive API contracts that serve as the single source of truth for 
 
 ## 📚 Prerequisites
 - Phase 2 outputs: `design-artifacts/wireframes/`, `design-artifacts/styled-dsl.yaml`
+- Phase 2.25 outputs: `design-artifacts/hifi-screens/` (visual reference for API design)
 - `current-feature.yaml` defining active development scope
-- User approval from Phase 2
+- User approval from Phase 2.25
 
 ## 🚀 Execution Steps
 

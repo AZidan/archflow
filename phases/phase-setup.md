@@ -32,6 +32,10 @@ Analyze `current-feature.yaml` content for these keywords:
 - Keywords: "wireframes", "user flows", "design", "mockups", "themes", "ui/ux", "prototypes"
 - Indicators: Design artifacts being created
 
+**Phase 2.25 (High-Fidelity Design):**
+- Keywords: "hi-fi", "high fidelity", "superdesign", "visual design", "screen design", "hifi"
+- Indicators: High-fidelity screen generation from styled-dsl.yaml
+
 **Phase 2.5 (API Architecture):**
 - Keywords: "api contract", "endpoints", "schemas", "api spec", "swagger", "openapi"
 - Indicators: API contracts being defined
@@ -81,7 +85,9 @@ echo "Could not automatically detect project phase."
 echo "Please specify current development phase (1-6):"
 echo "1. Strategy & Planning"
 echo "2. Design"
-echo "3. Implementation" 
+echo "2.25. High-Fidelity Design (SuperDesign MCP)"
+echo "2.5. API Architecture"
+echo "3. Implementation"
 echo "4. Quality"
 echo "5. Launch"
 echo "6. Enhancement"

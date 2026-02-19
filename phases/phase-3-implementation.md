@@ -11,6 +11,7 @@ Build frontend and backend simultaneously using API contracts, then integrate an
 ## 📚 Prerequisites
 - Phase 2.5 output: `docs/api-contract.md` (SACRED DOCUMENT)
 - `design-artifacts/styled-dsl.yaml`
+- `design-artifacts/hifi-screens/` (visual reference for ui-engineer)
 - `current-feature.yaml` defining feature scope
 - User approval from Phase 2.5
 

@@ -11,13 +11,17 @@ Dynamic phase-based instruction loading for token-efficient development.
 - `ux-designer` - User flows, design systems, themes, wireframes → design-artifacts/
 - `dsl-generator` - Component specifications with styling → design-artifacts/styled-dsl.yaml
 
+**Phase 2.25: High-Fidelity Design**
+- SuperDesign MCP - Hi-fi screen generation from styled-dsl.yaml → design-artifacts/hifi-screens/
+
 **Phase 2.5: API Architecture**
 - `api-contract-architect` - API contracts from wireframes → docs/api-contract.md (single source of truth)
 
 **Phase 3: Implementation**
-- `ui-engineer` - All frontend (React, React Native, SwiftUI, Jetpack Compose) + integration
-- `api-engineer` - NestJS/MySQL backends, MUST follow docs/api-contract.md exactly (zero tolerance)
-- `qa-engineer` - Comprehensive testing (unit, integration, e2e) across all platforms
+- `ui-engineer` - All frontend (React, React Native, SwiftUI, Jetpack Compose) + integration with backend APIs. Also updates screens after ux-designer changes `styled-dsl.yaml`
+- `api-engineer` - NestJS/PostgreSQL backends, MUST follow docs/api-contract.md exactly (zero tolerance)
+- `qa-engineer` - Comprehensive testing (unit, integration, e2e) across all platforms. Runs AFTER feature agents complete
+- `ux-designer` - Design updates on specific screens. Updates `styled-dsl.yaml` file
 
 **Phase 4: Quality & Optimization**
 - `code-reviewer` - Code quality, security, best practices analysis + improvement reports
@@ -61,9 +65,16 @@ fi
 ## 💡 Universal Critical Rules (Apply to ALL Phases)
 
 ### 🚨 API Contract Compliance (Phases 2.5-4)
-- **API CONTRACT IS SACRED**: api-engineer MUST follow docs/api-contract.md exactly
+- **API CONTRACT IS SACRED**: api-engineer AND ui-engineer MUST follow docs/api-contract.md exactly
 - **ZERO TOLERANCE**: No deviations from contract specifications allowed
 - **CONTRACT VERIFICATION**: Must confirm understanding before implementation
+- **ui-engineer (real app only)**: When building the actual frontend app (`frontend/`), ui-engineer MUST read the API contract for every endpoint it integrates with. All TypeScript interfaces for API data MUST match the contract response schemas (field names, enum values, shapes). Pages MUST use real API hooks — no hardcoded mock data in page components. Mock data is only acceptable in HTML prototypes (`design-artifacts/`) and test files.
+- **Prototype exception**: When building HTML prototypes/screens in `design-artifacts/`, static mock data is expected and correct.
+
+### 🎨 SuperDesign MCP (Phase 2.25)
+- **MCP SETUP**: Projects using Phase 2.25 require the SuperDesign MCP server: `npx -y github:AZidan/superdesign-mcp-claude-code`
+- **OPTIONAL PHASE**: If SuperDesign MCP is unavailable, Phase 2.25 can be skipped (Phase 2 → 2.5 directly)
+- **VISUAL APPROVAL**: Hi-fi screens must be approved before API architecture begins
 
 ### ⚠️ Mandatory Approval Gates (ALL Phases)
 - **USER APPROVAL REQUIRED**: Stop and wait for explicit user approval after EVERY phase
@@ -82,8 +93,15 @@ fi
 - **VALIDATE BEFORE TRUSTING**: Run `codemap validate` before using cached line numbers after compaction
 - **See `.claude/skills/codemap/SKILL.md`** for full usage guide
 
+### 🔍 Subagent Codebase Navigation
+- When launching **Explore** or **Plan** agents, ALWAYS include this in the prompt: "Use the `/codemap` skill to navigate the codebase structurally. Never read full files — use codemap indexes to find symbols, then read only the specific line ranges you need. At the end of your response, state how many files you read fully vs. how many you navigated via codemap line ranges (e.g. 'Codemap: 5 files via line ranges, 1 full read')."
+
 ### ⚡ Development Efficiency (ALL Phases)
-- **PARALLEL DEVELOPMENT**: Run compatible agents simultaneously when possible
+- **AGENT TEAMS**: For Phase 3+ features, launch ui-engineer and api-engineer simultaneously when both have clear, independent scopes from the API contract
+- **SEQUENTIAL DEPENDENCY**: qa-engineer runs AFTER feature agents complete, never in parallel
+- **AGENT SCOPING**: Each agent works on ONE feature boundary. Never give an agent a cross-cutting concern
+- **HANDOFF VIA FILES**: Agents communicate through files, not messages. api-engineer produces endpoints; ui-engineer consumes docs/api-contract.md and styled-dsl.yaml
+- **CONFLICT PREVENTION**: Only ONE agent may modify a given file. If two agents need the same file, sequence them
 - **TOKEN EFFICIENCY**: Use `ref:filename.yaml` instead of pasting content. Use `codemap find` + targeted line reads instead of full file scans
 - **ONE FEATURE AT A TIME**: Never batch features in Phase 3
 
@@ -100,7 +118,8 @@ Current Phase Complete:
 
 Phase Files Available:
   - phases/phase-1-strategy.md
-  - phases/phase-2-design.md  
+  - phases/phase-2-design.md
+  - phases/phase-2.25-hifi-design.md
   - phases/phase-2.5-api-architecture.md
   - phases/phase-3-implementation.md
   - phases/phase-4-quality.md
@@ -142,3 +161,4 @@ pgrep -f "codemap watch" > /dev/null || codemap watch . -q &
 
 ---
 **📍 Current Phase Instructions: Load ref:{current-phase.yaml → phase_file}**
+- You always commit ONLY the changes you did not all the files.
