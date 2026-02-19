@@ -46,9 +46,9 @@ dsl-generator: ref:design-artifacts/wireframes/ → design-artifacts/styled-dsl.
 
 ## ➡️ Phase Transition
 Upon completion and approval:
-1. Update `current-phase.yaml` to `phase: 2.5`
-2. Proceed to API Architecture Phase
-3. Load `ref:phases/phase-2.5-api-architecture.md` for next phase instructions
+1. Update `current-phase.yaml` to `phase: 2.25`
+2. Proceed to High-Fidelity Design Phase
+3. Load `ref:phases/phase-2.25-hifi-design.md` for next phase instructions
 
 ---
-**Phase 2 Complete** ✅ → **Phase 2.5: API Architecture** ➡️
+**Phase 2 Complete** ✅ → **Phase 2.25: High-Fidelity Design** ➡️
