@@ -87,10 +87,21 @@ qa-engineer: test integrated feature → tests/[feature-name]/
   - Error scenario testing
 ```
 
+### 🎯 Step 3D: ACCEPTANCE TESTING
+
+```bash
+pm-maestro-reviewer: ref:roadmap.yaml → docs/acceptance-reports/{story-id}-review.md
+  - Map acceptance criteria from roadmap.yaml to Maestro test flows
+  - Execute Maestro tests against the running app
+  - Produce pass/fail acceptance report
+  - Verdict: ACCEPTED → proceed to demo | REJECTED → fix and re-run
+```
+
 ## 📤 Expected Outputs (Per Feature)
 - `src/components/[FeatureName]/` - Complete frontend implementation
 - `backend/src/[feature-name]/` - Complete backend implementation
 - `tests/[feature-name]/` - Comprehensive test suite
+- `docs/acceptance-reports/{story-id}-review.md` - Acceptance test report
 - Working, integrated feature ready for demo
 
 ## ✅ Completion Criteria (Per Feature)
@@ -98,6 +109,7 @@ qa-engineer: test integrated feature → tests/[feature-name]/
 - [ ] Backend endpoints match API contract exactly (100% compliance)
 - [ ] Frontend-backend integration working flawlessly
 - [ ] All test scenarios passing (unit, integration, e2e)
+- [ ] Acceptance criteria validated by pm-maestro-reviewer (ACCEPTED verdict)
 - [ ] Feature ready for user demo and approval
 
 ## 🚨 Critical Requirements
@@ -110,7 +122,7 @@ qa-engineer: test integrated feature → tests/[feature-name]/
 
 ### Feature Isolation
 - **ONE FEATURE AT A TIME** - never batch multiple features
-- **Complete entire 3-step process before next feature**
+- **Complete entire 4-step process before next feature**
 - **Each feature must be fully integrated and tested**
 
 ### Mandatory Approval Gates
@@ -130,7 +142,8 @@ For each feature in roadmap:
   Step 3A: ui-engineer + api-engineer (parallel)
   Step 3B: ui-engineer integration
   Step 3C: qa-engineer testing
-  Demo: Present working feature to user
+  Step 3D: pm-maestro-reviewer acceptance testing
+  Demo: Present working feature + acceptance report to user
   Approval Gate: Wait for explicit user approval
   Next: Move to next feature OR proceed to Phase 4 if all complete
 ```
