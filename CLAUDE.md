@@ -21,11 +21,13 @@ Dynamic phase-based instruction loading for token-efficient development.
 - `ui-engineer` - All frontend (React, React Native, SwiftUI, Jetpack Compose) + integration with backend APIs. Also updates screens after ux-designer changes `styled-dsl.yaml`
 - `api-engineer` - NestJS/PostgreSQL backends, MUST follow docs/api-contract.md exactly (zero tolerance)
 - `qa-engineer` - Comprehensive testing (unit, integration, e2e) across all platforms. Runs AFTER feature agents complete
+- `pm-maestro-reviewer` - Acceptance testing via Maestro. Runs AFTER qa-engineer, validates acceptance criteria from roadmap.yaml → docs/acceptance-reports/
 - `ux-designer` - Design updates on specific screens. Updates `styled-dsl.yaml` file
 
 **Phase 4: Quality & Optimization**
 - `code-reviewer` - Code quality, security, best practices analysis + improvement reports
 - `performance-optimizer` - Performance bottleneck identification and optimization
+- `pm-maestro-reviewer` - Full acceptance regression suite across all implemented features
 
 **Phase 5: Launch & Operations**
 - `devops-engineer` - CI/CD pipelines, deployment infrastructure, app store preparation
@@ -76,6 +78,12 @@ fi
 - **OPTIONAL PHASE**: If SuperDesign MCP is unavailable, Phase 2.25 can be skipped (Phase 2 → 2.5 directly)
 - **VISUAL APPROVAL**: Hi-fi screens must be approved before API architecture begins
 
+### ✅ Acceptance Testing (Phases 3-4)
+- **ACCEPTANCE GATE**: After qa-engineer completes, launch `pm-maestro-reviewer` to validate acceptance criteria from `roadmap.yaml`
+- **VERDICT REQUIRED**: Feature is not complete until pm-maestro-reviewer returns ACCEPTED verdict
+- **REJECTION FLOW**: If REJECTED, fix blocking defects and re-run pm-maestro-reviewer — do not proceed
+- **REPORTS**: Acceptance reports saved to `docs/acceptance-reports/{story-id}-review.md`
+
 ### ⚠️ Mandatory Approval Gates (ALL Phases)
 - **USER APPROVAL REQUIRED**: Stop and wait for explicit user approval after EVERY phase
 - **NO PHASE SKIPPING**: Complete every phase in exact sequence
@@ -98,7 +106,7 @@ fi
 
 ### ⚡ Development Efficiency (ALL Phases)
 - **AGENT TEAMS**: For Phase 3+ features, launch ui-engineer and api-engineer simultaneously when both have clear, independent scopes from the API contract
-- **SEQUENTIAL DEPENDENCY**: qa-engineer runs AFTER feature agents complete, never in parallel
+- **SEQUENTIAL DEPENDENCY**: qa-engineer runs AFTER feature agents complete, never in parallel. pm-maestro-reviewer runs AFTER qa-engineer
 - **AGENT SCOPING**: Each agent works on ONE feature boundary. Never give an agent a cross-cutting concern
 - **HANDOFF VIA FILES**: Agents communicate through files, not messages. api-engineer produces endpoints; ui-engineer consumes docs/api-contract.md and styled-dsl.yaml
 - **CONFLICT PREVENTION**: Only ONE agent may modify a given file. If two agents need the same file, sequence them

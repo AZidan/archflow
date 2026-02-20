@@ -7,6 +7,7 @@ Comprehensive quality review, performance optimization, and final testing across
 - `qa-engineer` - Comprehensive testing across all platforms and features
 - `code-reviewer` - Code quality, security, best practices assessment
 - `performance-optimizer` - Performance analysis and optimization (if needed)
+- `pm-maestro-reviewer` - Full acceptance regression suite across all features
 
 ## 📚 Prerequisites
 - All Phase 3 features implemented, integrated, and individually approved
@@ -50,6 +51,12 @@ code-reviewer: complete codebase review → docs/code-review-report.md
   - Documentation completeness
   - Maintainability assessment
 
+# Acceptance Regression Suite
+pm-maestro-reviewer: ref:roadmap.yaml → docs/acceptance-reports/regression-report.md
+  - Re-run ALL acceptance tests from Phase 3 as regression
+  - Verify no cross-feature regressions introduced
+  - Produce consolidated acceptance regression report
+
 # Performance Analysis (If Issues Found)
 performance-optimizer: analyze and optimize → docs/performance-report.md
   - Frontend performance optimization
@@ -62,6 +69,7 @@ performance-optimizer: analyze and optimize → docs/performance-report.md
 ## 📤 Expected Outputs
 - `tests/reports/test-results.md` - Comprehensive test results and coverage
 - `docs/code-review-report.md` - Code quality assessment and recommendations
+- `docs/acceptance-reports/regression-report.md` - Full acceptance regression results
 - `docs/performance-report.md` - Performance analysis and optimizations (if needed)
 
 ## ✅ Completion Criteria
@@ -72,6 +80,7 @@ performance-optimizer: analyze and optimize → docs/performance-report.md
 - [ ] Performance meets acceptable thresholds
 - [ ] All tests passing (unit, integration, e2e, cross-feature)
 - [ ] Documentation complete and accurate
+- [ ] Acceptance regression suite passes (all stories ACCEPTED)
 - [ ] Codebase ready for production deployment
 
 ## 🚨 Critical Requirements
@@ -112,7 +121,8 @@ performance-optimizer: analyze and optimize → docs/performance-report.md
 ```yaml
 Quality Assessment:
   - qa-engineer: comprehensive testing
-  - code-reviewer: quality assessment  
+  - code-reviewer: quality assessment
+  - pm-maestro-reviewer: acceptance regression suite
   - performance-optimizer: optimization (if needed)
 
 Review & Approval:
