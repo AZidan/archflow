@@ -6,13 +6,21 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Claude Code](https://img.shields.io/badge/Claude%20Code-Framework-blueviolet)](https://docs.anthropic.com/en/docs/claude-code) [![Agents](https://img.shields.io/badge/Agents-16+-blue)](https://github.com/AZidan/archflow) [![Phases](https://img.shields.io/badge/Phases-6-green)](https://github.com/AZidan/archflow)
 
-Archflow orchestrates 16+ specialized AI agents through a rigorous phase-by-phase workflow — from product strategy to production deployment. Instead of one general-purpose AI doing everything, each agent brings deep expertise in its domain.
-
-[Quick Start](#quick-start) · [Phases](#the-phases) · [Agents](#agents) · [Commands](#slash-commands) · [Principles](#core-principles)
+[Quick Start](#quick-start) · [What is Archflow?](#what-is-archflow) · [Phases](#the-phases) · [Agents](#agents) · [Commands](#slash-commands) · [Principles](#core-principles)
 
 <img src="docs/archflow-overview.svg" alt="Archflow Overview" width="700" />
 
 </div>
+
+---
+
+## What is Archflow?
+
+Archflow is a **phase-based AI development framework** for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that orchestrates 16+ specialized agents through a rigorous workflow — from product strategy to production deployment.
+
+Instead of one general-purpose AI doing everything, Archflow assigns each task to a dedicated agent with deep expertise in its domain: a `product-strategist` defines your business goals, a `ux-designer` creates your design system, an `api-contract-architect` locks down your API specs, and `ui-engineer` + `api-engineer` build the frontend and backend in parallel — all coordinated through file-based handoffs and mandatory approval gates.
+
+Archflow works with any project type — fullstack, frontend-only, backend-only, or mobile — and adapts its phases, agents, and artifact structure accordingly. It supports onboarding existing codebases, importing context from external tools (Jira, Notion, Linear, GitHub), and managing feature development through a structured git branching workflow.
 
 ---
 
