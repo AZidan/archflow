@@ -1,0 +1,225 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0f23;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a3e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="phase1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6366f1" />
+      <stop offset="100%" style="stop-color:#818cf8" />
+    </linearGradient>
+    <linearGradient id="phase2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8b5cf6" />
+      <stop offset="100%" style="stop-color:#a78bfa" />
+    </linearGradient>
+    <linearGradient id="phase225" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#a855f7" />
+      <stop offset="100%" style="stop-color:#c084fc" />
+    </linearGradient>
+    <linearGradient id="phase25" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#d946ef" />
+      <stop offset="100%" style="stop-color:#e879f9" />
+    </linearGradient>
+    <linearGradient id="phase3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ec4899" />
+      <stop offset="100%" style="stop-color:#f472b6" />
+    </linearGradient>
+    <linearGradient id="phase4" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f43f5e" />
+      <stop offset="100%" style="stop-color:#fb7185" />
+    </linearGradient>
+    <linearGradient id="phase5" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f97316" />
+      <stop offset="100%" style="stop-color:#fb923c" />
+    </linearGradient>
+    <linearGradient id="phase6" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#10b981" />
+      <stop offset="100%" style="stop-color:#34d399" />
+    </linearGradient>
+    <linearGradient id="arrow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#475569" />
+      <stop offset="100%" style="stop-color:#64748b" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#64748b"/>
+    </marker>
+    <marker id="arrowhead-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#34d399" opacity="0.6"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="520" fill="url(#bg)" rx="12"/>
+
+  <!-- Title -->
+  <text x="450" y="42" text-anchor="middle" fill="#e2e8f0" font-size="20" font-weight="700" letter-spacing="0.5">ARCHFLOW</text>
+  <text x="450" y="62" text-anchor="middle" fill="#94a3b8" font-size="11">Phase-Based AI Development Lifecycle</text>
+
+  <!-- Phase 1 -->
+  <g filter="shadow">
+    <rect x="30" y="85" width="195" height="80" rx="10" fill="url(#phase1)" opacity="0.9"/>
+  </g>
+  <text x="127" y="108" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">PHASE 1</text>
+  <text x="127" y="124" text-anchor="middle" fill="#e0e7ff" font-size="10">Strategy &amp; Planning</text>
+  <text x="127" y="145" text-anchor="middle" fill="#c7d2fe" font-size="8.5">product-strategist</text>
+  <text x="127" y="157" text-anchor="middle" fill="#c7d2fe" font-size="8.5">feature-planner</text>
+
+  <!-- Arrow 1->2 -->
+  <path d="M225 125 L250 125" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+  <!-- Phase 2 -->
+  <g filter="shadow">
+    <rect x="255" y="85" width="195" height="80" rx="10" fill="url(#phase2)" opacity="0.9"/>
+  </g>
+  <text x="352" y="108" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">PHASE 2</text>
+  <text x="352" y="124" text-anchor="middle" fill="#ede9fe" font-size="10">Design</text>
+  <text x="352" y="145" text-anchor="middle" fill="#ddd6fe" font-size="8.5">ux-designer</text>
+  <text x="352" y="157" text-anchor="middle" fill="#ddd6fe" font-size="8.5">dsl-generator</text>
+
+  <!-- Arrow 2->2.25 -->
+  <path d="M450 125 L475 125" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+  <!-- Phase 2.25 -->
+  <g filter="shadow">
+    <rect x="480" y="85" width="195" height="80" rx="10" fill="url(#phase225)" opacity="0.9"/>
+  </g>
+  <text x="577" y="108" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">PHASE 2.25</text>
+  <text x="577" y="124" text-anchor="middle" fill="#f3e8ff" font-size="10">Hi-Fi Design</text>
+  <text x="577" y="145" text-anchor="middle" fill="#e9d5ff" font-size="8.5">SuperDesign MCP</text>
+  <text x="577" y="157" text-anchor="middle" fill="#e9d5ff" font-size="7.5" font-style="italic">(optional)</text>
+
+  <!-- Arrow 2.25->2.5 -->
+  <path d="M675 125 L700 125" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+  <!-- Phase 2.5 -->
+  <g filter="shadow">
+    <rect x="705" y="85" width="165" height="80" rx="10" fill="url(#phase25)" opacity="0.9"/>
+  </g>
+  <text x="787" y="108" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">PHASE 2.5</text>
+  <text x="787" y="124" text-anchor="middle" fill="#fae8ff" font-size="10">API Architecture</text>
+  <text x="787" y="145" text-anchor="middle" fill="#f5d0fe" font-size="8.5">api-contract-architect</text>
+
+  <!-- Arrow 2.5 down to Phase 3 -->
+  <path d="M787 165 L787 188 L577 188 L577 210" stroke="#64748b" stroke-width="2" fill="none" stroke-dasharray="4,3" marker-end="url(#arrowhead)"/>
+
+  <!-- Phase 3 - Larger -->
+  <g filter="shadow">
+    <rect x="355" y="210" width="445" height="95" rx="10" fill="url(#phase3)" opacity="0.9"/>
+  </g>
+  <text x="577" y="233" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">PHASE 3</text>
+  <text x="577" y="249" text-anchor="middle" fill="#fce7f3" font-size="10">Implementation (Parallel)</text>
+
+  <!-- Parallel agents in Phase 3 -->
+  <rect x="370" y="260" width="100" height="32" rx="6" fill="rgba(255,255,255,0.15)"/>
+  <text x="420" y="279" text-anchor="middle" fill="#fff" font-size="8">ui-engineer</text>
+
+  <rect x="480" y="260" width="100" height="32" rx="6" fill="rgba(255,255,255,0.15)"/>
+  <text x="530" y="279" text-anchor="middle" fill="#fff" font-size="8">api-engineer</text>
+
+  <rect x="590" y="260" width="100" height="32" rx="6" fill="rgba(255,255,255,0.15)"/>
+  <text x="640" y="279" text-anchor="middle" fill="#fff" font-size="8">qa-engineer</text>
+
+  <rect x="700" y="260" width="88" height="32" rx="6" fill="rgba(255,255,255,0.15)"/>
+  <text x="744" y="275" text-anchor="middle" fill="#fff" font-size="7">pm-maestro</text>
+  <text x="744" y="286" text-anchor="middle" fill="#fff" font-size="7">-reviewer</text>
+
+  <!-- Parallel indicator -->
+  <text x="420" y="256" text-anchor="middle" fill="#fda4af" font-size="6" font-style="italic">parallel</text>
+  <text x="530" y="256" text-anchor="middle" fill="#fda4af" font-size="6" font-style="italic">parallel</text>
+  <text x="640" y="256" text-anchor="middle" fill="#fda4af" font-size="6" font-style="italic">then</text>
+  <text x="744" y="256" text-anchor="middle" fill="#fda4af" font-size="6" font-style="italic">then</text>
+
+  <!-- Left side: Artifacts panel -->
+  <g filter="shadow">
+    <rect x="30" y="210" width="305" height="95" rx="10" fill="rgba(255,255,255,0.05)" stroke="#334155" stroke-width="1"/>
+  </g>
+  <text x="182" y="232" text-anchor="middle" fill="#94a3b8" font-size="9" font-weight="600">ARTIFACTS (File-Based Handoffs)</text>
+  <text x="47" y="252" fill="#67e8f9" font-size="8">project-context.md</text>
+  <text x="180" y="252" fill="#67e8f9" font-size="8">roadmap.yaml</text>
+  <text x="47" y="266" fill="#67e8f9" font-size="8">docs/api-contract.md</text>
+  <text x="180" y="266" fill="#67e8f9" font-size="8">styled-dsl.yaml</text>
+  <text x="47" y="280" fill="#67e8f9" font-size="8">current-phase.yaml</text>
+  <text x="180" y="280" fill="#67e8f9" font-size="8">current-feature.yaml</text>
+  <text x="47" y="294" fill="#67e8f9" font-size="8">design-artifacts/</text>
+  <text x="180" y="294" fill="#67e8f9" font-size="8">acceptance-reports/</text>
+
+  <!-- Arrow Phase 3 -> Phase 4 -->
+  <path d="M577 305 L577 330" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+  <!-- Phase 4 -->
+  <g filter="shadow">
+    <rect x="355" y="330" width="445" height="80" rx="10" fill="url(#phase4)" opacity="0.9"/>
+  </g>
+  <text x="577" y="353" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">PHASE 4</text>
+  <text x="577" y="369" text-anchor="middle" fill="#ffe4e6" font-size="10">Quality &amp; Optimization</text>
+  <text x="487" y="390" text-anchor="middle" fill="#fecdd3" font-size="8.5">code-reviewer</text>
+  <text x="600" y="390" text-anchor="middle" fill="#fecdd3" font-size="8.5">performance-optimizer</text>
+  <text x="740" y="390" text-anchor="middle" fill="#fecdd3" font-size="8.5">pm-maestro-reviewer</text>
+
+  <!-- Left side: Approval gates -->
+  <g filter="shadow">
+    <rect x="30" y="330" width="305" height="95" rx="10" fill="rgba(255,255,255,0.05)" stroke="#334155" stroke-width="1"/>
+  </g>
+  <text x="182" y="352" text-anchor="middle" fill="#94a3b8" font-size="9" font-weight="600">APPROVAL GATES</text>
+  <circle cx="52" cy="370" r="5" fill="#fbbf24"/>
+  <text x="65" y="373" fill="#fbbf24" font-size="8">User approval after every phase</text>
+  <circle cx="52" cy="390" r="5" fill="#fbbf24"/>
+  <text x="65" y="393" fill="#fbbf24" font-size="8">Acceptance verdict required</text>
+  <circle cx="52" cy="410" r="5" fill="#fbbf24"/>
+  <text x="65" y="413" fill="#fbbf24" font-size="8">Demo before advancing</text>
+
+  <!-- Arrow Phase 4 -> Phase 5 -->
+  <path d="M577 410 L577 435" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+  <!-- Phase 5 -->
+  <g filter="shadow">
+    <rect x="255" y="435" width="260" height="70" rx="10" fill="url(#phase5)" opacity="0.9"/>
+  </g>
+  <text x="385" y="458" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">PHASE 5</text>
+  <text x="385" y="474" text-anchor="middle" fill="#ffedd5" font-size="10">Launch &amp; Operations</text>
+  <text x="345" y="494" text-anchor="middle" fill="#fed7aa" font-size="8.5">devops-engineer</text>
+  <text x="445" y="494" text-anchor="middle" fill="#fed7aa" font-size="8.5">post-launch-analyst</text>
+
+  <!-- Arrow Phase 5 -> Phase 6 -->
+  <path d="M515 470 L540 470" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+  <!-- Phase 6 -->
+  <g filter="shadow">
+    <rect x="545" y="435" width="255" height="70" rx="10" fill="url(#phase6)" opacity="0.9"/>
+  </g>
+  <text x="672" y="458" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">PHASE 6</text>
+  <text x="672" y="474" text-anchor="middle" fill="#d1fae5" font-size="10">Enhancement (On-Demand)</text>
+  <text x="632" y="494" text-anchor="middle" fill="#a7f3d0" font-size="8.5">i18n-engineer</text>
+  <text x="732" y="494" text-anchor="middle" fill="#a7f3d0" font-size="8.5">any agent</text>
+
+  <!-- Cycle arrow from Phase 6 back -->
+  <path d="M800 470 L830 470 L830 173" stroke="#34d399" stroke-width="1.5" fill="none" stroke-dasharray="4,3" opacity="0.7"/>
+  <polygon points="826,173 834,173 830,165" fill="#34d399" opacity="0.7"/>
+  <text x="843" y="340" fill="#34d399" font-size="7.5" transform="rotate(90, 843, 340)" opacity="0.7">new features</text>
+
+  <!-- Project types badge row -->
+  <g transform="translate(30, 440)">
+    <rect width="205" height="65" rx="10" fill="rgba(255,255,255,0.05)" stroke="#334155" stroke-width="1"/>
+    <text x="102" y="17" text-anchor="middle" fill="#94a3b8" font-size="9" font-weight="600">PROJECT TYPES</text>
+    <rect x="12" y="25" width="60" height="16" rx="4" fill="rgba(99,102,241,0.3)"/>
+    <text x="42" y="36" text-anchor="middle" fill="#a5b4fc" font-size="7">fullstack</text>
+    <rect x="78" y="25" width="55" height="16" rx="4" fill="rgba(99,102,241,0.3)"/>
+    <text x="105" y="36" text-anchor="middle" fill="#a5b4fc" font-size="7">frontend</text>
+    <rect x="139" y="25" width="55" height="16" rx="4" fill="rgba(99,102,241,0.3)"/>
+    <text x="166" y="36" text-anchor="middle" fill="#a5b4fc" font-size="7">backend</text>
+    <rect x="42" y="45" width="55" height="16" rx="4" fill="rgba(99,102,241,0.3)"/>
+    <text x="69" y="56" text-anchor="middle" fill="#a5b4fc" font-size="7">mobile</text>
+    <text x="120" y="56" fill="#64748b" font-size="6.5">auto-detected</text>
+  </g>
+
+</svg>
