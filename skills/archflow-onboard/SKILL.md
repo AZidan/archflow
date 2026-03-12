@@ -1,10 +1,10 @@
-# /onboard — Existing Codebase Onboarding Wizard
+# /archflow-onboard — Existing Codebase Onboarding Wizard
 
 Onboard an existing codebase to the phase-based development framework. Interactive wizard that audits code, imports context, backfills artifacts, and sets the development phase.
 
 ## Usage
 ```
-/onboard          → Start or resume the onboarding wizard
+/archflow-onboard          → Start or resume the onboarding wizard
 ```
 
 ## Prerequisites
@@ -109,8 +109,8 @@ Present options:
    claude mcp list
    ```
 2. If NOT configured:
-   - Run `/setup-mcp [tool]` inline (load `ref:skills/setup-mcp/SKILL.md`)
-   - If MCP setup requires restart: save progress to `.onboard-progress.yaml`, instruct user to restart Claude Code, then run `/onboard` again
+   - Run `/archflow-setup-mcp [tool]` inline (load `ref:skills/archflow-setup-mcp/SKILL.md`)
+   - If MCP setup requires restart: save progress to `.onboard-progress.yaml`, instruct user to restart Claude Code, then run `/archflow-onboard` again
 3. Once MCP is available:
    ```
    Paste the links to the epics/stories you want to import:
@@ -310,7 +310,7 @@ Skipped:
   [skip] [artifact] ([reason])
 
 Next steps:
-  - /feature to add a new feature to the roadmap
+  - /archflow-feature to add a new feature to the roadmap
   - Review roadmap.yaml, then start current phase
 ```
 
@@ -321,7 +321,7 @@ Next steps:
 ### MCP Restart Required
 If an MCP needs to be configured and requires a Claude Code restart:
 1. Save all progress to `.onboard-progress.yaml`
-2. Tell the user: "Please restart Claude Code, then run `/onboard` to resume."
+2. Tell the user: "Please restart Claude Code, then run `/archflow-onboard` to resume."
 3. On resume, skip completed steps and continue from where we left off.
 
 ### MCP Fetch Failure

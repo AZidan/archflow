@@ -1,17 +1,17 @@
-# /feature — Add or Start a Feature
+# /archflow-feature — Add or Start a Feature
 
 Add a new feature to the roadmap from a description or external tool link. Optionally starts the git workflow for development.
 
 ## Usage
 ```
-/feature              → Interactive feature wizard
-/feature [name]       → Quick-add a feature by name
+/archflow-feature              → Interactive feature wizard
+/archflow-feature [name]       → Quick-add a feature by name
 ```
 
 ## Prerequisites
-- `current-phase.yaml` must exist (run `/onboard` first for existing projects, or complete Phase 1 for new ones)
+- `current-phase.yaml` must exist (run `/archflow-onboard` first for existing projects, or complete Phase 1 for new ones)
 - `roadmap.yaml` must exist
-- For link-based import: relevant MCP must be configured (will prompt `/setup-mcp` if not)
+- For link-based import: relevant MCP must be configured (will prompt `/archflow-setup-mcp` if not)
 
 ---
 
@@ -57,7 +57,7 @@ Paste the epic/story link:
    ```bash
    claude mcp list
    ```
-3. If NOT configured: run `/setup-mcp [tool]` inline
+3. If NOT configured: run `/archflow-setup-mcp [tool]` inline
 4. Fetch the item via MCP:
    - Get the item + its children/sub-tasks
    - Extract: title, description, acceptance criteria, status, priority, sub-tasks
@@ -168,7 +168,7 @@ Ready to start development? [Yes / Not yet, just add to roadmap]
 ```
 
 #### If "Not yet"
-> "Feature added to roadmap. Run `/feature` again when ready to start."
+> "Feature added to roadmap. Run `/archflow-feature` again when ready to start."
 Done.
 
 #### If "Yes"
@@ -231,7 +231,7 @@ Follow the branching strategy from `ref:workflow.md`:
 
 ### Step 4: Task-Level Git Workflow (During Development)
 
-This step runs during Phase 3 implementation, not during `/feature` itself. It documents how tasks are executed using `workflow.md`.
+This step runs during Phase 3 implementation, not during `/archflow-feature` itself. It documents how tasks are executed using `workflow.md`.
 
 For each task in `current-feature.yaml`:
 
@@ -301,6 +301,6 @@ After ALL tasks are complete and approved:
 
 ## Notes
 - Feature IDs are auto-incremented from the highest existing ID in `roadmap.yaml`
-- The `/feature` command can be run at any time, not just during Phase 3
+- The `/archflow-feature` command can be run at any time, not just during Phase 3
 - Git operations always require explicit user approval before merging
 - The task-level git workflow (Step 4) is executed during Phase 3, referenced here for completeness

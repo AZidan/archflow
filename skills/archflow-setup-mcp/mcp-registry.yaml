@@ -1,5 +1,5 @@
 # Curated MCP Server Registry
-# Referenced by /setup-mcp skill — edit this file to add/update MCP servers
+# Referenced by /archflow-setup-mcp skill — edit this file to add/update MCP servers
 # Last verified: 2026-03-12
 
 registry:
@@ -74,3 +74,12 @@ registry:
         description: "Auth token"
     purpose: "Fetch boards, lists, and cards"
     onboarding_only: true
+
+  superdesign:
+    name: "SuperDesign"
+    transport: stdio
+    command: "npx -y github:AZidan/superdesign-mcp-claude-code"
+    purpose: "Generate high-fidelity UI screens from styled-dsl.yaml (Phase 2.25)"
+    notes: "Required for Phase 2.25 (High-Fidelity Design). Must be installed before starting hi-fi screen generation."
+    onboarding_only: false
+    phase: "2.25"
