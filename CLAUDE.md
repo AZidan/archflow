@@ -36,6 +36,26 @@ Dynamic phase-based instruction loading for token-efficient development.
 **Phase 6: Enhancement (On-Demand)**
 - `i18n-engineer` - Internationalization for web/iOS/Android platforms
 
+## 📌 Available Commands
+- `/onboard` — Onboard existing codebase (interactive wizard: audit, import context, backfill artifacts, set phase)
+- `/setup-mcp` — Configure an MCP server for external tools (Jira, Notion, Linear, GitHub, etc.)
+- `/feature` — Add a new feature to the roadmap and start the git development workflow
+
+## 🌐 Project Types
+The framework detects and adapts to project type: `fullstack`, `frontend_only`, `backend_only`, `mobile`.
+- Stored in `current-phase.yaml` as `project_type`
+- Phases, agents, and audit checks are filtered by project type
+- `roadmap.yaml` structure is tailored to project type (backend = endpoints/services, frontend = pages/components)
+- Set automatically by `/onboard` or can be set manually in `current-phase.yaml`
+
+## 🔀 Git Workflow
+All feature development follows `ref:workflow.md` branching strategy:
+- Feature branches from main
+- Task branches from feature
+- Subtask branches from task
+- Merge only after explicit user approval
+- Use `/feature` to create feature branches and track tasks in `current-feature.yaml`
+
 ## 🔄 Dynamic Phase Loading
 
 **Current Phase Detection:**
@@ -125,6 +145,7 @@ Current Phase Complete:
   5. Load ref:phases/phase-{next}.md for next instructions
 
 Phase Files Available:
+  - phases/phase-onboarding.md    # For existing codebases (via /onboard)
   - phases/phase-1-strategy.md
   - phases/phase-2-design.md
   - phases/phase-2.25-hifi-design.md
