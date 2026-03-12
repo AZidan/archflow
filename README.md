@@ -20,7 +20,16 @@ Archflow is a **phase-based AI development framework** for [Claude Code](https:/
 
 Instead of one general-purpose AI doing everything, Archflow assigns each task to a dedicated agent with deep expertise in its domain: a `product-strategist` defines your business goals, a `ux-designer` creates your design system, an `api-contract-architect` locks down your API specs, and `ui-engineer` + `api-engineer` build the frontend and backend in parallel — all coordinated through file-based handoffs and mandatory approval gates.
 
-Archflow works with any project type — fullstack, frontend-only, backend-only, or mobile — and adapts its phases, agents, and artifact structure accordingly. It supports onboarding existing codebases, importing context from external tools (Jira, Notion, Linear, GitHub), and managing feature development through a structured git branching workflow.
+Archflow works with any project type — fullstack, frontend-only, backend-only, or mobile — and adapts its phases, agents, and artifact structure accordingly.
+
+### Works with new and existing projects
+
+Most AI development workflows assume you're starting from scratch. Archflow works both ways:
+
+- **Greenfield projects** start at Phase 1 — Archflow guides you from business strategy through design, implementation, and deployment, generating every artifact along the way.
+- **Existing codebases** start with `/archflow onboard` — an interactive wizard that audits your code, detects your tech stack and project type, imports context from tools you already use (Jira, Notion, Linear, GitHub, Confluence, Slack), backfills missing artifacts, and drops you into the right phase based on what already exists.
+
+This means you can adopt Archflow on a project that's been in development for months — it meets you where you are instead of forcing you to start over.
 
 ---
 
@@ -33,6 +42,7 @@ Building software with AI assistants often means context gets lost, quality vari
 - **Contract-first development** — API contracts are defined before implementation, enabling true parallel frontend/backend development
 - **Token efficiency** — Dynamic phase loading means only relevant instructions are in context at any time
 - **File-based handoffs** — Agents communicate through artifacts, not chat messages, so nothing gets lost
+- **Greenfield and brownfield** — Works with new projects from scratch and existing codebases mid-development
 
 ---
 
@@ -74,7 +84,6 @@ git clone https://github.com/AZidan/archflow.git /tmp/archflow
 cp -r /tmp/archflow/agents ~/.claude/agents
 cp -r /tmp/archflow/phases ~/.claude/phases
 cp -r /tmp/archflow/skills ~/.claude/skills
-cp -r /tmp/archflow/templates ~/.claude/templates
 cp /tmp/archflow/CLAUDE.md ~/.claude/CLAUDE.md
 cp /tmp/archflow/workflow.md ~/.claude/workflow.md
 ```
@@ -263,14 +272,8 @@ After QA, the `pm-maestro-reviewer` validates acceptance criteria from `roadmap.
 │   ├── phase-4-quality.md
 │   ├── phase-5-launch.md
 │   └── phase-6-enhancement.md
-├── skills/                      # Slash command implementations
-│   └── archflow/SKILL.md       # Main skill (onboard, feature, setup-mcp)
-└── templates/                   # Project scaffolding templates
-    ├── frontend-nextjs/
-    ├── backend-nestjs/
-    ├── mobile-react-native/
-    ├── mobile-ios/
-    └── mobile-android/
+└── skills/                      # Slash command implementations
+    └── archflow/SKILL.md       # Main skill (onboard, feature, setup-mcp)
 ```
 
 ---
@@ -298,7 +301,7 @@ These integrations are primarily used during `/archflow onboard` (Step 2: Contex
 
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (latest version)
 - Git
-- Node.js (for template scaffolding and some MCP servers)
+- Node.js (for some MCP servers)
 
 ---
 
@@ -307,7 +310,6 @@ These integrations are primarily used during `/archflow onboard` (Step 2: Contex
 Contributions are welcome. Areas of interest:
 
 - **New agents** — Add specialized agents in `agents/` following the existing format
-- **New templates** — Add project templates in `templates/`
 - **Phase improvements** — Refine phase instructions in `phases/`
 - **MCP registry** — Add tool integrations in `skills/archflow/mcp-registry.yaml`
 - **Bug fixes** — Open an issue or submit a PR
