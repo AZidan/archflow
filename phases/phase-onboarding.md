@@ -1,6 +1,6 @@
 # Phase: Onboarding (Existing Codebase)
 
-This phase is loaded by `/onboard`. It contains audit logic, project type detection, backfill rules, and gap analysis for onboarding existing codebases into the phase-based framework.
+This phase is loaded by `/archflow-onboard`. It contains audit logic, project type detection, backfill rules, and gap analysis for onboarding existing codebases into the phase-based framework.
 
 ---
 
@@ -254,8 +254,8 @@ project_type: "fullstack"
 mcps_added: ["jira"]
 ```
 
-On re-run of `/onboard`, detect this file and resume from the saved step.
+On re-run of `/archflow-onboard`, detect this file and resume from the saved step.
 
 ---
 
-**This file is loaded by the `/onboard` skill. It provides the rules and logic; the skill provides the interactive wizard flow.**
+**This file is loaded by the `/archflow-onboard` skill. It provides the rules and logic; the skill provides the interactive wizard flow.**

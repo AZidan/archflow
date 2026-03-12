@@ -28,14 +28,14 @@ if $has_source_code; then
   # Existing project detected — offer onboarding
   echo "Existing project detected."
   # Ask: "Run onboarding wizard? [Yes / Start fresh]"
-  # If yes: load phases/phase-onboarding.md via /onboard
+  # If yes: load phases/phase-onboarding.md via /archflow-onboard
   # If no: continue with Phase 1 below
 fi
 ```
 
 **When existing source code is detected:**
 - Present to user: "Existing project detected. Run onboarding wizard? [Yes / Start fresh]"
-- If **Yes**: Load `ref:phases/phase-onboarding.md` and execute the `/onboard` wizard
+- If **Yes**: Load `ref:phases/phase-onboarding.md` and execute the `/archflow-onboard` wizard
 - If **Start fresh**: Continue with normal Phase 1 setup below
 
 ---
