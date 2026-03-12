@@ -1,5 +1,5 @@
 # Curated MCP Server Registry
-# Referenced by /archflow-setup-mcp skill — edit this file to add/update MCP servers
+# Referenced by /archflow setup-mcp command — edit this file to add/update MCP servers
 # Last verified: 2026-03-12
 
 registry:
