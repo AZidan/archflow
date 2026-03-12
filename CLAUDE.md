@@ -37,16 +37,17 @@ Dynamic phase-based instruction loading for token-efficient development.
 - `i18n-engineer` - Internationalization for web/iOS/Android platforms
 
 ## 📌 Available Commands (Archflow)
-- `/archflow-onboard` — Onboard existing codebase (interactive wizard: audit, import context, backfill artifacts, set phase)
-- `/archflow-setup-mcp` — Configure an MCP server for external tools (Jira, Notion, Linear, GitHub, SuperDesign, etc.)
-- `/archflow-feature` — Add a new feature to the roadmap and start the git development workflow
+- `/archflow` — Show available subcommands and current project status
+- `/archflow onboard` — Onboard existing codebase (interactive wizard: audit, import context, backfill artifacts, set phase)
+- `/archflow setup-mcp` — Configure an MCP server for external tools (Jira, Notion, Linear, GitHub, SuperDesign, etc.)
+- `/archflow feature` — Add a new feature to the roadmap and start the git development workflow
 
 ## 🌐 Project Types
 The framework detects and adapts to project type: `fullstack`, `frontend_only`, `backend_only`, `mobile`.
 - Stored in `current-phase.yaml` as `project_type`
 - Phases, agents, and audit checks are filtered by project type
 - `roadmap.yaml` structure is tailored to project type (backend = endpoints/services, frontend = pages/components)
-- Set automatically by `/archflow-onboard` or can be set manually in `current-phase.yaml`
+- Set automatically by `/archflow onboard` or can be set manually in `current-phase.yaml`
 
 ## 🔀 Git Workflow
 All feature development follows `ref:workflow.md` branching strategy:
@@ -54,7 +55,7 @@ All feature development follows `ref:workflow.md` branching strategy:
 - Task branches from feature
 - Subtask branches from task
 - Merge only after explicit user approval
-- Use `/archflow-feature` to create feature branches and track tasks in `current-feature.yaml`
+- Use `/archflow feature` to create feature branches and track tasks in `current-feature.yaml`
 
 ## 🔄 Dynamic Phase Loading
 
@@ -145,7 +146,7 @@ Current Phase Complete:
   5. Load ref:phases/phase-{next}.md for next instructions
 
 Phase Files Available:
-  - phases/phase-onboarding.md    # For existing codebases (via /archflow-onboard)
+  - phases/phase-onboarding.md    # For existing codebases (via /archflow onboard)
   - phases/phase-1-strategy.md
   - phases/phase-2-design.md
   - phases/phase-2.25-hifi-design.md

@@ -37,7 +37,7 @@ codemap init . && codemap watch . -q &
 ### 🔀 Git Workflow Integration
 Each feature follows the branching strategy from `ref:workflow.md`:
 
-1. Feature branch should already exist (created by `/archflow-feature` command)
+1. Feature branch should already exist (created by `/archflow feature` command)
 2. If not, create it:
    ```bash
    git checkout main && git pull origin main
