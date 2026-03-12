@@ -1,0 +1,76 @@
+# Curated MCP Server Registry
+# Referenced by /setup-mcp skill — edit this file to add/update MCP servers
+# Last verified: 2026-03-12
+
+registry:
+  jira:
+    name: "Jira (Atlassian Rovo)"
+    transport: http
+    url: "https://mcp.atlassian.com/v1/mcp"
+    auth: oauth
+    purpose: "Fetch epics, stories, sprint data, and manage Jira issues"
+    notes: "Official Atlassian Rovo MCP. Covers Jira + Confluence in one server. OAuth via browser."
+    onboarding_only: true
+
+  confluence:
+    name: "Confluence (Atlassian Rovo)"
+    transport: http
+    url: "https://mcp.atlassian.com/v1/mcp"
+    auth: oauth
+    purpose: "Fetch and manage Confluence pages and spaces"
+    notes: "Same Atlassian Rovo MCP as Jira. If Jira is already configured, Confluence is available too."
+    shared_with: "jira"
+    onboarding_only: true
+
+  notion:
+    name: "Notion"
+    transport: http
+    url: "https://mcp.notion.com/mcp"
+    auth: oauth
+    purpose: "Fetch pages and databases by link"
+    onboarding_only: true
+
+  linear:
+    name: "Linear"
+    transport: http
+    url: "https://mcp.linear.app/sse"
+    auth: oauth
+    purpose: "Fetch issues, projects, and cycles by link"
+    onboarding_only: true
+
+  github:
+    name: "GitHub"
+    transport: http
+    url: "https://api.githubcopilot.com/mcp/"
+    auth: oauth
+    purpose: "Fetch issues, PRs, project boards"
+    onboarding_only: false
+
+  google-drive:
+    name: "Google Drive"
+    transport: stdio
+    command: "npx -y @anthropic/claude-code-google-drive"
+    auth: oauth
+    purpose: "Fetch Google Docs, Sheets by link"
+    onboarding_only: true
+
+  slack:
+    name: "Slack"
+    transport: http
+    url: "https://api.slack.com/mcp"
+    auth: oauth
+    purpose: "Fetch context from channels and threads"
+    onboarding_only: true
+
+  trello:
+    name: "Trello"
+    transport: stdio
+    command: "npx -y @modelcontextprotocol/server-trello"
+    env_required:
+      TRELLO_API_KEY:
+        description: "API key"
+        help_url: "https://trello.com/power-ups/admin"
+      TRELLO_TOKEN:
+        description: "Auth token"
+    purpose: "Fetch boards, lists, and cards"
+    onboarding_only: true
