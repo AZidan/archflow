@@ -2,6 +2,44 @@
 
 This file is loaded ONLY when `current-phase.yaml` is missing from a project directory. It handles phase detection and initialization.
 
+## 🔍 Existing Project Detection
+
+**Before any inference, check if this is an existing codebase:**
+
+```bash
+# Check for existing source code indicators
+has_source_code=false
+for indicator in "package.json" "src/" "backend/" "frontend/" "app/" "server/" "*.py" "*.go" "*.java" "Cargo.toml" "go.mod"; do
+  if [[ -e "$indicator" ]] || ls $indicator 2>/dev/null; then
+    has_source_code=true
+    break
+  fi
+done
+
+# Check if package.json has real dependencies (not just a scaffold)
+if [[ -f "package.json" ]]; then
+  deps_count=$(node -e "const p=require('./package.json'); console.log(Object.keys(p.dependencies||{}).length + Object.keys(p.devDependencies||{}).length)" 2>/dev/null || echo "0")
+  if [[ "$deps_count" -gt 3 ]]; then
+    has_source_code=true
+  fi
+fi
+
+if $has_source_code; then
+  # Existing project detected — offer onboarding
+  echo "Existing project detected."
+  # Ask: "Run onboarding wizard? [Yes / Start fresh]"
+  # If yes: load phases/phase-onboarding.md via /onboard
+  # If no: continue with Phase 1 below
+fi
+```
+
+**When existing source code is detected:**
+- Present to user: "Existing project detected. Run onboarding wizard? [Yes / Start fresh]"
+- If **Yes**: Load `ref:phases/phase-onboarding.md` and execute the `/onboard` wizard
+- If **Start fresh**: Continue with normal Phase 1 setup below
+
+---
+
 ## 🔍 Smart Phase Detection Logic
 
 ### Detection Flow
