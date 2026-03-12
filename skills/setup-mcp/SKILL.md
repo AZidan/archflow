@@ -8,6 +8,9 @@ Configure external tool MCP servers for use with Claude Code.
 /setup-mcp [tool-name]  → Configure a specific MCP server
 ```
 
+## Registry
+The curated MCP registry is stored in `ref:skills/setup-mcp/mcp-registry.yaml`. Read that file to look up tool details. Edit it to add or update MCP servers.
+
 ## Invocation
 When the user runs `/setup-mcp`, follow this flow exactly.
 
@@ -26,11 +29,16 @@ Parse the output. If the requested tool is already listed:
 
 If not found, proceed to Step 2.
 
-### Step 2: Lookup in Curated Registry
+**Special case — shared MCPs**: Some tools share a server (e.g., Jira and Confluence both use Atlassian Rovo). If the registry entry has `shared_with`, check if that sibling is already configured. If so:
+> "[Tool] is available through the already-configured [sibling] MCP (same server). No additional setup needed."
 
-Search the registry below for the tool name (case-insensitive). If found, show:
+### Step 2: Lookup in Registry
+
+Read `ref:skills/setup-mcp/mcp-registry.yaml` and search for the tool name (case-insensitive). If found, show:
 > "[Tool] MCP uses [command/url] via [transport] transport."
 > Purpose: [purpose]
+
+If the entry has `notes`, show those too.
 
 If not found, go to **Fallback** section.
 
@@ -102,96 +110,20 @@ claude mcp add --transport stdio [tool-name] -- npx -y [package-name]
 
 ---
 
-## Curated MCP Registry
-
-### jira
-- **Name**: Jira
-- **Transport**: stdio
-- **Command**: `npx -y @anthropic/claude-code-jira`
-- **Env Required**:
-  - `JIRA_API_TOKEN`: API token — get at https://id.atlassian.com/manage-profile/security/api-tokens
-  - `JIRA_DOMAIN`: e.g., company.atlassian.net
-  - `JIRA_EMAIL`: Jira account email
-- **Purpose**: Fetch epics, stories, and sprint data by link
-- **Onboarding Only**: true
-
-### notion
-- **Name**: Notion
-- **Transport**: http
-- **URL**: `https://mcp.notion.com/mcp`
-- **Auth**: oauth
-- **Purpose**: Fetch pages and databases by link
-- **Onboarding Only**: true
-
-### linear
-- **Name**: Linear
-- **Transport**: http
-- **URL**: `https://mcp.linear.app/sse`
-- **Auth**: oauth
-- **Purpose**: Fetch issues, projects, and cycles by link
-- **Onboarding Only**: true
-
-### github
-- **Name**: GitHub
-- **Transport**: http
-- **URL**: `https://api.githubcopilot.com/mcp/`
-- **Auth**: oauth
-- **Purpose**: Fetch issues, PRs, project boards
-- **Onboarding Only**: false
-
-### confluence
-- **Name**: Confluence
-- **Transport**: stdio
-- **Command**: `npx -y @anthropic/claude-code-confluence`
-- **Env Required**:
-  - `CONFLUENCE_API_TOKEN`: API token — get at https://id.atlassian.com/manage-profile/security/api-tokens
-  - `CONFLUENCE_DOMAIN`: Your Confluence domain
-  - `CONFLUENCE_EMAIL`: Confluence account email
-- **Purpose**: Fetch documentation pages by link
-- **Onboarding Only**: true
-
-### google-drive
-- **Name**: Google Drive
-- **Transport**: stdio
-- **Command**: `npx -y @anthropic/claude-code-google-drive`
-- **Auth**: oauth
-- **Purpose**: Fetch Google Docs, Sheets by link
-- **Onboarding Only**: true
-
-### slack
-- **Name**: Slack
-- **Transport**: http
-- **URL**: `https://api.slack.com/mcp`
-- **Auth**: oauth
-- **Purpose**: Fetch context from channels and threads
-- **Onboarding Only**: true
-
-### trello
-- **Name**: Trello
-- **Transport**: stdio
-- **Command**: `npx -y @modelcontextprotocol/server-trello`
-- **Env Required**:
-  - `TRELLO_API_KEY`: API key — get at https://trello.com/power-ups/admin
-  - `TRELLO_TOKEN`: Auth token
-- **Purpose**: Fetch boards, lists, and cards
-- **Onboarding Only**: true
-
----
-
 ## Listing Available MCPs
 
-When invoked without arguments (`/setup-mcp`), show the registry as a table:
+When invoked without arguments (`/setup-mcp`), read `ref:skills/setup-mcp/mcp-registry.yaml` and show the registry as a table:
 
 ```
 Available MCP Servers:
 
 | Tool         | Transport | Auth   | Purpose                              |
 |--------------|-----------|--------|--------------------------------------|
-| jira         | stdio     | env    | Fetch epics, stories, sprint data    |
+| jira         | http      | oauth  | Fetch epics, stories, sprint data    |
+| confluence   | http      | oauth  | Fetch Confluence pages and spaces    |
 | notion       | http      | oauth  | Fetch pages and databases            |
 | linear       | http      | oauth  | Fetch issues, projects, cycles       |
 | github       | http      | oauth  | Fetch issues, PRs, project boards    |
-| confluence   | stdio     | env    | Fetch documentation pages            |
 | google-drive | stdio     | oauth  | Fetch Google Docs, Sheets            |
 | slack        | http      | oauth  | Fetch context from channels/threads  |
 | trello       | stdio     | env    | Fetch boards, lists, cards           |
@@ -199,9 +131,12 @@ Available MCP Servers:
 Usage: /setup-mcp [tool-name]
 ```
 
+Note: Jira and Confluence share the same Atlassian Rovo MCP server — configuring one gives access to both.
+
 ---
 
 ## Notes
-- Package names in this registry are best-effort. If `claude mcp add` fails, try the fallback npm search.
+- The registry file (`mcp-registry.yaml`) is the single source of truth. Edit it to add new tools.
+- Package names are best-effort. If `claude mcp add` fails, try the fallback npm search.
 - Some MCPs require Claude Code restart after configuration.
 - OAuth MCPs will open a browser window for authorization.
