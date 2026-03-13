@@ -82,10 +82,10 @@ Or merge into an existing setup:
 ```bash
 git clone https://github.com/AZidan/archflow.git /tmp/archflow
 cp -r /tmp/archflow/agents ~/.claude/agents
-cp -r /tmp/archflow/phases ~/.claude/phases
+cp -r /tmp/archflow/.archflow ~/.claude/.archflow
 cp -r /tmp/archflow/skills ~/.claude/skills
 cp /tmp/archflow/CLAUDE.md ~/.claude/CLAUDE.md
-cp /tmp/archflow/workflow.md ~/.claude/workflow.md
+cp /tmp/archflow/.claude/settings.json ~/.claude/.claude/settings.json
 ```
 
 ### 2. Start a New Project
@@ -217,10 +217,10 @@ Archflow manages these files in your project:
 
 | File | Purpose |
 |------|---------|
-| `project-context.md` | Business goals, tech stack, architecture decisions |
-| `roadmap.yaml` | Feature roadmap and sprint planning |
-| `current-phase.yaml` | Phase state tracker (auto-created) |
-| `current-feature.yaml` | Active feature scope and task tracking |
+| `.archflow/project-context.md` | Business goals, tech stack, architecture decisions |
+| `.archflow/roadmap.yaml` | Feature roadmap and sprint planning |
+| `.archflow/current-phase.yaml` | Phase state tracker (auto-created) |
+| `.archflow/current-feature.yaml` | Active feature scope and task tracking |
 | `docs/api-contract.md` | API specifications (single source of truth) |
 | `design-artifacts/styled-dsl.yaml` | Component specifications with styling |
 | `design-artifacts/theme.yaml` | Design system tokens |
@@ -244,7 +244,7 @@ Phase 3 processes one feature at a time. Agents are scoped to single feature bou
 No information passes through chat between agents. `api-engineer` produces endpoints; `ui-engineer` consumes the API contract and styled-dsl.yaml. This makes handoffs reliable and auditable.
 
 ### Acceptance Testing is Mandatory
-After QA, the `pm-maestro-reviewer` validates acceptance criteria from `roadmap.yaml`. A feature is not complete until it receives an ACCEPTED verdict.
+After QA, the `pm-maestro-reviewer` validates acceptance criteria from `.archflow/roadmap.yaml`. A feature is not complete until it receives an ACCEPTED verdict.
 
 ---
 
@@ -252,8 +252,8 @@ After QA, the `pm-maestro-reviewer` validates acceptance criteria from `roadmap.
 
 ```
 ~/.claude/
-├── CLAUDE.md                    # Main orchestration instructions
-├── workflow.md                  # Git branching strategy
+├── CLAUDE.md                    # Orchestration instructions (loaded into system prompt)
+├── .claude/settings.json        # Hook config (reloads instructions after compaction)
 ├── agents/                      # 16+ specialized agent definitions
 │   ├── product-strategist.md
 │   ├── ux-designer.md
@@ -261,19 +261,23 @@ After QA, the `pm-maestro-reviewer` validates acceptance criteria from `roadmap.
 │   ├── ui-engineer.md
 │   ├── qa-engineer.md
 │   └── ...
-├── phases/                      # Phase-specific instruction files
-│   ├── phase-setup.md
-│   ├── phase-onboarding.md
-│   ├── phase-1-strategy.md
-│   ├── phase-2-design.md
-│   ├── phase-2.25-hifi-design.md
-│   ├── phase-2.5-api-architecture.md
-│   ├── phase-3-implementation.md
-│   ├── phase-4-quality.md
-│   ├── phase-5-launch.md
-│   └── phase-6-enhancement.md
-└── skills/                      # Slash command implementations
-    └── archflow/SKILL.md       # Main skill (onboard, feature, setup-mcp)
+├── skills/                      # Slash command implementations
+│   └── archflow/SKILL.md       # Main skill (onboard, feature, setup-mcp)
+└── .archflow/                   # Workflow data (separated from Claude Code config)
+    ├── instructions.md          # Full instructions (reloaded via SessionStart hook)
+    ├── workflow.md              # Git branching strategy
+    ├── base-dsl-structure.yaml  # DSL template for design artifacts
+    └── phases/                  # Phase-specific instruction files
+        ├── phase-setup.md
+        ├── phase-onboarding.md
+        ├── phase-1-strategy.md
+        ├── phase-2-design.md
+        ├── phase-2.25-hifi-design.md
+        ├── phase-2.5-api-architecture.md
+        ├── phase-3-implementation.md
+        ├── phase-4-quality.md
+        ├── phase-5-launch.md
+        └── phase-6-enhancement.md
 ```
 
 ---
@@ -310,7 +314,7 @@ These integrations are primarily used during `/archflow onboard` (Step 2: Contex
 Contributions are welcome. Areas of interest:
 
 - **New agents** — Add specialized agents in `agents/` following the existing format
-- **Phase improvements** — Refine phase instructions in `phases/`
+- **Phase improvements** — Refine phase instructions in `.archflow/phases/`
 - **MCP registry** — Add tool integrations in `skills/archflow/mcp-registry.yaml`
 - **Bug fixes** — Open an issue or submit a PR
 
