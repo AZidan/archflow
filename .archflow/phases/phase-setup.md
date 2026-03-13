@@ -1,6 +1,6 @@
 # Phase Setup & Inference System
 
-This file is loaded ONLY when `current-phase.yaml` is missing from a project directory. It handles phase detection and initialization.
+This file is loaded ONLY when `.archflow/current-phase.yaml` is missing from a project directory. It handles phase detection and initialization.
 
 ## 🔍 Existing Project Detection
 
@@ -35,7 +35,7 @@ fi
 
 **When existing source code is detected:**
 - Present to user: "Existing project detected. Run onboarding wizard? [Yes / Start fresh]"
-- If **Yes**: Load `ref:phases/phase-onboarding.md` and execute the `/archflow onboard` wizard
+- If **Yes**: Load `.archflow/phases/phase-onboarding.md` and execute the `/archflow onboard` wizard
 - If **Start fresh**: Continue with normal Phase 1 setup below
 
 ---
@@ -44,23 +44,23 @@ fi
 
 ### Detection Flow
 ```bash
-if [[ -f "current-phase.yaml" ]]; then
+if [[ -f ".archflow/current-phase.yaml" ]]; then
   # Normal operation - use existing tracker
-  Current Phase: ref:current-phase.yaml → phase_file
-elif [[ -f "current-feature.yaml" ]]; then
+  Current Phase: .archflow/current-phase.yaml → phase_file
+elif [[ -f ".archflow/current-feature.yaml" ]]; then
   # Existing project without phase tracker - infer phase
-  Infer Phase: ref:current-feature.yaml → determine current phase
-  Create: current-phase.yaml based on inference
+  Infer Phase: .archflow/current-feature.yaml → determine current phase
+  Create: .archflow/current-phase.yaml based on inference
 else
   # New project - start from Phase 1
-  cp ~/.claude/current-phase.yaml ./current-phase.yaml
+  cp ~/.claude/.archflow/current-phase.yaml ./.archflow/current-phase.yaml
 fi
 ```
 
 ## 🎯 Phase Inference Rules
 
 ### Keyword-Based Detection
-Analyze `current-feature.yaml` content for these keywords:
+Analyze `.archflow/current-feature.yaml` content for these keywords:
 
 **Phase 1 (Strategy & Planning):**
 - Keywords: "business goals", "personas", "planning", "strategy", "market", "target users"
@@ -97,15 +97,15 @@ Analyze `current-feature.yaml` content for these keywords:
 ## 🔄 Inference Process
 
 ### Step-by-Step Detection
-1. **Read** `current-feature.yaml` content
+1. **Read** `.archflow/current-feature.yaml` content
 2. **Count** keyword matches for each phase
 3. **Select** phase with highest keyword count
-4. **Create** `current-phase.yaml` with detected phase
+4. **Create** `.archflow/current-phase.yaml` with detected phase
 5. **Load** appropriate phase instruction file
 
 ### Example Inference
 ```yaml
-# current-feature.yaml content analysis:
+# .archflow/current-feature.yaml content analysis:
 Content: "Working on user registration wireframes and login flow design"
 Keywords Found:
   - Phase 2: "wireframes", "design" (2 matches)
@@ -162,10 +162,10 @@ For existing projects with code already in place, run `codemap stats` after init
 # Auto-generated from inference
 phase: {detected_phase}
 phase_name: "{detected_phase_name}"
-phase_file: "phases/phase-{detected_phase}-{name}.md"
+phase_file: ".archflow/phases/phase-{detected_phase}-{name}.md"
 
 # Inference metadata
-inferred_from: "current-feature.yaml"
+inferred_from: ".archflow/current-feature.yaml"
 inference_confidence: "high|medium|low"
 inference_keywords: ["keyword1", "keyword2"]
 created_by: "phase-setup-system"
@@ -181,4 +181,4 @@ completed_at: null
 ```
 
 ---
-**This file is only loaded during project initialization when current-phase.yaml is missing.**
+**This file is only loaded during project initialization when .archflow/current-phase.yaml is missing.**

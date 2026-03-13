@@ -36,7 +36,7 @@ For each screen defined in `styled-dsl.yaml`:
 
 ```bash
 # Read theme context
-theme_context: ref:design-artifacts/theme.yaml
+theme_context: design-artifacts/theme.yaml
 
 # For each screen in styled-dsl.yaml:
 superdesign_generate:
@@ -80,7 +80,7 @@ Repeat until user approves all screens.
 If hi-fi design iterations introduced visual changes that differ from the original DSL:
 
 ```bash
-dsl-generator: ref:design-artifacts/hifi-screens/ → update design-artifacts/styled-dsl.yaml
+dsl-generator: design-artifacts/hifi-screens/ → update design-artifacts/styled-dsl.yaml
   - Update color values, spacing, or typography if changed during hi-fi iteration
   - Add any new components or layout adjustments discovered during visual review
   - Maintain DSL structure and format consistency
@@ -111,9 +111,9 @@ Only run this step if design changes were made during iteration. Skip if screens
 
 ## ➡️ Phase Transition
 Upon completion and approval:
-1. Update `current-phase.yaml` to `phase: 2.5`
+1. Update `.archflow/current-phase.yaml` to `phase: 2.5`
 2. Proceed to API Architecture Phase
-3. Load `ref:phases/phase-2.5-api-architecture.md` for next phase instructions
+3. Load `.archflow/phases/phase-2.5-api-architecture.md` for next phase instructions
 
 ---
 **Phase 2.25 Complete** ✅ → **Phase 2.5: API Architecture** ➡️

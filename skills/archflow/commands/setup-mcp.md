@@ -9,7 +9,7 @@ Configure external tool MCP servers for use with Claude Code.
 ```
 
 ## Registry
-The curated MCP registry is stored in `ref:skills/archflow/mcp-registry.yaml`. Read that file to look up tool details. Edit it to add or update MCP servers.
+The curated MCP registry is stored in `skills/archflow/mcp-registry.yaml`. Read that file to look up tool details. Edit it to add or update MCP servers.
 
 ## Invocation
 When the user runs `/archflow setup-mcp`, follow this flow exactly.
@@ -34,7 +34,7 @@ If not found, proceed to Step 2.
 
 ### Step 2: Lookup in Registry
 
-Read `ref:skills/archflow/mcp-registry.yaml` and search for the tool name (case-insensitive). If found, show:
+Read `skills/archflow/mcp-registry.yaml` and search for the tool name (case-insensitive). If found, show:
 > "[Tool] MCP uses [command/url] via [transport] transport."
 > Purpose: [purpose]
 
@@ -112,7 +112,7 @@ claude mcp add --transport stdio [tool-name] -- npx -y [package-name]
 
 ## Listing Available MCPs
 
-When invoked without arguments (`/archflow setup-mcp`), read `ref:skills/archflow/mcp-registry.yaml` and show the registry as a table:
+When invoked without arguments (`/archflow setup-mcp`), read `skills/archflow/mcp-registry.yaml` and show the registry as a table:
 
 ```
 Available MCP Servers:

@@ -5,4 +5,13 @@ shell-snapshots/
 todos/
 CLAUDE_.md
 claude-config.zip
-settings.json
+/settings.json
+/settings.local.json
+.claude/settings.local.json
+templates/backend-nestjs/node_modules
+templates/backend-nestjs/dist
+templates/backend-nestjs/coverage
+templates/backend-nestjs/build
+templates/mobile-react-native/ios
+templates/mobile-react-native/android
+templates/mobile-react-native/node_modules

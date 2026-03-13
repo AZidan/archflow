@@ -27,9 +27,26 @@ Archflow works with any project type — fullstack, frontend-only, backend-only,
 Most AI development workflows assume you're starting from scratch. Archflow works both ways:
 
 - **Greenfield projects** start at Phase 1 — Archflow guides you from business strategy through design, implementation, and deployment, generating every artifact along the way.
-- **Existing codebases** start with `/archflow onboard` — an interactive wizard that audits your code, detects your tech stack and project type, imports context from tools you already use (Jira, Notion, Linear, GitHub, Confluence, Slack), backfills missing artifacts, and drops you into the right phase based on what already exists.
+- **Existing codebases** start with `/archflow onboard` — a three-phase orchestration that gathers your input, dispatches up to 9 specialized agents in parallel to deeply analyze your codebase, imports context from tools you already use (Jira, Notion, Linear, GitHub, Confluence, Slack), reverse-engineers artifacts (API contracts, design systems, roadmaps), and drops you into the right phase based on what already exists.
 
 This means you can adopt Archflow on a project that's been in development for months — it meets you where you are instead of forcing you to start over.
+
+#### How onboarding works
+
+```
+Phase A: Interactive Collection     You answer 5 quick questions (tech stack, context source,
+                                    design/API preferences, roadmap vision)
+
+Phase B: Autonomous Agent Dispatch  Up to 9 agents run in parallel across 3 dependency layers:
+                                    codebase audit → doc deep-dive → design extraction →
+                                    route/API extraction → product-strategist → ux-designer →
+                                    api-contract-architect → dsl-generator → feature-planner
+
+Phase C: Synthesis & Presentation   Results are reconciled, a gap report is generated,
+                                    and artifacts are presented for your approval
+```
+
+The onboarding agents generate production-quality `project-context.md`, `roadmap.yaml`, `api-contract.md`, `theme.yaml`, `styled-dsl.yaml`, and `user-flows.md` — all reverse-engineered from your existing code and imported documentation. It also creates or updates your project's `CLAUDE.md` with architecture context derived from the analysis.
 
 ---
 
@@ -82,10 +99,10 @@ Or merge into an existing setup:
 ```bash
 git clone https://github.com/AZidan/archflow.git /tmp/archflow
 cp -r /tmp/archflow/agents ~/.claude/agents
-cp -r /tmp/archflow/phases ~/.claude/phases
+cp -r /tmp/archflow/.archflow ~/.claude/.archflow
 cp -r /tmp/archflow/skills ~/.claude/skills
 cp /tmp/archflow/CLAUDE.md ~/.claude/CLAUDE.md
-cp /tmp/archflow/workflow.md ~/.claude/workflow.md
+cp /tmp/archflow/.claude/settings.json ~/.claude/.claude/settings.json
 ```
 
 ### 2. Start a New Project
@@ -98,7 +115,7 @@ claude
 ```
 
 - **New project?** Archflow starts at Phase 1 (Strategy).
-- **Existing codebase?** Run `/archflow onboard` — the interactive wizard audits your code, imports context from external tools, and sets the right starting phase.
+- **Existing codebase?** Run `/archflow onboard` — the three-phase orchestration collects your input, dispatches specialized agents to deeply analyze your code, and presents production-quality artifacts for approval.
 
 ### 3. Develop Features
 
@@ -109,7 +126,7 @@ Once set up, use `/archflow feature` to add features and start the git workflow:
 /archflow feature login    # Quick-add by name
 ```
 
-Archflow creates the feature branch, breaks it into tasks, and guides implementation through the appropriate agents.
+Archflow creates the feature branch, breaks it into tasks, and guides implementation through the appropriate agents. Features are filtered by scope — a `backend_only` repo only sees backend-scoped features from the roadmap.
 
 ---
 
@@ -171,8 +188,8 @@ Archflow creates the feature branch, breaks it into tasks, and guides implementa
 | Command | Description |
 |---------|-------------|
 | `/archflow` | Start the phase-based development workflow |
-| `/archflow onboard` | Onboard an existing codebase — audit, import context, backfill artifacts, set phase |
-| `/archflow feature` | Add a feature to the roadmap and start the git development workflow |
+| `/archflow onboard` | Onboard an existing codebase — 3-phase orchestration: collect input, dispatch agents, synthesize results |
+| `/archflow feature` | Add a feature to the roadmap (with scope-based filtering) and start the git workflow |
 | `/archflow setup-mcp` | Configure MCP servers for external tools (Jira, Notion, Linear, GitHub, etc.) |
 
 ---
@@ -217,10 +234,10 @@ Archflow manages these files in your project:
 
 | File | Purpose |
 |------|---------|
-| `project-context.md` | Business goals, tech stack, architecture decisions |
-| `roadmap.yaml` | Feature roadmap and sprint planning |
-| `current-phase.yaml` | Phase state tracker (auto-created) |
-| `current-feature.yaml` | Active feature scope and task tracking |
+| `.archflow/project-context.md` | Business goals, tech stack, architecture decisions |
+| `.archflow/roadmap.yaml` | Feature roadmap and sprint planning |
+| `.archflow/current-phase.yaml` | Phase state tracker (auto-created) |
+| `.archflow/current-feature.yaml` | Active feature scope and task tracking |
 | `docs/api-contract.md` | API specifications (single source of truth) |
 | `design-artifacts/styled-dsl.yaml` | Component specifications with styling |
 | `design-artifacts/theme.yaml` | Design system tokens |
@@ -244,7 +261,7 @@ Phase 3 processes one feature at a time. Agents are scoped to single feature bou
 No information passes through chat between agents. `api-engineer` produces endpoints; `ui-engineer` consumes the API contract and styled-dsl.yaml. This makes handoffs reliable and auditable.
 
 ### Acceptance Testing is Mandatory
-After QA, the `pm-maestro-reviewer` validates acceptance criteria from `roadmap.yaml`. A feature is not complete until it receives an ACCEPTED verdict.
+After QA, the `pm-maestro-reviewer` validates acceptance criteria from `.archflow/roadmap.yaml`. A feature is not complete until it receives an ACCEPTED verdict.
 
 ---
 
@@ -252,8 +269,8 @@ After QA, the `pm-maestro-reviewer` validates acceptance criteria from `roadmap.
 
 ```
 ~/.claude/
-├── CLAUDE.md                    # Main orchestration instructions
-├── workflow.md                  # Git branching strategy
+├── CLAUDE.md                    # Orchestration instructions (loaded into system prompt)
+├── .claude/settings.json        # Hook config (reloads instructions after compaction)
 ├── agents/                      # 16+ specialized agent definitions
 │   ├── product-strategist.md
 │   ├── ux-designer.md
@@ -261,19 +278,23 @@ After QA, the `pm-maestro-reviewer` validates acceptance criteria from `roadmap.
 │   ├── ui-engineer.md
 │   ├── qa-engineer.md
 │   └── ...
-├── phases/                      # Phase-specific instruction files
-│   ├── phase-setup.md
-│   ├── phase-onboarding.md
-│   ├── phase-1-strategy.md
-│   ├── phase-2-design.md
-│   ├── phase-2.25-hifi-design.md
-│   ├── phase-2.5-api-architecture.md
-│   ├── phase-3-implementation.md
-│   ├── phase-4-quality.md
-│   ├── phase-5-launch.md
-│   └── phase-6-enhancement.md
-└── skills/                      # Slash command implementations
-    └── archflow/SKILL.md       # Main skill (onboard, feature, setup-mcp)
+├── skills/                      # Slash command implementations
+│   └── archflow/SKILL.md       # Main skill (onboard, feature, setup-mcp)
+└── .archflow/                   # Workflow data (separated from Claude Code config)
+    ├── instructions.md          # Full instructions (reloaded via SessionStart hook)
+    ├── workflow.md              # Git branching strategy
+    ├── base-dsl-structure.yaml  # DSL template for design artifacts
+    └── phases/                  # Phase-specific instruction files
+        ├── phase-setup.md
+        ├── phase-onboarding.md
+        ├── phase-1-strategy.md
+        ├── phase-2-design.md
+        ├── phase-2.25-hifi-design.md
+        ├── phase-2.5-api-architecture.md
+        ├── phase-3-implementation.md
+        ├── phase-4-quality.md
+        ├── phase-5-launch.md
+        └── phase-6-enhancement.md
 ```
 
 ---
@@ -293,7 +314,7 @@ The `/archflow setup-mcp` command configures MCP servers to connect with your ex
 | Slack | HTTP/OAuth | Import context from channels/threads |
 | Trello | stdio/env | Import boards, lists, cards |
 
-These integrations are primarily used during `/archflow onboard` (Step 2: Context Import) to pull existing project context into Archflow's format.
+These integrations are primarily used during `/archflow onboard` (Phase A: Context Import) to pull existing project context into Archflow's format.
 
 ---
 
@@ -310,7 +331,7 @@ These integrations are primarily used during `/archflow onboard` (Step 2: Contex
 Contributions are welcome. Areas of interest:
 
 - **New agents** — Add specialized agents in `agents/` following the existing format
-- **Phase improvements** — Refine phase instructions in `phases/`
+- **Phase improvements** — Refine phase instructions in `.archflow/phases/`
 - **MCP registry** — Add tool integrations in `skills/archflow/mcp-registry.yaml`
 - **Bug fixes** — Open an issue or submit a PR
 

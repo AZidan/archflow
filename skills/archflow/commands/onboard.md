@@ -1,6 +1,6 @@
 # /archflow onboard — Existing Codebase Onboarding Wizard
 
-Onboard an existing codebase to the phase-based development framework. Interactive wizard that audits code, imports context, backfills artifacts, and sets the development phase.
+Onboard an existing codebase to the phase-based development framework. Three-phase orchestration: gather user input upfront, dispatch specialized agents for deep analysis, then synthesize and present results.
 
 ## Usage
 ```
@@ -12,28 +12,31 @@ Onboard an existing codebase to the phase-based development framework. Interacti
 - The project should have existing source code (otherwise use Phase 1 setup normally)
 
 ## Detailed Rules
-Load `ref:phases/phase-onboarding.md` for audit logic, project type detection rules, backfill rules, and gap report format.
+Load `.archflow/phases/phase-onboarding.md` for audit logic, project type detection, extraction rules, structured output schemas, agent prompt templates, and synthesis rules.
 
 ---
 
-## Wizard Flow (5 Steps)
-
-### Resume Check
+## Resume Check
 
 Before starting, check for interrupted progress:
 ```bash
-# Check for saved progress
 if [[ -f ".onboard-progress.yaml" ]]; then
-  # Read saved state and resume from wizard_step
-  # Inform user: "Resuming onboarding from Step [N]..."
+  # Read wizard_phase and agent_outputs
+  # Phase A: re-ask from last incomplete step
+  # Phase B: re-dispatch incomplete agents (skip completed ones)
+  # Phase C: re-run synthesis
 fi
 ```
 
-If `.onboard-progress.yaml` exists, read it and skip to the saved `wizard_step`. Present what was already completed.
+If `.onboard-progress.yaml` exists, read it and resume from the saved `wizard_phase`. Present what was already completed.
 
 ---
 
-### STEP 1 of 5: PROJECT DETECTION
+## PHASE A: Interactive Collection (main agent, user present)
+
+All user input gathered in one pass. No heavy analysis, no agent dispatch.
+
+### STEP A1: Project Detection
 
 **Actions:**
 1. Scan directory for code indicators:
@@ -43,13 +46,13 @@ If `.onboard-progress.yaml` exists, read it and skip to the saved `wizard_step`.
    - Database: `prisma/`, `typeorm`, `sequelize` in deps, `*.entity.ts`
    - CI/CD: `.github/workflows/`, `.gitlab-ci.yml`, `Dockerfile`
 2. Detect tech stack from dependencies and file patterns
-3. Detect project type using rules from `phases/phase-onboarding.md`:
+3. Detect project type using rules from `.archflow/phases/phase-onboarding.md`:
    - `fullstack` | `frontend_only` | `backend_only` | `mobile`
 4. Run `codemap init .` and `codemap stats` for codebase metrics
 
 **Present to user:**
 ```
-STEP 1 of 5: PROJECT DETECTION
+STEP A1: PROJECT DETECTION
 
 Detected project:
  - Type: [Fullstack / Frontend Only / Backend Only / Mobile]
@@ -62,29 +65,15 @@ Detected project:
 Is this correct?
 ```
 
-Ask user to confirm or correct. Wait for confirmation before proceeding.
-
-**Save progress** after confirmation:
-```yaml
-# .onboard-progress.yaml
-wizard_step: 2
-completed_steps: [1]
-detected_tech:
-  language: "TypeScript"
-  frontend: "React"
-  backend: "NestJS"
-  database: "PostgreSQL"
-project_type: "fullstack"
-mcps_added: []
-```
+Wait for confirmation before proceeding.
 
 ---
 
-### STEP 2 of 5: CONTEXT IMPORT
+### STEP A2: Context Source Selection
 
 **Ask the user:**
 ```
-STEP 2 of 5: CONTEXT IMPORT
+STEP A2: CONTEXT SOURCE SELECTION
 
 Where does your project strategy and roadmap live?
 ```
@@ -109,142 +98,248 @@ Present options:
    claude mcp list
    ```
 2. If NOT configured:
-   - Run `/archflow setup-mcp [tool]` inline (load `ref:skills/archflow/commands/setup-mcp.md`)
+   - Run `/archflow setup-mcp [tool]` inline (load `skills/archflow/commands/setup-mcp.md`)
    - If MCP setup requires restart: save progress to `.onboard-progress.yaml`, instruct user to restart Claude Code, then run `/archflow onboard` again
-3. Once MCP is available:
+3. Once MCP is available, collect links:
    ```
    Paste the links to the epics/stories you want to import:
    (one per line, press Enter twice when done)
    ```
-4. For each link:
-   - Fetch via MCP (the item + its children/sub-tasks)
-   - Extract: title, description, acceptance criteria, status, priority
-   - Translate to `project-context.md` + `roadmap.yaml` format
-5. Present extracted data to user for approval/editing
-6. Write approved files
+4. **THEN explicitly prompt for additional documentation:**
+   ```
+   Paste any additional documentation links that describe requirements,
+   architecture, or design decisions (Confluence pages, PRDs, wiki pages,
+   Google Docs). The more links, the better the analysis.
+   (one per line, press Enter twice when done, or type "skip")
+   ```
 
 **For "Local files":**
 ```
 Point me to the files (paths or paste content):
 ```
-- Read the files
-- Translate to framework format (`project-context.md` + `roadmap.yaml`)
-- Present for approval
 
 **For "I'll describe it":**
+Record: `import_source: "conversational"`. Conversational input will be collected in Step A4.
 
-Ask conversationally, one question at a time:
+Do NOT fetch or process any links during Phase A. Just collect them.
+
+---
+
+### STEP A3: Design & API Preferences
+
+**For fullstack / frontend_only / mobile:**
+```
+STEP A3: DESIGN & API PREFERENCES
+
+Extract design system from existing components?
+(Scans for Tailwind config, CSS variables, theme files, component patterns)
+[Yes / Skip]
+```
+
+**For ALL project types with API interaction:**
+```
+Generate API contract from existing code? Or point to existing spec?
+```
+Options:
+- **Generate** — Reverse-engineer from existing routes/API calls
+- **Point to file** — User provides path to existing OpenAPI/Swagger spec
+- **Skip** — No API contract generation
+
+Clarify extraction mode by project type:
+- `fullstack` / `backend_only`: "Will scan server-side routes, controllers, and decorators"
+- `frontend_only` / `mobile`: "Will scan client-side API calls, service layers, and TypeScript interfaces"
+
+**Also ask:**
+```
+Any corrections to the detected tech stack? [Confirm / Edit]
+```
+
+---
+
+### STEP A4: Roadmap Preferences
+
+```
+STEP A4: ROADMAP PREFERENCES
+
+Any vision for the product beyond what's in [selected source]?
+Planned features not yet tracked?
+```
+
+Record response as `user_vision_notes`.
+
+```
+Any features to explicitly mark as completed or deprioritized?
+(List feature names, or type "none")
+```
+
+Record as `completed_features_override`.
+
+**If import_source is "conversational":** Ask the structured questions here:
 1. "What does your application do?"
 2. "Who are the target users?"
-3. "What's the tech stack?" (pre-fill from Step 1 detection)
-4. "What are the main features? List them briefly."
-5. "Which features are complete / in-progress / planned?"
-6. "Any KPIs or goals you're tracking?"
+3. "What are the main features? List them briefly."
+4. "Which features are complete / in-progress / planned?"
+5. "Any KPIs or goals you're tracking?"
 
-Generate `project-context.md` + `roadmap.yaml` from answers. Present for approval.
-
-**IMPORTANT**: Roadmap structure must match project type (see `phases/phase-onboarding.md`):
-- Backend-only: features are endpoints, modules, integrations (no screens)
-- Frontend-only: features are pages, components, flows (no API endpoints unless consuming external)
-- Fullstack: both frontend and backend aspects per feature
-
-**Save progress** after this step completes.
+Record all answers in `user_vision_notes`.
 
 ---
 
-### STEP 3 of 5: CODEBASE AUDIT
+### STEP A5: Confirmation & Handoff
 
-**Actions:**
-1. Run the full audit checklist from `phases/phase-onboarding.md`, filtered by `project_type`
-2. For each audit check:
-   - Scan for the listed file patterns
-   - Record found/missing status
-3. Special handling:
-   - If swagger/openapi found: record path, mark as API contract (use as-is)
-   - Count source files, components, routes, modules, test files
-4. Determine phase status for each applicable phase
-5. Calculate recommended starting phase (see phase-onboarding.md rules)
-
-**Present the gap report** using the format from `phases/phase-onboarding.md`:
-
+**Present summary of everything collected:**
 ```
-STEP 3 of 5: CODEBASE AUDIT
+STEP A5: CONFIRMATION
 
-+--------------------------------------------------+
-|           PROJECT ONBOARDING AUDIT               |
-+--------------------------------------------------+
-|                                                  |
-|  Project Type: [type] ([tech])                   |
-|  Files: [N] source files, [M] test files         |
-|                                                  |
-|  Phase 1 (Strategy):     [status]                |
-|    [details per artifact]                        |
-|                                                  |
-|  Phase 2 (Design):       [status or N/A]         |
-|  ...                                             |
-|                                                  |
-|  Recommended starting phase: Phase [N]           |
-+--------------------------------------------------+
+Project: [Type] — [Tech Stack]
+Import source: [source] ([N] links + [M] doc links)
+Design extraction: [Yes/No]
+API contract: [Generate/Existing/Skip]
+Vision notes: [summary]
+Feature overrides: [list or none]
 
-Agree with Phase [N]? [Yes / Prefer Phase X]
+This analysis will take several minutes. Specialized agents will
+deeply analyze your codebase, imported documents, and generate
+production-quality artifacts. You can work on other tasks and
+come back to check results.
+
+Proceed? [Yes / Edit]
 ```
 
-Wait for user confirmation on the recommended phase.
+If "Edit": go back to the relevant step.
 
-**Save progress** after confirmation.
+**Save all state to `.onboard-progress.yaml`** using the schema from `phase-onboarding.md`.
 
 ---
 
-### STEP 4 of 5: ARTIFACT BACKFILL
+## PHASE B: Autonomous Agent Dispatch (main agent orchestrates, user can leave)
 
-For each **missing CORE artifact** (one at a time, in phase order):
+Load the execution dependency graph and agent filtering table from `.archflow/phases/phase-onboarding.md`.
 
-#### project-context.md (if missing)
-```
-No project context found. How to provide it?
-```
-Options:
-- **Import from tool** — link-based fetch (same pattern as Step 2)
-- **Local file** — point to existing documentation
-- **Describe it** — structured questions
-- **Skip** — record as gap
+### Layer 1: No Dependencies (dispatch all in parallel)
 
-#### roadmap.yaml (if missing)
-Same options as above. If importing from a tool:
-```
-Paste links to the epics/stories for this project's roadmap:
-```
-Fetch, translate, present, approve.
+**1a. Codebase Audit (inline — NOT a subagent)**
+- Run the full audit checklist from `phase-onboarding.md`, filtered by `project_type`
+- For each audit check: scan for listed file patterns, record found/missing
+- Special: if swagger/openapi found, record path for `api_contract_path`
+- Count source files, components, routes, modules, test files
+- Output: `.onboard-audit-report.yaml` (use structured schema from `phase-onboarding.md`)
 
-#### API contract (if missing AND project type needs one)
+**1b. Doc Deep-Dive (Task subagent, `run_in_background: true`)**
+- Skip if `import_source` is "skip" or "conversational" with no links
+- Use prompt template from `phase-onboarding.md` → "Doc Deep-Dive Agent"
+- Subagent type: `general-purpose`
+- Output: `.onboard-imported-context.md`
 
-Check first: if swagger/openapi was found in audit, it's already handled:
-> "Found [openapi.yaml] — using as API contract. No action needed."
+**1c. Design Extraction (Task subagent, `run_in_background: true`)**
+- Skip if `extract_design_system` is false OR project type is `backend_only`
+- Use prompt template from `phase-onboarding.md` → "Design Extraction Agent"
+- Subagent type: `Explore`
+- Output: `design-artifacts/theme.yaml` + `design-artifacts/extracted-components.yaml`
 
-If NOT found:
-```
-No API spec found. Generate from existing routes?
-```
-Options:
-- **Yes** — Launch `api-contract-architect` to scan existing controllers/routes
-- **I'll provide one** — User points to their spec file
-- **Skip** — Record as gap
+**1d. Route/API Extraction (Task subagent, `run_in_background: true`)**
+- Skip if `generate_api_contract` is false
+- Choose server-side or client-side prompt based on project type
+- Use prompt template from `phase-onboarding.md` → "Route/API Extraction Agent"
+- Subagent type: `Explore`
+- Output: `.onboard-extracted-routes.yaml`
 
-#### Nice-to-have artifacts (design system, wireframes)
-Only shown for applicable project types. Brief mention:
-> "Optional: Extract design tokens from your existing components? [Yes / Skip]"
+**After dispatching Layer 1:** Update `.onboard-progress.yaml` with agent statuses. Wait for all Layer 1 agents to complete before proceeding.
 
-**Present each generated artifact.** User approves before moving to the next.
+### Layer 2: Depends on Layer 1 (dispatch in parallel where possible)
 
-**Save progress** after each artifact is handled.
+**2a. product-strategist (Task subagent)**
+- Waits for: Codebase Audit + Doc Deep-Dive
+- Use prompt template from `phase-onboarding.md` → "product-strategist (Onboarding Mode)"
+- Subagent type: `product-strategist`
+- Output: `.archflow/project-context.md` + `.onboard-roadmap-draft.yaml`
+
+**2b. ux-designer (Task subagent)**
+- Skip if project type is `backend_only`
+- Waits for: Design Extraction + product-strategist (needs project-context.md)
+- Use prompt template from `phase-onboarding.md` → "ux-designer (Onboarding Mode)"
+- Subagent type: `ux-designer`
+- Output: `design-artifacts/theme.yaml` (refined) + `design-artifacts/user-flows.md` + `design-artifacts/wireframes/`
+
+**2c. api-contract-architect (Task subagent)**
+- Skip if `generate_api_contract` is false
+- Skip if existing spec was pointed to (use as-is)
+- Waits for: Route/API Extraction + product-strategist (needs project-context.md)
+- Use prompt template from `phase-onboarding.md` → "api-contract-architect (Onboarding Mode)"
+- Subagent type: `api-contract-architect`
+- Output: `docs/api-contract.md`
+
+**Note:** product-strategist runs first in Layer 2. ux-designer and api-contract-architect both depend on its output. If product-strategist completes, dispatch ux-designer and api-contract-architect in parallel.
+
+**After Layer 2:** Update `.onboard-progress.yaml`. Wait for all to complete.
+
+### Layer 3: Depends on Layer 2 (dispatch in parallel)
+
+**3a. dsl-generator (Task subagent)**
+- Skip if project type is `backend_only`
+- Waits for: ux-designer
+- Use prompt template from `phase-onboarding.md` → "dsl-generator (Onboarding Mode)"
+- Subagent type: `dsl-generator`
+- Output: `design-artifacts/styled-dsl.yaml`
+
+**3b. feature-planner (Task subagent)**
+- Waits for: product-strategist
+- Use prompt template from `phase-onboarding.md` → "feature-planner (Onboarding Mode)"
+- Subagent type: `feature-planner`
+- Output: `.archflow/roadmap.yaml`
+
+**After Layer 3:** Update `.onboard-progress.yaml`. All agents complete. Proceed to Phase C.
 
 ---
 
-### STEP 5 of 5: FINALIZE & CLEANUP
+## PHASE C: Synthesis & Presentation (main agent, user returns)
 
-**Actions:**
+### STEP C1: Roadmap Reconciliation
 
-1. **Create `current-phase.yaml`:**
+Read `.archflow/roadmap.yaml` + `.onboard-audit-report.yaml` + user overrides from `.onboard-progress.yaml`:
+- If feature-planner marks "planned" but audit shows code exists → upgrade to "in_progress" or "completed"
+- If user explicitly overrode a feature status → use user's status
+- Product-strategist "proposed" features → keep as "proposed"
+- Write reconciled `roadmap.yaml`
+
+### STEP C2: Phase Determination
+
+Use the Recommended Phase Logic from `phase-onboarding.md` with enriched audit data.
+
+### STEP C3: Gap Report
+
+Generate gap report using the format from `phase-onboarding.md` (Phase C section), based on real agent outputs.
+
+### STEP C4: Presentation
+
+Present using the format from `phase-onboarding.md`:
+```
+ONBOARDING COMPLETE
+
+Project: [Name] ([Type]: [Tech Stack])
+Recommended Phase: [N] ([Phase Name])
+
+Generated Artifacts:
+  ✅ project-context.md (by product-strategist — domain research + [source] synthesis)
+  ✅ roadmap.yaml ([N] features: [X] complete, [Y] in-progress, [Z] planned, [W] proposed)
+  ...
+
+Review each artifact? [Yes / Trust the agents]
+```
+
+If "Yes": present each artifact for approval/editing, one at a time.
+
+**For failed agents:** Show which artifacts were not generated and offer fallback options:
+```
+⚠️ [artifact] — Agent failed. Options:
+  - Import from file
+  - Describe manually
+  - Skip (record as gap)
+```
+
+### STEP C5: Finalize & Cleanup
+
+1. **Create `.archflow/current-phase.yaml`:**
 ```yaml
 phase: {recommended_phase}
 phase_name: "{phase_name}"
@@ -281,7 +376,62 @@ feature_status: "ready"
 status: "onboarded"
 ```
 
-2. **MCP cleanup** (if any onboarding-only MCPs were added):
+2. **Create or update `CLAUDE.md` with Archflow section:**
+
+If `CLAUDE.md` does NOT exist in the project root, create it with global project instructions derived from the onboarding analysis:
+
+```markdown
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+[Brief description from project-context.md — what the app does, tech stack summary]
+
+## Common Commands
+
+[Detected from package.json scripts, Makefile, or common patterns for the tech stack]
+
+## Architecture
+
+[Key architectural patterns, directory structure, path aliases — derived from audit]
+
+## Archflow Framework
+
+This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based development framework.
+
+- **Current Phase**: [N] ([Phase Name]) — see `.archflow/current-phase.yaml`
+- **Project Context**: `.archflow/project-context.md`
+- **Roadmap**: `.archflow/roadmap.yaml` ([N] epics, [M] proposed features)
+- **API Contract**: `docs/api-contract.md`
+
+Commands:
+- `/archflow` — Show status and available commands
+- `/archflow feature` — Start a new feature from the roadmap
+```
+
+If `CLAUDE.md` ALREADY exists, append the Archflow section to the end:
+
+```markdown
+
+## Archflow Framework
+
+This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based development framework.
+
+- **Current Phase**: [N] ([Phase Name]) — see `.archflow/current-phase.yaml`
+- **Project Context**: `.archflow/project-context.md`
+- **Roadmap**: `.archflow/roadmap.yaml` ([N] epics, [M] proposed features)
+- **API Contract**: `docs/api-contract.md`
+
+Commands:
+- `/archflow` — Show status and available commands
+- `/archflow feature` — Start a new feature from the roadmap
+```
+
+Fill in the actual values from `current-phase.yaml` and the generated artifacts. Only list artifacts that were actually created (e.g., skip API contract line if none was generated, skip design system lines for backend_only).
+
+3. **MCP cleanup** (if any onboarding-only MCPs were added):
 ```
 These MCPs were added for import and aren't needed for development:
   - [list of onboarding_only MCPs]
@@ -289,12 +439,13 @@ Remove to save context window? [Yes / Keep]
 ```
 If yes, run `claude mcp remove [name]` for each.
 
-3. **Clean up progress file:**
+4. **Clean up ALL temporary onboarding files:**
 ```bash
-rm .onboard-progress.yaml  # No longer needed
+rm .onboard-*
 ```
+This removes every `.onboard-*` file (progress, audit report, imported context, extracted routes, roadmap draft, and any other temp files created during onboarding). Do NOT leave any behind.
 
-4. **Print summary:**
+5. **Print summary:**
 ```
 ONBOARDING COMPLETE
 
@@ -302,12 +453,16 @@ Project: [Name] ([Type]: [Tech Stack])
 Current Phase: [N] ([Phase Name])
 
 Created:
-  [checkmark] project-context.md
-  [checkmark] roadmap.yaml ([N] features)
-  [checkmark] API contract: [path] (existing)
+  ✅ CLAUDE.md [created / updated with Archflow section]
+  ✅ project-context.md
+  ✅ roadmap.yaml ([N] features)
+  ✅ API contract: [path]
+  ✅ Design system: design-artifacts/theme.yaml
+  ✅ styled-dsl.yaml ([N] screens)
+  ✅ User flows: design-artifacts/user-flows.md
 
 Skipped:
-  [skip] [artifact] ([reason])
+  ⏭️ [artifact] ([reason])
 
 Next steps:
   - /archflow feature to add a new feature to the roadmap
@@ -318,26 +473,42 @@ Next steps:
 
 ## Error Handling
 
+### Agent Failure
+- Record failure in `.onboard-progress.yaml` under the agent's status
+- Continue dispatching non-dependent agents
+- In Phase C, report failed artifacts with manual fallback options
+
+### MCP Unavailable
+- Use WebFetch as fallback for documentation pages
+- If auth required: ask user to paste content manually in Phase A
+- Product-strategist runs with reduced context (user_vision_notes only)
+
 ### MCP Restart Required
 If an MCP needs to be configured and requires a Claude Code restart:
 1. Save all progress to `.onboard-progress.yaml`
 2. Tell the user: "Please restart Claude Code, then run `/archflow onboard` to resume."
 3. On resume, skip completed steps and continue from where we left off.
 
-### MCP Fetch Failure
-If fetching a link fails:
-- Show the error
-- Ask: "Try another link, or skip this import? [Try again / Skip]"
+### Design Extraction Fails
+- ux-designer receives empty extraction
+- Falls back to creating fresh theme from project-context.md
 
 ### No Source Code Found
 If no source code indicators are found:
 > "This doesn't appear to be an existing codebase. Use the normal Phase 1 setup instead."
 > Exit the wizard.
 
+### Resume After Interruption
+`.onboard-progress.yaml` tracks `wizard_phase` (A/B/C) and per-agent status:
+- **Phase A interrupted:** Re-ask from the last incomplete step
+- **Phase B interrupted:** Re-dispatch agents with `status: "pending"` or `status: "running"`, skip `status: "completed"`
+- **Phase C interrupted:** Re-run synthesis from Step C1
+
 ---
 
 ## Notes
-- This wizard is interactive — wait for user input at every decision point
-- Never auto-skip steps or make assumptions about what the user wants
-- All generated artifacts must be shown to the user for approval before writing
+- Phase A is interactive — wait for user input at every decision point
+- Phase B is autonomous — user can leave, agents work in background
+- Phase C is interactive — present results for user approval
+- All generated artifacts must be shown to the user for approval in Phase C (unless they choose "Trust the agents")
 - The wizard can be re-run safely; it will detect existing artifacts and skip them
