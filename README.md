@@ -27,9 +27,26 @@ Archflow works with any project type — fullstack, frontend-only, backend-only,
 Most AI development workflows assume you're starting from scratch. Archflow works both ways:
 
 - **Greenfield projects** start at Phase 1 — Archflow guides you from business strategy through design, implementation, and deployment, generating every artifact along the way.
-- **Existing codebases** start with `/archflow onboard` — an interactive wizard that audits your code, detects your tech stack and project type, imports context from tools you already use (Jira, Notion, Linear, GitHub, Confluence, Slack), backfills missing artifacts, and drops you into the right phase based on what already exists.
+- **Existing codebases** start with `/archflow onboard` — a three-phase orchestration that gathers your input, dispatches up to 9 specialized agents in parallel to deeply analyze your codebase, imports context from tools you already use (Jira, Notion, Linear, GitHub, Confluence, Slack), reverse-engineers artifacts (API contracts, design systems, roadmaps), and drops you into the right phase based on what already exists.
 
 This means you can adopt Archflow on a project that's been in development for months — it meets you where you are instead of forcing you to start over.
+
+#### How onboarding works
+
+```
+Phase A: Interactive Collection     You answer 5 quick questions (tech stack, context source,
+                                    design/API preferences, roadmap vision)
+
+Phase B: Autonomous Agent Dispatch  Up to 9 agents run in parallel across 3 dependency layers:
+                                    codebase audit → doc deep-dive → design extraction →
+                                    route/API extraction → product-strategist → ux-designer →
+                                    api-contract-architect → dsl-generator → feature-planner
+
+Phase C: Synthesis & Presentation   Results are reconciled, a gap report is generated,
+                                    and artifacts are presented for your approval
+```
+
+The onboarding agents generate production-quality `project-context.md`, `roadmap.yaml`, `api-contract.md`, `theme.yaml`, `styled-dsl.yaml`, and `user-flows.md` — all reverse-engineered from your existing code and imported documentation. It also creates or updates your project's `CLAUDE.md` with architecture context derived from the analysis.
 
 ---
 
@@ -98,7 +115,7 @@ claude
 ```
 
 - **New project?** Archflow starts at Phase 1 (Strategy).
-- **Existing codebase?** Run `/archflow onboard` — the interactive wizard audits your code, imports context from external tools, and sets the right starting phase.
+- **Existing codebase?** Run `/archflow onboard` — the three-phase orchestration collects your input, dispatches specialized agents to deeply analyze your code, and presents production-quality artifacts for approval.
 
 ### 3. Develop Features
 
@@ -109,7 +126,7 @@ Once set up, use `/archflow feature` to add features and start the git workflow:
 /archflow feature login    # Quick-add by name
 ```
 
-Archflow creates the feature branch, breaks it into tasks, and guides implementation through the appropriate agents.
+Archflow creates the feature branch, breaks it into tasks, and guides implementation through the appropriate agents. Features are filtered by scope — a `backend_only` repo only sees backend-scoped features from the roadmap.
 
 ---
 
@@ -171,8 +188,8 @@ Archflow creates the feature branch, breaks it into tasks, and guides implementa
 | Command | Description |
 |---------|-------------|
 | `/archflow` | Start the phase-based development workflow |
-| `/archflow onboard` | Onboard an existing codebase — audit, import context, backfill artifacts, set phase |
-| `/archflow feature` | Add a feature to the roadmap and start the git development workflow |
+| `/archflow onboard` | Onboard an existing codebase — 3-phase orchestration: collect input, dispatch agents, synthesize results |
+| `/archflow feature` | Add a feature to the roadmap (with scope-based filtering) and start the git workflow |
 | `/archflow setup-mcp` | Configure MCP servers for external tools (Jira, Notion, Linear, GitHub, etc.) |
 
 ---
@@ -297,7 +314,7 @@ The `/archflow setup-mcp` command configures MCP servers to connect with your ex
 | Slack | HTTP/OAuth | Import context from channels/threads |
 | Trello | stdio/env | Import boards, lists, cards |
 
-These integrations are primarily used during `/archflow onboard` (Step 2: Context Import) to pull existing project context into Archflow's format.
+These integrations are primarily used during `/archflow onboard` (Phase A: Context Import) to pull existing project context into Archflow's format.
 
 ---
 
