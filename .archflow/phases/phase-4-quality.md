@@ -5,7 +5,7 @@ Comprehensive quality review, performance optimization, and final testing across
 
 ## 📋 Required Agents (Project-Type Aware)
 
-Read `current-phase.yaml` to determine `project_type` and select appropriate agents:
+Read `.archflow/current-phase.yaml` to determine `project_type` and select appropriate agents:
 
 | Agent | fullstack | frontend_only | backend_only | mobile |
 |-------|-----------|---------------|--------------|--------|
@@ -21,7 +21,7 @@ Read `current-phase.yaml` to determine `project_type` and select appropriate age
 
 ## 📚 Prerequisites
 - All Phase 3 features implemented, integrated, and individually approved
-- API contract at `ref:current-phase.yaml → api_contract_path` (for contract compliance verification)
+- API contract at `.archflow/current-phase.yaml → api_contract_path` (for contract compliance verification)
 - Individual feature tests passing
 - User approval for all individual features
 
@@ -58,12 +58,12 @@ code-reviewer: complete codebase review → docs/code-review-report.md
   - Security vulnerability analysis
   - Best practices compliance
   - Architecture review
-  - API contract compliance verification (ref:{api_contract_path})
+  - API contract compliance verification ({api_contract_path})
   - Documentation completeness
   - Maintainability assessment
 
 # Acceptance Regression Suite
-pm-maestro-reviewer: ref:roadmap.yaml → docs/acceptance-reports/regression-report.md
+pm-maestro-reviewer: .archflow/roadmap.yaml → docs/acceptance-reports/regression-report.md
   - Re-run ALL acceptance tests from Phase 3 as regression
   - Verify no cross-feature regressions introduced
   - Produce consolidated acceptance regression report
@@ -149,9 +149,9 @@ Outcome:
 
 ## ➡️ Phase Transition
 When all quality gates pass and user approves:
-1. Update `current-phase.yaml` to `phase: 5`
+1. Update `.archflow/current-phase.yaml` to `phase: 5`
 2. Proceed to Launch Phase
-3. Load `ref:phases/phase-5-launch.md` for next phase instructions
+3. Load `.archflow/phases/phase-5-launch.md` for next phase instructions
 
 ---
 **Phase 4 Complete** → **Phase 5: Launch**
