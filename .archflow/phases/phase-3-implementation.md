@@ -5,7 +5,7 @@ Build frontend and backend simultaneously using API contracts, then integrate an
 
 ## 📋 Required Agents (Project-Type Aware)
 
-Read `current-phase.yaml` to determine `project_type` and select appropriate agents:
+Read `.archflow/current-phase.yaml` to determine `project_type` and select appropriate agents:
 
 | Agent | fullstack | frontend_only | backend_only | mobile |
 |-------|-----------|---------------|--------------|--------|
@@ -14,12 +14,12 @@ Read `current-phase.yaml` to determine `project_type` and select appropriate age
 | `qa-engineer` | Yes | Yes | Yes | Yes |
 
 ## 📚 Prerequisites
-- API contract at `ref:current-phase.yaml → api_contract_path` (SACRED DOCUMENT)
+- API contract at `.archflow/current-phase.yaml → api_contract_path` (SACRED DOCUMENT)
   - This may be `docs/api-contract.md`, `openapi.yaml`, `swagger.json`, or any path
   - If `api_contract_path` is null: skip API contract verification (frontend_only projects consuming no external APIs)
 - `design-artifacts/styled-dsl.yaml` (for projects with UI — skip for backend_only)
 - `design-artifacts/hifi-screens/` (visual reference — skip for backend_only)
-- `current-feature.yaml` defining feature scope
+- `.archflow/current-feature.yaml` defining feature scope
 - User approval from previous phase
 
 ## 🚀 Execution Steps
@@ -35,7 +35,7 @@ codemap init . && codemap watch . -q &
 ```
 
 ### 🔀 Git Workflow Integration
-Each feature follows the branching strategy from `ref:workflow.md`:
+Each feature follows the branching strategy from `.archflow/workflow.md`:
 
 1. Feature branch should already exist (created by `/archflow feature` command)
 2. If not, create it:
@@ -44,11 +44,11 @@ Each feature follows the branching strategy from `ref:workflow.md`:
    git checkout -b {feature-branch}
    git push -u origin {feature-branch}
    ```
-3. Task branches are created from the feature branch per `workflow.md`
+3. Task branches are created from the feature branch per `.archflow/workflow.md`
 4. All merges require explicit user approval
 
 ### ⚡ FEATURE-BY-FEATURE DEVELOPMENT (ONE AT A TIME)
-For EACH feature in `roadmap.yaml` (or `current-feature.yaml`), execute the process below.
+For EACH feature in `.archflow/roadmap.yaml` (or `.archflow/current-feature.yaml`), execute the process below.
 
 ### 🔄 Step 3A: DEVELOPMENT
 
@@ -68,14 +68,14 @@ codemap show backend/src/
 #### fullstack (parallel)
 ```bash
 # Frontend Development
-ui-engineer: ref:design-artifacts/styled-dsl.yaml + ref:{api_contract_path} → src/components/[FeatureName]/
+ui-engineer: design-artifacts/styled-dsl.yaml + {api_contract_path} → src/components/[FeatureName]/
   - Build frontend components using contract for API integration points
   - Create service layers that match contract endpoints exactly
   - Implement UI logic and user interactions
   - Add error handling for all contract-defined error codes
 
 # Backend Development (CONTRACT SACRED!)
-api-engineer: MUST READ + FOLLOW ref:{api_contract_path} EXACTLY → backend/src/[feature-name]/
+api-engineer: MUST READ + FOLLOW {api_contract_path} EXACTLY → backend/src/[feature-name]/
   - VERIFY: All endpoints match contract paths, methods, parameters
   - VERIFY: All response structures match contract schemas
   - VERIFY: All error codes match contract specifications
@@ -86,8 +86,8 @@ api-engineer: MUST READ + FOLLOW ref:{api_contract_path} EXACTLY → backend/src
 #### frontend_only
 ```bash
 # Frontend Development Only
-ui-engineer: ref:design-artifacts/styled-dsl.yaml → src/components/[FeatureName]/
-  - If consuming external APIs: read ref:{api_contract_path} for integration
+ui-engineer: design-artifacts/styled-dsl.yaml → src/components/[FeatureName]/
+  - If consuming external APIs: read {api_contract_path} for integration
   - Build frontend components
   - Create service layers for API calls (if applicable)
   - Implement UI logic and user interactions
@@ -96,7 +96,7 @@ ui-engineer: ref:design-artifacts/styled-dsl.yaml → src/components/[FeatureNam
 #### backend_only
 ```bash
 # Backend Development Only (CONTRACT SACRED!)
-api-engineer: MUST READ + FOLLOW ref:{api_contract_path} EXACTLY → backend/src/[feature-name]/
+api-engineer: MUST READ + FOLLOW {api_contract_path} EXACTLY → backend/src/[feature-name]/
   - VERIFY: All endpoints match contract paths, methods, parameters
   - VERIFY: All response structures match contract schemas
   - NO DEVIATIONS from contract allowed - ZERO TOLERANCE
@@ -105,15 +105,15 @@ api-engineer: MUST READ + FOLLOW ref:{api_contract_path} EXACTLY → backend/src
 #### mobile
 ```bash
 # Same as fullstack but with mobile-specific ui-engineer instructions
-ui-engineer: ref:design-artifacts/styled-dsl.yaml + ref:{api_contract_path} → mobile components
-api-engineer: ref:{api_contract_path} → backend/src/[feature-name]/
+ui-engineer: design-artifacts/styled-dsl.yaml + {api_contract_path} → mobile components
+api-engineer: {api_contract_path} → backend/src/[feature-name]/
 ```
 
 ### 🔗 Step 3B: INTEGRATION
 **After development is complete (skip for backend_only):**
 
 ```bash
-ui-engineer: ref:{api_contract_path} → connect frontend ↔ backend
+ui-engineer: {api_contract_path} → connect frontend ↔ backend
   - Test API calls against actual backend endpoints
   - Verify data flow matches contract specifications
   - Handle all error scenarios as defined in contract
@@ -134,7 +134,7 @@ qa-engineer: test integrated feature → tests/[feature-name]/
 ### 🎯 Step 3D: ACCEPTANCE TESTING
 
 ```bash
-pm-maestro-reviewer: ref:roadmap.yaml → docs/acceptance-reports/{story-id}-review.md
+pm-maestro-reviewer: .archflow/roadmap.yaml → docs/acceptance-reports/{story-id}-review.md
   - Map acceptance criteria from roadmap.yaml to Maestro test flows
   - Execute Maestro tests against the running app
   - Produce pass/fail acceptance report
@@ -144,16 +144,16 @@ pm-maestro-reviewer: ref:roadmap.yaml → docs/acceptance-reports/{story-id}-rev
 ### 🔀 Step 3E: GIT MERGE (Per Task)
 After each task passes testing and acceptance:
 1. Wait for explicit user approval
-2. Merge task branch → feature branch (per `workflow.md`)
+2. Merge task branch → feature branch (per `.archflow/workflow.md`)
 3. Clean up task branch
-4. Update `current-feature.yaml`: mark task complete
+4. Update `.archflow/current-feature.yaml`: mark task complete
 
 After ALL tasks for a feature are complete:
 1. Wait for explicit user approval
-2. Merge feature branch → main (per `workflow.md`)
+2. Merge feature branch → main (per `.archflow/workflow.md`)
 3. Clean up feature branch
-4. Update `roadmap.yaml`: feature status → `complete`
-5. Update `current-phase.yaml`: `current_feature` → `null`
+4. Update `.archflow/roadmap.yaml`: feature status → `complete`
+5. Update `.archflow/current-phase.yaml`: `current_feature` → `null`
 
 ## 📤 Expected Outputs (Per Feature)
 - Frontend implementation (skip for backend_only)
@@ -174,7 +174,7 @@ After ALL tasks for a feature are complete:
 ## 🚨 Critical Requirements
 
 ### API Contract Compliance (ZERO TOLERANCE)
-- **api-engineer MUST follow `ref:{api_contract_path}` exactly** (whatever format it's in)
+- **api-engineer MUST follow `{api_contract_path}` exactly** (whatever format it's in)
 - **NO deviations, modifications, or "improvements" allowed**
 - **Every endpoint, parameter, response format must match contract**
 - **Contract violations cause integration failures and project delays**
@@ -185,9 +185,9 @@ After ALL tasks for a feature are complete:
 - **Each feature must be fully integrated and tested**
 
 ### Git Workflow
-- **All merges require explicit user approval** (per `workflow.md`)
+- **All merges require explicit user approval** (per `.archflow/workflow.md`)
 - **Never auto-merge** task or feature branches
-- **Branch naming follows conventions** in `workflow.md`
+- **Branch naming follows conventions** in `.archflow/workflow.md`
 
 ### Mandatory Approval Gates
 - **DEMO REQUIRED**: Working feature must be demonstrated to user
@@ -209,9 +209,9 @@ For each feature in roadmap:
 
 ## ➡️ Phase Transition
 When ALL features are implemented, integrated, tested, and approved:
-1. Update `current-phase.yaml` to `phase: 4`
+1. Update `.archflow/current-phase.yaml` to `phase: 4`
 2. Proceed to Quality Phase
-3. Load `ref:phases/phase-4-quality.md` for next phase instructions
+3. Load `.archflow/phases/phase-4-quality.md` for next phase instructions
 
 ---
 **Phase 3 Complete (All Features)** → **Phase 4: Quality**
