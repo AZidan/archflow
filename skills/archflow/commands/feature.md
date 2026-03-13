@@ -9,8 +9,8 @@ Add a new feature to the roadmap from a description or external tool link. Optio
 ```
 
 ## Prerequisites
-- `current-phase.yaml` must exist (run `/archflow onboard` first for existing projects, or complete Phase 1 for new ones)
-- `roadmap.yaml` must exist
+- `.archflow/current-phase.yaml` must exist (run `/archflow onboard` first for existing projects, or complete Phase 1 for new ones)
+- `.archflow/roadmap.yaml` must exist
 - For link-based import: relevant MCP must be configured (will prompt `/archflow setup-mcp` if not)
 
 ---
@@ -40,7 +40,7 @@ Ask these questions (one at a time):
 3. **"Acceptance criteria (what defines done)?"** — Ask for a list
 4. **"Priority?"** — High / Medium / Low
 5. **"Which part of the codebase?"** — Frontend / Backend / Both
-   - Only ask this if `project_type` is `fullstack` (read from `current-phase.yaml`)
+   - Only ask this if `project_type` is `fullstack` (read from `.archflow/current-phase.yaml`)
    - For `backend_only`: assume Backend
    - For `frontend_only`: assume Frontend
 
@@ -84,26 +84,41 @@ Paste the epic/story link:
 
 #### Option C: "From roadmap"
 
-1. Read `roadmap.yaml`
-2. List features with status `planned` or `in_progress`:
+1. Read `.archflow/roadmap.yaml` and `.archflow/current-phase.yaml` (for `project_type`)
+2. **Filter features by project_type compatibility:**
+   - Determine which scopes match this repo's project_type:
+     - `backend_only` → show epics with scope: `backend`, `both`
+     - `frontend_only` → show epics with scope: `frontend`, `both`
+     - `mobile` → show epics with scope: `mobile`, `both`
+     - `fullstack` → show all scopes
+   - Features with `scope: unknown` are always shown (may need investigation)
+3. List matching features with status `planned` or `in_progress`:
    ```
-   Planned features in roadmap:
+   Features relevant to this [project_type] repo:
 
-   1. [F-001] User Authentication (planned, high priority)
-   2. [F-002] Dashboard Analytics (planned, medium priority)
-   3. [F-003] Export Reports (planned, low priority)
+   1. [F-001] User Authentication (planned, high priority, scope: backend)
+   2. [F-002] API Rate Limiting (planned, medium priority, scope: backend)
+   3. [F-003] Admin Dashboard API (planned, low priority, scope: both)
 
-   Which feature to start? [number]
+   [N] features hidden (scope: frontend/mobile — not applicable to this repo)
+
+   Which feature to start? [number / "show all"]
    ```
-3. User picks one → skip to Step 3 (git workflow)
+4. If user types "show all": display the hidden features too, each with a warning:
+   ```
+   ⚠️ [F-010] Mobile App Phase 2 (planned, scope: mobile)
+       Warning: This feature's scope (mobile) doesn't match this repo (backend_only).
+       It may have no implementable work here. Continue anyway? [Yes / Pick another]
+   ```
+5. User picks one → skip to Step 3 (git workflow)
 
 ---
 
 ### Step 2: Update roadmap.yaml
 
-Read `current-phase.yaml` to get `project_type`. Add the feature in the appropriate format.
+Read `.archflow/current-phase.yaml` to get `project_type`. Add the feature in the appropriate format.
 
-**Generate a feature ID**: Find the highest existing `F-NNN` ID in `roadmap.yaml` and increment.
+**Generate a feature ID**: Find the highest existing `F-NNN` ID in `.archflow/roadmap.yaml` and increment.
 
 #### Fullstack format
 ```yaml
@@ -132,6 +147,7 @@ Read `current-phase.yaml` to get `project_type`. Add the feature in the appropri
   description: "{description}"
   priority: {priority}
   status: planned
+  scope: backend  # backend | frontend | mobile | both | unknown
   acceptance_criteria:
     - "{criterion_1}"
   tasks:
@@ -147,6 +163,7 @@ Read `current-phase.yaml` to get `project_type`. Add the feature in the appropri
   description: "{description}"
   priority: {priority}
   status: planned
+  scope: frontend  # backend | frontend | mobile | both | unknown
   acceptance_criteria:
     - "{criterion_1}"
   tasks:
@@ -155,7 +172,7 @@ Read `current-phase.yaml` to get `project_type`. Add the feature in the appropri
   source: "{tool:ID or manual}"
 ```
 
-Write the updated `roadmap.yaml`. Confirm to user:
+Write the updated `.archflow/roadmap.yaml`. Confirm to user:
 > "Added [Feature Name] as [F-NNN] to roadmap.yaml."
 
 ---
@@ -173,7 +190,7 @@ Done.
 
 #### If "Yes"
 
-Follow the branching strategy from `ref:workflow.md`:
+Follow the branching strategy from `.archflow/workflow.md`:
 
 1. **Create feature branch from main:**
    ```bash
@@ -184,13 +201,13 @@ Follow the branching strategy from `ref:workflow.md`:
    ```
    - Branch name: kebab-case of feature name (e.g., `user-notifications`)
 
-2. **Update `current-phase.yaml`:**
+2. **Update `.archflow/current-phase.yaml`:**
    ```yaml
    current_feature: "F-{id}"
    feature_status: "in_progress"
    ```
 
-3. **Create/update `current-feature.yaml`:**
+3. **Create/update `.archflow/current-feature.yaml`:**
    ```yaml
    feature_id: "F-{id}"
    feature_name: "{name}"
@@ -210,7 +227,7 @@ Follow the branching strategy from `ref:workflow.md`:
        branch: null
    ```
 
-4. **Update `roadmap.yaml`:** Set the feature's status to `in_progress`.
+4. **Update `.archflow/roadmap.yaml`:** Set the feature's status to `in_progress`.
 
 5. **Present next steps:**
    ```
@@ -221,7 +238,7 @@ Follow the branching strategy from `ref:workflow.md`:
      2. [{type}] {task_2} (pending)
 
    Start Phase 3 implementation when ready.
-   Branch workflow (ref: workflow.md):
+   Branch workflow (.archflow/workflow.md):
      - Task branches: {feature}/{task-name}
      - Subtask branches: {feature}/{task-number}-{subtask-name}
      - Merge only after explicit user approval
@@ -233,7 +250,7 @@ Follow the branching strategy from `ref:workflow.md`:
 
 This step runs during Phase 3 implementation, not during `/archflow feature` itself. It documents how tasks are executed using `workflow.md`.
 
-For each task in `current-feature.yaml`:
+For each task in `.archflow/current-feature.yaml`:
 
 1. **Create task branch:**
    ```bash
@@ -243,10 +260,10 @@ For each task in `current-feature.yaml`:
    git push -u origin {feature}/{task-name}
    ```
 
-2. **Update `current-feature.yaml`:** Set task status to `in_progress`, record branch name.
+2. **Update `.archflow/current-feature.yaml`:** Set task status to `in_progress`, record branch name.
 
 3. **Implement** using appropriate agents:
-   - Check `project_type` from `current-phase.yaml`
+   - Check `project_type` from `.archflow/current-phase.yaml`
    - `backend_only`: only use `api-engineer`
    - `frontend_only`: only use `ui-engineer`
    - `fullstack`: use both based on task `type` field
@@ -272,7 +289,7 @@ For each task in `current-feature.yaml`:
    git push origin --delete {feature}/{task-name}
    ```
 
-8. **Update `current-feature.yaml`:** Mark task as `complete`.
+8. **Update `.archflow/current-feature.yaml`:** Mark task as `complete`.
 
 ### Feature Completion
 
@@ -293,14 +310,14 @@ After ALL tasks are complete and approved:
    ```
 
 3. **Update files:**
-   - `roadmap.yaml`: feature status → `complete`
-   - `current-phase.yaml`: `current_feature` → `null`, `feature_status` → `ready`
-   - `current-feature.yaml`: clear or remove
+   - `.archflow/roadmap.yaml`: feature status → `complete`
+   - `.archflow/current-phase.yaml`: `current_feature` → `null`, `feature_status` → `ready`
+   - `.archflow/current-feature.yaml`: clear or remove
 
 ---
 
 ## Notes
-- Feature IDs are auto-incremented from the highest existing ID in `roadmap.yaml`
+- Feature IDs are auto-incremented from the highest existing ID in `.archflow/roadmap.yaml`
 - The `/archflow feature` command can be run at any time, not just during Phase 3
 - Git operations always require explicit user approval before merging
 - The task-level git workflow (Step 4) is executed during Phase 3, referenced here for completeness
