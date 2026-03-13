@@ -32,19 +32,19 @@ Available subcommands:
                           (from description, external tool link, or existing roadmap)
 
 Current project status:
-  → Read current-phase.yaml if it exists, show phase + project type
+  → Read .archflow/current-phase.yaml if it exists, show phase + project type
   → If missing: "No project onboarded. Run /archflow onboard to get started."
 ```
 
 ### `onboard` → Load onboarding wizard
-Read and follow `ref:skills/archflow/commands/onboard.md`
+Read and follow `skills/archflow/commands/onboard.md`
 
 ### `setup-mcp` → Load MCP setup helper
-Read and follow `ref:skills/archflow/commands/setup-mcp.md`
+Read and follow `skills/archflow/commands/setup-mcp.md`
 Pass any additional arguments (e.g., `jira`, `notion`) as the tool name.
 
 ### `feature` → Load feature command
-Read and follow `ref:skills/archflow/commands/feature.md`
+Read and follow `skills/archflow/commands/feature.md`
 Pass any additional arguments (e.g., `login`) as the feature name for quick-add.
 
 ### Unknown subcommand

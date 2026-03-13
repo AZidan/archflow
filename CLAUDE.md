@@ -1,13 +1,13 @@
-# Claude Code Subagents (Phase-Based System)
+# Archflow — Phase-Based Development Instructions
 Dynamic phase-based instruction loading for token-efficient development.
 
 ## 🎯 Core Agents (Always Available)
 
 **Phase 1: Strategy & Planning**
-- `product-strategist` - Business strategy, personas, KPIs → project-context.md
-- `feature-planner` - Feature roadmaps, user stories, sprint planning → roadmap.yaml
+- `product-strategist` - Business strategy, personas, KPIs → .archflow/project-context.md
+- `feature-planner` - Feature roadmaps, user stories, sprint planning → .archflow/roadmap.yaml
 
-**Phase 2: Design**  
+**Phase 2: Design**
 - `ux-designer` - User flows, design systems, themes, wireframes → design-artifacts/
 - `dsl-generator` - Component specifications with styling → design-artifacts/styled-dsl.yaml
 
@@ -21,7 +21,7 @@ Dynamic phase-based instruction loading for token-efficient development.
 - `ui-engineer` - All frontend (React, React Native, SwiftUI, Jetpack Compose) + integration with backend APIs. Also updates screens after ux-designer changes `styled-dsl.yaml`
 - `api-engineer` - NestJS/PostgreSQL backends, MUST follow docs/api-contract.md exactly (zero tolerance)
 - `qa-engineer` - Comprehensive testing (unit, integration, e2e) across all platforms. Runs AFTER feature agents complete
-- `pm-maestro-reviewer` - Acceptance testing via Maestro. Runs AFTER qa-engineer, validates acceptance criteria from roadmap.yaml → docs/acceptance-reports/
+- `pm-maestro-reviewer` - Acceptance testing via Maestro. Runs AFTER qa-engineer, validates acceptance criteria from .archflow/roadmap.yaml → docs/acceptance-reports/
 - `ux-designer` - Design updates on specific screens. Updates `styled-dsl.yaml` file
 
 **Phase 4: Quality & Optimization**
@@ -44,46 +44,46 @@ Dynamic phase-based instruction loading for token-efficient development.
 
 ## 🌐 Project Types
 The framework detects and adapts to project type: `fullstack`, `frontend_only`, `backend_only`, `mobile`.
-- Stored in `current-phase.yaml` as `project_type`
+- Stored in `.archflow/current-phase.yaml` as `project_type`
 - Phases, agents, and audit checks are filtered by project type
-- `roadmap.yaml` structure is tailored to project type (backend = endpoints/services, frontend = pages/components)
-- Set automatically by `/archflow onboard` or can be set manually in `current-phase.yaml`
+- `.archflow/roadmap.yaml` structure is tailored to project type (backend = endpoints/services, frontend = pages/components)
+- Set automatically by `/archflow onboard` or can be set manually in `.archflow/current-phase.yaml`
 
 ## 🔀 Git Workflow
-All feature development follows `ref:workflow.md` branching strategy:
+All feature development follows `.archflow/workflow.md` branching strategy:
 - Feature branches from main
 - Task branches from feature
 - Subtask branches from task
 - Merge only after explicit user approval
-- Use `/archflow feature` to create feature branches and track tasks in `current-feature.yaml`
+- Use `/archflow feature` to create feature branches and track tasks in `.archflow/current-feature.yaml`
 
 ## 🔄 Dynamic Phase Loading
 
 **Current Phase Detection:**
 ```yaml
-# Read current-phase.yaml to determine active phase
+# Read .archflow/current-phase.yaml to determine active phase
 phase: 1  # Current phase number
-phase_file: "phases/phase-1-strategy.md"  # Load this file for detailed instructions
+phase_file: ".archflow/phases/phase-1-strategy.md"  # Load this file for detailed instructions
 ```
 
 **Phase Instruction Loading:**
 ```bash
 # Check for existing phase tracker
-if [[ -f "current-phase.yaml" ]]; then
+if [[ -f ".archflow/current-phase.yaml" ]]; then
   # Normal operation - use existing tracker
-  Current Phase: ref:current-phase.yaml → phase_file
-  Detailed Instructions: ref:phases/phase-{current}-{name}.md
+  Current Phase: .archflow/current-phase.yaml → phase_file
+  Detailed Instructions: .archflow/phases/phase-{current}-{name}.md
 else
   # Project setup needed - load setup system
-  Setup Required: ref:phases/phase-setup.md → detect and initialize phase
+  Setup Required: .archflow/phases/phase-setup.md → detect and initialize phase
 fi
 ```
 
 ## 📋 Universal Context Files (Always Required)
-- `project-context.md` - Business goals, tech stack, architecture decisions
-- `roadmap.yaml` - Feature roadmap and sprint planning
-- `current-feature.yaml` - Active development scope and requirements  
-- `current-phase.yaml` - Phase state tracker (PROJECT-SCOPED, auto-created from template)
+- `.archflow/project-context.md` - Business goals, tech stack, architecture decisions
+- `.archflow/roadmap.yaml` - Feature roadmap and sprint planning
+- `.archflow/current-feature.yaml` - Active development scope and requirements
+- `.archflow/current-phase.yaml` - Phase state tracker (PROJECT-SCOPED, auto-created from template)
 
 ## 💡 Universal Critical Rules (Apply to ALL Phases)
 
@@ -100,7 +100,7 @@ fi
 - **VISUAL APPROVAL**: Hi-fi screens must be approved before API architecture begins
 
 ### ✅ Acceptance Testing (Phases 3-4)
-- **ACCEPTANCE GATE**: After qa-engineer completes, launch `pm-maestro-reviewer` to validate acceptance criteria from `roadmap.yaml`
+- **ACCEPTANCE GATE**: After qa-engineer completes, launch `pm-maestro-reviewer` to validate acceptance criteria from `.archflow/roadmap.yaml`
 - **VERDICT REQUIRED**: Feature is not complete until pm-maestro-reviewer returns ACCEPTED verdict
 - **REJECTION FLOW**: If REJECTED, fix blocking defects and re-run pm-maestro-reviewer — do not proceed
 - **REPORTS**: Acceptance reports saved to `docs/acceptance-reports/{story-id}-review.md`
@@ -131,7 +131,7 @@ fi
 - **AGENT SCOPING**: Each agent works on ONE feature boundary. Never give an agent a cross-cutting concern
 - **HANDOFF VIA FILES**: Agents communicate through files, not messages. api-engineer produces endpoints; ui-engineer consumes docs/api-contract.md and styled-dsl.yaml
 - **CONFLICT PREVENTION**: Only ONE agent may modify a given file. If two agents need the same file, sequence them
-- **TOKEN EFFICIENCY**: Use `ref:filename.yaml` instead of pasting content. Use `codemap find` + targeted line reads instead of full file scans
+- **TOKEN EFFICIENCY**: Use codemap find + targeted line reads instead of full file scans
 - **ONE FEATURE AT A TIME**: Never batch features in Phase 3
 
 ## 🔄 Phase Navigation System
@@ -142,24 +142,24 @@ Current Phase Complete:
   1. Validate all completion criteria met
   2. Present outputs to user
   3. Wait for explicit user approval
-  4. Update current-phase.yaml to next phase
-  5. Load ref:phases/phase-{next}.md for next instructions
+  4. Update .archflow/current-phase.yaml to next phase
+  5. Load .archflow/phases/phase-{next}.md for next instructions
 
 Phase Files Available:
-  - phases/phase-onboarding.md    # For existing codebases (via /archflow onboard)
-  - phases/phase-1-strategy.md
-  - phases/phase-2-design.md
-  - phases/phase-2.25-hifi-design.md
-  - phases/phase-2.5-api-architecture.md
-  - phases/phase-3-implementation.md
-  - phases/phase-4-quality.md
-  - phases/phase-5-launch.md
-  - phases/phase-6-enhancement.md
+  - .archflow/phases/phase-onboarding.md    # For existing codebases (via /archflow onboard)
+  - .archflow/phases/phase-1-strategy.md
+  - .archflow/phases/phase-2-design.md
+  - .archflow/phases/phase-2.25-hifi-design.md
+  - .archflow/phases/phase-2.5-api-architecture.md
+  - .archflow/phases/phase-3-implementation.md
+  - .archflow/phases/phase-4-quality.md
+  - .archflow/phases/phase-5-launch.md
+  - .archflow/phases/phase-6-enhancement.md
 ```
 
 ### Project Setup (When Needed)
-For projects without `current-phase.yaml`:
-- **Load Setup System**: `ref:phases/phase-setup.md`
+For projects without `.archflow/current-phase.yaml`:
+- **Load Setup System**: `.archflow/phases/phase-setup.md`
 - **Phase Detection**: Automatic inference from project state
 - **Initialization**: Create phase tracker and load instructions
 
@@ -171,24 +171,24 @@ For projects without `current-phase.yaml`:
 pgrep -f "codemap watch" > /dev/null || codemap watch . -q &
 ```
 
-**Normal Operation (current-phase.yaml exists):**
+**Normal Operation (.archflow/current-phase.yaml exists):**
 1. Start codemap watch (above)
-2. Load current phase from `current-phase.yaml`
-3. Load detailed instructions from `ref:phases/phase-{current}.md`
+2. Load current phase from `.archflow/current-phase.yaml`
+3. Load detailed instructions from `.archflow/phases/phase-{current}.md`
 4. Follow phase-specific execution steps
 5. Complete approval gates before proceeding to next phase
 
-**Project Setup (current-phase.yaml missing):**
+**Project Setup (.archflow/current-phase.yaml missing):**
 1. Start codemap watch (above)
-2. Load setup system from `ref:phases/phase-setup.md`
+2. Load setup system from `.archflow/phases/phase-setup.md`
 3. Auto-detect phase from project state or start Phase 1
-4. Create `current-phase.yaml` and continue with normal operation
+4. Create `.archflow/current-phase.yaml` and continue with normal operation
 
 **File Structure:**
-- `current-phase.yaml` - Project phase state (auto-created if missing)
-- `phases/phase-setup.md` - Setup system (loaded only when needed)
-- `phases/phase-*.md` - Phase-specific instructions (loaded based on current phase)
+- `.archflow/current-phase.yaml` - Project phase state (auto-created if missing)
+- `.archflow/phases/phase-setup.md` - Setup system (loaded only when needed)
+- `.archflow/phases/phase-*.md` - Phase-specific instructions (loaded based on current phase)
 
 ---
-**📍 Current Phase Instructions: Load ref:{current-phase.yaml → phase_file}**
+**📍 Current Phase Instructions: Load .archflow/current-phase.yaml → phase_file**
 - You always commit ONLY the changes you did not all the files.
