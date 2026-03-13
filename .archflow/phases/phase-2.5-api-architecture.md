@@ -9,7 +9,7 @@ Create comprehensive API contracts that serve as the single source of truth for 
 ## 📚 Prerequisites
 - Phase 2 outputs: `design-artifacts/wireframes/`, `design-artifacts/styled-dsl.yaml`
 - Phase 2.25 outputs: `design-artifacts/hifi-screens/` (visual reference for API design)
-- `current-feature.yaml` defining active development scope
+- `.archflow/current-feature.yaml` defining active development scope
 - User approval from Phase 2.25
 
 ## 🚀 Execution Steps
@@ -18,7 +18,7 @@ Create comprehensive API contracts that serve as the single source of truth for 
 Define all API contracts before any implementation begins.
 
 ```bash
-api-contract-architect: ref:design-artifacts/wireframes/ + current-feature.yaml → docs/api-contract.md
+api-contract-architect: design-artifacts/wireframes/ + current-feature.yaml → docs/api-contract.md
 ```
 
 ## 📤 Expected Outputs
@@ -43,7 +43,7 @@ api-contract-architect: ref:design-artifacts/wireframes/ + current-feature.yaml 
 - **ERROR SPECIFICATIONS**: All possible error scenarios must be documented
 - **USER APPROVAL MANDATORY**: Present API contracts to user and wait for explicit approval
 - **NO PROCEEDING**: Do not move to Phase 3 without approval
-- **FEATURE SCOPE**: Only create contracts for features defined in `current-feature.yaml`
+- **FEATURE SCOPE**: Only create contracts for features defined in `.archflow/current-feature.yaml`
 
 ## 💡 Why This Phase Is Critical
 - Enables **parallel development** in Phase 3
@@ -53,9 +53,9 @@ api-contract-architect: ref:design-artifacts/wireframes/ + current-feature.yaml 
 
 ## ➡️ Phase Transition
 Upon completion and approval:
-1. Update `current-phase.yaml` to `phase: 3`
+1. Update `.archflow/current-phase.yaml` to `phase: 3`
 2. Proceed to Implementation Phase (Parallel Development)
-3. Load `ref:phases/phase-3-implementation.md` for next phase instructions
+3. Load `.archflow/phases/phase-3-implementation.md` for next phase instructions
 
 ---
 **Phase 2.5 Complete** ✅ → **Phase 3: Implementation (Parallel)** ➡️
