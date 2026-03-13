@@ -8,7 +8,7 @@ Create user flows, visual design system, wireframes, and component specification
 - `dsl-generator` - Screen DSL creation + styling + component specs
 
 ## 📚 Prerequisites
-- Phase 1 outputs: `project-context.md`, `roadmap.yaml`
+- Phase 1 outputs: `.archflow/project-context.md`, `.archflow/roadmap.yaml`
 - User approval from Phase 1
 
 ## 🚀 Execution Steps
@@ -18,10 +18,10 @@ UX Designer creates foundation, then DSL Generator builds on it.
 
 ```bash
 # Step 2A: UX Foundation
-ux-designer: ref:project-context.md → design-artifacts/user-flows.md + design-artifacts/theme.yaml + design-artifacts/wireframes/
+ux-designer: .archflow/project-context.md → design-artifacts/user-flows.md + design-artifacts/theme.yaml + design-artifacts/wireframes/
 
 # Step 2B: Component Specifications  
-dsl-generator: ref:design-artifacts/wireframes/ → design-artifacts/styled-dsl.yaml
+dsl-generator: design-artifacts/wireframes/ → design-artifacts/styled-dsl.yaml
 ```
 
 ## 📤 Expected Outputs
@@ -39,16 +39,16 @@ dsl-generator: ref:design-artifacts/wireframes/ → design-artifacts/styled-dsl.
 - [ ] All designs align with business goals from Phase 1
 
 ## 🚨 Critical Requirements
-- **REFERENCE PHASE 1**: All design decisions must reference `project-context.md`
+- **REFERENCE PHASE 1**: All design decisions must reference `.archflow/project-context.md`
 - **USER APPROVAL MANDATORY**: Present design artifacts to user and wait for explicit approval
 - **NO PROCEEDING**: Do not move to Phase 2.5 without approval
 - **CONSISTENCY**: Maintain design system consistency across all artifacts
 
 ## ➡️ Phase Transition
 Upon completion and approval:
-1. Update `current-phase.yaml` to `phase: 2.25`
+1. Update `.archflow/current-phase.yaml` to `phase: 2.25`
 2. Proceed to High-Fidelity Design Phase
-3. Load `ref:phases/phase-2.25-hifi-design.md` for next phase instructions
+3. Load `.archflow/phases/phase-2.25-hifi-design.md` for next phase instructions
 
 ---
 **Phase 2 Complete** ✅ → **Phase 2.25: High-Fidelity Design** ➡️
