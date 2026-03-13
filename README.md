@@ -82,32 +82,25 @@ Each phase has explicit completion criteria, expected output artifacts, and requ
 
 ## Quick Start
 
-### 1. Install
+### 1. Add the Marketplace (one-time)
 
-Clone this repo into your Claude Code configuration directory:
-
-```bash
-# Back up your existing .claude directory if you have one
-cp -r ~/.claude ~/.claude-backup 2>/dev/null
-
-# Clone Archflow
-git clone https://github.com/AZidan/archflow.git ~/.claude
-```
-
-Or merge into an existing setup:
+Register the Archflow marketplace with Claude Code:
 
 ```bash
-git clone https://github.com/AZidan/archflow.git /tmp/archflow
-cp -r /tmp/archflow/agents ~/.claude/agents
-cp -r /tmp/archflow/.archflow ~/.claude/.archflow
-cp -r /tmp/archflow/skills ~/.claude/skills
-cp /tmp/archflow/CLAUDE.md ~/.claude/CLAUDE.md
-cp /tmp/archflow/.claude/settings.json ~/.claude/.claude/settings.json
+claude plugin marketplace add archflow https://github.com/AZidan/archflow
 ```
 
-### 2. Start a New Project
+### 2. Install the Plugin
 
-Open Claude Code in your project directory. Archflow auto-detects whether setup is needed:
+```bash
+claude plugin install archflow --scope project
+```
+
+This saves the plugin reference to `.claude/settings.json` in your repo — any team member who clones gets prompted to install automatically.
+
+### 3. Start Your Project
+
+Open Claude Code in your project directory:
 
 ```bash
 cd your-project
@@ -117,7 +110,7 @@ claude
 - **New project?** Archflow starts at Phase 1 (Strategy).
 - **Existing codebase?** Run `/archflow onboard` — the three-phase orchestration collects your input, dispatches specialized agents to deeply analyze your code, and presents production-quality artifacts for approval.
 
-### 3. Develop Features
+### 4. Develop Features
 
 Once set up, use `/archflow feature` to add features and start the git workflow:
 
@@ -187,7 +180,8 @@ Archflow creates the feature branch, breaks it into tasks, and guides implementa
 
 | Command | Description |
 |---------|-------------|
-| `/archflow` | Start the phase-based development workflow |
+| `/archflow` | Show available subcommands and current project status |
+| `/archflow init` | Initialize Archflow in a new project (creates `.archflow/` state files) |
 | `/archflow onboard` | Onboard an existing codebase — 3-phase orchestration: collect input, dispatch agents, synthesize results |
 | `/archflow feature` | Add a feature to the roadmap (with scope-based filtering) and start the git workflow |
 | `/archflow setup-mcp` | Configure MCP servers for external tools (Jira, Notion, Linear, GitHub, etc.) |
@@ -267,34 +261,44 @@ After QA, the `pm-maestro-reviewer` validates acceptance criteria from `.archflo
 
 ## File Structure
 
+Archflow is distributed as a Claude Code plugin marketplace. The plugin contains all framework code; your project only stores state files.
+
+### Marketplace (this repo)
+
 ```
-~/.claude/
-├── CLAUDE.md                    # Orchestration instructions (loaded into system prompt)
-├── .claude/settings.json        # Hook config (reloads instructions after compaction)
-├── agents/                      # 16+ specialized agent definitions
-│   ├── product-strategist.md
-│   ├── ux-designer.md
-│   ├── api-engineer.md
-│   ├── ui-engineer.md
-│   ├── qa-engineer.md
-│   └── ...
-├── skills/                      # Slash command implementations
-│   └── archflow/SKILL.md       # Main skill (onboard, feature, setup-mcp)
-└── .archflow/                   # Workflow data (separated from Claude Code config)
-    ├── instructions.md          # Full instructions (reloaded via SessionStart hook)
-    ├── workflow.md              # Git branching strategy
-    ├── base-dsl-structure.yaml  # DSL template for design artifacts
-    └── phases/                  # Phase-specific instruction files
-        ├── phase-setup.md
-        ├── phase-onboarding.md
-        ├── phase-1-strategy.md
-        ├── phase-2-design.md
-        ├── phase-2.25-hifi-design.md
-        ├── phase-2.5-api-architecture.md
-        ├── phase-3-implementation.md
-        ├── phase-4-quality.md
-        ├── phase-5-launch.md
-        └── phase-6-enhancement.md
+archflow/
+├── .claude-plugin/marketplace.json  # Marketplace registry
+├── plugin/                          # Installable plugin
+│   ├── .claude-plugin/plugin.json   # Plugin manifest
+│   ├── hooks/hooks.json             # SessionStart hook (loads instructions after compaction)
+│   ├── agents/                      # 17 specialized agent definitions
+│   ├── skills/archflow/             # Slash command implementations
+│   │   ├── SKILL.md                 # Router (onboard, feature, setup-mcp)
+│   │   ├── mcp-registry.yaml        # Curated MCP server registry
+│   │   └── commands/
+│   │       ├── onboard.md           # /archflow onboard
+│   │       ├── feature.md           # /archflow feature
+│   │       └── setup-mcp.md         # /archflow setup-mcp
+│   └── .archflow/                   # Framework instructions and phase files
+│       ├── instructions.md          # Core instructions (reloaded via hook)
+│       ├── workflow.md              # Git branching strategy
+│       ├── base-dsl-structure.yaml  # DSL template for design artifacts
+│       └── phases/                  # Phase-specific instruction files (10 files)
+├── README.md
+└── LICENSE
+```
+
+### Project (created by `/archflow onboard` or Phase 1 setup)
+
+```
+your-project/
+├── .archflow/                       # Project state (version-controlled)
+│   ├── current-phase.yaml           # Phase state tracker
+│   ├── project-context.md           # Business goals, tech stack, architecture
+│   ├── roadmap.yaml                 # Feature roadmap and sprint planning
+│   └── current-feature.yaml         # Active feature scope and tasks
+├── .claude/settings.json            # Plugin reference (auto-created on install)
+└── CLAUDE.md                        # Updated with Archflow section by onboarding
 ```
 
 ---
