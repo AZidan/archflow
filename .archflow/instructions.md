@@ -38,6 +38,7 @@ Dynamic phase-based instruction loading for token-efficient development.
 
 ## 📌 Available Commands (Archflow)
 - `/archflow` — Show available subcommands and current project status
+- `/archflow init` — Initialize Archflow in a new project (creates `.archflow/` state files, sets Phase 1)
 - `/archflow onboard` — Onboard existing codebase (interactive wizard: audit, import context, backfill artifacts, set phase)
 - `/archflow setup-mcp` — Configure an MCP server for external tools (Jira, Notion, Linear, GitHub, SuperDesign, etc.)
 - `/archflow feature` — Add a new feature to the roadmap and start the git development workflow

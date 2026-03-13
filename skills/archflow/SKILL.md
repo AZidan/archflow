@@ -5,6 +5,7 @@ Archflow manages the full software development lifecycle through structured phas
 ## Usage
 ```
 /archflow                → Show available subcommands
+/archflow init           → Initialize Archflow in a new project
 /archflow onboard        → Onboard an existing codebase (interactive wizard)
 /archflow setup-mcp      → Configure MCP servers for external tools
 /archflow setup-mcp jira → Configure a specific MCP server
@@ -22,6 +23,9 @@ Archflow — Phase-Based Development Workflow
 
 Available subcommands:
 
+  /archflow init          Initialize Archflow in a new project
+                          (creates .archflow/ state files, sets Phase 1)
+
   /archflow onboard       Onboard an existing codebase to the phase framework
                           (detect project type, import context, audit, set phase)
 
@@ -35,6 +39,9 @@ Current project status:
   → Read .archflow/current-phase.yaml if it exists, show phase + project type
   → If missing: "No project onboarded. Run /archflow onboard to get started."
 ```
+
+### `init` → Load project initializer
+Read and follow `skills/archflow/commands/init.md`
 
 ### `onboard` → Load onboarding wizard
 Read and follow `skills/archflow/commands/onboard.md`
@@ -51,6 +58,6 @@ Pass any additional arguments (e.g., `login`) as the feature name for quick-add.
 ```
 Unknown subcommand: [arg]
 
-Available: onboard, setup-mcp, feature
+Available: init, onboard, setup-mcp, feature
 Run /archflow for help.
 ```
