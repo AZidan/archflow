@@ -1,0 +1,603 @@
+# Base DSL Structure - Component Library and Screen Architecture
+# This defines the core structure for all UI components and screen patterns
+
+# Component Library Definition
+components:
+  # Basic UI Components
+  button:
+    variants:
+      - primary
+      - secondary
+      - tertiary
+      - danger
+      - success
+      - ghost
+    sizes:
+      - xs
+      - sm
+      - md
+      - lg
+      - xl
+    states:
+      - default
+      - hover
+      - pressed
+      - disabled
+      - loading
+    properties:
+      - text
+      - icon
+      - icon_position
+      - full_width
+      - href
+      - action
+
+  input:
+    types:
+      - text
+      - email
+      - password
+      - number
+      - tel
+      - url
+      - search
+      - textarea
+      - select
+      - multiselect
+      - file
+      - date
+      - time
+      - datetime
+    variants:
+      - outlined
+      - filled
+      - underlined
+    sizes:
+      - sm
+      - md
+      - lg
+    states:
+      - default
+      - focused
+      - error
+      - disabled
+      - success
+    properties:
+      - label
+      - placeholder
+      - value
+      - required
+      - error_message
+      - help_text
+      - prefix_icon
+      - suffix_icon
+
+  card:
+    variants:
+      - elevated
+      - outlined
+      - filled
+    properties:
+      - title
+      - subtitle
+      - content
+      - image
+      - actions
+      - href
+      - padding
+
+  navigation:
+    types:
+      - top_bar
+      - bottom_bar
+      - side_drawer
+      - breadcrumb
+      - tabs
+    properties:
+      - items
+      - active_item
+      - logo
+      - user_menu
+      - search
+
+  list:
+    types:
+      - simple
+      - detailed
+      - avatar
+      - action
+      - grouped
+    properties:
+      - items
+      - dividers
+      - selection
+      - actions
+
+  grid:
+    properties:
+      - columns
+      - gap
+      - items
+      - responsive
+
+  modal:
+    types:
+      - dialog
+      - drawer
+      - bottom_sheet
+      - fullscreen
+    properties:
+      - title
+      - content
+      - actions
+      - closable
+      - backdrop_blur
+
+  badge:
+    variants:
+      - solid
+      - outlined
+      - dot
+    colors:
+      - primary
+      - secondary
+      - success
+      - warning
+      - error
+      - info
+    properties:
+      - text
+      - count
+      - position
+
+  avatar:
+    sizes:
+      - xs
+      - sm
+      - md
+      - lg
+      - xl
+    properties:
+      - image
+      - initials
+      - status
+      - border
+
+  chip:
+    variants:
+      - filled
+      - outlined
+    properties:
+      - label
+      - removable
+      - selected
+      - icon
+
+  progress:
+    types:
+      - linear
+      - circular
+      - steps
+    properties:
+      - value
+      - max
+      - indeterminate
+      - label
+
+  skeleton:
+    types:
+      - text
+      - rectangle
+      - circle
+      - card
+    properties:
+      - width
+      - height
+      - animated
+
+  tooltip:
+    positions:
+      - top
+      - bottom
+      - left
+      - right
+    properties:
+      - content
+      - trigger
+
+  accordion:
+    properties:
+      - items
+      - multiple
+      - default_expanded
+
+  table:
+    properties:
+      - columns
+      - rows
+      - sortable
+      - filterable
+      - pagination
+      - selection
+
+  pagination:
+    types:
+      - numbered
+      - simple
+      - load_more
+    properties:
+      - current_page
+      - total_pages
+      - items_per_page
+
+  rating:
+    properties:
+      - value
+      - max
+      - readonly
+      - size
+
+  toggle:
+    types:
+      - switch
+      - checkbox
+      - radio
+    properties:
+      - checked
+      - label
+      - disabled
+
+  stepper:
+    types:
+      - horizontal
+      - vertical
+    properties:
+      - steps
+      - current_step
+      - completed_steps
+
+  breadcrumb:
+    properties:
+      - items
+      - separator
+      - max_items
+
+  alert:
+    variants:
+      - info
+      - success
+      - warning
+      - error
+    properties:
+      - title
+      - message
+      - dismissible
+      - actions
+
+  image:
+    properties:
+      - src
+      - alt
+      - aspect_ratio
+      - fit
+      - placeholder
+      - lazy
+
+  video:
+    properties:
+      - src
+      - poster
+      - controls
+      - autoplay
+      - loop
+      - muted
+
+# Layout Components
+layout:
+  container:
+    properties:
+      - max_width
+      - padding
+      - centered
+
+  row:
+    properties:
+      - gap
+      - align
+      - justify
+      - wrap
+
+  column:
+    properties:
+      - gap
+      - align
+      - flex
+
+  stack:
+    types:
+      - vertical
+      - horizontal
+    properties:
+      - gap
+      - align
+      - justify
+
+  divider:
+    types:
+      - horizontal
+      - vertical
+    properties:
+      - thickness
+      - color
+
+  spacer:
+    properties:
+      - size
+
+# Screen Architecture
+screen_architecture:
+  templates:
+    # Basic screen structure
+    base:
+      sections:
+        - header
+        - main
+        - footer
+      navigation:
+        - type
+        - position
+        - items
+
+    # Common app patterns
+    auth:
+      sections:
+        - hero
+        - form
+        - alternatives
+      layout: centered
+
+    dashboard:
+      sections:
+        - header
+        - sidebar
+        - main_content
+        - stats
+      layout: grid
+
+    landing:
+      sections:
+        - hero
+        - features
+        - testimonials
+        - cta
+        - footer
+      layout: vertical
+
+    ecommerce:
+      sections:
+        - header
+        - breadcrumb
+        - product_grid
+        - filters
+        - pagination
+      layout: sidebar_main
+
+    profile:
+      sections:
+        - header
+        - avatar_section
+        - tabs
+        - content
+      layout: vertical
+
+    settings:
+      sections:
+        - header
+        - sidebar_menu
+        - content_area
+      layout: sidebar_main
+
+    product_detail:
+      sections:
+        - header
+        - product_images
+        - product_info
+        - related_products
+      layout: vertical
+
+    cart:
+      sections:
+        - header
+        - items_list
+        - summary
+        - actions
+      layout: vertical
+
+# Navigation Patterns
+navigation_patterns:
+  primary:
+    - home
+    - products
+    - about
+    - contact
+    - account
+
+  secondary:
+    - search
+    - notifications
+    - help
+    - settings
+
+  footer:
+    - privacy
+    - terms
+    - support
+    - social_links
+
+# Form Patterns
+form_patterns:
+  login:
+    fields:
+      - email
+      - password
+    actions:
+      - sign_in
+      - forgot_password
+    alternatives:
+      - social_login
+      - create_account
+
+  register:
+    fields:
+      - first_name
+      - last_name
+      - email
+      - password
+      - confirm_password
+    actions:
+      - create_account
+      - terms_agreement
+    alternatives:
+      - social_signup
+      - sign_in
+
+  checkout:
+    sections:
+      - shipping_info
+      - billing_info
+      - payment_method
+      - order_summary
+    actions:
+      - place_order
+      - back_to_cart
+
+  contact:
+    fields:
+      - name
+      - email
+      - subject
+      - message
+    actions:
+      - send_message
+      - call_instead
+
+  profile:
+    sections:
+      - personal_info
+      - preferences
+      - security
+      - notifications
+    actions:
+      - save_changes
+      - delete_account
+
+# Data Patterns
+data_patterns:
+  product:
+    properties:
+      - id
+      - name
+      - description
+      - price
+      - image
+      - rating
+      - reviews_count
+      - in_stock
+      - category
+
+  user:
+    properties:
+      - id
+      - first_name
+      - last_name
+      - email
+      - avatar
+      - role
+      - status
+      - joined_date
+
+  order:
+    properties:
+      - id
+      - items
+      - total
+      - status
+      - date
+      - shipping_address
+      - tracking_number
+
+  review:
+    properties:
+      - id
+      - user
+      - rating
+      - comment
+      - date
+      - helpful_count
+
+# Responsive Breakpoints
+responsive:
+  breakpoints:
+    xs: 0px
+    sm: 640px
+    md: 768px
+    lg: 1024px
+    xl: 1280px
+    "2xl": 1536px
+
+  grid_columns:
+    xs: 1
+    sm: 2
+    md: 3
+    lg: 4
+    xl: 6
+
+  container_widths:
+    sm: 640px
+    md: 768px
+    lg: 1024px
+    xl: 1280px
+    "2xl": 1536px
+
+# Animation Patterns
+animations:
+  transitions:
+    - fade_in
+    - slide_in
+    - scale_in
+    - bounce_in
+    - flip_in
+
+  durations:
+    fast: 150ms
+    normal: 300ms
+    slow: 500ms
+
+  easings:
+    ease_in: cubic-bezier(0.4, 0, 1, 1)
+    ease_out: cubic-bezier(0, 0, 0.2, 1)
+    ease_in_out: cubic-bezier(0.4, 0, 0.2, 1)
+
+# State Management
+state_patterns:
+  loading:
+    - skeleton
+    - spinner
+    - progress_bar
+    - shimmer
+
+  empty:
+    - no_data
+    - no_results
+    - no_items
+
+  error:
+    - network_error
+    - validation_error
+    - server_error
+    - not_found
+
+  success:
+    - confirmation
+    - completion
+    - saved
