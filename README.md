@@ -87,7 +87,7 @@ Each phase has explicit completion criteria, expected output artifacts, and requ
 Register the Archflow marketplace with Claude Code:
 
 ```bash
-claude plugin marketplace add archflow https://github.com/AZidan/archflow
+claude plugin marketplace add azidan/archflow https://github.com/AZidan/archflow
 ```
 
 ### 2. Install the Plugin
