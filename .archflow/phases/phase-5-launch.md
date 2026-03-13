@@ -126,9 +126,9 @@ Post-Launch Monitoring:
 
 ## ➡️ Phase Transition
 After successful production deployment and stable operation:
-1. Update `current-phase.yaml` to `phase: monitoring`
+1. Update `.archflow/current-phase.yaml` to `phase: monitoring`
 2. Enter ongoing monitoring and optimization mode
-3. Load `ref:phases/phase-6-enhancement.md` for future enhancements
+3. Load `.archflow/phases/phase-6-enhancement.md` for future enhancements
 
 ---
 **Phase 5 Complete - LIVE IN PRODUCTION** 🚀 → **Ongoing Monitoring & Enhancement** 📊

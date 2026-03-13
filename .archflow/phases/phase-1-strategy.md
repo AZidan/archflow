@@ -19,8 +19,8 @@ feature-planner: create feature roadmap + user stories + sprint plan → roadmap
 ```
 
 ## 📤 Expected Outputs
-- `project-context.md` - Business goals, tech stack, target users, success metrics
-- `roadmap.yaml` - Prioritized feature list, development phases, timeline estimates
+- `.archflow/project-context.md` - Business goals, tech stack, target users, success metrics
+- `.archflow/roadmap.yaml` - Prioritized feature list, development phases, timeline estimates
 
 ## ✅ Completion Criteria
 - [ ] Business strategy clearly defined with target market
@@ -37,9 +37,9 @@ feature-planner: create feature roadmap + user stories + sprint plan → roadmap
 
 ## ➡️ Phase Transition
 Upon completion and approval:
-1. Update `current-phase.yaml` to `phase: 2`
+1. Update `.archflow/current-phase.yaml` to `phase: 2`
 2. Proceed to Design Phase
-3. Load `ref:phases/phase-2-design.md` for next phase instructions
+3. Load `.archflow/phases/phase-2-design.md` for next phase instructions
 
 ---
 **Phase 1 Complete** ✅ → **Phase 2: Design** ➡️
