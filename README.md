@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Claude Code](https://img.shields.io/badge/Claude%20Code-Framework-blueviolet)](https://docs.anthropic.com/en/docs/claude-code) [![Agents](https://img.shields.io/badge/Agents-16+-blue)](https://github.com/AZidan/archflow) [![Phases](https://img.shields.io/badge/Phases-6-green)](https://github.com/AZidan/archflow)
 
-[Quick Start](#quick-start) · [What is Archflow?](#what-is-archflow) · [Phases](#the-phases) · [Agents](#agents) · [Commands](#slash-commands) · [Principles](#core-principles)
+[Website](https://azidan.github.io/archflow/) · [Quick Start](#quick-start) · [What is Archflow?](#what-is-archflow) · [Phases](#the-phases) · [Agents](#agents) · [Commands](#slash-commands) · [Principles](#core-principles)
 
 <img src="docs/archflow-overview.svg" alt="Archflow Overview" width="700" />
 
@@ -87,7 +87,7 @@ Each phase has explicit completion criteria, expected output artifacts, and requ
 Register the Archflow marketplace with Claude Code:
 
 ```bash
-claude plugin marketplace add archflow https://github.com/AZidan/archflow
+claude plugin marketplace add azidan/archflow https://github.com/AZidan/archflow
 ```
 
 ### 2. Install the Plugin
