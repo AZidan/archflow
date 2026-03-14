@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Claude Code](https://img.shields.io/badge/Claude%20Code-Framework-blueviolet)](https://docs.anthropic.com/en/docs/claude-code) [![Agents](https://img.shields.io/badge/Agents-16+-blue)](https://github.com/AZidan/archflow) [![Phases](https://img.shields.io/badge/Phases-6-green)](https://github.com/AZidan/archflow)
 
-[Website](https://azidan.github.io/archflow/) · [Quick Start](#quick-start) · [What is Archflow?](#what-is-archflow) · [Phases](#the-phases) · [Agents](#agents) · [Commands](#slash-commands) · [Principles](#core-principles)
+[Website](https://azidan.github.io/archflow/) · [Quick Start](#quick-start) · [How It Works](#how-it-works) · [Phases](#the-phases) · [Agents](#agents) · [Commands](#commands)
 
 <img src="docs/archflow-overview.svg" alt="Archflow Overview" width="700" />
 
@@ -16,50 +16,65 @@
 
 ## What is Archflow?
 
-Archflow is a **phase-based AI development framework** for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that orchestrates 16+ specialized agents through a rigorous workflow — from product strategy to production deployment.
+Archflow is a **phase-based AI development framework** for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). It orchestrates 16+ specialized agents through a structured workflow — from product strategy to production deployment.
 
-Instead of one general-purpose AI doing everything, Archflow assigns each task to a dedicated agent with deep expertise in its domain: a `product-strategist` defines your business goals, a `ux-designer` creates your design system, an `api-contract-architect` locks down your API specs, and `ui-engineer` + `api-engineer` build the frontend and backend in parallel — all coordinated through file-based handoffs and mandatory approval gates.
+Instead of one AI doing everything, each task goes to an agent with deep expertise in its domain. A `product-strategist` defines business goals. A `ux-designer` creates the design system. An `api-contract-architect` locks down API specs. Then `ui-engineer` and `api-engineer` build frontend and backend in parallel — coordinated through file-based handoffs and mandatory approval gates.
 
 Archflow works with any project type — fullstack, frontend-only, backend-only, or mobile — and adapts its phases, agents, and artifact structure accordingly.
 
-### Works with new and existing projects
+---
 
-Most AI development workflows assume you're starting from scratch. Archflow works both ways:
+## Quick Start
 
-- **Greenfield projects** start at Phase 1 — Archflow guides you from business strategy through design, implementation, and deployment, generating every artifact along the way.
-- **Existing codebases** start with `/archflow onboard` — a three-phase orchestration that gathers your input, dispatches up to 9 specialized agents in parallel to deeply analyze your codebase, imports context from tools you already use (Jira, Notion, Linear, GitHub, Confluence, Slack), reverse-engineers artifacts (API contracts, design systems, roadmaps), and drops you into the right phase based on what already exists.
+### 1. Add the Marketplace (one-time)
 
-This means you can adopt Archflow on a project that's been in development for months — it meets you where you are instead of forcing you to start over.
-
-#### How onboarding works
-
-```
-Phase A: Interactive Collection     You answer 5 quick questions (tech stack, context source,
-                                    design/API preferences, roadmap vision)
-
-Phase B: Autonomous Agent Dispatch  Up to 9 agents run in parallel across 3 dependency layers:
-                                    codebase audit → doc deep-dive → design extraction →
-                                    route/API extraction → product-strategist → ux-designer →
-                                    api-contract-architect → dsl-generator → feature-planner
-
-Phase C: Synthesis & Presentation   Results are reconciled, a gap report is generated,
-                                    and artifacts are presented for your approval
+```bash
+claude plugin marketplace add azidan/archflow https://github.com/AZidan/archflow
 ```
 
-The onboarding agents generate production-quality `project-context.md`, `roadmap.yaml`, `api-contract.md`, `theme.yaml`, `styled-dsl.yaml`, and `user-flows.md` — all reverse-engineered from your existing code and imported documentation. It also creates or updates your project's `CLAUDE.md` with architecture context derived from the analysis.
+### 2. Install the Plugin
+
+```bash
+claude plugin install archflow --scope project
+```
+
+This saves the plugin reference to `.claude/settings.json` in your repo — any team member who clones gets prompted to install automatically.
+
+Free and open source. No lock-in. Uninstall anytime with `claude plugin uninstall archflow`.
+
+### 3. Start Your Project
+
+Open Claude Code in your project directory:
+
+```bash
+cd your-project
+claude
+```
+
+- **New project?** Archflow starts at Phase 1 (Strategy).
+- **Existing codebase?** Run `/archflow onboard` — agents analyze your code, import context from your tools, and generate all artifacts for approval.
+
+### 4. Develop Features
+
+```
+/archflow feature          # Interactive wizard
+/archflow feature login    # Quick-add by name
+```
+
+Archflow creates the feature branch, breaks it into tasks, and guides implementation through the appropriate agents. Features are filtered by scope — a `backend_only` repo only sees backend-scoped features from the roadmap.
 
 ---
 
-## Why Archflow?
+## How It Works
 
-Building software with AI assistants often means context gets lost, quality varies, and there's no consistent process. Archflow solves this by:
+Building software with AI means context gets lost, quality varies, and the same mistakes repeat. Archflow fixes this with three ideas:
 
-- **Phase gates with approval checkpoints** — No phase is skipped, no feature ships without verification
-- **Specialized agents** — A UX designer doesn't write backend code; an API engineer doesn't make design decisions
-- **Contract-first development** — API contracts are defined before implementation, enabling true parallel frontend/backend development
-- **Token efficiency** — Dynamic phase loading means only relevant instructions are in context at any time
-- **File-based handoffs** — Agents communicate through artifacts, not chat messages, so nothing gets lost
-- **Greenfield and brownfield** — Works with new projects from scratch and existing codebases mid-development
+- **Specialized agents** — A UX designer doesn't write backend code. An API engineer doesn't make design decisions. 16+ agents, each scoped to one domain.
+- **File-based handoffs** — Context survives between conversations. Agents communicate through artifacts, not chat — so nothing gets lost when a session ends.
+- **Phase gates** — 6 phases from strategy to deployment. Nothing moves forward without your approval. No skipped steps. No autonomous decisions on what ships.
+- **Contract-first development** — API contracts are defined before implementation. Frontend and backend build against the same spec, so they never disagree.
+- **Focused context** — Each phase loads only what the active agents need. Less noise, better results.
+- **Acceptance testing** — Features aren't done until they pass acceptance testing against your roadmap criteria.
 
 ---
 
@@ -80,111 +95,53 @@ Each phase has explicit completion criteria, expected output artifacts, and requ
 
 ---
 
-## Quick Start
+## Works with Existing Projects
 
-### 1. Add the Marketplace (one-time)
+Most AI workflows assume you're starting from scratch. Archflow meets you where you are.
 
-Register the Archflow marketplace with Claude Code:
-
-```bash
-claude plugin marketplace add azidan/archflow https://github.com/AZidan/archflow
-```
-
-### 2. Install the Plugin
-
-```bash
-claude plugin install archflow --scope project
-```
-
-This saves the plugin reference to `.claude/settings.json` in your repo — any team member who clones gets prompted to install automatically.
-
-### 3. Start Your Project
-
-Open Claude Code in your project directory:
-
-```bash
-cd your-project
-claude
-```
-
-- **New project?** Archflow starts at Phase 1 (Strategy).
-- **Existing codebase?** Run `/archflow onboard` — the three-phase orchestration collects your input, dispatches specialized agents to deeply analyze your code, and presents production-quality artifacts for approval.
-
-### 4. Develop Features
-
-Once set up, use `/archflow feature` to add features and start the git workflow:
+Run `/archflow onboard` and it dispatches up to 9 agents in parallel to deeply analyze your codebase. They import context from tools you already use (Jira, Notion, Linear, GitHub, Confluence, Slack), reverse-engineer your design system and API contracts, and drop you into the right phase based on what already exists.
 
 ```
-/archflow feature          # Interactive wizard
-/archflow feature login    # Quick-add by name
+Phase A: Interactive Collection     Answer 5 questions about your stack and context sources
+
+Phase B: Autonomous Agent Dispatch  Up to 9 agents analyze your codebase in parallel:
+                                    codebase audit → doc deep-dive → design extraction →
+                                    route/API extraction → product-strategist → ux-designer →
+                                    api-contract-architect → dsl-generator → feature-planner
+
+Phase C: Synthesis & Presentation   Artifacts generated and presented for your approval
 ```
 
-Archflow creates the feature branch, breaks it into tasks, and guides implementation through the appropriate agents. Features are filtered by scope — a `backend_only` repo only sees backend-scoped features from the roadmap.
+The onboarding agents generate ready-to-use `project-context.md`, `roadmap.yaml`, `api-contract.md`, `theme.yaml`, `styled-dsl.yaml`, and `user-flows.md` — all reverse-engineered from your existing code and imported documentation. It also creates or updates your project's `CLAUDE.md` with architecture context derived from the analysis.
+
+**New project?** `/archflow init` starts you at Phase 1 with a clean slate.
 
 ---
 
 ## Agents
 
-### Phase 1: Strategy & Planning
-| Agent | Role |
-|-------|------|
-| `product-strategist` | Business strategy, user personas, KPIs, market positioning |
-| `feature-planner` | Feature roadmaps, user stories, epic breakdown, sprint planning |
-
-### Phase 2: Design
-| Agent | Role |
-|-------|------|
-| `ux-designer` | User flows, design systems, themes, wireframes |
-| `dsl-generator` | Component specifications with styling (styled-dsl.yaml) |
-
-### Phase 2.25: High-Fidelity Design (Optional)
-| Tool | Role |
-|------|------|
-| SuperDesign MCP | Generate polished HTML screens from styled-dsl.yaml for visual approval |
-
-### Phase 2.5: API Architecture
-| Agent | Role |
-|-------|------|
-| `api-contract-architect` | API contracts from wireframes — the single source of truth |
-
-### Phase 3: Implementation
-| Agent | Role |
-|-------|------|
-| `ui-engineer` | All frontend: React, React Native, SwiftUI, Jetpack Compose |
-| `api-engineer` | NestJS/PostgreSQL backends, strictly follows API contract |
-| `qa-engineer` | Unit, integration, and e2e testing across all platforms |
-| `pm-maestro-reviewer` | Acceptance testing via Maestro against roadmap criteria |
-
-### Phase 4: Quality & Optimization
-| Agent | Role |
-|-------|------|
-| `code-reviewer` | Code quality, security, best practices |
-| `performance-optimizer` | Performance bottleneck identification and fixes |
-| `pm-maestro-reviewer` | Full acceptance regression suite |
-
-### Phase 5: Launch & Operations
-| Agent | Role |
-|-------|------|
-| `devops-engineer` | CI/CD pipelines, deployment, infrastructure, app store prep |
-| `post-launch-analyst` | Analytics, user insights, performance monitoring |
-
-### Phase 6: Enhancement
-| Agent | Role |
-|-------|------|
-| `i18n-engineer` | Internationalization for web, iOS, and Android |
-| Any agent | Re-enter earlier phases for new features |
+| Phase | Agents |
+|-------|--------|
+| 1. Strategy & Planning | `product-strategist`, `feature-planner` |
+| 2. Design | `ux-designer`, `dsl-generator` |
+| 2.25 High-Fidelity (optional) | SuperDesign MCP |
+| 2.5 API Architecture | `api-contract-architect` |
+| 3. Implementation | `ui-engineer`, `api-engineer`, `qa-engineer`, `pm-maestro-reviewer` |
+| 4. Quality & Optimization | `code-reviewer`, `performance-optimizer`, `pm-maestro-reviewer` |
+| 5. Launch & Operations | `devops-engineer`, `post-launch-analyst` |
+| 6. Enhancement | `i18n-engineer`, any agent as needed |
 
 ---
 
-## Slash Commands
+## Commands
 
-| Command | Description |
+| Command | What it does |
 |---------|-------------|
 | `/archflow` | Show available subcommands and current project status |
-| `/archflow init` | Initialize Archflow in a new project (creates `.archflow/` state files) |
-| `/archflow onboard` | Onboard an existing codebase — 3-phase orchestration: collect input, dispatch agents, synthesize results |
-| `/archflow feature` | Add a feature to the roadmap (with scope-based filtering) and start the git workflow |
-| `/archflow setup-mcp` | Configure MCP servers for external tools (Jira, Notion, Linear, GitHub, etc.) |
+| `/archflow init` | Initialize a new project at Phase 1 |
+| `/archflow onboard` | Analyze an existing codebase and generate all artifacts |
+| `/archflow feature` | Add a feature, create branches, assign agents |
+| `/archflow setup-mcp` | Connect external tools (Jira, Notion, Linear, GitHub, etc.) |
 
 ---
 
@@ -240,26 +197,8 @@ Archflow manages these files in your project:
 
 ---
 
-## Core Principles
-
-### API Contract is Sacred
-Both `api-engineer` and `ui-engineer` must follow `docs/api-contract.md` exactly. Zero deviations. This eliminates integration issues and enables parallel development.
-
-### Approval Gates Everywhere
-Every phase requires explicit user approval before advancing. Working features must be demonstrated. No autonomous phase skipping.
-
-### One Feature at a Time
-Phase 3 processes one feature at a time. Agents are scoped to single feature boundaries. This prevents conflicts and keeps context focused.
-
-### Agents Communicate Through Files
-No information passes through chat between agents. `api-engineer` produces endpoints; `ui-engineer` consumes the API contract and styled-dsl.yaml. This makes handoffs reliable and auditable.
-
-### Acceptance Testing is Mandatory
-After QA, the `pm-maestro-reviewer` validates acceptance criteria from `.archflow/roadmap.yaml`. A feature is not complete until it receives an ACCEPTED verdict.
-
----
-
-## File Structure
+<details>
+<summary><strong>File Structure</strong></summary>
 
 Archflow is distributed as a Claude Code plugin marketplace. The plugin contains all framework code; your project only stores state files.
 
@@ -301,9 +240,10 @@ your-project/
 └── CLAUDE.md                        # Updated with Archflow section by onboarding
 ```
 
----
+</details>
 
-## External Tool Integration
+<details>
+<summary><strong>External Tool Integration</strong></summary>
 
 The `/archflow setup-mcp` command configures MCP servers to connect with your existing tools:
 
@@ -318,7 +258,9 @@ The `/archflow setup-mcp` command configures MCP servers to connect with your ex
 | Slack | HTTP/OAuth | Import context from channels/threads |
 | Trello | stdio/env | Import boards, lists, cards |
 
-These integrations are primarily used during `/archflow onboard` (Phase A: Context Import) to pull existing project context into Archflow's format.
+These integrations are primarily used during `/archflow onboard` to pull existing project context into Archflow's format.
+
+</details>
 
 ---
 
