@@ -283,3 +283,17 @@ Guidelines:
 ## MEMORY.md
 
 Your MEMORY.md contains general patterns. Check it and any linked files for project-specific context (credentials, URLs, page structure) before writing tests.
+
+## Phase 3 Completion Protocol
+
+### After Acceptance Testing
+1. Write report: `docs/acceptance-reports/{story-id}-review.md`
+2. VERDICT: ACCEPTED or REJECTED
+3. ACCEPTED → "Story [ID] ready for user approval."
+4. REJECTED → List blocking defects.
+
+### Git Commit
+```bash
+git add docs/acceptance-reports/
+git commit -m "docs([story-id]): acceptance report - [ACCEPTED/REJECTED]"
+```
