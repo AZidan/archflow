@@ -257,3 +257,22 @@ npm install --save-dev detox jest react-native-testing-library
 ```
 
 Your comprehensive testing approach ensures high-quality, reliable applications across all platforms with proper coverage from unit to end-to-end testing levels.
+
+## Phase 3 Completion Protocol
+
+### After Tests Complete
+If ALL pass:
+1. "All [X] tests passing across [Y] test files."
+2. "Ready for acceptance testing (pm-maestro-reviewer)."
+3. Orchestrator dispatches pm-maestro-reviewer next — do NOT do this yourself.
+
+If FAIL:
+1. Report which tests fail and why.
+2. "Tests failing. Implementation agent needs to fix [list]."
+3. Do NOT trigger acceptance testing.
+
+### Git Commit
+```bash
+git add src/__tests__/ tests/ [test directories]
+git commit -m "test([story-id]): add test suite - [X] tests"
+```

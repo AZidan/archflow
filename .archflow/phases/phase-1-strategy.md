@@ -35,6 +35,31 @@ feature-planner: create feature roadmap + user stories + sprint plan → roadmap
 - **NO PROCEEDING**: Do not move to Phase 2 without approval
 - **DOCUMENTATION**: All decisions must be captured in specified output files
 
+## Phase Completion: Commit Artifacts
+
+Before transitioning to the next phase, commit all artifacts:
+```bash
+git add .archflow/project-context.md .archflow/roadmap.yaml
+git commit -m "docs: complete Phase 1 - strategy and roadmap"
+```
+
+## Phase Transition Validation
+
+Before updating `current-phase.yaml`, verify:
+
+1. **Artifacts exist**:
+   - [ ] `.archflow/project-context.md` exists
+   - [ ] `.archflow/roadmap.yaml` exists
+
+2. **Git state**:
+   - [ ] All artifacts committed (`git status` shows clean tree)
+
+3. **Approval**:
+   - [ ] User explicitly approved phase outputs
+
+If ANY check fails → HALT: "Cannot transition. Missing: [list]"
+If ALL pass → update `current-phase.yaml` to next phase.
+
 ## ➡️ Phase Transition
 Upon completion and approval:
 1. Update `.archflow/current-phase.yaml` to `phase: 2`
