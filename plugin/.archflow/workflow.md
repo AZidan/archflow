@@ -103,8 +103,35 @@ git push origin --delete [feature]/[task-number]-[subtask-name]
 ```
 
 ### Step 8: Update tracking documentation
-- Mark subtask as "Complete"
-- Move to next subtask
+
+After completing a subtask, update BOTH tracking files:
+
+#### 8.1 Update roadmap.yaml
+Find your story → subtasks array → your subtask:
+```yaml
+subtasks:
+  - text: "Your subtask description"
+    completed: true    # ← Change from false to true
+```
+
+#### 8.2 Update current-feature.yaml
+Find your task → update progress:
+```yaml
+tasks:
+  - id: "1"
+    name: "Your task"
+    status: "in_progress"  # or "complete" if ALL subtasks done
+    completed_subtasks: 5   # ← increment
+    total_subtasks: 7
+```
+
+#### 8.3 Commit the tracking update
+```bash
+git add .archflow/roadmap.yaml .archflow/current-feature.yaml
+git commit -m "docs: mark subtask complete - [subtask description]"
+```
+
+IMPORTANT: Do this AFTER each subtask, not at the end of the story.
 
 ---
 

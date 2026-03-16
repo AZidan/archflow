@@ -51,6 +51,30 @@ api-contract-architect: design-artifacts/wireframes/ + current-feature.yaml → 
 - Provides **single source of truth** for both frontend and backend
 - Reduces **development time** by 40-50%
 
+## Phase Completion: Commit Artifacts
+
+Before transitioning to the next phase, commit all artifacts:
+```bash
+git add docs/api-contract.md
+git commit -m "docs: complete Phase 2.5 - API contract"
+```
+
+## Phase Transition Validation
+
+Before updating `current-phase.yaml`, verify:
+
+1. **Artifacts exist**:
+   - [ ] `docs/api-contract.md` exists (or equivalent at `api_contract_path`). For `frontend_only`/`mobile`: required if app consumes external APIs (`api_contract_path` is set)
+
+2. **Git state**:
+   - [ ] All artifacts committed (`git status` shows clean tree)
+
+3. **Approval**:
+   - [ ] User explicitly approved phase outputs
+
+If ANY check fails → HALT: "Cannot transition. Missing: [list]"
+If ALL pass → update `current-phase.yaml` to next phase.
+
 ## ➡️ Phase Transition
 Upon completion and approval:
 1. Update `.archflow/current-phase.yaml` to `phase: 3`

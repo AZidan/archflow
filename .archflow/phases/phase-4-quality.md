@@ -147,6 +147,23 @@ Outcome:
   - ISSUES FOUND: Fix issues and repeat Phase 4
 ```
 
+## Phase Transition Validation
+
+Before updating `current-phase.yaml`, verify:
+
+1. **Artifacts exist**:
+   - [ ] `docs/acceptance-reports/` contains reports for all stories
+   - [ ] All tests passing (qa-engineer report confirms)
+
+2. **Git state**:
+   - [ ] All artifacts committed (`git status` shows clean tree)
+
+3. **Approval**:
+   - [ ] User explicitly approved phase outputs
+
+If ANY check fails → HALT: "Cannot transition. Missing: [list]"
+If ALL pass → update `current-phase.yaml` to next phase.
+
 ## ➡️ Phase Transition
 When all quality gates pass and user approves:
 1. Update `.archflow/current-phase.yaml` to `phase: 5`

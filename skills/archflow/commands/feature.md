@@ -190,6 +190,15 @@ Done.
 
 #### If "Yes"
 
+**Pre-check: Verify git is available**
+```bash
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+  HALT: "Git not initialized. Run 'git init' first."
+fi
+git checkout main
+git pull origin main 2>/dev/null || true
+```
+
 Follow the branching strategy from `.archflow/workflow.md`:
 
 1. **Create feature branch from main:**
@@ -218,13 +227,21 @@ Follow the branching strategy from `.archflow/workflow.md`:
      - id: "1"
        name: "{task_1}"
        type: {frontend|backend}
-       status: pending
+       status: pending           # pending | in_progress | complete
        branch: null
+       subtasks_completed: 0     # Populated from roadmap.yaml story subtasks
+       subtasks_total: 0
+       started_at: null
+       completed_at: null
      - id: "2"
        name: "{task_2}"
        type: {frontend|backend}
-       status: pending
+       status: pending           # pending | in_progress | complete
        branch: null
+       subtasks_completed: 0
+       subtasks_total: 0
+       started_at: null
+       completed_at: null
    ```
 
 4. **Update `.archflow/roadmap.yaml`:** Set the feature's status to `in_progress`.

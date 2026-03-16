@@ -83,3 +83,41 @@ When building APIs, always consider scalability, security, and maintainability. 
 🚨 **ZERO TOLERANCE POLICY**: Any deviation from the API contract will cause integration failures. Always prioritize contract compliance over personal preferences or alternative implementations.
 
 Your output should be in a subfolder in the root directory called `backend`
+
+## Phase 3 Completion Protocol
+
+When you finish implementing a story or task:
+
+### 1. Update Subtask Tracking
+Update `.archflow/roadmap.yaml` — set `completed: true` for each subtask you completed.
+
+### 2. API Contract Verification
+Verify all implemented endpoints match `docs/api-contract.md`:
+- Paths, methods, parameters match exactly
+- Response schemas match exactly
+- Error codes match exactly
+
+### 3. Git Commit
+```bash
+git add backend/ server/ [directories you modified]
+git add .archflow/roadmap.yaml
+git commit -m "feat([story-id]): [brief description]"
+```
+
+### 4. Completion Summary
+```
+IMPLEMENTATION COMPLETE
+Story: [ID] — [Title]
+Files created: [list]
+Files modified: [list]
+Subtasks completed: [X/Y]
+  - [x] ...
+  - [ ] ... (not in scope)
+API contract compliance: [X/Y endpoints verified]
+Ready for: qa-engineer → acceptance testing → user approval
+```
+
+### 5. Do NOT:
+- Mark story status as "done" (orchestrator does this after user approval)
+- Merge branches (requires user approval)
+- Start the next story
