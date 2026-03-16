@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f"/>
+      <stop offset="100%" style="stop-color:#12121a"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Subtle grid -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-width="0.3" opacity="0.04"/>
+  </pattern>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Divider -->
+  <line x1="600" y1="90" x2="600" y2="540" stroke="#ffffff" stroke-width="1" opacity="0.06"/>
+
+  <!-- VS badge -->
+  <circle cx="600" cy="310" r="24" fill="#1a1a2e" stroke="#ffffff" stroke-width="0.5" opacity="0.8"/>
+  <text x="600" y="315" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#ffffff" text-anchor="middle" font-weight="700" opacity="0.6">VS</text>
+
+  <!-- ==================== LEFT SIDE: VIBE CODING ==================== -->
+  <text x="280" y="72" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#ef4444" text-anchor="middle" letter-spacing="3" opacity="0.9">VIBE CODING</text>
+
+  <!-- Box 1: Idea -->
+  <rect x="170" y="100" width="220" height="48" rx="8" fill="#1a1a2e" stroke="#ffffff" stroke-width="0.5" opacity="0.6"/>
+  <text x="280" y="129" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#ffffff" text-anchor="middle" opacity="0.7">Idea</text>
+
+  <!-- Arrow -->
+  <line x1="280" y1="148" x2="280" y2="176" stroke="#ef4444" stroke-width="1.5" opacity="0.4"/>
+  <polygon points="280,182 275,174 285,174" fill="#ef4444" opacity="0.4"/>
+
+  <!-- Box 2: Start Coding -->
+  <rect x="170" y="186" width="220" height="48" rx="8" fill="#1a1a2e" stroke="#ef4444" stroke-width="1" opacity="0.8"/>
+  <text x="280" y="215" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#f87171" text-anchor="middle" font-weight="500">Start Coding</text>
+
+  <!-- Arrow -->
+  <line x1="280" y1="234" x2="280" y2="262" stroke="#ef4444" stroke-width="1.5" opacity="0.4"/>
+  <polygon points="280,268 275,260 285,260" fill="#ef4444" opacity="0.4"/>
+
+  <!-- Box 3: Hit a Gap -->
+  <rect x="170" y="272" width="220" height="48" rx="8" fill="#1a1a2e" stroke="#ef4444" stroke-width="1" opacity="0.8"/>
+  <text x="280" y="301" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#f87171" text-anchor="middle" font-weight="500">Hit a Gap</text>
+
+  <!-- Arrow -->
+  <line x1="280" y1="320" x2="280" y2="348" stroke="#ef4444" stroke-width="1.5" opacity="0.4"/>
+  <polygon points="280,354 275,346 285,346" fill="#ef4444" opacity="0.4"/>
+
+  <!-- Box 4: LLM Fills the Gap -->
+  <rect x="150" y="358" width="260" height="48" rx="8" fill="#2a1015" stroke="#ef4444" stroke-width="1.5" opacity="0.9"/>
+  <text x="280" y="387" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#fca5a5" text-anchor="middle" font-weight="600">LLM Fills the Gap</text>
+
+  <!-- Loop arrow back to Start Coding -->
+  <path d="M 410 382 Q 480 382 480 296 Q 480 210 410 210" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,4" opacity="0.45"/>
+  <polygon points="410,210 418,205 418,215" fill="#ef4444" opacity="0.45"/>
+  <text x="506" y="300" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#ef4444" text-anchor="middle" opacity="0.5" transform="rotate(-90, 506, 300)">repeat</text>
+
+  <!-- Arrow to result -->
+  <line x1="280" y1="406" x2="280" y2="434" stroke="#ef4444" stroke-width="1.5" opacity="0.3"/>
+  <polygon points="280,440 275,432 285,432" fill="#ef4444" opacity="0.3"/>
+
+  <!-- Result box -->
+  <rect x="150" y="444" width="260" height="56" rx="10" fill="#1a0a0e" stroke="#ef4444" stroke-width="1" opacity="0.7"/>
+  <text x="280" y="468" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#fca5a5" text-anchor="middle" opacity="0.8">Hallucinations compound</text>
+  <text x="280" y="488" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#fca5a5" text-anchor="middle" opacity="0.8">Codebase breaks at scale</text>
+
+  <!-- X icon -->
+  <circle cx="280" cy="526" r="16" fill="none" stroke="#ef4444" stroke-width="2" opacity="0.6"/>
+  <line x1="272" y1="518" x2="288" y2="534" stroke="#ef4444" stroke-width="2" opacity="0.6"/>
+  <line x1="288" y1="518" x2="272" y2="534" stroke="#ef4444" stroke-width="2" opacity="0.6"/>
+
+
+  <!-- ==================== RIGHT SIDE: ARCHFLOW ==================== -->
+  <text x="830" y="72" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#8b5cf6" text-anchor="middle" letter-spacing="3" opacity="0.9">ARCHFLOW</text>
+
+  <!-- Phase 1: Strategy -->
+  <rect x="700" y="100" width="260" height="48" rx="8" fill="#1a1a2e" stroke="#6366f1" stroke-width="1" opacity="0.9"/>
+  <text x="760" y="128" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#a78bfa" font-weight="700">PHASE 1</text>
+  <text x="860" y="128" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#c4b5fd" opacity="0.8">Strategy</text>
+  <!-- Gate -->
+  <rect x="972" y="110" width="28" height="28" rx="6" fill="#0f1a0f" stroke="#22c55e" stroke-width="1.2"/>
+  <polyline points="980,124 986,130 996,118" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Arrow -->
+  <line x1="830" y1="148" x2="830" y2="176" stroke="#6366f1" stroke-width="1.5" opacity="0.5"/>
+  <polygon points="830,182 825,174 835,174" fill="#6366f1" opacity="0.5"/>
+
+  <!-- Phase 2: Design -->
+  <rect x="700" y="186" width="260" height="48" rx="8" fill="#1a1a2e" stroke="#6366f1" stroke-width="1" opacity="0.9"/>
+  <text x="760" y="214" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#a78bfa" font-weight="700">PHASE 2</text>
+  <text x="855" y="214" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#c4b5fd" opacity="0.8">Design</text>
+  <!-- Gate -->
+  <rect x="972" y="196" width="28" height="28" rx="6" fill="#0f1a0f" stroke="#22c55e" stroke-width="1.2"/>
+  <polyline points="980,210 986,216 996,204" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Arrow -->
+  <line x1="830" y1="234" x2="830" y2="262" stroke="#6366f1" stroke-width="1.5" opacity="0.5"/>
+  <polygon points="830,268 825,260 835,260" fill="#6366f1" opacity="0.5"/>
+
+  <!-- Phase 2.5: API Contract -->
+  <rect x="700" y="272" width="260" height="48" rx="8" fill="#1a1a2e" stroke="#6366f1" stroke-width="1" opacity="0.9"/>
+  <text x="768" y="300" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#a78bfa" font-weight="700">PHASE 2.5</text>
+  <text x="880" y="300" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#c4b5fd" opacity="0.8">API Contract</text>
+  <!-- Gate -->
+  <rect x="972" y="282" width="28" height="28" rx="6" fill="#0f1a0f" stroke="#22c55e" stroke-width="1.2"/>
+  <polyline points="980,296 986,302 996,290" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Arrow -->
+  <line x1="830" y1="320" x2="830" y2="348" stroke="#6366f1" stroke-width="1.5" opacity="0.5"/>
+  <polygon points="830,354 825,346 835,346" fill="#6366f1" opacity="0.5"/>
+
+  <!-- Phase 3: Build -->
+  <rect x="700" y="358" width="260" height="48" rx="8" fill="#1a1a2e" stroke="#6366f1" stroke-width="1" opacity="0.9"/>
+  <text x="760" y="386" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#a78bfa" font-weight="700">PHASE 3</text>
+  <text x="872" y="386" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#c4b5fd" opacity="0.8">Build (Parallel)</text>
+  <!-- Gate -->
+  <rect x="972" y="368" width="28" height="28" rx="6" fill="#0f1a0f" stroke="#22c55e" stroke-width="1.2"/>
+  <polyline points="980,382 986,388 996,376" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Human Approval bracket + label -->
+  <path d="M 1012 120 C 1028 120 1028 124 1028 180 L 1028 310 L 1028 386 C 1028 396 1028 396 1012 396" fill="none" stroke="#22c55e" stroke-width="1.2" opacity="0.5"/>
+  <line x1="1028" y1="258" x2="1042" y2="258" stroke="#22c55e" stroke-width="1.2" opacity="0.5"/>
+  <text x="1056" y="248" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#22c55e" opacity="0.7" letter-spacing="1.5">HUMAN</text>
+  <text x="1048" y="262" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#22c55e" opacity="0.7" letter-spacing="1.5">APPROVAL</text>
+  <text x="1054" y="276" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#22c55e" opacity="0.7" letter-spacing="1.5">AT EVERY</text>
+  <text x="1060" y="290" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#22c55e" opacity="0.7" letter-spacing="1.5">GATE</text>
+
+  <!-- Arrow to result -->
+  <line x1="830" y1="406" x2="830" y2="434" stroke="#6366f1" stroke-width="1.5" opacity="0.3"/>
+  <polygon points="830,440 825,432 835,432" fill="#6366f1" opacity="0.3"/>
+
+  <!-- Result box -->
+  <rect x="700" y="444" width="260" height="56" rx="10" fill="#0f1a2e" stroke="#6366f1" stroke-width="1" opacity="0.7"/>
+  <text x="830" y="468" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#c4b5fd" text-anchor="middle" opacity="0.9">No gaps. No guesses.</text>
+  <text x="830" y="488" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#c4b5fd" text-anchor="middle" opacity="0.9">Every phase has what it needs.</text>
+
+  <!-- Check icon -->
+  <circle cx="830" cy="526" r="16" fill="none" stroke="#22c55e" stroke-width="2" opacity="0.6" filter="url(#glow)"/>
+  <polyline points="822,526 828,532 840,520" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+
+
+  <!-- Bottom tagline -->
+  <text x="600" y="590" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#ffffff" text-anchor="middle" opacity="0.45" font-weight="300" letter-spacing="1">Structure over speed. Think first, build once.</text>
+</svg>
