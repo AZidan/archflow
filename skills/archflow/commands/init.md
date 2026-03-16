@@ -14,6 +14,28 @@ Lightweight command for setting up Archflow in a new or existing project.
 
 ## Flow
 
+### Step 0: Initialize Git (MANDATORY)
+
+Before creating any Archflow files:
+
+1. Check if git is already initialized:
+   ```bash
+   git rev-parse --is-inside-work-tree 2>/dev/null
+   ```
+
+2. If NOT initialized, ask user:
+   "Initialize git repository? [Yes / No]"
+   - If Yes: `git init`
+   - If No: WARN "Archflow strongly recommends git. Proceeding without it."
+
+3. After `.archflow/` files are created (end of Step 3), make the initial commit:
+   ```bash
+   git add .archflow/
+   git commit -m "chore: initialize archflow (Phase 1)"
+   ```
+
+---
+
 ### Step 1: Check If Already Initialized
 
 Check if `.archflow/current-phase.yaml` exists in the project root.

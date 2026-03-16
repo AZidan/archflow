@@ -109,6 +109,30 @@ Only run this step if design changes were made during iteration. Skip if screens
 - **DSL SYNC**: Any approved design changes MUST be reflected back in `styled-dsl.yaml`
 - **MCP DEPENDENCY**: If SuperDesign MCP is unavailable, offer skip option — do not block the pipeline
 
+## Phase Completion: Commit Artifacts
+
+Before transitioning to the next phase, commit all artifacts:
+```bash
+git add superdesign/ design-artifacts/hifi-screens/
+git commit -m "docs: complete Phase 2.25 - hi-fi screens"
+```
+
+## Phase Transition Validation
+
+Before updating `current-phase.yaml`, verify:
+
+1. **Artifacts exist**:
+   - [ ] `design-artifacts/hifi-screens/` exists (or phase was explicitly skipped)
+
+2. **Git state**:
+   - [ ] All artifacts committed (`git status` shows clean tree)
+
+3. **Approval**:
+   - [ ] User explicitly approved phase outputs
+
+If ANY check fails → HALT: "Cannot transition. Missing: [list]"
+If ALL pass → update `current-phase.yaml` to next phase.
+
 ## ➡️ Phase Transition
 Upon completion and approval:
 1. Update `.archflow/current-phase.yaml` to `phase: 2.5`

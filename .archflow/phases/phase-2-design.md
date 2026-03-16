@@ -44,6 +44,31 @@ dsl-generator: design-artifacts/wireframes/ → design-artifacts/styled-dsl.yaml
 - **NO PROCEEDING**: Do not move to Phase 2.5 without approval
 - **CONSISTENCY**: Maintain design system consistency across all artifacts
 
+## Phase Completion: Commit Artifacts
+
+Before transitioning to the next phase, commit all artifacts:
+```bash
+git add design-artifacts/
+git commit -m "docs: complete Phase 2 - wireframes, theme, styled-dsl"
+```
+
+## Phase Transition Validation
+
+Before updating `current-phase.yaml`, verify:
+
+1. **Artifacts exist**:
+   - [ ] `design-artifacts/styled-dsl.yaml` exists
+   - [ ] Design system files exist (e.g., `design-artifacts/theme.yaml`)
+
+2. **Git state**:
+   - [ ] All artifacts committed (`git status` shows clean tree)
+
+3. **Approval**:
+   - [ ] User explicitly approved phase outputs
+
+If ANY check fails → HALT: "Cannot transition. Missing: [list]"
+If ALL pass → update `current-phase.yaml` to next phase.
+
 ## ➡️ Phase Transition
 Upon completion and approval:
 1. Update `.archflow/current-phase.yaml` to `phase: 2.25`

@@ -24,6 +24,43 @@ Read `.archflow/current-phase.yaml` to determine `project_type` and select appro
 
 ## 🚀 Execution Steps
 
+### Step 0: Phase 3 Pre-Flight Validation (MANDATORY)
+
+If ANY check fails, HALT and fix before proceeding.
+
+#### 0.1 Git Repository
+Run: `git status`
+- NOT initialized → HALT: "Git is required. Run `git init && git add . && git commit -m 'Initial commit'`"
+- Verify prior phase commits: `git log --oneline | head -5`
+
+#### 0.2 Feature Branch
+Check: `.archflow/current-feature.yaml` exists AND `branch` field is NOT "main"
+- Missing/main → HALT: "Run `/archflow feature` first."
+
+#### 0.3 API Contract (ALL project types that consume or serve APIs)
+Check: API contract file exists at path from `.archflow/current-phase.yaml → api_contract_path`
+- **fullstack / backend_only**: HALT if missing — "Complete Phase 2.5 first."
+- **frontend_only / mobile**: If `api_contract_path` is set (i.e., the app consumes external APIs),
+  HALT if the file is missing — "API contract required. Point to existing spec or generate one via `/archflow onboard`."
+  If `api_contract_path` is null (no external APIs), skip this check.
+
+Note: The onboarding wizard (Step A3) scans frontend/mobile client-side API calls,
+service layers, and TypeScript interfaces to generate or locate the API contract.
+Frontend/mobile projects that consume APIs MUST have a contract so ui-engineer
+can build correct service layers and TypeScript interfaces.
+
+#### 0.4 Design Artifacts (fullstack/frontend_only/mobile)
+Check: `design-artifacts/styled-dsl.yaml` exists
+- Missing → HALT: "Complete Phase 2 first."
+
+#### 0.5 Codemap
+- `.codemap/` missing → `codemap init .`
+- Watcher: `pgrep -f "codemap watch" > /dev/null || codemap watch . -q &`
+
+All checks passed → proceed to Step 3A.
+
+---
+
 ### 🗺️ Pre-Implementation: Codemap Setup
 Before writing any code, ensure Codemap is initialized and running:
 ```bash
@@ -48,7 +85,41 @@ Each feature follows the branching strategy from `.archflow/workflow.md`:
 4. All merges require explicit user approval
 
 ### ⚡ FEATURE-BY-FEATURE DEVELOPMENT (ONE AT A TIME)
+
+- **ONE FEATURE AT A TIME**: Complete all stories in a feature before starting next
+- **ONE STORY AT A TIME**: Complete full cycle (implement → test → accept → approve → merge) per story
+- **PARALLEL WITHIN A STORY**: ui-engineer + api-engineer CAN run in parallel for SAME story only
+
 For EACH feature in `.archflow/roadmap.yaml` (or `.archflow/current-feature.yaml`), execute the process below.
+
+### Story Serialization Check
+
+Before starting work on a new story:
+
+1. Check roadmap.yaml: Any stories with `status: in_progress`?
+   - YES, DIFFERENT story → HALT: "Story [X] still in progress. Complete it first."
+   - YES, SAME story → Continue (resuming)
+   - NO → Proceed
+
+2. Only ONE story may be `in_progress` at a time within a feature.
+
+3. Parallelism rules:
+   - ALLOWED: ui-engineer + api-engineer for the SAME story (independent scopes)
+   - NOT ALLOWED: agents for DIFFERENT stories in parallel
+   - NOT ALLOWED: different features in parallel
+
+### Pre-Dispatch Validation (BEFORE launching any agent)
+
+1. `.archflow/current-feature.yaml` present?
+   - NO → Run `/archflow feature` first
+
+2. Task branch exists for this story?
+   - NO → Create per workflow.md, update current-feature.yaml
+
+3. Working tree clean? (`git status --porcelain`)
+   - Dirty → Commit or stash first
+
+ONLY THEN dispatch the agent with: "Work on branch [branch-name]"
 
 ### 🔄 Step 3A: DEVELOPMENT
 
@@ -131,15 +202,44 @@ qa-engineer: test integrated feature → tests/[feature-name]/
   - Error scenario testing
 ```
 
-### 🎯 Step 3D: ACCEPTANCE TESTING
+Gate: ALL tests must pass before Step 3D.
+If tests FAIL:
+  → Re-dispatch implementation agent with failure details
+  → Re-run qa-engineer
+  → Do NOT proceed to Step 3D
 
-```bash
-pm-maestro-reviewer: .archflow/roadmap.yaml → docs/acceptance-reports/{story-id}-review.md
-  - Map acceptance criteria from roadmap.yaml to Maestro test flows
-  - Execute Maestro tests against the running app
-  - Produce pass/fail acceptance report
-  - Verdict: ACCEPTED → proceed to demo | REJECTED → fix and re-run
-```
+### 🎯 Step 3D: ACCEPTANCE TESTING (AUTO-TRIGGERED after 3C passes)
+
+IMMEDIATELY after qa-engineer reports all tests passing:
+  → Dispatch pm-maestro-reviewer with story ID + acceptance criteria
+  → Output: `docs/acceptance-reports/{story-id}-review.md`
+
+If REJECTED:
+  → Re-dispatch implementation agent to fix blocking defects
+  → Re-run Step 3C (qa-engineer)
+  → Re-run Step 3D (pm-maestro-reviewer)
+  → Do NOT proceed until ACCEPTED
+
+If ACCEPTED:
+  → Proceed to Step 3F (Approval Gate)
+
+Step 3D is NOT optional. No story can be "done" without ACCEPTED verdict.
+
+### Post-Agent Verification
+
+After an agent returns from implementing a story:
+
+1. Verify roadmap.yaml subtasks are updated:
+   - Count subtasks with `completed: true` for the story
+   - If count doesn't match agent's claimed completion, update manually
+
+2. Only mark story `status: done` when ALL of:
+   - ALL subtasks are `completed: true`
+   - Tests pass (qa-engineer)
+   - Acceptance verdict is ACCEPTED (pm-maestro-reviewer)
+   - User has explicitly approved
+
+3. NEVER mark a story "done" by only changing the status field.
 
 ### 🔀 Step 3E: GIT MERGE (Per Task)
 After each task passes testing and acceptance:
@@ -147,6 +247,46 @@ After each task passes testing and acceptance:
 2. Merge task branch → feature branch (per `.archflow/workflow.md`)
 3. Clean up task branch
 4. Update `.archflow/current-feature.yaml`: mark task complete
+
+### 🛑 Step 3F: APPROVAL GATE (MANDATORY — CANNOT BE SKIPPED)
+
+After acceptance testing returns ACCEPTED:
+
+1. Present to the user:
+   ```
+   ============================================
+   APPROVAL REQUIRED: [Story ID] — [Story Title]
+   ============================================
+   Branch: [task-branch-name]
+   Agent: [agent-name]
+
+   Completed subtasks:
+   - [x] Subtask 1
+   - [x] Subtask 2
+
+   Acceptance: ACCEPTED
+   Test results: [X/Y tests passing]
+
+   Files changed:
+   - [list of created/modified files]
+
+   Respond with:
+   - "Approved" → merge to feature branch
+   - "Changes needed: [feedback]" → agent will address
+   ============================================
+   ```
+
+2. WAIT for user response. Do NOT proceed.
+
+3. If "Approved":
+   - Merge per workflow.md
+   - Update roadmap.yaml: story `status: done`, all subtasks `completed: true`
+   - Add `approved: true` and `approved_at: "[date]"` to the story
+   - Update current-feature.yaml: task `status: complete`, `completed_at: "[date]"`
+
+4. If "Changes needed":
+   - Re-dispatch agent with feedback
+   - Re-run qa-engineer → pm-maestro-reviewer → return to step 1
 
 After ALL tasks for a feature are complete:
 1. Wait for explicit user approval

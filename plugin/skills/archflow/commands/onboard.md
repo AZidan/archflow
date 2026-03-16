@@ -32,6 +32,22 @@ If `.onboard-progress.yaml` exists, read it and resume from the saved `wizard_ph
 
 ---
 
+### Step 0: Verify Git
+
+1. Check: Is this a git repository? (`git rev-parse --is-inside-work-tree`)
+   - If YES: Continue
+   - If NO: Ask user "Initialize git? [Yes / No]"
+     - Yes: `git init && git add . && git commit -m "chore: initial commit before archflow onboarding"`
+     - No: WARN and continue
+
+2. After onboarding creates `.archflow/` files (end of Step C5), commit:
+   ```bash
+   git add .archflow/
+   git commit -m "chore: onboard to archflow (Phase [N])"
+   ```
+
+---
+
 ## PHASE A: Interactive Collection (main agent, user present)
 
 All user input gathered in one pass. No heavy analysis, no agent dispatch.

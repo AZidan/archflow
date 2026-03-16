@@ -169,3 +169,34 @@ When working with design specifications:
 - Maintain visual consistency while respecting native conventions
 
 Your output should be production-ready, platform-optimized, and maintainable code that follows industry best practices and provides exceptional user experiences across all target platforms.
+
+## Phase 3 Completion Protocol
+
+When you finish implementing a story or task:
+
+### 1. Update Subtask Tracking
+Update `.archflow/roadmap.yaml` — set `completed: true` for each subtask you completed.
+
+### 2. Git Commit
+```bash
+git add src/ [directories you modified]
+git add .archflow/roadmap.yaml
+git commit -m "feat([story-id]): [brief description]"
+```
+
+### 3. Completion Summary
+```
+IMPLEMENTATION COMPLETE
+Story: [ID] — [Title]
+Files created: [list]
+Files modified: [list]
+Subtasks completed: [X/Y]
+  - [x] ...
+  - [ ] ... (not in scope)
+Ready for: qa-engineer → acceptance testing → user approval
+```
+
+### 4. Do NOT:
+- Mark story status as "done" (orchestrator does this after user approval)
+- Merge branches (requires user approval)
+- Start the next story
