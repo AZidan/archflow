@@ -1,0 +1,304 @@
+# =============================================================================
+# Archflow Canonical Roadmap Schema
+# =============================================================================
+# This is the CANONICAL schema for .archflow/roadmap.yaml.
+# All Archflow agents, skills, and commands MUST produce and consume this format.
+#
+# Design principles:
+#   - Epics own stories (single source of truth for deliverables)
+#   - Phases represent product milestones (MVP, Growth, Scale — NOT archflow lifecycle phases)
+#   - Sprints are time-boxed work containers within a phase
+#   - Sprints reference stories by ID only (no duplication)
+# =============================================================================
+
+schema_version: "1.0"
+
+# -----------------------------------------------------------------------------
+# Top-level structure
+# -----------------------------------------------------------------------------
+roadmap:
+  type: object
+  required: [project, project_type, epics, phases]
+  properties:
+    project:
+      type: string
+      description: "Project name"
+      example: "my-app"
+
+    project_type:
+      type: string
+      enum: [fullstack, frontend_only, backend_only, mobile]
+      description: "Project type — determines which agents and phases apply"
+
+    epics:
+      type: array
+      description: "Deliverable scope — each epic groups related stories"
+      items:
+        $ref: "#/epic"
+
+    phases:
+      type: array
+      description: "Product delivery milestones (MVP, Growth, Scale, etc.)"
+      items:
+        $ref: "#/phase"
+
+# -----------------------------------------------------------------------------
+# Epic
+# -----------------------------------------------------------------------------
+epic:
+  type: object
+  required: [id, name, scope, stories]
+  properties:
+    id:
+      type: string
+      pattern: "^E[0-9]+$"
+      description: "Epic identifier"
+      example: "E1"
+
+    name:
+      type: string
+      description: "Human-readable epic name"
+      example: "Admin Authentication"
+
+    scope:
+      type: string
+      enum: [backend, frontend, mobile, both, unknown]
+      description: >
+        The TRUE scope of the work, not the repo's project_type.
+        A mobile epic imported into a backend repo should have scope: mobile.
+
+    stories:
+      type: array
+      description: "Stories belonging to this epic (single source of truth)"
+      items:
+        $ref: "#/story"
+
+# -----------------------------------------------------------------------------
+# Story
+# -----------------------------------------------------------------------------
+story:
+  type: object
+  required: [id, title, priority, status, assigned, description, acceptance_criteria, subtasks]
+  properties:
+    id:
+      type: string
+      pattern: "^S[0-9]+-[0-9]+$"
+      description: "Story ID — format: S{epic_number}-{sequence}"
+      example: "S1-01"
+
+    title:
+      type: string
+      description: "Short title (NOT a user story sentence)"
+      example: "Admin Login"
+
+    priority:
+      type: string
+      enum: [Critical, High, Medium, Low]
+
+    status:
+      type: string
+      enum: [backlog, in_progress, review, done]
+      description: "Kanban column status (lowercase, underscore-separated)"
+
+    assigned:
+      type: string
+      description: "Agent or role responsible for implementation"
+      example: "ui-engineer"
+
+    description:
+      type: string
+      description: "Detailed description of the work (multi-line YAML block scalar)"
+
+    acceptance_criteria:
+      type: array
+      description: "Testable criteria that define when the story is done"
+      items:
+        $ref: "#/acceptance_criterion"
+
+    subtasks:
+      type: array
+      description: "Granular implementation tasks within the story"
+      items:
+        $ref: "#/subtask"
+
+# -----------------------------------------------------------------------------
+# Acceptance Criterion
+# -----------------------------------------------------------------------------
+acceptance_criterion:
+  type: object
+  required: [text, met]
+  properties:
+    text:
+      type: string
+      description: "Testable criterion statement"
+      example: "Login page renders with email/password form"
+
+    met:
+      type: boolean
+      default: false
+      description: "Whether this criterion has been verified as passing"
+
+    verified_by:
+      type: string
+      required: false
+      enum: [pm-maestro-reviewer, qa-engineer, manual]
+      description: "Who/what verified this criterion"
+
+    verified_at:
+      type: string
+      format: iso8601
+      required: false
+      description: "When this criterion was verified"
+
+# -----------------------------------------------------------------------------
+# Subtask
+# -----------------------------------------------------------------------------
+subtask:
+  type: object
+  required: [text, completed]
+  properties:
+    text:
+      type: string
+      description: "Subtask description"
+      example: "Build login form component"
+
+    completed:
+      type: boolean
+      default: false
+
+# -----------------------------------------------------------------------------
+# Phase (Product Delivery Milestone)
+# -----------------------------------------------------------------------------
+phase:
+  type: object
+  required: [id, name, sprints]
+  properties:
+    id:
+      type: string
+      description: "Phase identifier (kebab-case)"
+      example: "mvp"
+
+    name:
+      type: string
+      description: "Human-readable phase name"
+      example: "MVP"
+
+    sprints:
+      type: array
+      items:
+        $ref: "#/sprint"
+
+# -----------------------------------------------------------------------------
+# Sprint
+# -----------------------------------------------------------------------------
+sprint:
+  type: object
+  required: [id, name, status, goal, stories]
+  properties:
+    id:
+      type: string
+      pattern: "^sprint-[0-9]+$"
+      description: "Sprint identifier"
+      example: "sprint-1"
+
+    name:
+      type: string
+      description: "Human-readable sprint name"
+      example: "Sprint 1: Auth & Shell"
+
+    status:
+      type: string
+      enum: [backlog, in_progress, review, done]
+
+    goal:
+      type: string
+      description: "Sprint goal — what this sprint delivers"
+      example: "Deliver authentication flow and app shell"
+
+    stories:
+      type: array
+      items:
+        type: string
+      description: "List of story IDs (references to stories defined under epics)"
+      example: [S1-01, S1-02, S1-03]
+
+# =============================================================================
+# Full Example
+# =============================================================================
+#
+# project: "my-app"
+# project_type: fullstack
+#
+# epics:
+#   - id: E1
+#     name: "Admin Authentication"
+#     scope: backend
+#     stories:
+#       - id: S1-01
+#         title: "Admin Login"
+#         priority: Critical
+#         status: done
+#         assigned: ui-engineer
+#         description: >
+#           Firebase Auth login page with email/password and session management.
+#         acceptance_criteria:
+#           - text: "Login page with email/password form"
+#             met: true
+#           - text: "Firebase Auth integration with custom claims"
+#             met: true
+#         subtasks:
+#           - text: "Build login form component"
+#             completed: true
+#           - text: "Wire Firebase Auth SDK"
+#             completed: true
+#       - id: S1-02
+#         title: "Role-Based Access Control"
+#         priority: High
+#         status: done
+#         assigned: api-engineer
+#         description: >
+#           Middleware for checking user roles (Super Admin, Support Agent, Analyst).
+#         acceptance_criteria:
+#           - text: "Role checking middleware"
+#             met: true
+#         subtasks:
+#           - text: "Implement RBAC middleware"
+#             completed: true
+#
+#   - id: E2
+#     name: "Dashboard"
+#     scope: both
+#     stories:
+#       - id: S2-01
+#         title: "Dashboard Metrics Cards"
+#         priority: High
+#         status: in_progress
+#         assigned: ui-engineer
+#         description: >
+#           Real-time metrics cards showing key business KPIs.
+#         acceptance_criteria:
+#           - text: "Metrics cards render with live data"
+#             met: false
+#         subtasks:
+#           - text: "Build MetricsCard component"
+#             completed: true
+#           - text: "Connect to analytics API"
+#             completed: false
+#
+# phases:
+#   - id: mvp
+#     name: "MVP"
+#     sprints:
+#       - id: sprint-1
+#         name: "Sprint 1: Auth & Shell"
+#         status: done
+#         goal: "Deliver authentication flow and app shell"
+#         stories: [S1-01, S1-02]
+#       - id: sprint-2
+#         name: "Sprint 2: Dashboard"
+#         status: in_progress
+#         goal: "Core dashboard with metrics and navigation"
+#         stories: [S2-01]
+#   - id: growth
+#     name: "Growth"
+#     sprints: []

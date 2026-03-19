@@ -595,27 +595,65 @@ OUTPUT: Write `design-artifacts/styled-dsl.yaml`
 
 **Prompt template:**
 ```
-You are converting a roadmap draft into proper roadmap.yaml format for an existing project.
+You are converting a roadmap draft into the canonical Archflow roadmap.yaml format for an existing project.
 
 INPUTS:
 - Roadmap draft: Read `.onboard-roadmap-draft.yaml`
 - Audit report: Read `.onboard-audit-report.yaml`
+- Canonical schema: Read `.archflow/schemas/roadmap-schema.yaml`
 - Project type: {project_type}
 
+CANONICAL OUTPUT FORMAT:
+The output MUST follow the schema at `.archflow/schemas/roadmap-schema.yaml`. Here is the structure:
+
+```yaml
+project: "{project_name}"
+project_type: {project_type}
+
+epics:
+  - id: E1
+    name: "Epic Name"
+    scope: backend          # backend | frontend | mobile | both | unknown
+    stories:
+      - id: S1-01
+        title: "Short Title"
+        priority: Critical   # Critical | High | Medium | Low
+        status: done         # backlog | in_progress | review | done
+        assigned: ui-engineer
+        description: >
+          Detailed description of the work.
+        acceptance_criteria:
+          - text: "Testable criterion"
+            met: true        # MUST be {text, met} objects, NEVER plain strings
+        subtasks:
+          - text: "Task description"
+            completed: true  # MUST be {text, completed} objects
+
+phases:
+  - id: mvp
+    name: "MVP"
+    sprints:
+      - id: sprint-1
+        name: "Sprint 1: Theme"
+        status: done
+        goal: "What this sprint delivers"
+        stories: [S1-01, S1-02]  # ID references only, NOT inline stories
+```
+
 TASKS:
-1. Convert the draft into proper `.archflow/roadmap.yaml` format
-2. Preserve status categories: completed, in_progress, planned, proposed
-3. Assign feature IDs (F-001, F-002, etc.)
-4. Create user stories with acceptance criteria for each feature
-5. EVERY epic MUST have a `scope` field: backend | frontend | mobile | both | unknown
+1. Group features from the draft into logical epics with `E{N}` IDs
+2. Create stories under each epic with `S{epic}-{seq}` IDs (e.g., S1-01, S1-02, S2-01)
+3. Map status values: completed → done, planned → backlog, in_progress → in_progress
+4. Stories with status "proposed" should be placed under epics with status: backlog and NOT assigned to any sprint
+5. EVERY epic MUST have a `scope` field:
    - Preserve scope from the roadmap draft (product-strategist already tagged it)
    - If missing, infer from the feature description and tasks
    - Tag the TRUE scope of the work, not the repo's project_type
-6. Structure MUST match project type:
-   - backend_only: features are endpoints, modules, integrations (no screens)
-   - frontend_only: features are pages, components, flows (no API endpoints unless consuming external)
-   - fullstack: both frontend and backend aspects per feature
-   - mobile: screens, navigation, platform-specific features
+6. Organize sprints under product delivery phases (e.g., MVP, Growth, Scale)
+   - Each sprint has a goal describing its expected deliverable
+   - Each sprint references stories by ID only
+7. acceptance_criteria MUST be {text, met} objects — NEVER plain strings
+8. subtasks MUST be {text, completed} objects
 
 OUTPUT: Write `.archflow/roadmap.yaml`
 ```
@@ -697,42 +735,52 @@ agent_outputs:
 
 ---
 
-## Roadmap Structure by Project Type
+## Canonical Roadmap Structure
 
-### Fullstack
+All project types use the SAME structure. Project-type differentiation is handled by the `scope` field on epics, not by structural differences.
+
+See `.archflow/schemas/roadmap-schema.yaml` for the full schema definition.
+
 ```yaml
-features:
-  - id: "F-001"
-    name: "Feature Name"
-    status: "completed"  # completed | in_progress | planned | proposed
-    scope: both  # frontend | backend | both
-    frontend_tasks: [...]
-    backend_tasks: [...]
+project: "{name}"
+project_type: "{fullstack|frontend_only|backend_only|mobile}"
+
+epics:
+  - id: E1
+    name: "Epic Name"
+    scope: backend    # backend | frontend | mobile | both | unknown
+    stories:
+      - id: S1-01
+        title: "Short Title"
+        priority: Critical
+        status: done
+        assigned: ui-engineer
+        description: >
+          Detailed description.
+        acceptance_criteria:
+          - text: "Criterion"
+            met: true
+        subtasks:
+          - text: "Task"
+            completed: true
+
+phases:
+  - id: mvp
+    name: "MVP"
+    sprints:
+      - id: sprint-1
+        name: "Sprint 1: Theme"
+        status: done
+        goal: "What this sprint delivers"
+        stories: [S1-01, S1-02]
 ```
 
-### Backend Only
-```yaml
-features:
-  - id: "F-001"
-    name: "Feature Name"
-    status: "completed"
-    scope: "backend"  # backend | frontend | mobile | both | unknown
-    tasks:
-      - "Endpoint/service description"
-```
-
-### Frontend Only
-```yaml
-features:
-  - id: "F-001"
-    name: "Feature Name"
-    status: "completed"
-    scope: "frontend"  # backend | frontend | mobile | both | unknown
-    tasks:
-      - "Page/component description"
-```
-
-**Scope field is required on ALL epics regardless of project type.** It represents the TRUE scope of the work, which may differ from the repo's project_type (e.g., a "mobile app" epic imported into a backend repo should have `scope: mobile`).
+**Key rules:**
+- **Scope field is required on ALL epics** regardless of project type. It represents the TRUE scope of the work, which may differ from the repo's project_type (e.g., a "mobile app" epic imported into a backend repo should have `scope: mobile`).
+- **Stories are defined under epics** — sprints reference them by ID only.
+- **acceptance_criteria** MUST be `{text, met}` objects, NEVER plain strings.
+- **subtasks** MUST be `{text, completed}` objects.
+- **Status** values: `backlog | in_progress | review | done` (not "completed", "planned", etc.).
 
 ---
 
@@ -741,9 +789,9 @@ features:
 ### C1: Roadmap Reconciliation
 
 Read `roadmap.yaml` + `.onboard-audit-report.yaml` + user overrides from `.onboard-progress.yaml`:
-- If feature-planner marks "planned" but audit shows code exists → upgrade to "in_progress" or "completed"
+- If feature-planner marks `backlog` but audit shows code exists → upgrade to `in_progress` or `done`
 - If user explicitly overrode a feature status in `completed_features_override` → use user's status
-- Product-strategist "proposed" features → keep as "proposed"
+- Stories not assigned to any sprint are forward-looking and should remain `backlog` under their epic
 
 ### C2: Phase Determination
 
@@ -789,7 +837,7 @@ Recommended Phase: [N] ([Phase Name])
 
 Generated Artifacts:
   ✅ project-context.md (by product-strategist — domain research + [source] synthesis)
-  ✅ roadmap.yaml ([N] features: [X] complete, [Y] in-progress, [Z] planned, [W] proposed)
+  ✅ roadmap.yaml ([N] epics, [M] stories: [X] done, [Y] in-progress, [Z] backlog)
   ✅ API contract: docs/api-contract.md (reverse-engineered from [N] routes)
   ✅ Design system: design-artifacts/theme.yaml ([N] tokens extracted)
   ✅ Component specs: design-artifacts/styled-dsl.yaml ([N] screens)

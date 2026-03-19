@@ -85,30 +85,34 @@ Paste the epic/story link:
 #### Option C: "From roadmap"
 
 1. Read `.archflow/roadmap.yaml` and `.archflow/current-phase.yaml` (for `project_type`)
-2. **Filter features by project_type compatibility:**
+2. **Filter stories by project_type compatibility** (using the parent epic's `scope`):
    - Determine which scopes match this repo's project_type:
      - `backend_only` → show epics with scope: `backend`, `both`
      - `frontend_only` → show epics with scope: `frontend`, `both`
      - `mobile` → show epics with scope: `mobile`, `both`
      - `fullstack` → show all scopes
-   - Features with `scope: unknown` are always shown (may need investigation)
-3. List matching features with status `planned` or `in_progress`:
+   - Epics with `scope: unknown` are always shown (may need investigation)
+3. List matching stories with status `backlog` or `in_progress`, grouped by epic:
    ```
-   Features relevant to this [project_type] repo:
+   Stories relevant to this [project_type] repo:
 
-   1. [F-001] User Authentication (planned, high priority, scope: backend)
-   2. [F-002] API Rate Limiting (planned, medium priority, scope: backend)
-   3. [F-003] Admin Dashboard API (planned, low priority, scope: both)
+   Epic: E1 - Admin Authentication (scope: backend)
+     1. [S1-01] Admin Login (backlog, Critical, assigned: ui-engineer)
+     2. [S1-02] Role-Based Access (backlog, High, assigned: api-engineer)
 
-   [N] features hidden (scope: frontend/mobile — not applicable to this repo)
+   Epic: E2 - Dashboard (scope: both)
+     3. [S2-01] Dashboard Metrics Cards (backlog, Medium, assigned: ui-engineer)
 
-   Which feature to start? [number / "show all"]
+   [N] stories hidden (epic scope: frontend/mobile — not applicable to this repo)
+
+   Which story to start? [number / "show all"]
    ```
-4. If user types "show all": display the hidden features too, each with a warning:
+4. If user types "show all": display the hidden stories too, each with a warning:
    ```
-   ⚠️ [F-010] Mobile App Phase 2 (planned, scope: mobile)
-       Warning: This feature's scope (mobile) doesn't match this repo (backend_only).
-       It may have no implementable work here. Continue anyway? [Yes / Pick another]
+   Epic: E5 - Mobile App (scope: mobile)
+     ⚠️ [S5-01] Push Notifications (backlog, scope: mobile)
+         Warning: This epic's scope (mobile) doesn't match this repo (backend_only).
+         It may have no implementable work here. Continue anyway? [Yes / Pick another]
    ```
 5. User picks one → skip to Step 3 (git workflow)
 
@@ -116,64 +120,71 @@ Paste the epic/story link:
 
 ### Step 2: Update roadmap.yaml
 
-Read `.archflow/current-phase.yaml` to get `project_type`. Add the feature in the appropriate format.
+Read `.archflow/current-phase.yaml` to get `project_type`. Read `.archflow/roadmap.yaml` to find existing epics and stories.
 
-**Generate a feature ID**: Find the highest existing `F-NNN` ID in `.archflow/roadmap.yaml` and increment.
+The roadmap follows the canonical schema at `.archflow/schemas/roadmap-schema.yaml`. Stories are defined under epics and referenced by sprints.
 
-#### Fullstack format
-```yaml
-- id: "F-{next_id}"
-  name: "{feature_name}"
-  description: "{description}"
-  priority: {priority}
-  status: planned
-  scope: {frontend|backend|both}
-  acceptance_criteria:
-    - "{criterion_1}"
-    - "{criterion_2}"
-  frontend_tasks:
-    - "{task_1}"
-    - "{task_2}"
-  backend_tasks:
-    - "{task_1}"
-    - "{task_2}"
-  source: "{tool:ID or manual}"
+#### 2a. Epic Selection
+
+Ask the user which epic this story belongs to:
+```
+Which epic does this belong to?
+
+Existing epics:
+  1. [E1] Admin Authentication (scope: backend)
+  2. [E2] Dashboard (scope: both)
+
+  [N] Create new epic
 ```
 
-#### Backend-only format
+If "Create new epic":
+- Generate next `E{N}` ID (increment from highest existing)
+- Ask for epic name and scope (`backend | frontend | mobile | both`)
+
+#### 2b. Story Creation
+
+Generate the next story ID under the chosen epic: `S{epic}-{seq}` (e.g., if epic is E2 and it has stories S2-01, S2-02, the next is S2-03).
+
+Add the story under the epic's `stories` array using the canonical format:
 ```yaml
-- id: "F-{next_id}"
-  name: "{feature_name}"
-  description: "{description}"
-  priority: {priority}
-  status: planned
-  scope: backend  # backend | frontend | mobile | both | unknown
+- id: "S{epic}-{seq}"
+  title: "{feature_name}"
+  priority: "{Critical|High|Medium|Low}"
+  status: backlog
+  assigned: "{agent_name}"
+  description: >
+    {description}
   acceptance_criteria:
-    - "{criterion_1}"
-  tasks:
-    - "{task_1}"
-    - "{task_2}"
-  source: "{tool:ID or manual}"
+    - text: "{criterion_1}"
+      met: false
+    - text: "{criterion_2}"
+      met: false
+  subtasks:
+    - text: "{subtask_1}"
+      completed: false
+    - text: "{subtask_2}"
+      completed: false
 ```
 
-#### Frontend-only format
-```yaml
-- id: "F-{next_id}"
-  name: "{feature_name}"
-  description: "{description}"
-  priority: {priority}
-  status: planned
-  scope: frontend  # backend | frontend | mobile | both | unknown
-  acceptance_criteria:
-    - "{criterion_1}"
-  tasks:
-    - "{task_1}"
-    - "{task_2}"
-  source: "{tool:ID or manual}"
+#### 2c. Sprint Assignment
+
+Ask which sprint to assign the story to:
 ```
+Assign to a sprint?
+
+  1. [sprint-1] Sprint 1: Auth & Shell (mvp, done)
+  2. [sprint-2] Sprint 2: Dashboard (mvp, in_progress)
+
+  [N] Create new sprint
+  [S] Skip — leave unassigned for now
+```
+
+If "Create new sprint": ask for sprint name, goal, and which phase it belongs to (list existing phases or create new).
+
+Add the story ID to the sprint's `stories` reference list.
 
 Write the updated `.archflow/roadmap.yaml`. Confirm to user:
-> "Added [Feature Name] as [F-NNN] to roadmap.yaml."
+> "Added [{title}] as [{story_id}] under epic [{epic_id}] {epic_name}."
 
 ---
 
@@ -212,52 +223,44 @@ Follow the branching strategy from `.archflow/workflow.md`:
 
 2. **Update `.archflow/current-phase.yaml`:**
    ```yaml
-   current_feature: "F-{id}"
+   current_feature: "{story_id}"    # e.g., S1-01
    feature_status: "in_progress"
    ```
 
 3. **Create/update `.archflow/current-feature.yaml`:**
    ```yaml
-   feature_id: "F-{id}"
-   feature_name: "{name}"
-   scope: {scope}
+   story_id: "{story_id}"          # e.g., S1-01
+   story_title: "{title}"
+   epic_id: "{epic_id}"            # e.g., E1
    branch: "{feature-branch-name}"
    status: in_progress
-   tasks:
-     - id: "1"
-       name: "{task_1}"
-       type: {frontend|backend}
-       status: pending           # pending | in_progress | complete
+   subtasks:                        # Populated from roadmap.yaml story subtasks
+     - text: "{subtask_1}"
+       completed: false
        branch: null
-       subtasks_completed: 0     # Populated from roadmap.yaml story subtasks
-       subtasks_total: 0
        started_at: null
        completed_at: null
-     - id: "2"
-       name: "{task_2}"
-       type: {frontend|backend}
-       status: pending           # pending | in_progress | complete
+     - text: "{subtask_2}"
+       completed: false
        branch: null
-       subtasks_completed: 0
-       subtasks_total: 0
        started_at: null
        completed_at: null
    ```
 
-4. **Update `.archflow/roadmap.yaml`:** Set the feature's status to `in_progress`.
+4. **Update `.archflow/roadmap.yaml`:** Set the story's status to `in_progress`.
 
 5. **Present next steps:**
    ```
    Feature branch created: {feature-branch-name}
+   Story: [{story_id}] {title} (epic: {epic_id})
 
-   Tasks ready in current-feature.yaml:
-     1. [{type}] {task_1} (pending)
-     2. [{type}] {task_2} (pending)
+   Subtasks from roadmap:
+     1. {subtask_1} (pending)
+     2. {subtask_2} (pending)
 
    Start Phase 3 implementation when ready.
    Branch workflow (.archflow/workflow.md):
-     - Task branches: {feature}/{task-name}
-     - Subtask branches: {feature}/{task-number}-{subtask-name}
+     - Task branches: {feature}/{subtask-name}
      - Merge only after explicit user approval
    ```
 
@@ -327,14 +330,16 @@ After ALL tasks are complete and approved:
    ```
 
 3. **Update files:**
-   - `.archflow/roadmap.yaml`: feature status → `complete`
+   - `.archflow/roadmap.yaml`: story status → `done`
    - `.archflow/current-phase.yaml`: `current_feature` → `null`, `feature_status` → `ready`
    - `.archflow/current-feature.yaml`: clear or remove
 
 ---
 
 ## Notes
-- Feature IDs are auto-incremented from the highest existing ID in `.archflow/roadmap.yaml`
+- Story IDs follow the pattern `S{epic}-{seq}` (e.g., S1-01, S2-03) and are auto-incremented under their epic
+- Epic IDs follow the pattern `E{N}` (e.g., E1, E2) and are auto-incremented
 - The `/archflow feature` command can be run at any time, not just during Phase 3
 - Git operations always require explicit user approval before merging
+- The roadmap follows the canonical schema at `.archflow/schemas/roadmap-schema.yaml`
 - The task-level git workflow (Step 4) is executed during Phase 3, referenced here for completeness
