@@ -1,3 +1,8 @@
+---
+name: archflow
+description: Phase-based development workflow manager that guides projects through structured phases from strategy and design through implementation, quality assurance, and launch. Manages roadmaps, feature branches, agent orchestration, and MCP server configuration.
+---
+
 # /archflow — Phase-Based Development Workflow
 
 Archflow manages the full software development lifecycle through structured phases, from onboarding existing codebases to launching production software.
