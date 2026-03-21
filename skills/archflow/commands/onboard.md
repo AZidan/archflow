@@ -313,9 +313,9 @@ Load the execution dependency graph and agent filtering table from `.archflow/ph
 ### STEP C1: Roadmap Reconciliation
 
 Read `.archflow/roadmap.yaml` + `.onboard-audit-report.yaml` + user overrides from `.onboard-progress.yaml`:
-- If feature-planner marks "planned" but audit shows code exists → upgrade to "in_progress" or "completed"
-- If user explicitly overrode a feature status → use user's status
-- Product-strategist "proposed" features → keep as "proposed"
+- If feature-planner marks `backlog` but audit shows code exists → upgrade to `in_progress` or `done`
+- If user explicitly overrode a story status → use user's status
+- Stories not assigned to any sprint are forward-looking and should remain `backlog` under their epic
 - Write reconciled `roadmap.yaml`
 
 ### STEP C2: Phase Determination
@@ -337,7 +337,7 @@ Recommended Phase: [N] ([Phase Name])
 
 Generated Artifacts:
   ✅ project-context.md (by product-strategist — domain research + [source] synthesis)
-  ✅ roadmap.yaml ([N] features: [X] complete, [Y] in-progress, [Z] planned, [W] proposed)
+  ✅ roadmap.yaml ([N] epics, [M] stories: [X] done, [Y] in-progress, [Z] backlog)
   ...
 
 Review each artifact? [Yes / Trust the agents]
