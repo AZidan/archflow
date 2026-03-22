@@ -237,6 +237,7 @@ Load the execution dependency graph and agent filtering table from `.archflow/ph
 **1a. Codebase Audit (inline — NOT a subagent)**
 - Run the full audit checklist from `phase-onboarding.md`, filtered by `project_type`
 - For each audit check: scan for listed file patterns, record found/missing
+- **Format validation**: if `.archflow/roadmap.yaml` is found, run the full Roadmap Format Validation defined in `phase-onboarding.md` — check every rule (top-level structure, epic/story fields, patterns, enum values, acceptance_criteria/subtasks item shapes, sprint ID format, sprint story references as strings, referential integrity, no duplicate story references across sprints). Record `format_valid` and all `format_violations` in the audit report.
 - Special: if swagger/openapi found, record path for `api_contract_path`
 - Count source files, components, routes, modules, test files
 - Output: `.onboard-audit-report.yaml` (use structured schema from `phase-onboarding.md`)
@@ -313,9 +314,9 @@ Load the execution dependency graph and agent filtering table from `.archflow/ph
 ### STEP C1: Roadmap Reconciliation
 
 Read `.archflow/roadmap.yaml` + `.onboard-audit-report.yaml` + user overrides from `.onboard-progress.yaml`:
-- If feature-planner marks "planned" but audit shows code exists → upgrade to "in_progress" or "completed"
-- If user explicitly overrode a feature status → use user's status
-- Product-strategist "proposed" features → keep as "proposed"
+- If feature-planner marks `backlog` but audit shows code exists → upgrade to `in_progress` or `done`
+- If user explicitly overrode a story status → use user's status
+- Stories not assigned to any sprint are forward-looking and should remain `backlog` under their epic
 - Write reconciled `roadmap.yaml`
 
 ### STEP C2: Phase Determination
@@ -337,7 +338,7 @@ Recommended Phase: [N] ([Phase Name])
 
 Generated Artifacts:
   ✅ project-context.md (by product-strategist — domain research + [source] synthesis)
-  ✅ roadmap.yaml ([N] features: [X] complete, [Y] in-progress, [Z] planned, [W] proposed)
+  ✅ roadmap.yaml ([N] epics, [M] stories: [X] done, [Y] in-progress, [Z] backlog)
   ...
 
 Review each artifact? [Yes / Trust the agents]
