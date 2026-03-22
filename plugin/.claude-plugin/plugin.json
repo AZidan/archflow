@@ -1,7 +1,7 @@
 {
   "name": "archflow",
   "description": "Phase-based AI development framework with 16+ specialized agents, structured phases, and file-based handoffs. Works with greenfield and existing codebases.",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "author": {
     "name": "AZidan"
   }

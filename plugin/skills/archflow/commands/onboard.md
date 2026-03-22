@@ -16,9 +16,65 @@ Load `.archflow/phases/phase-onboarding.md` for audit logic, project type detect
 
 ---
 
+## Entry Check
+
+On every invocation, run this decision tree **before** doing anything else:
+
+```
+1. Does .onboard-progress.yaml exist?
+   YES → Resume interrupted wizard (see Resume Check below)
+   NO  → Continue to step 2
+
+2. Does .archflow/current-phase.yaml exist with onboarded: true?
+   YES → Already-onboarded path (see Already Onboarded below)
+   NO  → New onboarding — proceed to Step 0
+```
+
+---
+
+## Already Onboarded
+
+When the project is already onboarded and no wizard is in progress, do NOT show a static status summary and exit. Instead, run an inline roadmap format audit first.
+
+**Step 1 — Validate roadmap.yaml format:**
+
+Read `.archflow/roadmap.yaml` and validate it against the full Roadmap Format Validation rules in `phase-onboarding.md`. Collect all violations.
+
+**Step 2 — Report and branch:**
+
+If `format_valid: true` (no violations):
+```
+This project is already onboarded. ✅
+
+  [show current status: project type, phase, artifacts, gaps — same as before]
+
+Run /archflow feature to kick off work, or tell me what you'd like to do.
+```
+
+If `format_valid: false` (violations found):
+```
+This project is already onboarded, but roadmap.yaml has format violations
+that are incompatible with the canonical schema.
+
+  [N] violations found:
+    ⚠ [path] — [rule]
+       found: [found value]
+    ⚠ ...
+
+Fix these automatically? [Yes / Show me each one / Skip]
+```
+
+- **Yes** — auto-fix all violations using the same rules as C1 reconciliation in `phase-onboarding.md`, then write the corrected `roadmap.yaml` and report what was fixed
+- **Show me each one** — walk through each violation interactively, applying or skipping fixes one at a time
+- **Skip** — exit without changes
+
+After fixing, show the updated status summary.
+
+---
+
 ## Resume Check
 
-Before starting, check for interrupted progress:
+Before starting a new wizard, check for interrupted progress:
 ```bash
 if [[ -f ".onboard-progress.yaml" ]]; then
   # Read wizard_phase and agent_outputs
