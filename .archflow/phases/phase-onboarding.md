@@ -79,8 +79,53 @@ Each check targets a specific phase artifact. Checks are filtered by `project_ty
 **roadmap** (weight: core)
 - Scan for: `.archflow/roadmap.yaml`, `roadmap.md`, `docs/roadmap.*`
 - Applicable to: all project types
-- If found: mark Phase 1 as complete
+- If found at `.archflow/roadmap.yaml`: validate format against canonical schema (see **Roadmap Format Validation** below)
+  - If valid: mark Phase 1 as complete, record `format_valid: true`
+  - If violations found: mark Phase 1 as partial, record `format_valid: false` and collect all violations
+- If found elsewhere (not `.archflow/roadmap.yaml`): mark Phase 1 as partial (needs migration to canonical path)
 - If missing: flag for generation by feature-planner
+
+### Roadmap Format Validation
+
+When `.archflow/roadmap.yaml` is found, validate it exhaustively against `.archflow/schemas/roadmap-schema.yaml`. Collect **all** violations before recording — do not stop at the first failure.
+
+**Top-level structure**
+- Required keys present: `project`, `project_type`, `epics`, `phases`
+- `project_type` is one of: `fullstack | frontend_only | backend_only | mobile`
+
+**Epics**
+- Each epic has all required fields: `id`, `name`, `scope`, `stories`
+- `id` matches pattern `^E[0-9]+$`
+- `scope` is one of: `backend | frontend | mobile | both | unknown`
+
+**Stories**
+- Each story has all required fields: `id`, `title`, `priority`, `status`, `assigned`, `description`, `acceptance_criteria`, `subtasks`
+- `id` matches pattern `^S[0-9]+-[0-9]+$`
+- Story ID epic-number prefix matches parent epic (e.g., stories under `E2` must have IDs starting with `S2-`)
+- `priority` is one of: `Critical | High | Medium | Low`
+- `status` is one of: `backlog | in_progress | review | done`
+- `acceptance_criteria` items are objects with `text` (string) and `met` (boolean) — plain strings are a violation
+- `subtasks` items are objects with `text` (string) and `completed` (boolean) — plain strings are a violation
+
+**Phases & Sprints**
+- Each phase has required fields: `id`, `name`, `sprints`
+- Each sprint has required fields: `id`, `name`, `status`, `goal`, `stories`
+- Sprint `id` matches pattern `^sprint-[0-9]+$`
+- Sprint `status` is one of: `backlog | in_progress | review | done`
+- Sprint `stories` is an array of **strings** (story ID references) — embedded story objects are a violation
+- Every story ID referenced in a sprint exists under an epic (referential integrity)
+- No story ID appears in more than one sprint across the entire roadmap
+
+**Recording violations**
+
+Each violation entry:
+```yaml
+- path: "epics[0].stories[2].acceptance_criteria[1]"  # YAML path to the offending item
+  rule: "acceptance_criteria item must be {text, met} object"
+  found: "plain string: 'User can log in'"
+```
+
+---
 
 ### Phase 2 Artifacts (Design)
 
@@ -148,7 +193,11 @@ phase_status:
     status: "PARTIAL"  # DONE | PARTIAL | MISSING | N/A
     artifacts:
       project_context: { found: false, path: null }
-      roadmap: { found: false, path: null }
+      roadmap:
+        found: false
+        path: null
+        format_valid: null        # null = not checked | true = valid | false = violations found
+        format_violations: []     # list of {path, rule, found} objects; empty if format_valid is true or null
   phase_2:
     status: "MISSING"
     artifacts:
@@ -308,10 +357,12 @@ Based on audit results, determine each phase's status:
 
 | Status | Meaning |
 |--------|---------|
-| DONE | All core artifacts exist |
-| PARTIAL | Some artifacts exist |
+| DONE | All core artifacts exist and pass format validation |
+| PARTIAL | Some artifacts exist, OR artifacts exist but have format violations |
 | MISSING | No artifacts found |
 | N/A | Not applicable for this project type |
+
+> **Format validation rule**: a `roadmap.yaml` with `format_valid: false` counts as PARTIAL, not DONE, regardless of whether the file exists.
 
 ### Recommended Phase Logic
 
@@ -792,6 +843,13 @@ Read `roadmap.yaml` + `.onboard-audit-report.yaml` + user overrides from `.onboa
 - If feature-planner marks `backlog` but audit shows code exists → upgrade to `in_progress` or `done`
 - If user explicitly overrode a feature status in `completed_features_override` → use user's status
 - Stories not assigned to any sprint are forward-looking and should remain `backlog` under their epic
+- If `format_valid: false`: auto-fix all violations from `format_violations` before writing the reconciled roadmap:
+  - Plain-string `acceptance_criteria` → convert to `{text: "...", met: false}`
+  - Plain-string `subtasks` → convert to `{text: "...", completed: false}`
+  - Embedded sprint story objects → extract their `id` and replace with the string reference
+  - Invalid `status` values → map to nearest valid value (`planned` → `backlog`, `completed` → `done`, `wip` → `in_progress`)
+  - Missing `scope` on epics → infer from story descriptions or default to `unknown`
+  - Dangling sprint story references (ID not in any epic) → remove from sprint, log as warning
 
 ### C2: Phase Determination
 
@@ -811,6 +869,8 @@ Generate gap report based on real agent outputs. Format:
 |                                                  |
 |  Phase 1 (Strategy):     [status]                |
 |    [checkmark/x] [artifact] [found/generated]    |
+|    [warning]    roadmap.yaml — [N] format         |
+|                 violations (see below)           |
 |                                                  |
 |  Phase 2 (Design):       [status or N/A]         |
 |    [checkmark/x] [artifact] [found/generated]    |
@@ -826,6 +886,24 @@ Generate gap report based on real agent outputs. Format:
 ```
 
 N/A phases for the project type should show as: `Phase 2 (Design): N/A (backend only)`
+
+If `format_valid: false`, append a violations block after the audit box:
+
+```
+roadmap.yaml format violations ([N] total):
+  ⚠ epics[0].stories[2].acceptance_criteria[1]
+    rule: acceptance_criteria item must be {text, met} object
+    found: plain string: "User can log in"
+  ⚠ phases[0].sprints[1].stories[0]
+    rule: sprint stories must be string ID references, not embedded objects
+    found: object with keys [id, title, status, ...]
+  ⚠ phases[0].sprints[0].stories[2]
+    rule: referenced story ID "S3-05" does not exist under any epic
+    found: "S3-05"
+  ...
+
+These violations will be fixed during roadmap reconciliation (Step C1).
+```
 
 ### C4: Presentation Format
 
