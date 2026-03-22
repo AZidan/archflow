@@ -16,59 +16,87 @@ Load `.archflow/phases/phase-onboarding.md` for audit logic, project type detect
 
 ---
 
-## Entry Check
+## Entry Check — ALWAYS RUN FIRST
 
-On every invocation, run this decision tree **before** doing anything else:
+**Before writing any response**, execute these steps in order using your tools:
 
+### Step E1: Check for in-progress wizard
+```bash
+# Tool call: check if .onboard-progress.yaml exists
 ```
-1. Does .onboard-progress.yaml exist?
-   YES → Resume interrupted wizard (see Resume Check below)
-   NO  → Continue to step 2
+- EXISTS → skip to **Resume Check** section below
+- MISSING → continue to Step E2
 
-2. Does .archflow/current-phase.yaml exist with onboarded: true?
-   YES → Already-onboarded path (see Already Onboarded below)
-   NO  → New onboarding — proceed to Step 0
+### Step E2: Read roadmap.yaml NOW (mandatory tool call)
+
+**Use the Read tool** to read `.archflow/roadmap.yaml`. Do this immediately — do not skip or defer.
+
+- If the file does not exist → continue to Step E3 (new onboarding)
+- If it exists → run Step E2a before doing anything else
+
+### Step E2a: Validate roadmap.yaml format (inline — no external file needed)
+
+Parse the content you just read and check every rule below. Collect **all** violations.
+
+**Top-level:** `project`, `project_type`, `epics`, `phases` must all be present. `project_type` must be `fullstack|frontend_only|backend_only|mobile`.
+
+**Epics:** each must have `id` (matches `^E[0-9]+$`), `name`, `scope` (`backend|frontend|mobile|both|unknown`), `stories`.
+
+**Stories:** each must have `id` (matches `^S[0-9]+-[0-9]+$`, epic-number prefix matches parent epic), `title`, `priority` (`Critical|High|Medium|Low`), `status` (`backlog|in_progress|review|done`), `assigned`, `description`, `acceptance_criteria`, `subtasks`.
+- `acceptance_criteria` items must be objects with `text` + `met` (boolean). Plain strings = violation.
+- `subtasks` items must be objects with `text` + `completed` (boolean). Plain strings = violation.
+
+**Sprints:** each must have `id` (matches `^sprint-[0-9]+$`), `name`, `status` (`backlog|in_progress|review|done`), `goal`, `stories`.
+- `stories` must be an array of **strings** (ID references). Embedded objects = violation.
+- Every referenced story ID must exist under an epic. Missing = violation.
+- No story ID may appear in more than one sprint. Duplicates = violation.
+
+### Step E3: Check onboarded status
+```bash
+# Tool call: read .archflow/current-phase.yaml, check onboarded field
 ```
+- `onboarded: true` AND roadmap has **no violations** → show status summary (see below), then stop
+- `onboarded: true` AND roadmap has **violations** → show violations report (see below), then stop
+- Not onboarded → proceed to **Step 0** (new onboarding)
 
 ---
 
-## Already Onboarded
+## Already Onboarded — No Violations
 
-When the project is already onboarded and no wizard is in progress, do NOT show a static status summary and exit. Instead, run an inline roadmap format audit first.
-
-**Step 1 — Validate roadmap.yaml format:**
-
-Read `.archflow/roadmap.yaml` and validate it against the full Roadmap Format Validation rules in `phase-onboarding.md`. Collect all violations.
-
-**Step 2 — Report and branch:**
-
-If `format_valid: true` (no violations):
 ```
 This project is already onboarded. ✅
 
-  [show current status: project type, phase, artifacts, gaps — same as before]
+  [show current status: project type, phase, artifacts, gaps]
 
 Run /archflow feature to kick off work, or tell me what you'd like to do.
 ```
 
-If `format_valid: false` (violations found):
+---
+
+## Already Onboarded — Violations Found
+
 ```
-This project is already onboarded, but roadmap.yaml has format violations
+This project is already onboarded, but roadmap.yaml has [N] format violations
 that are incompatible with the canonical schema.
 
-  [N] violations found:
-    ⚠ [path] — [rule]
-       found: [found value]
-    ⚠ ...
+  ⚠ [YAML path] — [rule broken]
+     found: [found value]
+  ⚠ ...
 
 Fix these automatically? [Yes / Show me each one / Skip]
 ```
 
-- **Yes** — auto-fix all violations using the same rules as C1 reconciliation in `phase-onboarding.md`, then write the corrected `roadmap.yaml` and report what was fixed
-- **Show me each one** — walk through each violation interactively, applying or skipping fixes one at a time
+- **Yes** — auto-fix all violations (see fix rules below), write corrected `roadmap.yaml`, report what changed, then show status summary
+- **Show me each one** — walk through each violation interactively, apply or skip fixes one at a time
 - **Skip** — exit without changes
 
-After fixing, show the updated status summary.
+**Auto-fix rules:**
+- Plain-string `acceptance_criteria` item → `{text: "<string>", met: false}`
+- Plain-string `subtasks` item → `{text: "<string>", completed: false}`
+- Embedded sprint story object → replace with its `id` string
+- Invalid `status` value → map: `planned`→`backlog`, `completed`→`done`, `wip`→`in_progress`
+- Missing epic `scope` → infer from stories or default to `unknown`
+- Sprint references non-existent story ID → remove from sprint, warn
 
 ---
 
