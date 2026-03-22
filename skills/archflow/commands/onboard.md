@@ -237,6 +237,7 @@ Load the execution dependency graph and agent filtering table from `.archflow/ph
 **1a. Codebase Audit (inline — NOT a subagent)**
 - Run the full audit checklist from `phase-onboarding.md`, filtered by `project_type`
 - For each audit check: scan for listed file patterns, record found/missing
+- **Format validation**: if `.archflow/roadmap.yaml` is found, run the full Roadmap Format Validation defined in `phase-onboarding.md` — check every rule (top-level structure, epic/story fields, patterns, enum values, acceptance_criteria/subtasks item shapes, sprint ID format, sprint story references as strings, referential integrity, no duplicate story references across sprints). Record `format_valid` and all `format_violations` in the audit report.
 - Special: if swagger/openapi found, record path for `api_contract_path`
 - Count source files, components, routes, modules, test files
 - Output: `.onboard-audit-report.yaml` (use structured schema from `phase-onboarding.md`)
