@@ -124,11 +124,12 @@ If `.onboard-progress.yaml` exists, read it and resume from the saved `wizard_ph
      - Yes: `git init && git add . && git commit -m "chore: initial commit before archflow onboarding"`
      - No: WARN and continue
 
-2. After onboarding creates `.archflow/` files (end of Step C5), commit:
+2. At the very end of Step C5 (after all files are written, including AGENTS.md and agent-specific files), commit all files created by onboarding:
    ```bash
-   git add .archflow/
+   git add .archflow/ AGENTS.md CLAUDE.md .github/ .claude/
    git commit -m "chore: onboard to archflow (Phase [N])"
    ```
+   Only include paths that actually exist (git add silently ignores non-existent paths).
 
 ---
 
@@ -477,7 +478,50 @@ feature_status: "ready"
 status: "onboarded"
 ```
 
-2. **Create or update `CLAUDE.md` with Archflow section:**
+2. **Write universal AGENTS.md + Claude Code instruction file:**
+
+#### C5.2a. Write AGENTS.md (universal cross-agent baseline)
+
+Always write `AGENTS.md` to the project root. This is the open standard file read by all AI coding agents (GitHub Copilot, opencode, Cursor, Gemini CLI, etc.).
+
+If `AGENTS.md` does NOT exist, create it:
+
+```markdown
+# AGENTS.md
+
+This file provides guidance to AI coding agents when working with code in this repository.
+It follows the open AGENTS.md standard (https://agents.md), readable by GitHub Copilot,
+Claude Code, opencode, Cursor, Gemini CLI, and other AI coding tools.
+
+## Project Overview
+
+[Brief description from project-context.md — what the app does, tech stack summary]
+
+## Common Commands
+
+[Detected from package.json scripts, Makefile, or common patterns for the tech stack]
+
+## Architecture
+
+[Key architectural patterns, directory structure, path aliases — derived from audit]
+
+## Archflow Framework
+
+This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based development framework.
+
+- **Current Phase**: [N] ([Phase Name]) — see `.archflow/current-phase.yaml`
+- **Project Context**: `.archflow/project-context.md`
+- **Roadmap**: `.archflow/roadmap.yaml` ([N] epics, [M] proposed features)
+- **API Contract**: `docs/api-contract.md`
+
+Commands:
+- `/archflow` — Show status and available commands
+- `/archflow feature` — Start a new feature from the roadmap
+```
+
+If `AGENTS.md` ALREADY exists, check whether it already contains an `## Archflow Framework` section. If it does, skip the append (idempotent). If it does not, append only the `## Archflow Framework` section to the end (same content as above, starting from the `## Archflow Framework` heading).
+
+#### C5.2b. Write Claude Code instruction file (CLAUDE.md)
 
 If `CLAUDE.md` does NOT exist in the project root, create it with global project instructions derived from the onboarding analysis:
 
@@ -512,7 +556,7 @@ Commands:
 - `/archflow feature` — Start a new feature from the roadmap
 ```
 
-If `CLAUDE.md` ALREADY exists, append the Archflow section to the end:
+If `CLAUDE.md` ALREADY exists, check whether it already contains an `## Archflow Framework` section. If it does, skip the append (idempotent). If it does not, append the Archflow section to the end:
 
 ```markdown
 
@@ -531,6 +575,104 @@ Commands:
 ```
 
 Fill in the actual values from `current-phase.yaml` and the generated artifacts. Only list artifacts that were actually created (e.g., skip API contract line if none was generated, skip design system lines for backend_only).
+
+#### C5.2c. Detect Additional Agents and Generate Their Files
+
+Read `skills/archflow/agent-registry.yaml`. Skip the `claude-code` entry — already handled above.
+
+For each remaining agent in the registry, run detection:
+
+**Detection logic:**
+- Run `detection.command`. Exit code 0 = agent confirmed.
+- If command fails, check `detection.path` (soft signal) — if the path exists, ask the user:
+  ```
+  Found [detection.path] — is [Agent Name] active in this project? [Yes / No]
+  ```
+  Skip if No.
+
+After checking all agents, if any are detected present a single confirmation:
+```
+Detected AI coding agents: claude-code (configured), [other agents]
+
+Configure Archflow files for additional agents too? [Yes / Claude Code only / Select]
+```
+
+For each confirmed additional agent:
+
+**A. Write instruction file**
+
+Create the agent's directory if needed (e.g., `mkdir -p .cursor/rules` for Cursor).
+
+Check the agent's `instruction_format` field in `agent-registry.yaml`:
+
+**If `instruction_format: mdc`** (Cursor): write a `.mdc` file with YAML frontmatter:
+
+```markdown
+---
+description: Archflow phase-based development framework instructions
+globs:
+alwaysApply: true
+---
+
+# Archflow Framework
+
+This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based development framework.
+
+- **Current Phase**: [N] ([Phase Name]) — see `.archflow/current-phase.yaml`
+- **Project Context**: `.archflow/project-context.md`
+- **Roadmap**: `.archflow/roadmap.yaml` ([N] epics, [M] proposed features)
+- **API Contract**: `docs/api-contract.md`
+
+Commands:
+- `/archflow` — Show status and available commands
+- `/archflow feature` — Start a new feature from the roadmap
+```
+
+**If no `instruction_format`** (standard Markdown): write a plain `.md` file:
+
+```markdown
+# [instruction_dest filename]
+
+This file provides guidance to [Agent Name] when working with code in this repository.
+
+## Project Overview
+
+[Brief description from project-context.md]
+
+## Common Commands
+
+[Same as CLAUDE.md / AGENTS.md]
+
+## Architecture
+
+[Same as CLAUDE.md / AGENTS.md]
+
+## Archflow Framework
+
+This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based development framework.
+
+- **Current Phase**: [N] ([Phase Name]) — see `.archflow/current-phase.yaml`
+- **Project Context**: `.archflow/project-context.md`
+- **Roadmap**: `.archflow/roadmap.yaml` ([N] epics, [M] proposed features)
+- **API Contract**: `docs/api-contract.md`
+
+Commands:
+- `/archflow` — Show status and available commands
+- `/archflow feature` — Start a new feature from the roadmap
+```
+
+If the file already exists, check whether it already contains an `## Archflow Framework` section (or `# Archflow Framework` for `.mdc` files). If it does, skip the write (idempotent). If it does not, append only the Archflow section.
+
+**B. Copy Archflow skills** (no-clobber — do not overwrite existing customizations). Run from the project root:
+```bash
+mkdir -p {agent.skills_dest}archflow
+rsync -a --ignore-existing skills/archflow/. {agent.skills_dest}archflow/
+```
+If `rsync` is unavailable, use: `cp -r skills/archflow/. {agent.skills_dest}archflow/` (this will overwrite; inform the user).
+
+**C. Hooks** — skip for all agents where `supports_hooks: false`. Onboard does not write hooks regardless — that is `init`'s responsibility.
+
+**D.** If `mcp_method: manual`, record this agent — it will appear in the summary with manual MCP setup instructions.
 
 3. **MCP cleanup** (if any onboarding-only MCPs were added):
 ```
@@ -554,7 +696,11 @@ Project: [Name] ([Type]: [Tech Stack])
 Current Phase: [N] ([Phase Name])
 
 Created:
+  ✅ AGENTS.md [created / updated with Archflow section]        ← universal cross-agent file
   ✅ CLAUDE.md [created / updated with Archflow section]
+  [For each additional confirmed agent:]
+  ✅ {agent.instruction_dest} [created / updated with Archflow section]
+  ✅ {agent.skills_dest}archflow/ [skills copied]
   ✅ project-context.md
   ✅ roadmap.yaml ([N] features)
   ✅ API contract: [path]
@@ -568,6 +714,14 @@ Skipped:
 Next steps:
   - /archflow feature to add a new feature to the roadmap
   - Review roadmap.yaml, then start current phase
+```
+
+If any `mcp_method: manual` agent was detected (e.g., GitHub Copilot), append:
+
+```
+MCP Setup for [Agent Name]:
+  MCP servers must be added manually to [agent.mcp_config_file].
+  Run /archflow setup-mcp [tool] for step-by-step guidance with the exact JSON to add.
 ```
 
 ---
