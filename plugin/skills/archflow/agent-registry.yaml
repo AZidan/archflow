@@ -1,0 +1,61 @@
+# Archflow Agent Registry
+# Single source of truth for all AI coding agent configurations.
+# Adding a new agent (e.g., opencode, cursor) = add one block here.
+# No command files need editing when a new agent is added.
+# Last updated: 2026-03-26
+
+agents:
+  claude-code:
+    name: "Claude Code"
+    detection:
+      # Authoritative: the claude CLI binary must be present
+      command: "which claude 2>/dev/null"
+      # No path signal — CLI check is sufficient
+    instruction_dest: "CLAUDE.md"
+    skills_dest: ".claude/skills/"
+    mcp_method: cli              # Use: claude mcp add --transport ...
+    supports_hooks: true         # Writes .claude/settings.json SessionStart hook
+    notes: "Primary agent. Hooks and CLI-based MCP install are Claude Code-only features."
+
+  github-copilot:
+    name: "GitHub Copilot (VS Code)"
+    detection:
+      # The gh-copilot CLI extension was retired Oct 2025 — no authoritative CLI check exists.
+      # .vscode/ directory presence is the only signal; always requires user confirmation.
+      path: ".vscode/"
+    instruction_dest: ".github/copilot-instructions.md"
+    skills_dest: ".github/skills/"
+    mcp_method: manual           # Guide user to edit .vscode/mcp.json manually
+    mcp_config_file: ".vscode/mcp.json"
+    supports_hooks: false        # No hooks equivalent in Copilot
+    notes: "MCP must be added manually to .vscode/mcp.json. No hooks support. Skills go in .github/skills/."
+
+  cursor:
+    name: "Cursor"
+    detection:
+      # Authoritative: the cursor CLI binary
+      command: "which cursor 2>/dev/null"
+      # Soft signal: .cursor/ directory exists — always requires user confirmation
+      path: ".cursor/"
+    instruction_dest: ".cursor/rules/archflow.mdc"
+    # .mdc format requires YAML frontmatter (description, globs, alwaysApply).
+    # The instruction file template in the commands must use .mdc format, not plain .md.
+    instruction_format: mdc
+    skills_dest: ".cursor/rules/"
+    mcp_method: manual           # Guide user to edit .cursor/mcp.json manually
+    mcp_config_file: ".cursor/mcp.json"
+    supports_hooks: false
+    notes: "Rules are .mdc files in .cursor/rules/ with YAML frontmatter. MCP config is .cursor/mcp.json with mcpServers key. Must restart Cursor after MCP changes."
+
+# Future agents (not yet implemented — add a block here to enable):
+#
+#  opencode:
+#    name: "opencode"
+#    detection:
+#      command: "which opencode 2>/dev/null"
+#    instruction_dest: "AGENTS.md"   # opencode reads AGENTS.md natively
+#    skills_dest: ".opencode/skills/"
+#    mcp_method: config              # Write to opencode.json mcp key
+#    mcp_config_file: "opencode.json"
+#    supports_hooks: false
+#    notes: "opencode reads AGENTS.md as primary instruction file."

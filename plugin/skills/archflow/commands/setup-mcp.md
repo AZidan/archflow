@@ -136,8 +136,129 @@ Note: Jira and Confluence share the same Atlassian Rovo MCP server — configuri
 
 ---
 
+## Multi-Agent MCP Setup
+
+After completing the Claude Code MCP setup above, check whether other AI coding agents are active in this project by reading `skills/archflow/agent-registry.yaml`.
+
+For each agent where `mcp_method: manual`, **first confirm the agent is present** using the same detection logic as `/archflow init` Step 5:
+- Run `detection.command` if the entry has one (exit code 0 = present)
+- If no command, check `detection.path` — if it exists, ask the user: "Found [path] — is [Agent Name] active in this project? [Yes / No]"
+- Skip this agent if detection fails or the user answers No
+
+If no `mcp_method: manual` agents are detected, skip this entire section silently.
+
+For each confirmed manual agent, apply the following pattern (shown below for GitHub Copilot — repeat the same steps for any other manual agents using their `mcp_config_file` from `agent-registry.yaml`):
+
+### GitHub Copilot (VS Code)
+
+The tool was configured above for Claude Code via `claude mcp add`. Now guide the user to add the same server to `.vscode/mcp.json` for GitHub Copilot.
+
+**Step 1: Check if `.vscode/mcp.json` exists**
+
+- If it does NOT exist, offer to create it:
+  ```json
+  {
+    "servers": {}
+  }
+  ```
+- If it ALREADY exists, proceed to Step 2 (merge, not replace).
+
+**Step 2: Present the exact JSON block to add**
+
+Using the transport type and connection details from `mcp-registry.yaml`, show the user exactly what to add inside the `"servers"` object:
+
+For a **stdio** transport tool (e.g., trello, superdesign):
+```
+Add this inside the "servers": {} object in .vscode/mcp.json:
+
+"[tool-name]": {
+  "type": "stdio",
+  "command": "npx",
+  "args": ["-y", "[package-name]"],
+  "env": {
+    "[ENV_KEY]": "[value]"
+  }
+}
+```
+
+For an **http** transport tool (e.g., jira, notion, linear, github):
+```
+Add this inside the "servers": {} object in .vscode/mcp.json:
+
+"[tool-name]": {
+  "type": "http",
+  "url": "[url from mcp-registry.yaml]"
+}
+```
+
+Note: HTTP tools that use OAuth (e.g., Jira, Notion) will prompt for browser authorization the first time VS Code uses the server — no credentials need to be embedded in the JSON.
+
+**Step 3: Instruct the user to reload**
+
+```
+After saving .vscode/mcp.json, reload the VS Code window:
+  Command Palette → "Developer: Reload Window"
+
+Then verify via Command Palette → "MCP: List Servers" — the server should appear.
+```
+
+### Cursor
+
+If Cursor is detected as an active agent, guide the user to add the same server to `.cursor/mcp.json`.
+
+**Step 1: Check if `.cursor/mcp.json` exists**
+
+- If it does NOT exist, offer to create it:
+  ```json
+  {
+    "mcpServers": {}
+  }
+  ```
+  Note: Cursor uses `mcpServers` (not `servers` like VS Code).
+- If it ALREADY exists, proceed to Step 2 (merge, not replace).
+
+**Step 2: Present the exact JSON block to add**
+
+For a **stdio** transport tool:
+```
+Add this inside the "mcpServers": {} object in .cursor/mcp.json:
+
+"[tool-name]": {
+  "command": "npx",
+  "args": ["-y", "[package-name]"],
+  "env": {
+    "[ENV_KEY]": "[value]"
+  }
+}
+```
+
+For an **http** transport tool:
+```
+Add this inside the "mcpServers": {} object in .cursor/mcp.json:
+
+"[tool-name]": {
+  "url": "[url from mcp-registry.yaml]"
+}
+```
+
+**Step 3: Instruct the user to restart**
+
+```
+After saving .cursor/mcp.json, completely quit and reopen Cursor.
+MCP servers only load at startup — a window reload is not sufficient.
+
+Then verify via Cursor Settings → MCP — the server should appear with a green indicator.
+```
+
+---
+
+**Skipping this section:** If no agents with `mcp_method: manual` are detected in `agent-registry.yaml`, skip this entire section silently.
+
+---
+
 ## Notes
-- The registry file (`mcp-registry.yaml`) is the single source of truth. Edit it to add new tools.
+- `mcp-registry.yaml` is the source of truth for MCP server details (transport, URLs, env vars).
+- `agent-registry.yaml` is the source of truth for which agents are present and how they install MCPs.
 - Package names are best-effort. If `claude mcp add` fails, try the fallback npm search.
 - Some MCPs require Claude Code restart after configuration.
-- OAuth MCPs will open a browser window for authorization.
+- OAuth MCPs will open a browser window for authorization (Claude Code) or VS Code authorization prompt (GitHub Copilot).

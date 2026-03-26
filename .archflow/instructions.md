@@ -38,10 +38,19 @@ Dynamic phase-based instruction loading for token-efficient development.
 
 ## 📌 Available Commands (Archflow)
 - `/archflow` — Show available subcommands and current project status
-- `/archflow init` — Initialize Archflow in a new project (creates `.archflow/` state files, sets Phase 1)
-- `/archflow onboard` — Onboard existing codebase (interactive wizard: audit, import context, backfill artifacts, set phase)
-- `/archflow setup-mcp` — Configure an MCP server for external tools (Jira, Notion, Linear, GitHub, SuperDesign, etc.)
+- `/archflow init` — Initialize Archflow in a new project (creates `.archflow/` state files, sets Phase 1). Detects installed AI coding agents and generates appropriate instruction files (AGENTS.md universal + agent-specific files).
+- `/archflow onboard` — Onboard existing codebase (interactive wizard: audit, import context, backfill artifacts, set phase). Generates AGENTS.md + agent-specific instruction files for all detected agents.
+- `/archflow setup-mcp` — Configure an MCP server for external tools (Jira, Notion, Linear, GitHub, SuperDesign, etc.). Handles Claude Code CLI install + manual guidance for GitHub Copilot VS Code.
 - `/archflow feature` — Add a new feature to the roadmap and start the git development workflow
+
+## 🤖 Multi-Agent Support
+Archflow detects installed AI coding agents and generates the right files for each:
+- **Claude Code** → `CLAUDE.md`, `.claude/skills/archflow/`, hooks
+- **GitHub Copilot (VS Code)** → `.github/copilot-instructions.md`, `.github/skills/archflow/`
+- **Cursor** → `.cursor/rules/archflow.mdc` (with `alwaysApply: true` frontmatter), `.cursor/rules/`
+- **All agents** → `AGENTS.md` (universal open standard, always generated)
+
+Agent registry: `plugin/skills/archflow/agent-registry.yaml` — add a new block there to support additional agents (opencode, etc.) with zero changes to command files.
 
 ## 🌐 Project Types
 The framework detects and adapts to project type: `fullstack`, `frontend_only`, `backend_only`, `mobile`.
