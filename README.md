@@ -2,9 +2,9 @@
 
 # Archflow
 
-**Turn Claude Code into a structured development team.**
+**Turn Claude Code & Cursor into a structured development team.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Claude Code](https://img.shields.io/badge/Claude%20Code-Framework-blueviolet)](https://docs.anthropic.com/en/docs/claude-code) [![Agents](https://img.shields.io/badge/Agents-16+-blue)](https://github.com/AZidan/archflow) [![Phases](https://img.shields.io/badge/Phases-6-green)](https://github.com/AZidan/archflow)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Claude Code](https://img.shields.io/badge/Claude%20Code-Framework-blueviolet)](https://docs.anthropic.com/en/docs/claude-code) [![Cursor](https://img.shields.io/badge/Cursor-Plugin-blue)](https://www.cursor.com/) [![Agents](https://img.shields.io/badge/Agents-16+-blue)](https://github.com/AZidan/archflow) [![Phases](https://img.shields.io/badge/Phases-6-green)](https://github.com/AZidan/archflow)
 
 [Website](https://azidan.github.io/archflow/) · [Quick Start](#quick-start) · [How It Works](#how-it-works) · [Phases](#the-phases) · [Agents](#agents) · [Commands](#commands)
 
@@ -16,7 +16,7 @@
 
 ## What is Archflow?
 
-Archflow is a **phase-based AI development framework** for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). It orchestrates 16+ specialized agents through a structured workflow — from product strategy to production deployment.
+Archflow is a **phase-based AI development framework** for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [Cursor](https://www.cursor.com/). It orchestrates 16+ specialized agents through a structured workflow — from product strategy to production deployment.
 
 Instead of one AI doing everything, each task goes to an agent with deep expertise in its domain. A `product-strategist` defines business goals. A `ux-designer` creates the design system. An `api-contract-architect` locks down API specs. Then `ui-engineer` and `api-engineer` build frontend and backend in parallel — coordinated through file-based handoffs and mandatory approval gates.
 
@@ -26,13 +26,15 @@ Archflow works with any project type — fullstack, frontend-only, backend-only,
 
 ## Quick Start
 
-### 1. Add the Marketplace (one-time)
+### Claude Code
+
+#### 1. Add the Marketplace (one-time)
 
 ```bash
 claude plugin marketplace add azidan/archflow https://github.com/AZidan/archflow
 ```
 
-### 2. Install the Plugin
+#### 2. Install the Plugin
 
 ```bash
 claude plugin install archflow --scope project
@@ -42,7 +44,7 @@ This saves the plugin reference to `.claude/settings.json` in your repo — any 
 
 Free and open source. No lock-in. Uninstall anytime with `claude plugin uninstall archflow`.
 
-### 3. Start Your Project
+#### 3. Start Your Project
 
 Open Claude Code in your project directory:
 
@@ -54,7 +56,7 @@ claude
 - **New project?** Archflow starts at Phase 1 (Strategy).
 - **Existing codebase?** Run `/archflow onboard` — agents analyze your code, import context from your tools, and generate all artifacts for approval.
 
-### 4. Develop Features
+#### 4. Develop Features
 
 ```
 /archflow feature          # Interactive wizard
@@ -62,6 +64,45 @@ claude
 ```
 
 Archflow creates the feature branch, breaks it into tasks, and guides implementation through the appropriate agents. Features are filtered by scope — a `backend_only` repo only sees backend-scoped features from the roadmap.
+
+### Cursor IDE
+
+#### 1. Install the Plugin
+
+Copy the `cursor-plugin/` directory from this repo into your Cursor local plugins folder:
+
+```bash
+cp -R cursor-plugin ~/.cursor/plugins/local/archflow
+```
+
+This installs Archflow as a local Cursor plugin. The plugin includes:
+
+- **Rules** (`rules/archflow-instructions.mdc`) — Always-applied workspace rules that load Archflow's phase-based instructions automatically.
+- **Agents** — All 16+ specialized agents available as Cursor sub-agents.
+- **Skills** — The `/archflow` slash command and all subcommands.
+
+#### 2. Open Your Project in Cursor
+
+```bash
+cd your-project
+cursor .
+```
+
+Archflow activates automatically via the `rules/archflow-instructions.mdc` file, which is loaded as an always-applied rule in Cursor.
+
+- **New project?** Tell the agent to run `/archflow init` — it starts at Phase 1 (Strategy).
+- **Existing codebase?** Tell the agent to run `/archflow onboard` — agents analyze your code and generate all artifacts.
+
+#### 3. Develop Features
+
+Use the same commands as Claude Code — they work identically in Cursor:
+
+```
+/archflow feature          # Interactive wizard
+/archflow feature login    # Quick-add by name
+```
+
+> **Note:** The Cursor plugin uses `.cursor-plugin/plugin.json` instead of `.claude-plugin/plugin.json`, and adds a `rules/` directory with `.mdc` rule files — Cursor's native format for always-applied workspace rules.
 
 ---
 
@@ -200,14 +241,14 @@ Archflow manages these files in your project:
 <details>
 <summary><strong>File Structure</strong></summary>
 
-Archflow is distributed as a Claude Code plugin marketplace. The plugin contains all framework code; your project only stores state files.
+Archflow is distributed as a Claude Code plugin marketplace and a Cursor local plugin. The plugin contains all framework code; your project only stores state files.
 
 ### Marketplace (this repo)
 
 ```
 archflow/
 ├── .claude-plugin/marketplace.json  # Marketplace registry
-├── plugin/                          # Installable plugin
+├── plugin/                          # Claude Code plugin
 │   ├── .claude-plugin/plugin.json   # Plugin manifest
 │   ├── hooks/hooks.json             # SessionStart hook (loads instructions after compaction)
 │   ├── agents/                      # 17 specialized agent definitions
@@ -223,6 +264,14 @@ archflow/
 │       ├── workflow.md              # Git branching strategy
 │       ├── base-dsl-structure.yaml  # DSL template for design artifacts
 │       └── phases/                  # Phase-specific instruction files (10 files)
+├── cursor-plugin/                   # Cursor IDE plugin
+│   ├── .cursor-plugin/plugin.json   # Cursor plugin manifest
+│   ├── rules/                       # Cursor-specific rules
+│   │   └── archflow-instructions.mdc  # Always-applied workspace rules
+│   ├── hooks/hooks.json             # SessionStart hook
+│   ├── agents/                      # 17 specialized agent definitions (shared)
+│   ├── skills/archflow/             # Slash command implementations (shared)
+│   └── .archflow/                   # Framework instructions and phase files (shared)
 ├── README.md
 └── LICENSE
 ```
@@ -266,7 +315,7 @@ These integrations are primarily used during `/archflow onboard` to pull existin
 
 ## Requirements
 
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (latest version)
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (latest version) **or** [Cursor IDE](https://www.cursor.com/) (latest version)
 - Git
 - Node.js (for some MCP servers)
 
@@ -279,6 +328,7 @@ Contributions are welcome. Areas of interest:
 - **New agents** — Add specialized agents in `agents/` following the existing format
 - **Phase improvements** — Refine phase instructions in `.archflow/phases/`
 - **MCP registry** — Add tool integrations in `skills/archflow/mcp-registry.yaml`
+- **Cursor plugin** — Improve the Cursor integration in `cursor-plugin/`
 - **Bug fixes** — Open an issue or submit a PR
 
 ---
