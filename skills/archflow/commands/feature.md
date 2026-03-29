@@ -309,7 +309,9 @@ For each task in `.archflow/current-feature.yaml`:
    git push origin --delete {feature}/{task-name}
    ```
 
-8. **Update `.archflow/current-feature.yaml`:** Mark task as `complete`.
+8. **Update tracking files:**
+   - `.archflow/current-feature.yaml`: Mark task as `complete`, record `completed_at`
+   - `.archflow/roadmap.yaml`: Mark the corresponding `subtasks[]` entry as `completed: true` for the subtask that maps to this task
 
 ### Feature Completion
 
@@ -330,7 +332,10 @@ After ALL tasks are complete and approved:
    ```
 
 3. **Update files:**
-   - `.archflow/roadmap.yaml`: story status → `done`
+   - `.archflow/roadmap.yaml`:
+     - Story `status` → `done`
+     - ALL `subtasks[].completed` → `true`
+     - ALL `acceptance_criteria[].met` → `true`
    - `.archflow/current-phase.yaml`: `current_feature` → `null`, `feature_status` → `ready`
    - `.archflow/current-feature.yaml`: clear or remove
 
