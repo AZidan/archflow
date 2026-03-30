@@ -208,7 +208,8 @@ sprint:
 
     status:
       type: string
-      enum: [backlog, in_progress, review, done]
+      enum: [backlog, in_progress, done]
+      description: "Sprint lifecycle status. Only one sprint should be in_progress at a time (enforced by consumers, not schema)."
 
     goal:
       type: string

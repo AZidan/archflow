@@ -179,7 +179,14 @@ Assign to a sprint?
   [S] Skip — leave unassigned for now
 ```
 
-If "Create new sprint": ask for sprint name, goal, and which phase it belongs to (list existing phases or create new).
+If "Create new sprint": ask for sprint name and goal. Ask which phase it belongs to (list existing phases or create new). Always create with `status: backlog`:
+```yaml
+- id: "sprint-{N}"        # auto-increment from highest existing
+  name: "{sprint_name}"
+  status: backlog          # REQUIRED — always starts as backlog
+  goal: "{sprint_goal}"
+  stories: ["{story_id}"]
+```
 
 Add the story ID to the sprint's `stories` reference list.
 
