@@ -477,7 +477,13 @@ feature_status: "ready"
 status: "onboarded"
 ```
 
-2. **Create or update `CLAUDE.md` with Archflow section:**
+2. **Copy workflow.md, phases, and schemas into the project's `.archflow/`:**
+   - Copy `skills/archflow/workflow.md` → `.archflow/workflow.md`
+   - Copy `skills/archflow/phases/` → `.archflow/phases/` (skip files that already exist)
+   - Copy `skills/archflow/schemas/` → `.archflow/schemas/` (skip files that already exist)
+   - These files define the git branching strategy and canonical formats. They MUST be in the project repo so Phase 3+ agents can read them from the repo context regardless of plugin cache state.
+
+3. **Create or update `CLAUDE.md` with Archflow section:**
 
 If `CLAUDE.md` does NOT exist in the project root, create it with global project instructions derived from the onboarding analysis:
 
@@ -532,7 +538,7 @@ Commands:
 
 Fill in the actual values from `current-phase.yaml` and the generated artifacts. Only list artifacts that were actually created (e.g., skip API contract line if none was generated, skip design system lines for backend_only).
 
-3. **MCP cleanup** (if any onboarding-only MCPs were added):
+4. **MCP cleanup** (if any onboarding-only MCPs were added):
 ```
 These MCPs were added for import and aren't needed for development:
   - [list of onboarding_only MCPs]
@@ -540,13 +546,13 @@ Remove to save context window? [Yes / Keep]
 ```
 If yes, run `claude mcp remove [name]` for each.
 
-4. **Clean up ALL temporary onboarding files:**
+5. **Clean up ALL temporary onboarding files:**
 ```bash
 rm .onboard-*
 ```
 This removes every `.onboard-*` file (progress, audit report, imported context, extracted routes, roadmap draft, and any other temp files created during onboarding). Do NOT leave any behind.
 
-5. **Print summary:**
+6. **Print summary:**
 ```
 ONBOARDING COMPLETE
 
