@@ -123,6 +123,26 @@ ONLY THEN dispatch the agent with: "Work on branch [branch-name]"
 
 ### 🔄 Step 3A: DEVELOPMENT
 
+#### Mandatory Agent Delegation
+
+The orchestrator (main Claude session) MUST NOT write application code directly. For every story in Phase 3+:
+
+1. **Read the `assigned` field** from the story in `roadmap.yaml` (e.g., `assigned: ui-engineer`, `assigned: api-engineer`)
+2. **Launch that agent via the Agent tool** with the story context (story ID, description, acceptance criteria, subtasks, relevant file paths)
+3. **The orchestrator's role is coordination only**: dispatch agents, verify outputs, update tracking files, manage git workflow
+
+**Exception — orchestrator may act directly when:**
+- The work is interactive infrastructure (Docker container management, live API calls, environment setup, database migrations requiring shell interaction)
+- The task is purely file-tracking updates (roadmap.yaml status, current-feature.yaml)
+- Document the reason in the commit message if the orchestrator writes application code
+
+**Enforcement:**
+- If `assigned` names a specialized agent (`api-engineer`, `ui-engineer`, `devops-engineer`, `qa-engineer`, `ux-designer`), delegation via Agent tool is mandatory
+- The orchestrator must NOT copy-paste agent output or rewrite what an agent should produce
+- If an agent fails, the orchestrator should re-launch with a corrected prompt, not take over the implementation
+
+---
+
 **Before writing code, agents must:**
 ```bash
 # Check what already exists — avoid duplicating code
