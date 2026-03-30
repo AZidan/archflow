@@ -51,34 +51,57 @@ Parse the content you just read and check every rule below. Collect **all** viol
 - Every referenced story ID must exist under an epic. Missing = violation.
 - No story ID may appear in more than one sprint. Duplicates = violation.
 
+### Step E2b: Backfill missing .archflow/ template files
+
+**Use the Glob tool** to list all files in the project's `.archflow/` directory. Compare against the canonical template files that should exist:
+
+```
+Required template files:
+  .archflow/workflow.md
+  .archflow/instructions.md
+  .archflow/phases/phase-1-strategy.md
+  .archflow/phases/phase-2-design.md
+  .archflow/phases/phase-2.25-hifi-design.md
+  .archflow/phases/phase-2.5-api-architecture.md
+  .archflow/phases/phase-3-implementation.md
+  .archflow/phases/phase-4-quality.md
+  .archflow/phases/phase-5-launch.md
+  .archflow/phases/phase-6-enhancement.md
+  .archflow/phases/phase-onboarding.md
+  .archflow/phases/phase-setup.md
+  .archflow/schemas/roadmap-schema.yaml
+```
+
+For each file: check if it exists in the project's `.archflow/`. Collect all missing files into a list.
+
+- If **no files missing** → continue to Step E3
+- If **files missing** → record the list and continue to Step E3 (present alongside the status summary)
+
+**Important:** This check runs even if `roadmap.yaml` doesn't exist (new project). The backfill offer is only shown in the Already Onboarded paths below.
+
 ### Step E3: Check onboarded status
 ```bash
 # Tool call: read .archflow/current-phase.yaml, check onboarded field
 ```
-- `onboarded: true` AND roadmap has **no violations** → show status summary (see below), then stop
-- `onboarded: true` AND roadmap has **violations** → show violations report (see below), then stop
+- `onboarded: true` → go to Already Onboarded path (with or without violations/missing files)
 - Not onboarded → proceed to **Step 0** (new onboarding)
 
 ---
 
-## Already Onboarded — No Violations
+## Already Onboarded
 
+After E2, E2a, and E2b complete, present results based on what was found:
+
+### Status summary (always shown)
 ```
-This project is already onboarded. ✅
+This project is already onboarded.
 
   [show current status: project type, phase, artifacts, gaps]
-
-Run /archflow feature to kick off work, or tell me what you'd like to do.
 ```
 
----
-
-## Already Onboarded — Violations Found
-
+### Roadmap violations (if format_valid is false)
 ```
-This project is already onboarded, but roadmap.yaml has [N] format violations
-that are incompatible with the canonical schema.
-
+roadmap.yaml has [N] format violations:
   ⚠ [YAML path] — [rule broken]
      found: [found value]
   ⚠ ...
@@ -86,11 +109,32 @@ that are incompatible with the canonical schema.
 Fix these automatically? [Yes / Show me each one / Skip]
 ```
 
-- **Yes** — auto-fix all violations (see fix rules below), write corrected `roadmap.yaml`, report what changed, then show status summary
-- **Show me each one** — walk through each violation interactively, apply or skip fixes one at a time
-- **Skip** — exit without changes
+### Missing template files (if any files missing from E2b)
+```
+[M] template files are missing from .archflow/ (likely added in a newer Archflow version):
+  - phases/phase-3-implementation.md
+  - schemas/roadmap-schema.yaml
+  - workflow.md
 
-**Auto-fix rules:**
+Copy them from the plugin? [Yes / Skip]
+  (This is non-destructive — existing files are never overwritten.)
+```
+
+- **Yes** — copy each missing file from `skills/archflow/` to `.archflow/`. Create subdirectories (`phases/`, `schemas/`) if needed. NEVER overwrite existing files.
+- **Skip** — continue without copying
+
+### Final line
+```
+Run /archflow feature to kick off work, or tell me what you'd like to do.
+```
+
+If neither violations nor missing files were found, this collapses to just the status summary + final line.
+
+---
+
+## Roadmap Auto-Fix Rules
+
+When the user chooses "Yes" to fix violations:
 - Plain-string `acceptance_criteria` item → `{text: "<string>", met: false}`
 - Plain-string `subtasks` item → `{text: "<string>", completed: false}`
 - Embedded sprint story object → replace with its `id` string
