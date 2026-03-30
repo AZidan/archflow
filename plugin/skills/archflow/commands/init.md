@@ -87,7 +87,12 @@ Proceed to Step 3.
 mkdir -p .archflow
 ```
 
-2. **Create `.archflow/current-phase.yaml`** with Phase 1 defaults:
+2. **Copy `workflow.md` into the project's `.archflow/`:**
+   - Source: the plugin's `skills/archflow/workflow.md` (available at the skill's install path)
+   - Destination: `.archflow/workflow.md`
+   - This file defines the git branching strategy (feature → task → subtask branches, approval gates). It MUST be present in every Archflow project so Phase 3 agents can read it from the repo context.
+
+3. **Create `.archflow/current-phase.yaml`** with Phase 1 defaults:
 ```yaml
 phase: 1
 phase_name: "Strategy & Planning"
@@ -115,7 +120,15 @@ feature_status: "ready"
 status: "initialized"
 ```
 
-### Step 4: Update Project CLAUDE.md
+### Step 4: Copy Phases and Schemas (if not present)
+
+If the project's `.archflow/` does not already contain `phases/` and `schemas/` directories, copy them from the plugin's skill folder:
+- `skills/archflow/phases/` → `.archflow/phases/`
+- `skills/archflow/schemas/` → `.archflow/schemas/`
+
+These are reference files that agents read during execution. They must be in the project repo so agents always have access regardless of plugin cache state.
+
+### Step 5: Update Project CLAUDE.md
 
 If `CLAUDE.md` does NOT exist in the project root, create it:
 
