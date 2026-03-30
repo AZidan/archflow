@@ -111,7 +111,7 @@ When `.archflow/roadmap.yaml` is found, validate it exhaustively against `.archf
 - Each phase has required fields: `id`, `name`, `sprints`
 - Each sprint has required fields: `id`, `name`, `status`, `goal`, `stories`
 - Sprint `id` matches pattern `^sprint-[0-9]+$`
-- Sprint `status` is one of: `backlog | in_progress | review | done`
+- Sprint `status` is one of: `backlog | in_progress | done` (required — missing field is a violation)
 - Sprint `stories` is an array of **strings** (story ID references) — embedded story objects are a violation
 - Every story ID referenced in a sprint exists under an epic (referential integrity)
 - No story ID appears in more than one sprint across the entire roadmap
@@ -703,6 +703,8 @@ TASKS:
 6. Organize sprints under product delivery phases (e.g., MVP, Growth, Scale)
    - Each sprint has a goal describing its expected deliverable
    - Each sprint references stories by ID only
+   - EVERY sprint MUST have a `status` field: `backlog | in_progress | done`
+   - Sprints with all stories `done` → `status: done`; sprints with any `in_progress` story → `status: in_progress`; all others → `status: backlog`
 7. acceptance_criteria MUST be {text, met} objects — NEVER plain strings
 8. subtasks MUST be {text, completed} objects
 
