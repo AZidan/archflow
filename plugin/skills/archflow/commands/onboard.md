@@ -46,7 +46,7 @@ Parse the content you just read and check every rule below. Collect **all** viol
 - `acceptance_criteria` items must be objects with `text` + `met` (boolean). Plain strings = violation.
 - `subtasks` items must be objects with `text` + `completed` (boolean). Plain strings = violation.
 
-**Sprints:** each must have `id` (matches `^sprint-[0-9]+$`), `name`, `status` (`backlog|in_progress|review|done`), `goal`, `stories`.
+**Sprints:** each must have `id` (matches `^sprint-[0-9]+$`), `name`, `status` (`backlog|in_progress|done`), `goal`, `stories`. Missing `status` field = violation (not just invalid values — the field must exist).
 - `stories` must be an array of **strings** (ID references). Embedded objects = violation.
 - Every referenced story ID must exist under an epic. Missing = violation.
 - No story ID may appear in more than one sprint. Duplicates = violation.
@@ -140,6 +140,7 @@ When the user chooses "Yes" to fix violations:
 - Embedded sprint story object → replace with its `id` string
 - Invalid `status` value → map: `planned`→`backlog`, `completed`→`done`, `wip`→`in_progress`
 - Missing epic `scope` → infer from stories or default to `unknown`
+- Missing sprint `status` → default to `backlog`
 - Sprint references non-existent story ID → remove from sprint, warn
 
 ---
