@@ -5,7 +5,7 @@ Dynamic phase-based instruction loading for token-efficient development.
 
 **Phase 1: Strategy & Planning**
 - `product-strategist` - Business strategy, personas, KPIs → .archflow/project-context.md
-- `feature-planner` - Feature roadmaps, user stories, sprint planning → .archflow/roadmap.yaml
+- `feature-planner` - Backlog stubs + epic labels (Mode A) → .archflow/backlog.yaml + roadmap.yaml; promotes stubs into release files (Mode B)
 
 **Phase 2: Design**
 - `ux-designer` - User flows, design systems, themes, wireframes → design-artifacts/
@@ -21,13 +21,13 @@ Dynamic phase-based instruction loading for token-efficient development.
 - `ui-engineer` - All frontend (React, React Native, SwiftUI, Jetpack Compose) + integration with backend APIs. Also updates screens after ux-designer changes `styled-dsl.yaml`
 - `api-engineer` - NestJS/PostgreSQL backends, MUST follow docs/api-contract.md exactly (zero tolerance)
 - `qa-engineer` - Comprehensive testing (unit, integration, e2e) across all platforms. Runs AFTER feature agents complete
-- `pm-maestro-reviewer` - Acceptance testing via Maestro. Runs AFTER qa-engineer, validates acceptance criteria from .archflow/roadmap.yaml → docs/acceptance-reports/
+- `pm-maestro-reviewer` - Acceptance testing via Maestro. Runs AFTER qa-engineer, validates acceptance criteria from the active release file (.archflow/releases/{active_release}.yaml) → docs/acceptance-reports/
 - `ux-designer` - Design updates on specific screens. Updates `styled-dsl.yaml` file
 
 **Phase 4: Quality & Optimization**
 - `code-reviewer` - Code quality, security, best practices analysis + improvement reports
 - `performance-optimizer` - Performance bottleneck identification and optimization
-- `pm-maestro-reviewer` - Full acceptance regression suite across all implemented features
+- `pm-maestro-reviewer` - Acceptance regression suite scoped to the active release's stories
 
 **Phase 5: Launch & Operations**
 - `devops-engineer` - CI/CD pipelines, deployment infrastructure, app store preparation
@@ -38,16 +38,41 @@ Dynamic phase-based instruction loading for token-efficient development.
 
 ## 📌 Available Commands (Archflow)
 - `/archflow` — Show available subcommands and current project status
-- `/archflow init` — Initialize Archflow in a new project (creates `.archflow/` state files, sets Phase 1)
-- `/archflow onboard` — Onboard existing codebase (interactive wizard: audit, import context, backfill artifacts, set phase)
+- `/archflow init` — Initialize Archflow in a new project (creates `.archflow/` state files, sets Phase 1, mode: quick)
+- `/archflow onboard` — Onboard existing codebase (interactive wizard: audit, import context, backfill artifacts, set phase + mode)
+- `/archflow migrate` — Migrate a v1.0 project to schema v2.0 (releases replace phases, sprints retired, multi-file split)
+- `/archflow mode [quick|full]` — Show or switch the ceremony mode
+- `/archflow release [new|start|ship]` — Inspect / manage releases (status, create, start, ship)
 - `/archflow setup-mcp` — Configure an MCP server for external tools (Jira, Notion, Linear, GitHub, SuperDesign, etc.)
-- `/archflow feature` — Add a new feature to the roadmap and start the git development workflow
+- `/archflow feature` — Add a story to the backlog or the active release and start the git development workflow
+
+## 🚀 Release Model (v2.0 — the outer loop)
+
+Archflow has TWO axes. **Lifecycle phases (1–6)** are the inner process loop (strategy → design →
+API → implement → quality → ship). **Releases** are the first-class OUTER loop — the shippable
+increments a product is built in. (v2.0 renamed the old product "phases" to `releases:` and **retired
+sprints**; a release is the story container.)
+
+- **Files** (multi-file split keeps context bounded): `roadmap.yaml` is the small INDEX (meta, mode,
+  epic LABELS, `releases[]` pipeline, `shipped[]` ledger); `backlog.yaml` holds unscheduled scope as
+  STUBS; `releases/{slug}.yaml` holds one release's detailed stories; `releases/archive/` holds shipped
+  releases; `history.yaml` is the shipped-story intent layer. A story lives in exactly ONE place
+  (move, never copy). Schemas in `.archflow/schemas/{roadmap,release,backlog,history}-schema.yaml`.
+- **Loop:** Strategy (once) → **create + start a release** → inner phases 2–5 scoped to it → **ship
+  ritual** (mark released, tag, archive, append history, roll off the index) → prompt for the next
+  release. At most ONE release is `in_progress`; many may be `planning`/`ready` concurrently.
+- **Readiness pipeline (per story):** `backlog → spec_ready → design_ready → contract_ready → ready →
+  in_progress → review → done`, with per-story `gates {needs_design, needs_contract}`. Design/contract
+  gates run just-in-time, one step ahead of build.
+- **Modes:** `mode: quick | full` (in `roadmap.yaml` + `current-phase.yaml`). quick = single implicit
+  release, gates auto-satisfied, one lane (default for `/archflow init`). full = explicit release
+  pipeline + enforced advisory gates + role lanes. Switch with `/archflow mode`.
 
 ## 🌐 Project Types
 The framework detects and adapts to project type: `fullstack`, `frontend_only`, `backend_only`, `mobile`.
 - Stored in `.archflow/current-phase.yaml` as `project_type`
 - Phases, agents, and audit checks are filtered by project type
-- `.archflow/roadmap.yaml` structure is tailored to project type (backend = endpoints/services, frontend = pages/components)
+- Release/backlog story fields are tailored to project type (backend = endpoints/services, frontend = pages/components)
 - Set automatically by `/archflow onboard` or can be set manually in `.archflow/current-phase.yaml`
 
 ## 🔀 Git Workflow
@@ -82,9 +107,12 @@ fi
 
 ## 📋 Universal Context Files (Always Required)
 - `.archflow/project-context.md` - Business goals, tech stack, architecture decisions
-- `.archflow/roadmap.yaml` - Feature roadmap and sprint planning
-- `.archflow/current-feature.yaml` - Active development scope and requirements
-- `.archflow/current-phase.yaml` - Phase state tracker (PROJECT-SCOPED, auto-created from template)
+- `.archflow/roadmap.yaml` - v2.0 INDEX: mode, epic labels, `releases[]` pipeline, `shipped[]` ledger
+- `.archflow/backlog.yaml` - Unscheduled scope as stubs
+- `.archflow/releases/{slug}.yaml` - Detailed stories for a release (source of truth for story status)
+- `.archflow/history.yaml` - Shipped-story intent layer (loaded only on lookup)
+- `.archflow/current-feature.yaml` - Active development scope (git task/subtask tracking)
+- `.archflow/current-phase.yaml` - Phase + mode + active_release tracker (PROJECT-SCOPED, auto-created)
 
 ## 💡 Universal Critical Rules (Apply to ALL Phases)
 
@@ -101,7 +129,7 @@ fi
 - **VISUAL APPROVAL**: Hi-fi screens must be approved before API architecture begins
 
 ### ✅ Acceptance Testing (Phases 3-4)
-- **ACCEPTANCE GATE**: After qa-engineer completes, launch `pm-maestro-reviewer` to validate acceptance criteria from `.archflow/roadmap.yaml`
+- **ACCEPTANCE GATE**: After qa-engineer completes, launch `pm-maestro-reviewer` to validate acceptance criteria from the active release file (`.archflow/releases/{active_release}.yaml`)
 - **VERDICT REQUIRED**: Feature is not complete until pm-maestro-reviewer returns ACCEPTED verdict
 - **REJECTION FLOW**: If REJECTED, fix blocking defects and re-run pm-maestro-reviewer — do not proceed
 - **REPORTS**: Acceptance reports saved to `docs/acceptance-reports/{story-id}-review.md`
@@ -133,7 +161,7 @@ fi
 - **HANDOFF VIA FILES**: Agents communicate through files, not messages. api-engineer produces endpoints; ui-engineer consumes docs/api-contract.md and styled-dsl.yaml
 - **CONFLICT PREVENTION**: Only ONE agent may modify a given file. If two agents need the same file, sequence them
 - **TOKEN EFFICIENCY**: Use codemap find + targeted line reads instead of full file scans
-- **ONE FEATURE AT A TIME**: Never batch features in Phase 3
+- **ONE STORY AT A TIME**: In Phase 3, complete one story's full cycle (build → test → accept → approve → merge) before the next. Only one story `in_progress` in the active release at a time.
 
 ## 🔄 Phase Navigation System
 
