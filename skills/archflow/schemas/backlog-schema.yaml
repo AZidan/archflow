@@ -1,0 +1,81 @@
+# =============================================================================
+# Archflow BACKLOG Schema — v2.0
+# =============================================================================
+# Canonical schema for `.archflow/backlog.yaml` — the full unshipped, unscheduled
+# scope, held as lightweight STUBS grouped by epic. Stubs are cheap: no acceptance
+# criteria or subtasks yet. Detail is added only when a stub is PROMOTED into a
+# release (see release-schema.yaml), which keeps the backlog compact even for large
+# products.
+#
+# A story lives in exactly one place at a time: backlog.yaml -> a release file ->
+# releases/archive/. MOVE, never copy.
+#
+# Related schemas:
+#   .archflow/roadmap.yaml         -> roadmap-schema.yaml   (index)
+#   .archflow/releases/{slug}.yaml -> release-schema.yaml   (detailed story shape)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# backlog.yaml
+# -----------------------------------------------------------------------------
+backlog:
+  type: object
+  required: [epics]
+  properties:
+    epics:
+      type: array
+      items:
+        type: object
+        required: [id, stories]
+        properties:
+          id:
+            type: string
+            pattern: "^E[0-9]+$"
+          stories:
+            type: array
+            items:
+              $ref: "#/story_stub"
+
+# -----------------------------------------------------------------------------
+# Story stub  (lightweight — promoted into a release to become a detailed story)
+# -----------------------------------------------------------------------------
+story_stub:
+  type: object
+  required: [id, title, priority, status, description]
+  properties:
+    id:
+      type: string
+      pattern: "^S[0-9]+-[0-9]+$"
+      description: "Epic-scoped story ID — format S{epic_number}-{sequence}. Stable across promotion."
+      example: "S2-07"
+    title:
+      type: string
+      example: "Saved payment methods"
+    priority:
+      type: string
+      enum: [Critical, High, Medium, Low]
+    status:
+      type: string
+      const: backlog
+      description: "A stub in backlog.yaml is always `backlog` — literally 'in the backlog file'."
+    target:
+      type: string
+      required: false
+      description: "OPTIONAL, non-binding grouping hint used to suggest the next release. Not a commitment."
+      example: "checkout"
+    description:
+      type: string
+      description: "One-line description. Full detail (ACs, subtasks, gates) is added on promotion into a release."
+
+# =============================================================================
+# Example — backlog.yaml
+# =============================================================================
+# epics:
+#   - id: E2
+#     stories:
+#       - id: S2-11
+#         title: "One-tap reorder"
+#         priority: Medium
+#         status: backlog
+#         target: checkout
+#         description: "Reorder a previous cart in one tap."

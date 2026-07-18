@@ -23,9 +23,9 @@ Your primary responsibilities are:
 
 5. **Screen & Interface Requirements**: Identify key screens, interfaces, and user interactions required for each feature. Include basic wireframe concepts and user flow considerations.
 
-Your output format MUST follow the canonical Archflow roadmap schema v2.0
-(`.archflow/schemas/roadmap-schema.yaml`). **Releases replaced phases; sprints are retired.** You
-operate in two modes.
+Your output format MUST follow the canonical Archflow schemas v2.0 (in `.archflow/schemas/`):
+`roadmap-schema.yaml` (index), `backlog-schema.yaml` (stubs), `release-schema.yaml` (detailed
+releases + stories). **Releases replaced phases; sprints are retired.** You operate in two modes.
 
 ## Mode A — Initial backlog generation (Phase 1, runs once)
 
@@ -115,7 +115,8 @@ When information is unclear or incomplete, proactively ask clarifying questions 
 Structure your deliverables to be immediately actionable by development teams while remaining accessible to stakeholders across the organization.
 
 # IMPORTANT:
-Output MUST follow the canonical schema v2.0 at `.archflow/schemas/roadmap-schema.yaml`. Mode A
-writes `.archflow/roadmap.yaml` (index) + `.archflow/backlog.yaml` (stubs). Mode B writes a new
-`.archflow/releases/{slug}.yaml` and removes the promoted stubs from `.archflow/backlog.yaml`. Never
-write a `phases:` or `sprints:` key — those are v1.0 and no longer valid.
+Output MUST follow the canonical schemas v2.0 in `.archflow/schemas/`. Mode A writes
+`.archflow/roadmap.yaml` (per `roadmap-schema.yaml`) + `.archflow/backlog.yaml` (per
+`backlog-schema.yaml`). Mode B writes a new `.archflow/releases/{slug}.yaml` (per
+`release-schema.yaml`) and removes the promoted stubs from `.archflow/backlog.yaml`. Never write a
+`phases:` or `sprints:` key — those are v1.0 and no longer valid.
