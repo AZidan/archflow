@@ -1,7 +1,8 @@
-# Phase 3: Implementation (Parallel Development)
+# Phase 3: Implementation (Build the Active Release)
 
 ## 🎯 Phase Objective
-Build frontend and backend simultaneously using API contracts, then integrate and test each feature.
+Build the stories of the ONE active release, one story at a time, honoring each story's readiness
+pipeline. Frontend and backend build in parallel within a story via the API contract.
 
 ## 📋 Required Agents (Project-Type Aware)
 
@@ -13,14 +14,53 @@ Read `.archflow/current-phase.yaml` to determine `project_type` and select appro
 | `api-engineer` | Yes | No | Yes | Yes |
 | `qa-engineer` | Yes | Yes | Yes | Yes |
 
+## 🧭 Work source (v2.0) — the ACTIVE RELEASE only
+
+All build work comes from the one release currently `in_progress`:
+
+- `.archflow/current-phase.yaml → active_release` = slug of the in_progress release.
+- Stories live in `.archflow/releases/{active_release}.yaml` (see `release-schema.yaml`).
+- `roadmap.yaml` is only the index — you never read `backlog.yaml` or other release files to select
+  build work. An agent scoped to the active release file literally cannot see backlog / draft-release
+  stories; that is the soft release boundary made structural.
+- **If `active_release` is null** → HALT: "No release is being built. Transition a `ready` release to
+  `in_progress` first (see Release start), or create one via feature-planner."
+
+### Release start (transition ready → in_progress)
+Before Phase 3 can run, exactly one release must be `in_progress`:
+1. Pick a `ready` release from `roadmap.yaml → releases`.
+2. **Gate: at most one `in_progress`.** If another release is already `in_progress`, HALT — finish or
+   park it first.
+3. Optional re-validation: reconcile the release against what has shipped since it was drafted (via
+   `history.yaml`).
+4. Set its `status: in_progress` in both the release file and the `releases` index; set
+   `current-phase.yaml → active_release` to its slug.
+
+## 🚦 Readiness pipeline (Pillar 2) — which stories are buildable
+
+A story's `status` IS its readiness state. Phase 3 builds a story only once it is `ready` — all
+*applicable* upstream gates satisfied:
+
+- `gates: {needs_design, needs_contract}` (derived from scope).
+- `needs_design: true` → requires `design_ready` (designer produced `design_artifact`) before build.
+- `needs_contract: true` → requires `contract_ready` (architect specified endpoints) before build.
+- `ready` = `spec_ready` AND (`design_ready` OR not needs_design) AND (`contract_ready` OR not needs_contract).
+
+### Mode calibration
+- **quick mode** → gates auto-satisfy. A story promoted into the release is buildable immediately; no
+  gate prompts.
+- **full mode** → gates enforced **advisory-recorded**. To build a story that is not yet `ready`:
+  1. Warn which gate is unmet (e.g. "S2-07 needs_design but is only `spec_ready` — no design artifact").
+  2. Ask to proceed anyway.
+  3. If yes, stamp the story `started_ungated: {gate, by, reason, at: <iso8601>}` and proceed. The
+     skip is recorded so review/QA can catch it. **Never a hard block** — the human keeps control.
+
 ## 📚 Prerequisites
-- API contract at `.archflow/current-phase.yaml → api_contract_path` (SACRED DOCUMENT)
-  - This may be `docs/api-contract.md`, `openapi.yaml`, `swagger.json`, or any path
-  - If `api_contract_path` is null: skip API contract verification (frontend_only projects consuming no external APIs)
-- `design-artifacts/styled-dsl.yaml` (for projects with UI — skip for backend_only)
-- `design-artifacts/hifi-screens/` (visual reference — skip for backend_only)
-- `.archflow/current-feature.yaml` defining feature scope
-- User approval from previous phase
+- `active_release` set and its release file present.
+- API contract at `.archflow/current-phase.yaml → api_contract_path` (SACRED DOCUMENT) for stories
+  with `needs_contract`. May be `docs/api-contract.md`, `openapi.yaml`, etc. Null → no external APIs.
+- `design-artifacts/` handoff for stories with `needs_design` (per-story `design_artifact`).
+- User approval from the previous phase.
 
 ## 🚀 Execution Steps
 
@@ -33,345 +73,240 @@ Run: `git status`
 - NOT initialized → HALT: "Git is required. Run `git init && git add . && git commit -m 'Initial commit'`"
 - Verify prior phase commits: `git log --oneline | head -5`
 
-#### 0.2 Feature Branch
+#### 0.2 Active Release
+Check: `.archflow/current-phase.yaml → active_release` is set AND `.archflow/releases/{active_release}.yaml` exists
+- Missing → HALT: "No active release. Start one (ready → in_progress) first."
+
+#### 0.3 Feature Branch
 Check: `.archflow/current-feature.yaml` exists AND `branch` field is NOT "main"
 - Missing/main → HALT: "Run `/archflow feature` first."
 
-#### 0.3 API Contract (ALL project types that consume or serve APIs)
-Check: API contract file exists at path from `.archflow/current-phase.yaml → api_contract_path`
-- **fullstack / backend_only**: HALT if missing — "Complete Phase 2.5 first."
-- **frontend_only / mobile**: If `api_contract_path` is set (i.e., the app consumes external APIs),
-  HALT if the file is missing — "API contract required. Point to existing spec or generate one via `/archflow onboard`."
-  If `api_contract_path` is null (no external APIs), skip this check.
-
-Note: The onboarding wizard (Step A3) scans frontend/mobile client-side API calls,
-service layers, and TypeScript interfaces to generate or locate the API contract.
-Frontend/mobile projects that consume APIs MUST have a contract so ui-engineer
-can build correct service layers and TypeScript interfaces.
-
-#### 0.4 Design Artifacts (fullstack/frontend_only/mobile)
-Check: `design-artifacts/styled-dsl.yaml` exists
-- Missing → HALT: "Complete Phase 2 first."
+#### 0.4 API Contract (stories with needs_contract)
+Check: contract file exists at `api_contract_path`
+- **fullstack / backend_only**: HALT if missing — "Complete Phase 2.5 (contract architecture) first."
+- **frontend_only / mobile**: if `api_contract_path` is set, HALT if missing; if null, skip.
 
 #### 0.5 Codemap
 - `.codemap/` missing → `codemap init .`
 - Watcher: `pgrep -f "codemap watch" > /dev/null || codemap watch . -q &`
 
-All checks passed → proceed to Step 3A.
+All checks passed → proceed.
 
 ---
 
-### 🗺️ Pre-Implementation: Codemap Setup
-Before writing any code, ensure Codemap is initialized and running:
-```bash
-# Verify codemap is active (should already be from phase-setup)
-codemap stats
-
-# If not initialized:
-codemap init . && codemap watch . -q &
-```
-
 ### 🔀 Git Workflow Integration
-Each feature follows the branching strategy from `.archflow/workflow.md`:
+Each story follows the branching strategy in `.archflow/workflow.md` (feature → task → subtask
+branches). Feature branch should already exist (from `/archflow feature`). All merges require
+explicit user approval.
 
-1. Feature branch should already exist (created by `/archflow feature` command)
-2. If not, create it:
-   ```bash
-   git checkout main && git pull origin main
-   git checkout -b {feature-branch}
-   git push -u origin {feature-branch}
-   ```
-3. Task branches are created from the feature branch per `.archflow/workflow.md`
-4. All merges require explicit user approval
+### ⚡ STORY-BY-STORY DEVELOPMENT (ONE AT A TIME)
 
-### ⚡ FEATURE-BY-FEATURE DEVELOPMENT (ONE AT A TIME)
+- **ONE STORY AT A TIME**: complete the full cycle (build → test → accept → approve → merge) per story.
+- **PARALLEL WITHIN A STORY**: ui-engineer + api-engineer CAN run in parallel for the SAME story only
+  (independent scopes from the contract).
 
-- **ONE FEATURE AT A TIME**: Complete all stories in a feature before starting next
-- **ONE STORY AT A TIME**: Complete full cycle (implement → test → accept → approve → merge) per story
-- **PARALLEL WITHIN A STORY**: ui-engineer + api-engineer CAN run in parallel for SAME story only
-
-For EACH feature in `.archflow/roadmap.yaml` (or `.archflow/current-feature.yaml`), execute the process below.
+For EACH `ready` story in `.archflow/releases/{active_release}.yaml`, execute the process below.
 
 ### Story Serialization Check
 
-Before starting work on a new story:
-
-1. Check roadmap.yaml: Any stories with `status: in_progress`?
+Before starting a new story:
+1. Read the active release file: any story with `status: in_progress`?
    - YES, DIFFERENT story → HALT: "Story [X] still in progress. Complete it first."
-   - YES, SAME story → Continue (resuming)
-   - NO → Proceed
+   - YES, SAME story → continue (resuming).
+   - NO → proceed.
+2. Only ONE story may be `in_progress` in the active release at a time.
+3. Parallelism: ALLOWED — ui-engineer + api-engineer for the SAME story. NOT ALLOWED — agents for
+   DIFFERENT stories in parallel.
 
-2. Only ONE story may be `in_progress` at a time within a feature.
+### 🔁 Pull-forward (scope change mid-build)
 
-3. Parallelism rules:
-   - ALLOWED: ui-engineer + api-engineer for the SAME story (independent scopes)
-   - NOT ALLOWED: agents for DIFFERENT stories in parallel
-   - NOT ALLOWED: different features in parallel
+If the work needs a story that is NOT in the active release (it's a stub in `backlog.yaml` or lives in
+a draft release file):
 
-### Pre-Dispatch Validation (BEFORE launching any agent)
+1. STOP — the active release file doesn't contain it, and a release-scoped agent can't see it.
+2. ASK: "S2-11 is in {backlog | q3-launch (draft)}, not this release. Pull it in?"
+3. On approval, **MOVE** it into the active release (never copy):
+   - from backlog → promote: remove the stub from `backlog.yaml`, add it to the release file, detail
+     ACs + subtasks, derive `gates` from scope.
+   - from a draft release → relocate the story block out of that file into the active release file.
+   - annotate `pulled_from: {backlog | <release-id>}` on the story.
+4. A story is never in two releases at once. Advisory, not a hard block.
 
-1. `.archflow/current-feature.yaml` present?
-   - NO → Run `/archflow feature` first
+### 🔎 Pre-modification history check (institutional memory)
 
-2. Task branch exists for this story?
-   - NO → Create per workflow.md, update current-feature.yaml
+Before an agent modifies an existing file, check `.archflow/history.yaml`:
+1. Look up the concrete file path in the `touched.files` of any history entry.
+2. If found, surface it: "`PaymentForm.tsx` last shipped for S3-04 (release checkout-redesign); its
+   AC was 'declined payment shows inline error'. Confirm your change preserves that."
+3. **Advisory** — confirm and proceed; never blocks. Purpose: stop silently breaking a shipped
+   guarantee, or re-solving something already built.
 
-3. Working tree clean? (`git status --porcelain`)
-   - Dirty → Commit or stash first
-
-ONLY THEN dispatch the agent with: "Work on branch [branch-name]"
+`history.yaml` is loaded ONLY for this lookup, never scanned per step. codemap answers *where* the
+code is; history answers *why it exists and what it was supposed to do*.
 
 ### 🔄 Step 3A: DEVELOPMENT
 
 #### Mandatory Agent Delegation
 
-The orchestrator (main Claude session) MUST NOT write application code directly. For every story in Phase 3+:
+The orchestrator (main Claude session) MUST NOT write application code directly. For every story:
 
-1. **Read the `assigned` field** from the story in `roadmap.yaml` (e.g., `assigned: ui-engineer`, `assigned: api-engineer`)
-2. **Launch that agent via the Agent tool** with the story context (story ID, description, acceptance criteria, subtasks, relevant file paths)
-3. **The orchestrator's role is coordination only**: dispatch agents, verify outputs, update tracking files, manage git workflow
+1. **Read the `assigned` field** from the story in the active release file (e.g. `assigned: ui-engineer`).
+2. **Launch that agent via the Agent tool** with story context (story ID, description, acceptance
+   criteria, subtasks, `design_artifact` path if present, relevant file paths).
+3. **Orchestrator role = coordination only**: dispatch agents, verify outputs, update the release
+   file, manage git workflow.
 
-**Exception — orchestrator may act directly when:**
-- The work is interactive infrastructure (Docker container management, live API calls, environment setup, database migrations requiring shell interaction)
-- The task is purely file-tracking updates (roadmap.yaml status, current-feature.yaml)
-- Document the reason in the commit message if the orchestrator writes application code
+**Exception — orchestrator may act directly when:** the work is interactive infrastructure (Docker,
+live API calls, env setup, DB migrations needing shell interaction), or purely file-tracking updates
+(release file status, current-feature.yaml). Document the reason in the commit if the orchestrator
+writes application code.
 
-**Enforcement:**
-- If `assigned` names a specialized agent (`api-engineer`, `ui-engineer`, `devops-engineer`, `qa-engineer`, `ux-designer`), delegation via Agent tool is mandatory
-- The orchestrator must NOT copy-paste agent output or rewrite what an agent should produce
-- If an agent fails, the orchestrator should re-launch with a corrected prompt, not take over the implementation
+**Enforcement:** if `assigned` names a specialized agent, delegation via the Agent tool is mandatory.
+The orchestrator must NOT copy-paste or rewrite agent output. If an agent fails, re-launch with a
+corrected prompt — do not take over.
 
 ---
 
-**Before writing code, agents must:**
+**Before writing code, agents must** (run the pre-modification history check above, then):
 ```bash
 # Check what already exists — avoid duplicating code
 codemap find "[FeatureName]"
 codemap find "related-symbol-name"
-
-# Understand existing file structures before creating new ones
-codemap show src/components/  # or relevant directory
-codemap show backend/src/
+codemap show src/components/   # or relevant directory
 ```
 
 **Project-type-aware agent dispatch:**
 
-#### fullstack (parallel)
+#### fullstack (parallel within the story)
 ```bash
-# Frontend Development
-ui-engineer: design-artifacts/styled-dsl.yaml + {api_contract_path} → src/components/[FeatureName]/
-  - Build frontend components using contract for API integration points
-  - Create service layers that match contract endpoints exactly
-  - Implement UI logic and user interactions
-  - Add error handling for all contract-defined error codes
+# Frontend (uses the story's design_artifact + contract integration points)
+ui-engineer: {design_artifact} + {api_contract_path} → src/components/[FeatureName]/
+  - Build components using the contract for API integration points
+  - Service layers matching contract endpoints exactly
+  - Error handling for all contract-defined error codes
 
-# Backend Development (CONTRACT SACRED!)
+# Backend (CONTRACT SACRED!)
 api-engineer: MUST READ + FOLLOW {api_contract_path} EXACTLY → backend/src/[feature-name]/
-  - VERIFY: All endpoints match contract paths, methods, parameters
-  - VERIFY: All response structures match contract schemas
-  - VERIFY: All error codes match contract specifications
-  - VERIFY: Authentication matches contract requirements
-  - NO DEVIATIONS from contract allowed - ZERO TOLERANCE
+  - VERIFY endpoints, response structures, error codes, auth all match the contract
+  - NO DEVIATIONS — ZERO TOLERANCE
 ```
 
 #### frontend_only
 ```bash
-# Frontend Development Only
-ui-engineer: design-artifacts/styled-dsl.yaml → src/components/[FeatureName]/
+ui-engineer: {design_artifact} → src/components/[FeatureName]/
   - If consuming external APIs: read {api_contract_path} for integration
-  - Build frontend components
-  - Create service layers for API calls (if applicable)
-  - Implement UI logic and user interactions
 ```
 
 #### backend_only
 ```bash
-# Backend Development Only (CONTRACT SACRED!)
 api-engineer: MUST READ + FOLLOW {api_contract_path} EXACTLY → backend/src/[feature-name]/
-  - VERIFY: All endpoints match contract paths, methods, parameters
-  - VERIFY: All response structures match contract schemas
-  - NO DEVIATIONS from contract allowed - ZERO TOLERANCE
+  - VERIFY endpoints + response structures match the contract — ZERO TOLERANCE
 ```
 
 #### mobile
 ```bash
-# Same as fullstack but with mobile-specific ui-engineer instructions
-ui-engineer: design-artifacts/styled-dsl.yaml + {api_contract_path} → mobile components
+ui-engineer: {design_artifact} + {api_contract_path} → mobile components
 api-engineer: {api_contract_path} → backend/src/[feature-name]/
 ```
 
-### 🔗 Step 3B: INTEGRATION
-**After development is complete (skip for backend_only):**
-
+### 🔗 Step 3B: INTEGRATION (skip for backend_only)
 ```bash
 ui-engineer: {api_contract_path} → connect frontend ↔ backend
-  - Test API calls against actual backend endpoints
-  - Verify data flow matches contract specifications
-  - Handle all error scenarios as defined in contract
-  - Ensure authentication integration works correctly
+  - Test API calls against actual endpoints; verify data flow matches the contract
+  - Handle all error scenarios; verify auth integration
 ```
 
-### ✅ Step 3C: FEATURE TESTING
-
+### ✅ Step 3C: STORY TESTING
 ```bash
-qa-engineer: test integrated feature → tests/[feature-name]/
-  - Unit tests for frontend components (skip for backend_only)
-  - Unit tests for backend endpoints (skip for frontend_only)
-  - Integration tests for API calls
-  - End-to-end tests for complete user workflows
-  - Error scenario testing
+qa-engineer: test the integrated story → tests/[feature-name]/
+  - Unit (frontend/backend per project type), integration, e2e, error scenarios
 ```
+Gate: ALL tests must pass before Step 3D. If tests FAIL → re-dispatch the implementation agent with
+details → re-run qa-engineer. Do NOT proceed.
 
-Gate: ALL tests must pass before Step 3D.
-If tests FAIL:
-  → Re-dispatch implementation agent with failure details
-  → Re-run qa-engineer
-  → Do NOT proceed to Step 3D
-
-### 🎯 Step 3D: ACCEPTANCE TESTING (AUTO-TRIGGERED after 3C passes)
-
+### 🎯 Step 3D: ACCEPTANCE TESTING (auto-triggered after 3C passes)
 IMMEDIATELY after qa-engineer reports all tests passing:
-  → Dispatch pm-maestro-reviewer with story ID + acceptance criteria
+  → Dispatch pm-maestro-reviewer with story ID + acceptance criteria (from the release file)
   → Output: `docs/acceptance-reports/{story-id}-review.md`
 
-If REJECTED:
-  → Re-dispatch implementation agent to fix blocking defects
-  → Re-run Step 3C (qa-engineer)
-  → Re-run Step 3D (pm-maestro-reviewer)
-  → Do NOT proceed until ACCEPTED
-
-If ACCEPTED:
-  → Proceed to Step 3F (Approval Gate)
-
-Step 3D is NOT optional. No story can be "done" without ACCEPTED verdict.
+If REJECTED → re-dispatch implementation agent → re-run 3C → re-run 3D. Do NOT proceed until ACCEPTED.
+Step 3D is NOT optional. No story is "done" without an ACCEPTED verdict.
 
 ### Post-Agent Verification
+After an agent returns:
+1. Verify subtasks in the **active release file** are updated (count `completed: true`); if the count
+   doesn't match the agent's claim, correct it.
+2. Mark a story `status: done` only when ALL of: all subtasks `completed: true`; tests pass; acceptance
+   ACCEPTED; user approved.
+3. NEVER mark a story done by only changing the status field.
+4. If the story carries `started_ungated`, call it out in the acceptance/approval summary so the skipped
+   gate is reviewed before done.
 
-After an agent returns from implementing a story:
-
-1. Verify roadmap.yaml subtasks are updated:
-   - Count subtasks with `completed: true` for the story
-   - If count doesn't match agent's claimed completion, update manually
-
-2. Only mark story `status: done` when ALL of:
-   - ALL subtasks are `completed: true`
-   - Tests pass (qa-engineer)
-   - Acceptance verdict is ACCEPTED (pm-maestro-reviewer)
-   - User has explicitly approved
-
-3. NEVER mark a story "done" by only changing the status field.
-
-### 🔀 Step 3E: GIT MERGE (Per Task)
-After each task passes testing and acceptance:
-1. Wait for explicit user approval
-2. Merge task branch → feature branch (per `.archflow/workflow.md`)
-3. Clean up task branch
-4. Update `.archflow/current-feature.yaml`: mark task complete
+### 🔀 Step 3E: GIT MERGE (per task)
+After a task passes testing + acceptance:
+1. Wait for explicit user approval.
+2. Merge task branch → feature branch (per `.archflow/workflow.md`); clean up the task branch.
+3. Update `.archflow/current-feature.yaml`: mark task complete.
 
 ### 🛑 Step 3F: APPROVAL GATE (MANDATORY — CANNOT BE SKIPPED)
 
-After acceptance testing returns ACCEPTED:
+After acceptance returns ACCEPTED, present to the user:
+```
+============================================
+APPROVAL REQUIRED: [Story ID] — [Story Title]   (release: [active_release])
+============================================
+Branch: [task-branch-name]        Agent: [agent-name]
+Readiness: [ready | started_ungated: <gate>]
 
-1. Present to the user:
-   ```
-   ============================================
-   APPROVAL REQUIRED: [Story ID] — [Story Title]
-   ============================================
-   Branch: [task-branch-name]
-   Agent: [agent-name]
+Completed subtasks:
+- [x] Subtask 1
+- [x] Subtask 2
 
-   Completed subtasks:
-   - [x] Subtask 1
-   - [x] Subtask 2
+Acceptance: ACCEPTED        Tests: [X/Y passing]
 
-   Acceptance: ACCEPTED
-   Test results: [X/Y tests passing]
+Files changed:
+- [list]
 
-   Files changed:
-   - [list of created/modified files]
-
-   Respond with:
-   - "Approved" → merge to feature branch
-   - "Changes needed: [feedback]" → agent will address
-   ============================================
-   ```
-
-2. WAIT for user response. Do NOT proceed.
-
-3. If "Approved":
-   - Merge per workflow.md
-   - Update roadmap.yaml: story `status: done`, all subtasks `completed: true`
-   - Add `approved: true` and `approved_at: "[date]"` to the story
-   - Update current-feature.yaml: task `status: complete`, `completed_at: "[date]"`
-
-4. If "Changes needed":
-   - Re-dispatch agent with feedback
-   - Re-run qa-engineer → pm-maestro-reviewer → return to step 1
-
-After ALL tasks for a feature are complete:
-1. Wait for explicit user approval
-2. Merge feature branch → main (per `.archflow/workflow.md`)
-3. Clean up feature branch
-4. Update `.archflow/roadmap.yaml`: feature status → `complete`
-5. Update `.archflow/current-phase.yaml`: `current_feature` → `null`
-
-## 📤 Expected Outputs (Per Feature)
-- Frontend implementation (skip for backend_only)
-- Backend implementation (skip for frontend_only)
-- Comprehensive test suite
-- `docs/acceptance-reports/{story-id}-review.md` - Acceptance test report
-- Working, integrated feature ready for demo
-
-## ✅ Completion Criteria (Per Feature)
-- [ ] Implementation complete per project type
-- [ ] API contract compliance (100% for endpoints that exist)
-- [ ] Frontend-backend integration working (if applicable)
-- [ ] All test scenarios passing (unit, integration, e2e)
-- [ ] Acceptance criteria validated by pm-maestro-reviewer (ACCEPTED verdict)
-- [ ] Git workflow completed (task branches merged, feature branch clean)
-- [ ] Feature ready for user demo and approval
-
-## 🚨 Critical Requirements
-
-### API Contract Compliance (ZERO TOLERANCE)
-- **api-engineer MUST follow `{api_contract_path}` exactly** (whatever format it's in)
-- **NO deviations, modifications, or "improvements" allowed**
-- **Every endpoint, parameter, response format must match contract**
-- **Contract violations cause integration failures and project delays**
-
-### Feature Isolation
-- **ONE FEATURE AT A TIME** - never batch multiple features
-- **Complete entire process before next feature**
-- **Each feature must be fully integrated and tested**
-
-### Git Workflow
-- **All merges require explicit user approval** (per `.archflow/workflow.md`)
-- **Never auto-merge** task or feature branches
-- **Branch naming follows conventions** in `.archflow/workflow.md`
-
-### Mandatory Approval Gates
-- **DEMO REQUIRED**: Working feature must be demonstrated to user
-- **USER APPROVAL MANDATORY**: Wait for explicit approval before next feature
-- **NO PROCEEDING**: Cannot start next feature without approval
-
-## 🔄 Per-Feature Workflow
-```yaml
-For each feature in roadmap:
-  Step 3A: Development (agents based on project_type)
-  Step 3B: Integration (skip for backend_only)
-  Step 3C: qa-engineer testing
-  Step 3D: pm-maestro-reviewer acceptance testing
-  Step 3E: Git merge (with user approval)
-  Demo: Present working feature + acceptance report to user
-  Approval Gate: Wait for explicit user approval
-  Next: Move to next feature OR proceed to Phase 4 if all complete
+Respond with:
+- "Approved" → merge to feature branch
+- "Changes needed: [feedback]" → agent will address
+============================================
 ```
 
+WAIT for the user. Do NOT proceed.
+
+If "Approved":
+- Merge per workflow.md.
+- Update the **active release file**: story `status: done`, all subtasks `completed: true`,
+  `approved: true`, `approved_at: "[date]"`.
+- Update current-feature.yaml: task `status: complete`, `completed_at: "[date]"`.
+
+If "Changes needed": re-dispatch agent with feedback → re-run 3C → 3D → back to the gate.
+
+## 📤 Expected Outputs (per story)
+- Implementation per project type; comprehensive tests
+- `docs/acceptance-reports/{story-id}-review.md`
+- Working, integrated story ready for demo
+
+## ✅ Completion Criteria (per story)
+- [ ] Built by the assigned agent; readiness gates honored (or override recorded)
+- [ ] API contract compliance (100% for endpoints that exist)
+- [ ] Integration working (if applicable); all tests passing
+- [ ] Acceptance ACCEPTED by pm-maestro-reviewer
+- [ ] Git workflow completed; user approved
+
+## 🚨 Critical Requirements
+- **API Contract (ZERO TOLERANCE)**: api-engineer follows `{api_contract_path}` exactly — no deviations.
+- **One story at a time**; complete the full cycle before the next.
+- **All merges require explicit user approval** (per `.archflow/workflow.md`); never auto-merge.
+- **Readiness gates are advisory-recorded in full mode**; auto-satisfied in quick mode.
+
 ## ➡️ Phase Transition
-When ALL features are implemented, integrated, tested, and approved:
-1. Update `.archflow/current-phase.yaml` to `phase: 4`
-2. Proceed to Quality Phase
-3. Load `.archflow/phases/phase-4-quality.md` for next phase instructions
+When ALL stories in the active release are `done` (tested + accepted + approved):
+1. Update `.archflow/current-phase.yaml` to `phase: 4` (still scoped to the active release).
+2. Load `.archflow/phases/phase-4-quality.md`.
+(The release itself SHIPS in Phase 5 — mark released, tag, archive, append history, then prompt for
+the next release.)
 
 ---
-**Phase 3 Complete (All Features)** → **Phase 4: Quality**
+**Phase 3 Complete (active release built)** → **Phase 4: Quality**
