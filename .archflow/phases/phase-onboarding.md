@@ -788,36 +788,34 @@ agent_outputs:
 
 ---
 
-## Canonical Roadmap Structure
+## Canonical Roadmap Structure (v2.0 — multi-file)
 
-All project types use the SAME structure. Project-type differentiation is handled by the `scope` field on epics, not by structural differences.
+All project types use the SAME structure. Project-type differentiation is handled by the `scope` field
+on epics (labels), not by structural differences. **Epics are labels — they do NOT contain stories.**
+Stories live in `backlog.yaml` (stubs) or a release file (detailed); a story is in exactly ONE place.
 
-See `.archflow/schemas/roadmap-schema.yaml` for the full schema definition.
+Use the "CANONICAL OUTPUT FORMAT (v2.0 — Mode A)" template earlier in this file as the authoritative
+shape, and the split schemas: `roadmap-schema.yaml` (index), `backlog-schema.yaml` (stubs),
+`release-schema.yaml` (detailed releases/stories), `history-schema.yaml`.
 
 ```yaml
+# .archflow/roadmap.yaml — INDEX only (no stories under epics)
+schema_version: "2.0"
 project: "{name}"
 project_type: "{fullstack|frontend_only|backend_only|mobile}"
+mode: "{quick|full}"
+epics:                                    # LABELS only
+  - {id: E1, name: "Epic Name", scope: backend}   # backend|frontend|mobile|both|unknown
+active_release: null                      # or the in_progress slug
+releases: []                              # planning/ready/in_progress refs
+shipped: []                               # ledger of shipped releases
 
-epics:
-  - id: E1
-    name: "Epic Name"
-    scope: backend    # backend | frontend | mobile | both | unknown
-    stories:
-      - id: S1-01
-        title: "Short Title"
-        priority: Critical
-        status: done
-        assigned: ui-engineer
-        description: >
-          Detailed description.
-        acceptance_criteria:
-          - text: "Criterion"
-            met: true
-        subtasks:
-          - text: "Task"
-            completed: true
+# .archflow/backlog.yaml — stubs (unscheduled scope)
+# .archflow/releases/{slug}.yaml — detailed stories (readiness status + gates + ACs + subtasks)
+# .archflow/releases/archive/{slug}.yaml — shipped releases
+# .archflow/history.yaml — shipped-story intent layer
 
-# v2.0: there is NO phases:/sprints: block. Instead:
+# There is NO phases:/sprints: block. Instead:
 #   - roadmap.yaml holds the index (mode, epic LABELS, releases[] pipeline, shipped[] ledger)
 #   - backlog.yaml holds unbuilt scope as stubs
 #   - releases/archive/{slug}.yaml holds already-shipped scope (status: released)

@@ -47,15 +47,15 @@ release and keeps the roadmap bounded. Perform IN ORDER:
 4. **Generate release notes** → `docs/releases/{active_release}.md` from the release's stories
    (titles + ACs) and goal. This is the durable human record.
 
-5. **Append `history.yaml`** — one entry per shipped story (the intent layer). Capture `touched`
+5. **Archive** the release file: move `.archflow/releases/{active_release}.yaml` →
+   `.archflow/releases/archive/{active_release}.yaml`.
+
+6. **Append `history.yaml`** — one entry per shipped story (the intent layer). Capture `touched`
    (files / endpoints / screens) from the git diff of this release (previous tag → this tag), plus
    the story's summary + ACs. Symbol/path anchors only, never line numbers.
    ```bash
    git diff <previous-tag>..vX.Y.Z --name-only   # -> touched.files per story (best-effort per story)
    ```
-
-6. **Archive** the release file: move `.archflow/releases/{active_release}.yaml` →
-   `.archflow/releases/archive/{active_release}.yaml`.
 
 7. **Roll off the index**: remove the release from `roadmap.yaml → releases`, append it to
    `roadmap.yaml → shipped` (id, name, version, released_at, file → archive path).
