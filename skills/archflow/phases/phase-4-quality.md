@@ -1,7 +1,8 @@
 # Phase 4: Quality Assurance
 
 ## 🎯 Phase Objective
-Comprehensive quality review, performance optimization, and final testing across all implemented features.
+Comprehensive quality review, performance optimization, and final testing across the **active
+release's** implemented stories, before it ships in Phase 5.
 
 ## 📋 Required Agents (Project-Type Aware)
 
@@ -20,10 +21,10 @@ Read `.archflow/current-phase.yaml` to determine `project_type` and select appro
 - **fullstack/mobile**: all agents review their full scope
 
 ## 📚 Prerequisites
-- All Phase 3 features implemented, integrated, and individually approved
+- All stories in the active release (`.archflow/releases/{active_release}.yaml`) are `done` (Phase 3)
 - API contract at `.archflow/current-phase.yaml → api_contract_path` (for contract compliance verification)
-- Individual feature tests passing
-- User approval for all individual features
+- Individual story tests passing
+- User approval for all individual stories
 
 ## 🚀 Execution Steps
 
@@ -62,11 +63,13 @@ code-reviewer: complete codebase review → docs/code-review-report.md
   - Documentation completeness
   - Maintainability assessment
 
-# Acceptance Regression Suite
-pm-maestro-reviewer: .archflow/roadmap.yaml → docs/acceptance-reports/regression-report.md
-  - Re-run ALL acceptance tests from Phase 3 as regression
-  - Verify no cross-feature regressions introduced
-  - Produce consolidated acceptance regression report
+# Acceptance Regression Suite (scoped to the ACTIVE RELEASE)
+pm-maestro-reviewer: .archflow/releases/{active_release}.yaml → docs/acceptance-reports/regression-report.md
+  - Re-run ALL acceptance tests for THIS release's stories as regression
+  - Verify no cross-story regressions within the release
+  - Produce a consolidated acceptance regression report for the release
+  - (Cross-release regression against prior shipped releases is a separate, optional full-regression
+    suite — run it before a high-risk release, sourced from history.yaml + archived releases.)
 
 # Performance Analysis (If Issues Found)
 performance-optimizer: analyze and optimize → docs/performance-report.md
@@ -167,8 +170,8 @@ If ALL pass → update `current-phase.yaml` to next phase.
 ## ➡️ Phase Transition
 When all quality gates pass and user approves:
 1. Update `.archflow/current-phase.yaml` to `phase: 5`
-2. Proceed to Launch Phase
+2. Proceed to ship the active release (Phase 5 — ship ritual + deploy)
 3. Load `.archflow/phases/phase-5-launch.md` for next phase instructions
 
 ---
-**Phase 4 Complete** → **Phase 5: Launch**
+**Phase 4 Complete (active release quality-passed)** → **Phase 5: Ship the Release**
