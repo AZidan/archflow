@@ -106,8 +106,9 @@ git push origin --delete [feature]/[task-number]-[subtask-name]
 
 After completing a subtask, update BOTH tracking files:
 
-#### 8.1 Update roadmap.yaml
-Find your story → subtasks array → your subtask:
+#### 8.1 Update the active release file (v2.0)
+Tracking lives in the active release file — `.archflow/releases/{active_release}.yaml` — NOT in
+`roadmap.yaml` (that's just the index). Find your story → subtasks array → your subtask:
 ```yaml
 subtasks:
   - text: "Your subtask description"
@@ -127,11 +128,18 @@ tasks:
 
 #### 8.3 Commit the tracking update
 ```bash
-git add .archflow/roadmap.yaml .archflow/current-feature.yaml
+git add .archflow/releases/{active_release}.yaml .archflow/current-feature.yaml
 git commit -m "docs: mark subtask complete - [subtask description]"
 ```
 
 IMPORTANT: Do this AFTER each subtask, not at the end of the story.
+
+#### 8.4 Footprint capture (for history.yaml, at release ship)
+The `history.yaml` intent layer records what each shipped story `touched` (files / endpoints /
+screens). The authoritative capture is at **release ship** (Phase 5 ship ritual) from the tag-to-tag
+git diff. Because branches map to stories/tasks, per-story attribution is best-effort from the merge
+structure; keep task/subtask branches scoped to a single story so the diff attributes cleanly. No
+per-subtask history bookkeeping is needed here — it is derived at ship time.
 
 ---
 
