@@ -85,7 +85,7 @@ stories:
       - {text: "{criterion}", met: false}
     subtasks:
       - {text: "{task}", completed: false}
-      - pulled_from: backlog          # annotate origin on the story if pulled in
+    pulled_from: backlog              # story-level (sibling of subtasks) — only if pulled in
 ```
 
 **Deriving `gates` from scope:** frontend / screen work -> `needs_design: true`; new or changed API

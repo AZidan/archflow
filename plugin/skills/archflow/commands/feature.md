@@ -82,39 +82,40 @@ Paste the epic/story link:
 
 ---
 
-#### Option C: "From roadmap"
+#### Option C: "From existing scope" (backlog + active release)
 
-1. Read `.archflow/roadmap.yaml` and `.archflow/current-phase.yaml` (for `project_type`)
-2. **Filter stories by project_type compatibility** (using the parent epic's `scope`):
-   - Determine which scopes match this repo's project_type:
-     - `backend_only` → show epics with scope: `backend`, `both`
-     - `frontend_only` → show epics with scope: `frontend`, `both`
-     - `mobile` → show epics with scope: `mobile`, `both`
-     - `fullstack` → show all scopes
-   - Epics with `scope: unknown` are always shown (may need investigation)
-3. List matching stories with status `backlog` or `in_progress`, grouped by epic:
+In v2.0 stories are NOT in `roadmap.yaml` (that's the story-less index). Existing work is either a
+**backlog stub** (`backlog.yaml`) or an **`in_progress`/ready story in the active release**
+(`releases/{active_release}.yaml`).
+
+1. Read `.archflow/current-phase.yaml` (for `project_type`, `mode`, `active_release`),
+   `.archflow/backlog.yaml`, and the active release file (if `active_release` is set). Use
+   `roadmap.yaml` only for epic labels (to show epic names/scope).
+2. **Filter by project_type compatibility** (using the parent epic's `scope`, resolved via the story's
+   `S{epic}-*` id → epic label in `roadmap.yaml`):
+   - `backend_only` → `backend`, `both`; `frontend_only` → `frontend`, `both`; `mobile` → `mobile`,
+     `both`; `fullstack` → all. Epics with `scope: unknown` are always shown.
+3. List candidates grouped by epic, from BOTH sources:
    ```
    Stories relevant to this [project_type] repo:
 
-   Epic: E1 - Admin Authentication (scope: backend)
-     1. [S1-01] Admin Login (backlog, Critical, assigned: ui-engineer)
-     2. [S1-02] Role-Based Access (backlog, High, assigned: api-engineer)
+   In the active release [{active_release}] (build now):
+     1. [S1-02] Role-Based Access (spec_ready, High, api-engineer)
 
-   Epic: E2 - Dashboard (scope: both)
-     3. [S2-01] Dashboard Metrics Cards (backlog, Medium, assigned: ui-engineer)
+   In the backlog (will be promoted into the active release, or pulled forward):
+     2. [S1-01] Admin Login (backlog, Critical)
+     3. [S2-01] Dashboard Metrics Cards (backlog, Medium)
 
-   [N] stories hidden (epic scope: frontend/mobile — not applicable to this repo)
+   [N] hidden (epic scope not applicable to this repo)
 
-   Which story to start? [number / "show all"]
+   Which story to work? [number / "show all"]
    ```
-4. If user types "show all": display the hidden stories too, each with a warning:
-   ```
-   Epic: E5 - Mobile App (scope: mobile)
-     ⚠️ [S5-01] Push Notifications (backlog, scope: mobile)
-         Warning: This epic's scope (mobile) doesn't match this repo (backend_only).
-         It may have no implementable work here. Continue anyway? [Yes / Pick another]
-   ```
-5. User picks one → skip to Step 3 (git workflow)
+4. "show all" → also list stories whose epic scope doesn't match, each with a scope-mismatch warning.
+5. User picks one:
+   - **Already in the active release** → skip to Step 3 (git workflow).
+   - **A backlog stub** → this is a pull-forward: promote/MOVE it into the active release (detail it,
+     derive `gates`, `status: spec_ready`, annotate `pulled_from: backlog`), then Step 3. If no release
+     is `in_progress`, tell the user to start one first (`/archflow release start`).
 
 ---
 
