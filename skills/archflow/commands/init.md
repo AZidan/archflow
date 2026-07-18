@@ -185,6 +185,8 @@ Next steps:
     → .archflow/project-context.md (business goals, tech stack, architecture)
     → .archflow/roadmap.yaml (v2.0 index: mode, epic labels, release pipeline)
     → .archflow/backlog.yaml (full scope as stubs; releases are carved from it just-in-time)
+  - At the end of Phase 1, your FIRST release is created + started (quick mode
+    auto-creates an implicit "current" release) — that's what Phases 2–3 build.
 ```
 
 ---

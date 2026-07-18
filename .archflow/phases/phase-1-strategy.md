@@ -63,11 +63,27 @@ Before updating `current-phase.yaml`, verify:
 If ANY check fails → HALT: "Cannot transition. Missing: [list]"
 If ALL pass → update `current-phase.yaml` to next phase.
 
-## ➡️ Phase Transition
+## ➡️ Phase Transition — create + start the FIRST release, then enter the inner loop
+
+Phase 1 produces the backlog; it does NOT itself build anything. Before Phase 2, you MUST create and
+start the first release (the inner-loop phases 2/2.5/3 require an `active_release`). This is the
+Strategy → **Prepare** → **Build** bridge.
+
 Upon completion and approval:
-1. Update `.archflow/current-phase.yaml` to `phase: 2`
-2. Proceed to Design Phase
-3. Load `.archflow/phases/phase-2-design.md` for next phase instructions
+
+1. **Create + start the first release** (sets `active_release`):
+   - **full mode:** create it from the backlog — invoke feature-planner **Mode B** (≡
+     `/archflow release new` + `start`): pick the initial slice of backlog stubs, MOVE them into
+     `.archflow/releases/{slug}.yaml`, detail them (ACs, subtasks, gates), set `status: in_progress`,
+     and register it in `roadmap.yaml → releases` with `active_release: {slug}`.
+   - **quick mode:** auto-create a single implicit release `.archflow/releases/current.yaml`
+     (`status: in_progress`), set `active_release: current`. Stories may be added directly to it
+     (quick mode skips the backlog→promote ceremony).
+2. Update `.archflow/current-phase.yaml`: `phase: 2`, `active_release: {slug|current}`.
+3. Load `.archflow/phases/phase-2-design.md` for next phase instructions.
+
+(Every subsequent release is created/started the same way, from the Phase 5 loop-back — see
+`phase-5-launch.md` Step 5D and `/archflow release`.)
 
 ---
-**Phase 1 Complete** ✅ → **Phase 2: Design** ➡️
+**Phase 1 Complete** ✅ → **First release started** → **Phase 2: Design** ➡️

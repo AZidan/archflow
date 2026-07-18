@@ -17,7 +17,9 @@ Design splits into TWO kinds of work (v2.0 — Pillar 2):
 
 ## 📚 Prerequisites
 - Phase 1 outputs: `.archflow/project-context.md`, `.archflow/roadmap.yaml`, `.archflow/backlog.yaml`
-- The active release (`.archflow/releases/{active_release}.yaml`) — its stories drive per-story design
+- The active release (`.archflow/releases/{active_release}.yaml`) — **created + started at the Phase
+  1→2 boundary** (see `phase-1-strategy.md` Phase Transition), or by the Phase 5 loop-back for later
+  releases. Its stories drive per-story design.
 - User approval from Phase 1
 
 ## 🚦 Per-story design gate (readiness pipeline)
