@@ -60,8 +60,9 @@ release and keeps the roadmap bounded. Perform IN ORDER:
 7. **Roll off the index**: remove the release from `roadmap.yaml → releases`, append it to
    `roadmap.yaml → shipped` (id, name, version, released_at, file → archive path).
 
-8. **Clear the pointer**: `roadmap.yaml → active_release` and `current-phase.yaml → active_release`
-   set to null. (In quick mode with a single implicit release, just mark it released.)
+8. **Clear the pointer**: remove the `active_release` key from `roadmap.yaml` and `current-phase.yaml`
+   (omit it rather than writing `null` — matches how migrate leaves it). (In quick mode with a single
+   implicit release, just mark it released.)
 
 9. **Commit** the finalization:
    ```bash

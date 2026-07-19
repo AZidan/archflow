@@ -38,16 +38,45 @@ def git(path, *args):
 
 
 def slugify(s):
+    s = str(s or "")
     s = s.split(":", 1)[-1] if ":" in s else s
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-") or "release"
+
+
+PRIORITY_MAP = {"critical": "Critical", "p0": "Critical", "blocker": "Critical", "must-have": "Critical",
+                "high": "High", "p1": "High", "should-have": "High",
+                "medium": "Medium", "med": "Medium", "p2": "Medium", "normal": "Medium", "nice-to-have": "Medium",
+                "low": "Low", "p3": "Low", "p4": "Low", "minor": "Low", "won't-have": "Low"}
+
+
+def norm_priority(p):
+    if p in ("Critical", "High", "Medium", "Low"):
+        return p
+    k = str(p or "").strip().lower()
+    if not k:
+        return "Medium"
+    if k in PRIORITY_MAP:
+        return PRIORITY_MAP[k]
+    warnings.append(f"unknown priority {p!r} -> defaulted 'Medium'")
+    return "Medium"
 
 
 PROJECT_ROOT = "."   # set in main(); lets gate derivation check for real design artifacts
 
 
+def assigned_str(st):
+    """Coerce v1 `assigned` (may be a list/dict/None) to a single lowercased string."""
+    v = st.get("assigned")
+    if isinstance(v, (list, tuple)):
+        v = " ".join(str(x) for x in v)
+    elif isinstance(v, dict):
+        v = " ".join(str(x) for x in v.values())
+    return str(v or "")
+
+
 def gates_for(st):
     """Derive gates from scope: the story's assigned role + any real design artifact on disk."""
-    a = (st.get("assigned") or "").lower()
+    a = assigned_str(st).lower()
     sid = st.get("id", "")
     has_artifact = bool(sid) and os.path.isdir(os.path.join(PROJECT_ROOT, "design-artifacts", sid))
     return {"needs_design": has_artifact or bool(re.search(r"ui|ux|frontend|mobile|design", a)),
@@ -55,9 +84,13 @@ def gates_for(st):
 
 
 def default_assigned(st):
-    """Keep the v1 assignee if present; otherwise infer a consistent one from gates."""
-    if st.get("assigned"):
-        return st["assigned"]
+    """A single-string assignee: the v1 value if it's a usable string, else inferred from gates."""
+    v = st.get("assigned")
+    if isinstance(v, str) and v.strip():
+        return v
+    a = assigned_str(st).strip()
+    if a:                                 # list/dict assignee -> its coerced string
+        return a
     g = gates_for(st)
     if g["needs_contract"] and not g["needs_design"]:
         return "api-engineer"
@@ -77,12 +110,12 @@ def load_v1(af):
     stories, sprint_of, sprints = [], {}, []
 
     def keep(st):
-        """Skip stories whose id is missing or not the schema id shape (S{n}-{m})."""
+        """Skip stories whose id is missing or not the schema id shape (S{n}-{m}, opt. letter suffix)."""
         sid = st.get("id")
         if not isinstance(sid, str) or not sid.strip():
             warnings.append(f"story with missing/invalid id skipped: {st.get('title', st)!r}")
             return False
-        if not re.match(r"^S\d+-\d+", sid.strip()):
+        if not re.match(r"^S\d+-\d+[a-z]?$", sid.strip()):   # end-anchored; allows S1-03b
             warnings.append(f"story id {sid!r} doesn't match S{{n}}-{{m}} — skipped "
                             f"(v2.0 requires that id shape)")
             return False
@@ -169,8 +202,8 @@ def story_dates(repo):
     for line in git(repo, "log", "--all", "--format=%ad|%s", "--date=short").splitlines():
         if "|" in line:
             d, s = line.split("|", 1)
-            for a, b in re.findall(r"[Ss](\d+)-(\d+)", s):
-                k = f"S{a}-{b}"; m[k] = max(m.get(k, ""), d)
+            for a in re.findall(r"[Ss](\d+-\d+[a-z]?)", s):   # keep suffix so S1-03b dates right
+                k = f"S{a}"; m[k] = max(m.get(k, ""), d)
     return m
 
 
@@ -213,7 +246,7 @@ def ac_texts(items):
 
 
 def detail(st, status=None):
-    return {"id": st["id"], "title": st.get("title", ""), "priority": st.get("priority", "Medium"),
+    return {"id": st["id"], "title": st.get("title", ""), "priority": norm_priority(st.get("priority")),
             "status": status or readiness(st.get("status", "backlog")), "gates": gates_for(st),
             "assigned": default_assigned(st), "description": st.get("description", ""),
             "acceptance_criteria": norm_ac(st.get("acceptance_criteria")),
@@ -285,6 +318,9 @@ def main():
             backlog.append(b)
 
     datable = sum(1 for st in stories if st["id"] in landed)
+    if active_sprint and not active_stories:
+        warnings.append(f"designated active sprint {active_sprint.get('id')!r} has no un-done stories "
+                        f"— no active release will be created (its done work went to a shipped release)")
 
     # ---- report ----
     print(f"\n=== /archflow migrate ({'APPLY' if apply else 'DRY-RUN'}) : {v1.get('project')} ===")
