@@ -42,10 +42,26 @@ def slugify(s):
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-") or "release"
 
 
-def gates_for(assigned):
-    a = (assigned or "").lower()
-    return {"needs_design": bool(re.search(r"ui|ux|frontend|mobile", a)),
-            "needs_contract": bool(re.search(r"api|backend|frappe", a))}
+PROJECT_ROOT = "."   # set in main(); lets gate derivation check for real design artifacts
+
+
+def gates_for(st):
+    """Derive gates from scope: the story's assigned role + any real design artifact on disk."""
+    a = (st.get("assigned") or "").lower()
+    sid = st.get("id", "")
+    has_artifact = bool(sid) and os.path.isdir(os.path.join(PROJECT_ROOT, "design-artifacts", sid))
+    return {"needs_design": has_artifact or bool(re.search(r"ui|ux|frontend|mobile|design", a)),
+            "needs_contract": bool(re.search(r"api|backend|frappe|contract|endpoint", a))}
+
+
+def default_assigned(st):
+    """Keep the v1 assignee if present; otherwise infer a consistent one from gates."""
+    if st.get("assigned"):
+        return st["assigned"]
+    g = gates_for(st)
+    if g["needs_contract"] and not g["needs_design"]:
+        return "api-engineer"
+    return "ui-engineer"
 
 
 def readiness(status):
@@ -59,18 +75,41 @@ def load_v1(af):
     v1 = yaml.safe_load(open(os.path.join(af, "roadmap.yaml")))
     variant = "A" if "phases" in v1 or "epics" in v1 else ("B" if "sprints" in v1 else "unknown")
     stories, sprint_of, sprints = [], {}, []
+
+    def keep(st):
+        """Skip malformed stories (no usable id) rather than crashing."""
+        sid = st.get("id")
+        if not isinstance(sid, str) or not sid.strip():
+            warnings.append(f"story with missing/invalid id skipped: {st.get('title', st)!r}")
+            return False
+        return True
+
     if variant == "A":
+        # Stories are defined under epics; sprints (under phases) reference them by ID.
+        by_id = {}
         for e in v1.get("epics", []):
             for st in e.get("stories", []):
-                stories.append(st); sprint_of[st["id"]] = e.get("name", e.get("id", ""))
-        sprints = v1.get("phases", [])  # milestones
-        for ph in sprints:
+                if keep(st):
+                    stories.append(st); by_id[st["id"]] = st
+                    sprint_of[st["id"]] = e.get("name", e.get("id", ""))
+        # Flatten inner sprints into one list, each carrying RESOLVED story objects.
+        for ph in v1.get("phases", []):
             for sp in ph.get("sprints", []):
-                sp["_stories"] = sp.get("stories", [])
+                resolved = []
+                for ref in sp.get("stories", []):
+                    sid = ref if isinstance(ref, str) else ref.get("id")
+                    if sid in by_id:
+                        resolved.append(by_id[sid])
+                        sprint_of[sid] = sp.get("name", sp.get("id", ""))
+                sprints.append({"id": sp.get("id"), "name": sp.get("name", sp.get("id", "")),
+                                "status": sp.get("status"), "goal": sp.get("goal", ""),
+                                "stories": resolved})
     else:
-        sprints = v1.get("sprints", [])
-        for s in sprints:
-            for st in s.get("stories", []):
+        for s in v1.get("sprints", []):
+            kept = [st for st in s.get("stories", []) if keep(st)]
+            s["stories"] = kept
+            sprints.append(s)
+            for st in kept:
                 stories.append(st); sprint_of[st["id"]] = s.get("name", s.get("id", ""))
     return v1, variant, stories, sprints, sprint_of
 
@@ -104,8 +143,7 @@ def release_events(repo):
     prod = next((b.strip().lstrip("* ") for b in branches.splitlines()
                  if re.search(r"(^|/)prod$", b.strip())), None)
     if not prod:
-        tags = [t for t in git(repo, "tag").splitlines() if re.match(r"v?\d", t)]
-        return (None, [])  # tags rarely dated cheaply; treat as continuous unless prod branch
+        return (None, [])  # no prod branch -> continuous deploy (baseline + rolling)
     seen = {}
     for line in git(repo, "log", prod, "--format=%ad|%s", "--date=short").splitlines():
         if "|" in line:
@@ -145,8 +183,8 @@ def build_windows(boundary, events):
 # ---- detail / write ---------------------------------------------------------------------------
 def detail(st, status=None):
     return {"id": st["id"], "title": st.get("title", ""), "priority": st.get("priority", "Medium"),
-            "status": status or readiness(st.get("status", "backlog")), "gates": gates_for(st.get("assigned")),
-            "assigned": st.get("assigned", "ui-engineer"), "description": st.get("description", ""),
+            "status": status or readiness(st.get("status", "backlog")), "gates": gates_for(st),
+            "assigned": default_assigned(st), "description": st.get("description", ""),
             "acceptance_criteria": st.get("acceptance_criteria", []), "subtasks": st.get("subtasks", [])}
 
 
@@ -162,7 +200,9 @@ def main():
     ap.add_argument("--active", default=None, help="sprint id/slug to become the active (in_progress) release")
     a = ap.parse_args()
     apply = a.apply and not a.dry_run
+    global PROJECT_ROOT
     repo, af = a.path, os.path.join(a.path, ".archflow")
+    PROJECT_ROOT = a.path
     if not os.path.exists(os.path.join(af, "roadmap.yaml")):
         sys.exit(f"ERROR: {af}/roadmap.yaml not found")
 
@@ -232,14 +272,31 @@ def main():
               + (" --active <sprint>" if len(inprog) > 1 and not a.active else "") + ".)")
         return
 
-    # ---- apply: backup + write ----
-    bk = os.path.join(af, "backup-v1"); os.makedirs(bk, exist_ok=True)
-    for f in ("roadmap.yaml", "current-phase.yaml", "current-feature.yaml"):
-        p = os.path.join(af, f)
-        if os.path.exists(p):
-            shutil.copy(p, bk)
+    # ---- apply: backup entire .archflow/ (except the backup dir itself), then write ----
+    bk = os.path.join(af, "backup-v1")
+    if os.path.exists(bk):
+        shutil.rmtree(bk)
+    shutil.copytree(af, bk, ignore=shutil.ignore_patterns("backup-v1"))
     res = os.path.join(af, "releases"); arc = os.path.join(res, "archive")
     os.makedirs(arc, exist_ok=True)
+
+    from datetime import date as _date
+    today = _date(*[int(x) for x in git(repo, "log", "-1", "--format=%ad", "--date=short").strip().split("-")]) \
+        if git(repo, "log", "-1", "--format=%ad", "--date=short").strip() else None
+
+    def window_date(L, lo, hi, sts):
+        """A schema-required date for the release. Never null."""
+        if L.startswith("release-"):
+            return L.replace("release-", "")
+        # latest commit date among this window's done stories
+        ds = [landed[s["id"]] for s in sts if s.get("id") in landed]
+        if ds:
+            return max(ds)
+        if hi not in ("9999", "0000") and re.match(r"\d{4}-\d{2}-\d{2}", hi):
+            return hi
+        if boundary:                       # pre-release baseline: use the boundary date
+            return boundary
+        return today.isoformat() if today else "1970-01-01"
 
     shipped, history = [], []
     for L, lo, hi in windows:
@@ -247,7 +304,7 @@ def main():
         if not sts:
             continue
         rslug = slugify(L)
-        released_at = L.replace("release-", "") if L.startswith("release-") else None
+        released_at = window_date(L, lo, hi, sts)
         rel = {"id": rslug, "name": L, "goal": "", "status": "released",
                "version": f"v0-{rslug}", "released_at": released_at,
                "stories": [detail(s, status="done") for s in sts]}
@@ -269,26 +326,26 @@ def main():
         dump(rel, os.path.join(res, active_slug + ".yaml"))
         releases_index.append({"id": active_slug, "status": "in_progress", "file": f"releases/{active_slug}.yaml"})
 
-    # epic labels from prefixes
+    # epic labels — synthesized from every story's prefix (single helper, used for
+    # grouping too, so no story lands under an unregistered epic label).
+    def epic_of(sid):
+        m = re.match(r"^S(\d+)-", sid or "")
+        return "E" + m.group(1) if m else "E0"
+
     epic_names = {}
     for st in stories:
-        m = re.match(r"^S(\d+)-", st.get("id", ""))
-        if m:
-            key = "E" + m.group(1)
-            epic_names.setdefault(key, (sprint_of.get(st["id"], "").split(":", 1)[-1].strip() or key))
-    epics = [{"id": k, "name": epic_names[k], "scope": "both"}
-             for k in sorted(epic_names, key=lambda x: int(x[1:]))]
+        key = epic_of(st.get("id"))
+        epic_names.setdefault(key, (sprint_of.get(st.get("id"), "").split(":", 1)[-1].strip() or key))
+    epic_key_order = sorted(epic_names, key=lambda x: (0, int(x[1:])) if x[1:].isdigit() else (1, 0))
+    epics = [{"id": k, "name": epic_names[k], "scope": "both"} for k in epic_key_order]
 
     index = {"schema_version": "2.0", "project": v1.get("project"),
              "project_type": v1.get("project_type", "fullstack"), "mode": "full",
              "epics": epics, "active_release": active_slug,
              "releases": releases_index, "shipped": shipped}
     dump(index, os.path.join(af, "roadmap.yaml"))
-    # group backlog by epic: story S{n}-{m} belongs to epic E{n}
-    def epic_of(sid):
-        m = re.match(r"^S(\d+)-", sid)
-        return "E" + m.group(1) if m else "E0"
-    bl_epics = collections.OrderedDict((k, []) for k in sorted(epic_names, key=lambda x: int(x[1:])))
+    # group backlog by epic (E0 for any oddball id is registered above, so never dangling)
+    bl_epics = collections.OrderedDict((k, []) for k in epic_key_order)
     for b in backlog:
         bl_epics.setdefault(epic_of(b["id"]), []).append(b)
     dump({"epics": [{"id": k, "stories": v} for k, v in bl_epics.items() if v]},
