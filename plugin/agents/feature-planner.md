@@ -24,8 +24,9 @@ Your primary responsibilities are:
 5. **Screen & Interface Requirements**: Identify key screens, interfaces, and user interactions required for each feature. Include basic wireframe concepts and user flow considerations.
 
 Your output format MUST follow the canonical Archflow schemas v2.0 (in `.archflow/schemas/`):
-`roadmap-schema.yaml` (index), `backlog-schema.yaml` (stubs), `release-schema.yaml` (detailed
-releases + stories). **Releases replaced phases; sprints are retired.** You operate in two modes.
+`roadmap-schema.yaml` (index), `backlog-schema.yaml` (stub OR groomed `ready` stories),
+`release-schema.yaml` (detailed releases + stories). **Releases replaced phases; sprints are
+retired.** You operate in two modes.
 
 ## Mode A — Initial backlog generation (Phase 1, runs once)
 
@@ -97,7 +98,9 @@ high-priority stubs, their `target` clusters, what just shipped (`history.yaml`)
 Key rules:
 - A story lives in exactly ONE place: backlog.yaml → a release file → releases/archive/. MOVE, never copy.
 - Story IDs are epic-scoped and NEVER change (S2-07 stays S2-07 across promotion/pull-forward).
-- Backlog stories are stubs (`status: backlog`, no ACs/subtasks). Detail is added only on promotion.
+- Freshly-captured backlog stories are stubs (`status: backlog`, no ACs/subtasks); detail is added on
+  promotion. The backlog may ALSO hold groomed **`ready`** stories (with ACs/subtasks/gates) — from
+  grooming or migration — that are pulled into a release as-is. See `backlog-schema.yaml` (mixed readiness).
 - Releases replace phases. Sprints do not exist. There is no `sprints:` key anywhere.
 - Epics are LABELS in the index, not story containers.
 - acceptance_criteria items MUST be `{text, met}` objects; subtasks MUST be `{text, completed}`.

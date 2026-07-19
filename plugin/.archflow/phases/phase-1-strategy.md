@@ -22,7 +22,8 @@ feature-planner (Mode A): create the backlog stubs + epic labels → backlog.yam
 ## 📤 Expected Outputs
 - `.archflow/project-context.md` - Business goals, tech stack, target users, success metrics
 - `.archflow/roadmap.yaml` - Index: project meta, `mode`, epic labels, empty `releases:` pipeline
-- `.archflow/backlog.yaml` - Full product scope as prioritized stubs (no ACs/subtasks yet)
+- `.archflow/backlog.yaml` - Full product scope as prioritized stubs (no ACs/subtasks yet; stories may
+  be groomed to `ready` with full detail later — the backlog holds mixed readiness)
 
 ## ✅ Completion Criteria
 - [ ] Business strategy clearly defined with target market
