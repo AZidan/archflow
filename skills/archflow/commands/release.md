@@ -45,7 +45,7 @@ while an engineer builds the active one).
 ## `release ship` — finalize
 Run the **Phase 5 ship ritual** (`.archflow/phases/phase-5-launch.md`, Step 5C) for the active
 release: verify releasable → mark released + version + tag → generate `docs/releases/{slug}.md` →
-append `history.yaml` (with `touched` from the tag-to-tag diff) → archive the release file → roll off
+archive the release file → append `history.yaml` (with `touched` from the tag-to-tag diff) → roll off
 the index into `shipped` → clear `active_release` → commit. Then offer the next release (Step 5D).
 
 ## Notes
