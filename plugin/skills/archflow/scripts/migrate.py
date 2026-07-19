@@ -37,8 +37,21 @@ def git(path, *args):
     return subprocess.run(["git", "-C", path, *args], capture_output=True, text=True).stdout
 
 
+def txt(x):
+    """Coerce any v1 free-text value (int / list / dict / None) to a schema-valid string."""
+    if x is None:
+        return ""
+    if isinstance(x, str):
+        return x
+    if isinstance(x, (list, tuple)):
+        return " ".join(txt(i) for i in x)
+    if isinstance(x, dict):
+        return " ".join(txt(v) for v in x.values())
+    return str(x)
+
+
 def slugify(s):
-    s = str(s or "")
+    s = txt(s)
     s = s.split(":", 1)[-1] if ":" in s else s
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-") or "release"
 
@@ -246,9 +259,9 @@ def ac_texts(items):
 
 
 def detail(st, status=None):
-    return {"id": st["id"], "title": st.get("title", ""), "priority": norm_priority(st.get("priority")),
+    return {"id": st["id"], "title": txt(st.get("title")), "priority": norm_priority(st.get("priority")),
             "status": status or readiness(st.get("status", "backlog")), "gates": gates_for(st),
-            "assigned": default_assigned(st), "description": st.get("description", ""),
+            "assigned": default_assigned(st), "description": txt(st.get("description")),
             "acceptance_criteria": norm_ac(st.get("acceptance_criteria")),
             "subtasks": norm_sub(st.get("subtasks"))}
 
@@ -393,15 +406,15 @@ def main():
                         "released_at": released_at, "file": f"releases/archive/{rslug}.yaml"})
         for s in sts:
             history.append({"story": s["id"], "release": rslug, "shipped_at": released_at,
-                            "summary": s.get("title", ""), "touched": {"files": [], "endpoints": [], "screens": []},
+                            "summary": txt(s.get("title")), "touched": {"files": [], "endpoints": [], "screens": []},
                             "acceptance_criteria": ac_texts(s.get("acceptance_criteria"))})
 
     active_slug = None
     releases_index = []
     if active_sprint and active_stories:
         active_slug = slugify(active_sprint.get("name", active_sprint.get("id", "current")))
-        rel = {"id": active_slug, "name": active_sprint.get("name", active_slug),
-               "goal": (active_sprint.get("goal") or "").strip(), "status": "in_progress",
+        rel = {"id": active_slug, "name": txt(active_sprint.get("name")) or active_slug,
+               "goal": txt(active_sprint.get("goal")).strip(), "status": "in_progress",
                "stories": [detail(s) for s in active_stories]}
         dump(rel, os.path.join(res, active_slug + ".yaml"))
         releases_index.append({"id": active_slug, "status": "in_progress", "file": f"releases/{active_slug}.yaml"})
@@ -415,11 +428,11 @@ def main():
     epic_names = {}
     for st in stories:
         key = epic_of(st.get("id"))
-        epic_names.setdefault(key, (sprint_of.get(st.get("id"), "").split(":", 1)[-1].strip() or key))
+        epic_names.setdefault(key, (txt(sprint_of.get(st.get("id"))).split(":", 1)[-1].strip() or key))
     epic_key_order = sorted(epic_names, key=lambda x: (0, int(x[1:])) if x[1:].isdigit() else (1, 0))
     epics = [{"id": k, "name": epic_names[k], "scope": "both"} for k in epic_key_order]
 
-    index = {"schema_version": "2.0", "project": v1.get("project"),
+    index = {"schema_version": "2.0", "project": txt(v1.get("project")) or "project",
              "project_type": v1.get("project_type", "fullstack"), "mode": "full",
              "epics": epics}
     if active_slug:                     # omit the key entirely when nothing is in progress
