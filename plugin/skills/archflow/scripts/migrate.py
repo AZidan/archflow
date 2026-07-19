@@ -77,10 +77,14 @@ def load_v1(af):
     stories, sprint_of, sprints = [], {}, []
 
     def keep(st):
-        """Skip malformed stories (no usable id) rather than crashing."""
+        """Skip stories whose id is missing or not the schema id shape (S{n}-{m})."""
         sid = st.get("id")
         if not isinstance(sid, str) or not sid.strip():
             warnings.append(f"story with missing/invalid id skipped: {st.get('title', st)!r}")
+            return False
+        if not re.match(r"^S\d+-\d+", sid.strip()):
+            warnings.append(f"story id {sid!r} doesn't match S{{n}}-{{m}} — skipped "
+                            f"(v2.0 requires that id shape)")
             return False
         return True
 
@@ -181,11 +185,39 @@ def build_windows(boundary, events):
 
 
 # ---- detail / write ---------------------------------------------------------------------------
+def norm_ac(items):
+    """Normalize acceptance_criteria to [{text, met}] — v1 'old format' used plain strings."""
+    out = []
+    for it in (items or []):
+        if isinstance(it, dict):
+            out.append({"text": it.get("text", ""), "met": bool(it.get("met", False))})
+        else:
+            out.append({"text": str(it), "met": False})
+    return out
+
+
+def norm_sub(items):
+    """Normalize subtasks to [{text, completed}] — defensive against plain strings."""
+    out = []
+    for it in (items or []):
+        if isinstance(it, dict):
+            out.append({"text": it.get("text", ""), "completed": bool(it.get("completed", False))})
+        else:
+            out.append({"text": str(it), "completed": False})
+    return out
+
+
+def ac_texts(items):
+    """AC text list for history entries, tolerant of str-or-dict items."""
+    return [(it.get("text", "") if isinstance(it, dict) else str(it)) for it in (items or [])]
+
+
 def detail(st, status=None):
     return {"id": st["id"], "title": st.get("title", ""), "priority": st.get("priority", "Medium"),
             "status": status or readiness(st.get("status", "backlog")), "gates": gates_for(st),
             "assigned": default_assigned(st), "description": st.get("description", ""),
-            "acceptance_criteria": st.get("acceptance_criteria", []), "subtasks": st.get("subtasks", [])}
+            "acceptance_criteria": norm_ac(st.get("acceptance_criteria")),
+            "subtasks": norm_sub(st.get("subtasks"))}
 
 
 def dump(obj, path):
@@ -213,12 +245,17 @@ def main():
     # active sprint selection (one in_progress -> active release)
     inprog = [s for s in sprints if sprint_status(s) == "in_progress"]
     active_sprint = None
+    ambiguous = False
     if a.active:
         active_sprint = next((s for s in sprints if s.get("id") == a.active
                               or slugify(s.get("name", "")) == a.active), None)
+        if active_sprint is None:
+            sys.exit(f"ERROR: --active '{a.active}' matched no sprint. "
+                     f"Choices: " + ", ".join(s.get("id", "?") for s in sprints if s.get("id")))
     elif len(inprog) == 1:
         active_sprint = inprog[0]
     elif len(inprog) > 1:
+        ambiguous = True
         warnings.append(f"{len(inprog)} in_progress sprints — pass --active to pick the one being built: "
                         + ", ".join(s.get("id", "?") for s in inprog))
     active_ids = {st["id"] for st in active_sprint.get("stories", [])} if active_sprint else set()
@@ -269,8 +306,15 @@ def main():
 
     if not apply:
         print("\n(dry-run — nothing written. Review the timeline, then re-run with --apply"
-              + (" --active <sprint>" if len(inprog) > 1 and not a.active else "") + ".)")
+              + (" --active <sprint>" if ambiguous else "") + ".)")
         return
+
+    # Invariant: at most one in_progress release. Refuse to guess (do NOT silently drop
+    # the active-release designation to backlog). The user must name the active sprint.
+    if ambiguous and active_sprint is None:
+        sys.exit(f"ERROR: {len(inprog)} in_progress sprints — cannot pick the active release. "
+                 f"Re-run with --active <one of: "
+                 + ", ".join(s.get("id", "?") for s in inprog) + ">. Nothing was written.")
 
     # ---- apply: backup entire .archflow/ (except the backup dir itself), then write ----
     bk = os.path.join(af, "backup-v1")
@@ -314,7 +358,7 @@ def main():
         for s in sts:
             history.append({"story": s["id"], "release": rslug, "shipped_at": released_at,
                             "summary": s.get("title", ""), "touched": {"files": [], "endpoints": [], "screens": []},
-                            "acceptance_criteria": [ac.get("text", "") for ac in s.get("acceptance_criteria", [])]})
+                            "acceptance_criteria": ac_texts(s.get("acceptance_criteria"))})
 
     active_slug = None
     releases_index = []
@@ -341,8 +385,11 @@ def main():
 
     index = {"schema_version": "2.0", "project": v1.get("project"),
              "project_type": v1.get("project_type", "fullstack"), "mode": "full",
-             "epics": epics, "active_release": active_slug,
-             "releases": releases_index, "shipped": shipped}
+             "epics": epics}
+    if active_slug:                     # omit the key entirely when nothing is in progress
+        index["active_release"] = active_slug
+    index["releases"] = releases_index
+    index["shipped"] = shipped
     dump(index, os.path.join(af, "roadmap.yaml"))
     # group backlog by epic (E0 for any oddball id is registered above, so never dangling)
     bl_epics = collections.OrderedDict((k, []) for k in epic_key_order)
@@ -352,11 +399,15 @@ def main():
          os.path.join(af, "backlog.yaml"))
     dump(history, os.path.join(af, "history.yaml"))
 
-    # update current-phase.yaml: add mode + active_release
+    # update current-phase.yaml: add mode + active_release (preserves other keys)
     cp_path = os.path.join(af, "current-phase.yaml")
     if os.path.exists(cp_path):
         cp = yaml.safe_load(open(cp_path)) or {}
-        cp["mode"] = "full"; cp["active_release"] = active_slug
+        cp["mode"] = "full"
+        if active_slug:
+            cp["active_release"] = active_slug
+        else:
+            cp.pop("active_release", None)
         dump(cp, cp_path)
 
     print(f"\nAPPLIED. Wrote roadmap.yaml (index, {len(open(os.path.join(af,'roadmap.yaml')).readlines())} lines), "
