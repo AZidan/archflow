@@ -126,8 +126,9 @@ a draft release file):
 1. STOP — the active release file doesn't contain it, and a release-scoped agent can't see it.
 2. ASK: "S2-11 is in {backlog | q3-launch (draft)}, not this release. Pull it in?"
 3. On approval, **MOVE** it into the active release (never copy):
-   - from backlog → promote: remove the stub from `backlog.yaml`, add it to the release file, detail
-     ACs + subtasks, derive `gates` from scope.
+   - from backlog → promote: remove it from `backlog.yaml`, add it to the release file. If it's a bare
+     `backlog` stub, detail it now (ACs + subtasks, derive `gates`); if it's already a groomed `ready`
+     story, it's pull-able as-is.
    - from a draft release → relocate the story block out of that file into the active release file.
    - annotate `pulled_from: {backlog | <release-id>}` on the story.
 4. A story is never in two releases at once. Advisory, not a hard block.
