@@ -50,8 +50,8 @@ backlog_story:
   properties:
     id:
       type: string
-      pattern: "^S[0-9]+-[0-9]+$"
-      description: "Epic-scoped story ID — format S{epic_number}-{sequence}. Stable across promotion."
+      pattern: "^S[0-9]+-[0-9]+[a-z]?$"
+      description: "Epic-scoped story ID — S{epic}-{seq} with optional letter suffix (e.g. S1-03b). Stable across promotion."
       example: "S2-07"
     title:
       type: string

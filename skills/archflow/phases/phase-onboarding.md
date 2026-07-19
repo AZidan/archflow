@@ -103,7 +103,7 @@ When `.archflow/roadmap.yaml` is found, FIRST detect its schema version:
 - No `phases:` or `sprints:` keys anywhere
 
 **Backlog (`backlog.yaml`, `backlog-schema.yaml`)**
-- `epics[] → stories[]` are stubs: `id` (`^S[0-9]+-[0-9]+$`), `title`, `priority`, `status: backlog`, `description`
+- `epics[] → stories[]` are stubs: `id` (`^S[0-9]+-[0-9]+[a-z]?$`), `title`, `priority`, `status: backlog`, `description`
 
 **Releases (`releases/*.yaml`, `release-schema.yaml`)**
 - Each: `id`, `name`, `goal`, `status` (`planning|ready|in_progress|released`), `stories[]`

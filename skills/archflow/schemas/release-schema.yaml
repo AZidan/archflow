@@ -74,8 +74,8 @@ story:
   properties:
     id:
       type: string
-      pattern: "^S[0-9]+-[0-9]+$"
-      description: "Epic-scoped (S{epic}-{seq}); unchanged when promoted from backlog or pulled between releases."
+      pattern: "^S[0-9]+-[0-9]+[a-z]?$"
+      description: "Epic-scoped (S{epic}-{seq}, optional letter suffix for split stories e.g. S1-03b); stable across promotion."
       example: "S2-07"
     title:
       type: string

@@ -23,7 +23,7 @@ history_entry:
   type: object
   required: [story, release, shipped_at, summary, touched, acceptance_criteria]
   properties:
-    story:   {type: string, pattern: "^S[0-9]+-[0-9]+$", example: "S3-04"}
+    story:   {type: string, pattern: "^S[0-9]+-[0-9]+[a-z]?$", example: "S3-04"}
     release: {type: string, example: "checkout-redesign"}
     version: {type: string, required: false, example: "v1.4.0"}
     shipped_at: {type: string, format: iso8601, example: "2026-03-14"}

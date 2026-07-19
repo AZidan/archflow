@@ -60,15 +60,18 @@ Point the user at `.archflow/backup-v1/` for rollback; note `/archflow release` 
   - *Deploy boundary* = first-commit date of strong CD infra (`buildspec`, `cloudbuild`,
     `kubernetes/**/deployment`, `helm`, `/eks`, `infra/**prod**`, `docker-compose.prod`, `kustomize`) —
     NOT test CI. Work before it → a `baseline` release.
-  - *Release events* = prod-branch merges (`from */staging`, `staging into prod`) / release tags,
-    coalesced within ~5 days. None → continuous deploy: `baseline` + one rolling release.
+  - *Release events* = prod-branch merges (`from */staging`, `staging into prod`), coalesced within
+    ~5 days. None → continuous deploy: `baseline` + one rolling release. (Git tags are not read.)
   - *Story dating* from `S{n}-{m}` commit subjects; undated done work → `baseline`.
 - **Routing:** `done` → reconstructed `releases/archive/` + `shipped` ledger + `history.yaml`; the ONE
   current `in_progress` sprint → the active `in_progress` release; everything else → `backlog.yaml` as
   **`ready` DETAILED stories** (ACs/subtasks kept, not stripped), with `target` = source sprint theme.
-- **Fill-ins:** epic labels synthesized from `S{n}-` prefixes; per-story `gates` from `assigned`;
-  archived-release `version` = tag or `v0-{slug}` (never null); `mode: full`; `active_release` set in
-  `roadmap.yaml` + `current-phase.yaml`.
+- **Normalization:** `priority` and story `status` mapped to the v2 enums; `acceptance_criteria`/
+  `subtasks` coerced to `{text,met}`/`{text,completed}`; non-`S{n}-{m}` ids skipped+warned.
+- **Fill-ins:** epic labels synthesized from `S{n}-` prefixes; per-story `gates` from scope
+  (`assigned` + any `design-artifacts/{id}/`); archived-release `version` = `v0-{slug}` (never null;
+  git tags are not read); `mode: full`; `active_release` set in `roadmap.yaml` + `current-phase.yaml`
+  (omitted when nothing is in progress).
 - **Invariant:** at most one `in_progress` release — refuses to guess when >1 in_progress sprint exists
   (requires `--active`).
 
