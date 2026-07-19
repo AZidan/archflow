@@ -1,11 +1,16 @@
 # =============================================================================
 # Archflow BACKLOG Schema — v2.0
 # =============================================================================
-# Canonical schema for `.archflow/backlog.yaml` — the full unshipped, unscheduled
-# scope, held as lightweight STUBS grouped by epic. Stubs are cheap: no acceptance
-# criteria or subtasks yet. Detail is added only when a stub is PROMOTED into a
-# release (see release-schema.yaml), which keeps the backlog compact even for large
-# products.
+# Canonical schema for `.archflow/backlog.yaml` — the unshipped, unscheduled scope,
+# grouped by epic, held at MIXED readiness:
+#   - a raw `backlog` STUB (just captured — title + one-line, no ACs/subtasks), or
+#   - a groomed `ready` DETAILED story (ACs, subtasks, gates) — pull-able into a release.
+# Freshly-captured ideas start as stubs; grooming promotes them to `ready`. When a
+# release is cut, its most relevant `ready` stories are MOVED into the release file.
+# (Migration lands existing detailed work here as `ready` — detail is preserved, not stripped.)
+#
+# The backlog stays bounded because SHIPPED stories roll off to releases/archive/, so it
+# only ever holds remaining work — not the whole product history.
 #
 # A story lives in exactly one place at a time: backlog.yaml -> a release file ->
 # releases/archive/. MOVE, never copy.
@@ -34,12 +39,12 @@ backlog:
           stories:
             type: array
             items:
-              $ref: "#/story_stub"
+              $ref: "#/backlog_story"
 
 # -----------------------------------------------------------------------------
-# Story stub  (lightweight — promoted into a release to become a detailed story)
+# Backlog story  (mixed readiness: bare `backlog` stub OR groomed `ready` detailed)
 # -----------------------------------------------------------------------------
-story_stub:
+backlog_story:
   type: object
   required: [id, title, priority, status, description]
   properties:
@@ -56,8 +61,10 @@ story_stub:
       enum: [Critical, High, Medium, Low]
     status:
       type: string
-      const: backlog
-      description: "A stub in backlog.yaml is always `backlog` — literally 'in the backlog file'."
+      enum: [backlog, ready]
+      description: >
+        `backlog` — a raw stub (no ACs/subtasks/gates yet).
+        `ready` — groomed + detailed, pull-able into a release as-is.
     target:
       type: string
       required: false
@@ -65,17 +72,44 @@ story_stub:
       example: "checkout"
     description:
       type: string
-      description: "One-line description. Full detail (ACs, subtasks, gates) is added on promotion into a release."
+      description: "One-line for a stub; fuller for a ready story."
+    # The following are REQUIRED when status is `ready`, ABSENT/optional for a `backlog` stub:
+    gates:
+      required: false
+      description: "{needs_design, needs_contract} — present on `ready` stories (see release-schema.yaml)."
+    assigned:
+      type: string
+      required: false
+    acceptance_criteria:
+      type: array
+      required: false
+      description: "Present on `ready` stories; `{text, met}` objects."
+    subtasks:
+      type: array
+      required: false
+      description: "Present on `ready` stories; `{text, completed}` objects."
 
 # =============================================================================
-# Example — backlog.yaml
+# Example — backlog.yaml (mixed readiness)
 # =============================================================================
 # epics:
 #   - id: E2
 #     stories:
-#       - id: S2-11
+#       - id: S2-11                      # a raw stub
 #         title: "One-tap reorder"
 #         priority: Medium
 #         status: backlog
 #         target: checkout
 #         description: "Reorder a previous cart in one tap."
+#       - id: S2-14                      # a groomed, ready-to-pull story
+#         title: "Saved payment methods"
+#         priority: High
+#         status: ready
+#         target: checkout
+#         gates: {needs_design: true, needs_contract: true}
+#         assigned: ui-engineer
+#         description: "Store and reuse cards during checkout."
+#         acceptance_criteria:
+#           - {text: "User can pay with a saved card", met: false}
+#         subtasks:
+#           - {text: "Build saved-card selector", completed: false}
