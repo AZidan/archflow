@@ -1,25 +1,48 @@
 # Phase 2.5: API Architecture
 
 ## 🎯 Phase Objective
-Create comprehensive API contracts that serve as the single source of truth for frontend/backend integration.
+API architecture splits into TWO kinds of work (v2.0 — Pillar 2), mirroring the design split:
+
+1. **Release foundation (once, at release start):** the contract *architecture* — auth patterns,
+   conventions, error-response format, pagination, versioning. The shared rules every endpoint obeys.
+2. **Per-story contract gate (continuous):** a specific story's *endpoints*, specified just-in-time
+   against the architecture, one step ahead of that story's build. Advances the story to
+   `contract_ready`. Stories with `gates.needs_contract: false` skip it entirely.
+
+The contract remains the single source of truth for frontend/backend integration (SACRED DOCUMENT).
 
 ## 📋 Required Agents
-- `api-contract-architect` - Creates API contracts from wireframes/requirements
+- `api-contract-architect` - Contract architecture (foundation) AND per-story endpoint specs (gate)
 
 ## 📚 Prerequisites
 - Phase 2 outputs: `design-artifacts/wireframes/`, `design-artifacts/styled-dsl.yaml`
 - Phase 2.25 outputs: `design-artifacts/hifi-screens/` (visual reference for API design)
-- `.archflow/current-feature.yaml` defining active development scope
+- The active release (`.archflow/releases/{active_release}.yaml`) — its stories drive per-story specs
 - User approval from Phase 2.25
+
+## 🚦 Per-story contract gate (readiness pipeline)
+
+For each story in the active release with `gates.needs_contract: true`, run just-in-time (one step
+ahead of that story's build):
+
+```bash
+api-contract-architect: {contract-architecture} + story context → docs/api-contract.md (this story's endpoints)
+```
+Then in the release file, advance the story's `status` to `contract_ready` (or `ready` if
+`needs_design` is false / already met). Endpoints MUST conform to the contract architecture.
+
+**Mode calibration:** in `quick` mode this gate auto-satisfies; in `full` mode it runs and appends the
+story's endpoints to the contract.
 
 ## 🚀 Execution Steps
 
-### Contract-First Development
-Define all API contracts before any implementation begins.
+### Release foundation: contract architecture (once, at release start)
+Define the shared contract rules before per-story endpoints are specified.
 
 ```bash
-api-contract-architect: design-artifacts/wireframes/ + current-feature.yaml → docs/api-contract.md
+api-contract-architect: design-artifacts/wireframes/ + active release → docs/api-contract.md (architecture section)
 ```
+Per-*endpoint* specs for individual stories happen in the per-story contract gate above, not here.
 
 ## 📤 Expected Outputs
 - `docs/api-contract.md` - Complete API specifications including:
@@ -43,7 +66,8 @@ api-contract-architect: design-artifacts/wireframes/ + current-feature.yaml → 
 - **ERROR SPECIFICATIONS**: All possible error scenarios must be documented
 - **USER APPROVAL MANDATORY**: Present API contracts to user and wait for explicit approval
 - **NO PROCEEDING**: Do not move to Phase 3 without approval
-- **FEATURE SCOPE**: Only create contracts for features defined in `.archflow/current-feature.yaml`
+- **RELEASE SCOPE**: Only specify endpoints for stories in the active release
+  (`.archflow/releases/{active_release}.yaml`) with `gates.needs_contract: true`
 
 ## 💡 Why This Phase Is Critical
 - Enables **parallel development** in Phase 3

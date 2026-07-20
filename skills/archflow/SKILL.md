@@ -12,6 +12,9 @@ Archflow manages the full software development lifecycle through structured phas
 /archflow                → Show available subcommands
 /archflow init           → Initialize Archflow in a new project
 /archflow onboard        → Onboard an existing codebase (interactive wizard)
+/archflow migrate        → Migrate a v1.0 project to schema v2.0 (releases)
+/archflow mode [quick|full] → Show or switch the ceremony mode
+/archflow release        → Inspect / manage releases (status, new, start, ship)
 /archflow setup-mcp      → Configure MCP servers for external tools
 /archflow setup-mcp jira → Configure a specific MCP server
 /archflow feature        → Add a new feature to the roadmap
@@ -34,6 +37,13 @@ Available subcommands:
   /archflow onboard       Onboard an existing codebase to the phase framework
                           (detect project type, import context, audit, set phase)
 
+  /archflow migrate       Migrate a v1.0 project to schema v2.0
+                          (releases replace phases, sprints retired, multi-file split)
+
+  /archflow mode          Show or switch the ceremony mode (quick | full)
+
+  /archflow release       Inspect / manage releases (status, new, start, ship)
+
   /archflow setup-mcp     Configure MCP servers for external tools
                           (Jira, Notion, Linear, GitHub, SuperDesign, etc.)
 
@@ -41,7 +51,8 @@ Available subcommands:
                           (from description, external tool link, or existing roadmap)
 
 Current project status:
-  → Read .archflow/current-phase.yaml if it exists, show phase + project type
+  → Read .archflow/current-phase.yaml if it exists, show phase + project type + mode + active_release
+  → If .archflow/roadmap.yaml is v1.0 (has phases:/no schema_version): suggest "/archflow migrate"
   → If missing: "No project onboarded. Run /archflow onboard to get started."
 ```
 
@@ -50,6 +61,17 @@ Read and follow `skills/archflow/commands/init.md`
 
 ### `onboard` → Load onboarding wizard
 Read and follow `skills/archflow/commands/onboard.md`
+
+### `migrate` → Load v1.0 → v2.0 migration
+Read and follow `skills/archflow/commands/migrate.md`
+
+### `mode` → Load mode show/switch
+Read and follow `skills/archflow/commands/mode.md`
+Pass any additional argument (`quick` / `full`) as the target mode.
+
+### `release` → Load release management
+Read and follow `skills/archflow/commands/release.md`
+Pass any additional arguments (`new [name]` / `start [slug]` / `ship`) through.
 
 ### `setup-mcp` → Load MCP setup helper
 Read and follow `skills/archflow/commands/setup-mcp.md`
@@ -63,6 +85,6 @@ Pass any additional arguments (e.g., `login`) as the feature name for quick-add.
 ```
 Unknown subcommand: [arg]
 
-Available: init, onboard, setup-mcp, feature
+Available: init, onboard, migrate, mode, release, setup-mcp, feature
 Run /archflow for help.
 ```

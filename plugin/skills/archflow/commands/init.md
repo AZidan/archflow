@@ -102,6 +102,10 @@ phase_file: "phases/phase-1-strategy.md"
 project_type: null  # Will be set during Phase 1
 onboarded: false
 
+# v2.0 — ceremony mode + active release pointer
+mode: quick          # new projects start in quick mode; graduate to full when they grow (/archflow mode)
+active_release: null # slug of the one in_progress release; null until a release is being built
+
 # Phase tracking
 phases_completed: []
 phases_partial: []
@@ -172,11 +176,17 @@ Created:
   .archflow/current-phase.yaml
   CLAUDE.md [created / updated with Archflow section]
 
+Mode: quick (single implicit release, gates auto-satisfied).
+  Switch anytime with /archflow mode full.
+
 Next steps:
   - Run Phase 1 to define your product strategy
-  - The product-strategist agent will create:
+  - The Phase 1 agents will create:
     → .archflow/project-context.md (business goals, tech stack, architecture)
-    → .archflow/roadmap.yaml (feature roadmap and sprint planning)
+    → .archflow/roadmap.yaml (v2.0 index: mode, epic labels, release pipeline)
+    → .archflow/backlog.yaml (full scope as stubs; releases are carved from it just-in-time)
+  - At the end of Phase 1, your FIRST release is created + started (quick mode
+    auto-creates an implicit "current" release) — that's what Phases 2–3 build.
 ```
 
 ---

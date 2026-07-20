@@ -164,6 +164,13 @@ phase: {detected_phase}
 phase_name: "{detected_phase_name}"
 phase_file: ".archflow/phases/phase-{detected_phase}-{name}.md"
 
+# Project type (drives which agents/phases apply)
+project_type: "{fullstack|frontend_only|backend_only|mobile}"
+
+# v2.0 — ceremony mode + active release pointer
+mode: "{quick|full}"          # quick = /archflow init default; full = onboard of a substantial repo
+active_release: null          # slug of the ONE in_progress release (cached from roadmap.yaml); null when none building
+
 # Inference metadata
 inferred_from: ".archflow/current-feature.yaml"
 inference_confidence: "high|medium|low"
@@ -179,6 +186,14 @@ status: "ready"
 last_updated: null
 completed_at: null
 ```
+
+### Mode default (v2.0)
+
+- **`/archflow init`** (new/small project) → `mode: quick`.
+- **`/archflow onboard`** → `mode: full` when the repo is substantial (real dependencies, multiple
+  services/tiers) or has multiple contributors; otherwise `quick`.
+- `active_release` mirrors `roadmap.yaml`'s `active_release` (the one `in_progress` release) and is
+  re-validated against it on load; it is a cache, not a second source of truth.
 
 ---
 **This file is only loaded during project initialization when .archflow/current-phase.yaml is missing.**
