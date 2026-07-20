@@ -1,25 +1,35 @@
 # =============================================================================
-# Archflow Canonical Roadmap Schema
+# Archflow Roadmap INDEX Schema — v2.0
 # =============================================================================
-# This is the CANONICAL schema for .archflow/roadmap.yaml.
-# All Archflow agents, skills, and commands MUST produce and consume this format.
+# Canonical schema for `.archflow/roadmap.yaml` — the small, always-loaded INDEX.
+# It holds project meta, the ceremony mode, epic labels, the live release pipeline,
+# and the shipped ledger. It does NOT hold release detail, backlog, or history.
 #
-# Design principles:
-#   - Epics own stories (single source of truth for deliverables)
-#   - Phases represent product milestones (MVP, Growth, Scale — NOT archflow lifecycle phases)
-#   - Sprints are time-boxed work containers within a phase
-#   - Sprints reference stories by ID only (no duplication)
+# The roadmap system is split across files (each has its own schema — see below):
+#   .archflow/roadmap.yaml            -> THIS schema (roadmap-schema.yaml)
+#   .archflow/backlog.yaml            -> backlog-schema.yaml   (stub stories)
+#   .archflow/releases/{slug}.yaml    -> release-schema.yaml   (detailed release + stories)
+#   .archflow/releases/archive/*.yaml -> release-schema.yaml   (shipped releases)
+#   .archflow/history.yaml            -> history-schema.yaml   (shipped-story intent layer)
+#
+# WHAT CHANGED FROM v1.0 (breaking): `phases:` -> `releases:`, sprints retired,
+# the monolith split into the files above, epics demoted to labels, story status
+# is now a readiness pipeline, and `mode` (quick|full) was added.
 # =============================================================================
 
-schema_version: "1.0"
+schema_version: "2.0"
 
 # -----------------------------------------------------------------------------
-# Top-level structure
+# roadmap.yaml  (the INDEX; stays small forever)
 # -----------------------------------------------------------------------------
 roadmap:
   type: object
-  required: [project, project_type, epics, phases]
+  required: [schema_version, project, project_type, mode, epics, releases]
   properties:
+    schema_version:
+      type: string
+      const: "2.0"
+
     project:
       type: string
       description: "Project name"
@@ -30,276 +40,123 @@ roadmap:
       enum: [fullstack, frontend_only, backend_only, mobile]
       description: "Project type — determines which agents and phases apply"
 
+    mode:
+      type: string
+      enum: [quick, full]
+      description: >
+        Ceremony profile over the SAME schema (not a fork).
+        quick — one implicit release, readiness gates auto-satisfied, one lane;
+        default for `/archflow init` on small/solo projects.
+        full — explicit release pipeline, enforced advisory gates, role lanes;
+        default for `/archflow onboard` of a substantial codebase / multi-contributor.
+        Switch in place with `/archflow mode [quick|full]` — no data rewrite.
+
     epics:
       type: array
-      description: "Deliverable scope — each epic groups related stories"
+      description: >
+        Cross-cutting LABELS only (declarations) — NOT story owners. A story
+        belongs to an epic by ID prefix (S1-04 -> E1). Epic progress is a computed
+        view, never stored.
       items:
         $ref: "#/epic"
 
-    phases:
+    active_release:
+      type: string
+      required: false
+      description: >
+        Cached pointer to the id of the ONE release currently `in_progress`
+        (being implemented). Absent when no release is being built. roadmap is the
+        source of truth for status; this is a validated cache, mirrored into
+        .archflow/current-phase.yaml.
+      example: "checkout-redesign"
+
+    releases:
       type: array
-      description: "Product delivery milestones (MVP, Growth, Scale, etc.)"
+      description: >
+        The live pipeline — bounded by planning horizon, not project lifetime.
+        Holds releases in `planning` / `ready` / `in_progress`. Shipped releases
+        roll OFF this list into `shipped` (below). At most one entry may be
+        `in_progress`. Each entry points at a file conforming to release-schema.yaml.
       items:
-        $ref: "#/phase"
+        $ref: "#/release_ref"
+
+    shipped:
+      type: array
+      required: false
+      description: "Append-only ledger — one line per shipped release (rolled off `releases`)."
+      items:
+        $ref: "#/shipped_ref"
 
 # -----------------------------------------------------------------------------
-# Epic
+# Epic (label only)
 # -----------------------------------------------------------------------------
 epic:
   type: object
-  required: [id, name, scope, stories]
+  required: [id, name, scope]
   properties:
     id:
       type: string
       pattern: "^E[0-9]+$"
-      description: "Epic identifier"
       example: "E1"
-
     name:
       type: string
-      description: "Human-readable epic name"
       example: "Admin Authentication"
-
     scope:
       type: string
       enum: [backend, frontend, mobile, both, unknown]
+      description: "The TRUE scope of the work, not the repo's project_type."
+
+# -----------------------------------------------------------------------------
+# Release reference (index entry pointing at a release file → release-schema.yaml)
+# -----------------------------------------------------------------------------
+release_ref:
+  type: object
+  required: [id, status, file]
+  properties:
+    id:
+      type: string
+      pattern: "^[a-z0-9][a-z0-9-]*$"
+      description: "Filesystem-safe slug derived from the release's display name."
+      example: "checkout-redesign"
+    status:
+      type: string
+      enum: [planning, ready, in_progress]
       description: >
-        The TRUE scope of the work, not the repo's project_type.
-        A mobile epic imported into a backend repo should have scope: mobile.
-
-    stories:
-      type: array
-      description: "Stories belonging to this epic (single source of truth)"
-      items:
-        $ref: "#/story"
+        Release-level status. planning — PM detailing (many allowed, concurrent);
+        ready — fully detailed, queued to build; in_progress — being implemented
+        (AT MOST ONE across the pipeline). `released` never appears here — a
+        released release moves to the `shipped` ledger.
+    file:
+      type: string
+      example: "releases/checkout-redesign.yaml"
 
 # -----------------------------------------------------------------------------
-# Story
+# Shipped reference (append-only ledger entry)
 # -----------------------------------------------------------------------------
-story:
+shipped_ref:
   type: object
-  required: [id, title, priority, status, assigned, description, acceptance_criteria, subtasks]
+  required: [id, name, version, released_at, file]
   properties:
-    id:
-      type: string
-      pattern: "^S[0-9]+-[0-9]+$"
-      description: "Story ID — format: S{epic_number}-{sequence}"
-      example: "S1-01"
-
-    title:
-      type: string
-      description: "Short title (NOT a user story sentence)"
-      example: "Admin Login"
-
-    priority:
-      type: string
-      enum: [Critical, High, Medium, Low]
-
-    status:
-      type: string
-      enum: [backlog, in_progress, review, done]
-      description: "Kanban column status (lowercase, underscore-separated)"
-
-    assigned:
-      type: string
-      description: "Agent or role responsible for implementation"
-      example: "ui-engineer"
-
-    description:
-      type: string
-      description: "Detailed description of the work (multi-line YAML block scalar)"
-
-    acceptance_criteria:
-      type: array
-      description: "Testable criteria that define when the story is done"
-      items:
-        $ref: "#/acceptance_criterion"
-
-    subtasks:
-      type: array
-      description: "Granular implementation tasks within the story"
-      items:
-        $ref: "#/subtask"
-
-# -----------------------------------------------------------------------------
-# Acceptance Criterion
-# -----------------------------------------------------------------------------
-acceptance_criterion:
-  type: object
-  required: [text, met]
-  properties:
-    text:
-      type: string
-      description: "Testable criterion statement"
-      example: "Login page renders with email/password form"
-
-    met:
-      type: boolean
-      default: false
-      description: "Whether this criterion has been verified as passing"
-
-    verified_by:
-      type: string
-      required: false
-      enum: [pm-maestro-reviewer, qa-engineer, manual]
-      description: "Who/what verified this criterion"
-
-    verified_at:
-      type: string
-      format: iso8601
-      required: false
-      description: "When this criterion was verified"
-
-# -----------------------------------------------------------------------------
-# Subtask
-# -----------------------------------------------------------------------------
-subtask:
-  type: object
-  required: [text, completed]
-  properties:
-    text:
-      type: string
-      description: "Subtask description"
-      example: "Build login form component"
-
-    completed:
-      type: boolean
-      default: false
-
-# -----------------------------------------------------------------------------
-# Phase (Product Delivery Milestone)
-# -----------------------------------------------------------------------------
-phase:
-  type: object
-  required: [id, name, sprints]
-  properties:
-    id:
-      type: string
-      description: "Phase identifier (kebab-case)"
-      example: "mvp"
-
-    name:
-      type: string
-      description: "Human-readable phase name"
-      example: "MVP"
-
-    sprints:
-      type: array
-      items:
-        $ref: "#/sprint"
-
-# -----------------------------------------------------------------------------
-# Sprint
-# -----------------------------------------------------------------------------
-sprint:
-  type: object
-  required: [id, name, status, goal, stories]
-  properties:
-    id:
-      type: string
-      pattern: "^sprint-[0-9]+$"
-      description: "Sprint identifier"
-      example: "sprint-1"
-
-    name:
-      type: string
-      description: "Human-readable sprint name"
-      example: "Sprint 1: Auth & Shell"
-
-    status:
-      type: string
-      enum: [backlog, in_progress, done]
-      description: "Sprint lifecycle status. Only one sprint should be in_progress at a time (enforced by consumers, not schema)."
-
-    goal:
-      type: string
-      description: "Sprint goal — what this sprint delivers"
-      example: "Deliver authentication flow and app shell"
-
-    stories:
-      type: array
-      items:
-        type: string
-      description: "List of story IDs (references to stories defined under epics)"
-      example: [S1-01, S1-02, S1-03]
+    id:      {type: string, example: "mvp"}
+    name:    {type: string, example: "MVP"}
+    version: {type: string, example: "v1.0.0"}
+    released_at: {type: string, format: iso8601, example: "2026-01-10"}
+    file:    {type: string, example: "releases/archive/mvp.yaml"}
 
 # =============================================================================
-# Full Example
+# Example — roadmap.yaml
 # =============================================================================
-#
-# project: "my-app"
+# schema_version: "2.0"
+# project: my-app
 # project_type: fullstack
-#
+# mode: full
 # epics:
-#   - id: E1
-#     name: "Admin Authentication"
-#     scope: backend
-#     stories:
-#       - id: S1-01
-#         title: "Admin Login"
-#         priority: Critical
-#         status: done
-#         assigned: ui-engineer
-#         description: >
-#           Firebase Auth login page with email/password and session management.
-#         acceptance_criteria:
-#           - text: "Login page with email/password form"
-#             met: true
-#           - text: "Firebase Auth integration with custom claims"
-#             met: true
-#         subtasks:
-#           - text: "Build login form component"
-#             completed: true
-#           - text: "Wire Firebase Auth SDK"
-#             completed: true
-#       - id: S1-02
-#         title: "Role-Based Access Control"
-#         priority: High
-#         status: done
-#         assigned: api-engineer
-#         description: >
-#           Middleware for checking user roles (Super Admin, Support Agent, Analyst).
-#         acceptance_criteria:
-#           - text: "Role checking middleware"
-#             met: true
-#         subtasks:
-#           - text: "Implement RBAC middleware"
-#             completed: true
-#
-#   - id: E2
-#     name: "Dashboard"
-#     scope: both
-#     stories:
-#       - id: S2-01
-#         title: "Dashboard Metrics Cards"
-#         priority: High
-#         status: in_progress
-#         assigned: ui-engineer
-#         description: >
-#           Real-time metrics cards showing key business KPIs.
-#         acceptance_criteria:
-#           - text: "Metrics cards render with live data"
-#             met: false
-#         subtasks:
-#           - text: "Build MetricsCard component"
-#             completed: true
-#           - text: "Connect to analytics API"
-#             completed: false
-#
-# phases:
-#   - id: mvp
-#     name: "MVP"
-#     sprints:
-#       - id: sprint-1
-#         name: "Sprint 1: Auth & Shell"
-#         status: done
-#         goal: "Deliver authentication flow and app shell"
-#         stories: [S1-01, S1-02]
-#       - id: sprint-2
-#         name: "Sprint 2: Dashboard"
-#         status: in_progress
-#         goal: "Core dashboard with metrics and navigation"
-#         stories: [S2-01]
-#   - id: growth
-#     name: "Growth"
-#     sprints: []
+#   - {id: E1, name: Admin Authentication, scope: backend}
+#   - {id: E2, name: Checkout, scope: both}
+# active_release: checkout-redesign
+# releases:
+#   - {id: checkout-redesign, status: in_progress, file: releases/checkout-redesign.yaml}
+#   - {id: q3-launch,         status: ready,       file: releases/q3-launch.yaml}
+#   - {id: loyalty-program,   status: planning,    file: releases/loyalty-program.yaml}
+# shipped:
+#   - {id: mvp, name: "MVP", version: v1.0.0, released_at: 2026-01-10, file: releases/archive/mvp.yaml}

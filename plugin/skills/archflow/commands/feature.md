@@ -82,51 +82,56 @@ Paste the epic/story link:
 
 ---
 
-#### Option C: "From roadmap"
+#### Option C: "From existing scope" (backlog + active release)
 
-1. Read `.archflow/roadmap.yaml` and `.archflow/current-phase.yaml` (for `project_type`)
-2. **Filter stories by project_type compatibility** (using the parent epic's `scope`):
-   - Determine which scopes match this repo's project_type:
-     - `backend_only` → show epics with scope: `backend`, `both`
-     - `frontend_only` → show epics with scope: `frontend`, `both`
-     - `mobile` → show epics with scope: `mobile`, `both`
-     - `fullstack` → show all scopes
-   - Epics with `scope: unknown` are always shown (may need investigation)
-3. List matching stories with status `backlog` or `in_progress`, grouped by epic:
+In v2.0 stories are NOT in `roadmap.yaml` (that's the story-less index). Existing work is either a
+**backlog stub** (`backlog.yaml`) or an **`in_progress`/ready story in the active release**
+(`releases/{active_release}.yaml`).
+
+1. Read `.archflow/current-phase.yaml` (for `project_type`, `mode`, `active_release`),
+   `.archflow/backlog.yaml`, and the active release file (if `active_release` is set). Use
+   `roadmap.yaml` only for epic labels (to show epic names/scope).
+2. **Filter by project_type compatibility** (using the parent epic's `scope`, resolved via the story's
+   `S{epic}-*` id → epic label in `roadmap.yaml`):
+   - `backend_only` → `backend`, `both`; `frontend_only` → `frontend`, `both`; `mobile` → `mobile`,
+     `both`; `fullstack` → all. Epics with `scope: unknown` are always shown.
+3. List candidates grouped by epic, from BOTH sources:
    ```
    Stories relevant to this [project_type] repo:
 
-   Epic: E1 - Admin Authentication (scope: backend)
-     1. [S1-01] Admin Login (backlog, Critical, assigned: ui-engineer)
-     2. [S1-02] Role-Based Access (backlog, High, assigned: api-engineer)
+   In the active release [{active_release}] (build now):
+     1. [S1-02] Role-Based Access (spec_ready, High, api-engineer)
 
-   Epic: E2 - Dashboard (scope: both)
-     3. [S2-01] Dashboard Metrics Cards (backlog, Medium, assigned: ui-engineer)
+   In the backlog (will be promoted into the active release, or pulled forward):
+     2. [S1-01] Admin Login (backlog, Critical)
+     3. [S2-01] Dashboard Metrics Cards (backlog, Medium)
 
-   [N] stories hidden (epic scope: frontend/mobile — not applicable to this repo)
+   [N] hidden (epic scope not applicable to this repo)
 
-   Which story to start? [number / "show all"]
+   Which story to work? [number / "show all"]
    ```
-4. If user types "show all": display the hidden stories too, each with a warning:
-   ```
-   Epic: E5 - Mobile App (scope: mobile)
-     ⚠️ [S5-01] Push Notifications (backlog, scope: mobile)
-         Warning: This epic's scope (mobile) doesn't match this repo (backend_only).
-         It may have no implementable work here. Continue anyway? [Yes / Pick another]
-   ```
-5. User picks one → skip to Step 3 (git workflow)
+4. "show all" → also list stories whose epic scope doesn't match, each with a scope-mismatch warning.
+5. User picks one:
+   - **Already in the active release** → skip to Step 3 (git workflow).
+   - **A backlog stub** → this is a pull-forward: promote/MOVE it into the active release (detail it,
+     derive `gates`, `status: spec_ready`, annotate `pulled_from: backlog`), then Step 3. If no release
+     is `in_progress`, tell the user to start one first (`/archflow release start`).
 
 ---
 
-### Step 2: Update roadmap.yaml
+### Step 2: Add the story (v2.0 — backlog or active release)
 
-Read `.archflow/current-phase.yaml` to get `project_type`. Read `.archflow/roadmap.yaml` to find existing epics and stories.
+Read `.archflow/current-phase.yaml` to get `project_type`, `mode`, and `active_release`. Read
+`.archflow/roadmap.yaml` (index) for epic labels, `.archflow/backlog.yaml` for existing stubs, and the
+active release file (if any).
 
-The roadmap follows the canonical schema at `.archflow/schemas/roadmap-schema.yaml`. Stories are defined under epics and referenced by sprints.
+Schemas: `roadmap-schema.yaml` (index / epic labels), `backlog-schema.yaml` (stubs),
+`release-schema.yaml` (detailed stories). **There are no sprints.** A story lands in the backlog (as a
+stub) or in the active release (as a detailed story) — never in two places.
 
-#### 2a. Epic Selection
+#### 2a. Epic Selection (label)
 
-Ask the user which epic this story belongs to:
+Ask which epic label this story belongs to:
 ```
 Which epic does this belong to?
 
@@ -136,62 +141,53 @@ Existing epics:
 
   [N] Create new epic
 ```
+If "Create new epic": generate next `E{N}` ID, ask for name + scope, add it to `roadmap.yaml → epics`
+(label only — no inline stories).
 
-If "Create new epic":
-- Generate next `E{N}` ID (increment from highest existing)
-- Ask for epic name and scope (`backend | frontend | mobile | both`)
+#### 2b. Destination — backlog stub or active release?
 
-#### 2b. Story Creation
+Ask where the story goes:
+```
+Where should this go?
 
-Generate the next story ID under the chosen epic: `S{epic}-{seq}` (e.g., if epic is E2 and it has stories S2-01, S2-02, the next is S2-03).
+  1. Backlog — capture it now, schedule it into a release later (a stub)
+  2. Active release [{active_release}] — build it in the current release (detailed)
+```
+(In `quick` mode with a single implicit release, default to that release. If no release is
+`in_progress`, only the backlog option is offered.)
 
-Add the story under the epic's `stories` array using the canonical format:
+Generate the next story ID under the chosen epic: `S{epic}-{seq}`.
+
+**If Backlog** → append a STUB to `.archflow/backlog.yaml` under the epic:
 ```yaml
 - id: "S{epic}-{seq}"
   title: "{feature_name}"
   priority: "{Critical|High|Medium|Low}"
   status: backlog
+  target: "{optional hint}"
+  description: "{one line}"
+```
+Then STOP Step 2 — a backlog stub is not built until it's promoted into a release (via
+`/archflow release new` or pull-forward). Skip Step 3 (no branch yet).
+
+**If Active release** → append a DETAILED story to `.archflow/releases/{active_release}.yaml`, deriving
+`gates` from scope:
+```yaml
+- id: "S{epic}-{seq}"
+  title: "{feature_name}"
+  priority: "{Critical|High|Medium|Low}"
+  status: spec_ready                       # PM-finalized; gates run before build
+  gates: {needs_design: {bool}, needs_contract: {bool}}
   assigned: "{agent_name}"
   description: >
     {description}
   acceptance_criteria:
-    - text: "{criterion_1}"
-      met: false
-    - text: "{criterion_2}"
-      met: false
+    - {text: "{criterion_1}", met: false}
   subtasks:
-    - text: "{subtask_1}"
-      completed: false
-    - text: "{subtask_2}"
-      completed: false
+    - {text: "{subtask_1}", completed: false}
 ```
-
-#### 2c. Sprint Assignment
-
-Ask which sprint to assign the story to:
-```
-Assign to a sprint?
-
-  1. [sprint-1] Sprint 1: Auth & Shell (mvp, done)
-  2. [sprint-2] Sprint 2: Dashboard (mvp, in_progress)
-
-  [N] Create new sprint
-  [S] Skip — leave unassigned for now
-```
-
-If "Create new sprint": ask for sprint name and goal. Ask which phase it belongs to (list existing phases or create new). Always create with `status: backlog`:
-```yaml
-- id: "sprint-{N}"        # auto-increment from highest existing
-  name: "{sprint_name}"
-  status: backlog          # REQUIRED — always starts as backlog
-  goal: "{sprint_goal}"
-  stories: ["{story_id}"]
-```
-
-Add the story ID to the sprint's `stories` reference list.
-
-Write the updated `.archflow/roadmap.yaml`. Confirm to user:
-> "Added [{title}] as [{story_id}] under epic [{epic_id}] {epic_name}."
+This is a mid-release pull-in — annotate `pulled_from: backlog` if it came from a stub. Confirm:
+> "Added [{title}] as [{story_id}] under epic [{epic_id}] to {backlog | release {active_release}}."
 
 ---
 
@@ -241,7 +237,7 @@ Follow the branching strategy from `.archflow/workflow.md`:
    epic_id: "{epic_id}"            # e.g., E1
    branch: "{feature-branch-name}"
    status: in_progress
-   subtasks:                        # Populated from roadmap.yaml story subtasks
+   subtasks:                        # Populated from the active release file's story subtasks
      - text: "{subtask_1}"
        completed: false
        branch: null
@@ -254,7 +250,8 @@ Follow the branching strategy from `.archflow/workflow.md`:
        completed_at: null
    ```
 
-4. **Update `.archflow/roadmap.yaml`:** Set the story's status to `in_progress`.
+4. **Update `.archflow/releases/{active_release}.yaml`:** Set the story's status to `in_progress`
+   (the release file is the source of truth for story status — not roadmap.yaml, which is the index).
 
 5. **Present next steps:**
    ```
@@ -318,7 +315,7 @@ For each task in `.archflow/current-feature.yaml`:
 
 8. **Update tracking files:**
    - `.archflow/current-feature.yaml`: Mark task as `complete`, record `completed_at`
-   - `.archflow/roadmap.yaml`: Mark the corresponding `subtasks[]` entry as `completed: true` for the subtask that maps to this task
+   - `.archflow/releases/{active_release}.yaml`: Mark the corresponding `subtasks[]` entry as `completed: true` for the subtask that maps to this task
 
 ### Feature Completion
 
@@ -339,7 +336,7 @@ After ALL tasks are complete and approved:
    ```
 
 3. **Update files:**
-   - `.archflow/roadmap.yaml`:
+   - `.archflow/releases/{active_release}.yaml` (the story's home):
      - Story `status` → `done`
      - ALL `subtasks[].completed` → `true`
      - ALL `acceptance_criteria[].met` → `true`

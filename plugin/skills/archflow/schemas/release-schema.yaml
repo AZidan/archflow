@@ -1,0 +1,209 @@
+# =============================================================================
+# Archflow RELEASE Schema — v2.0
+# =============================================================================
+# Canonical schema for a single release file:
+#   .archflow/releases/{slug}.yaml         (active / planning / ready release)
+#   .archflow/releases/archive/{slug}.yaml (shipped release — same shape, status: released)
+#
+# A release is the first-class OUTER LOOP unit (it replaced v1's product "phase";
+# sprints are retired). It owns its fully-detailed stories inline. Backlog stubs
+# are PROMOTED into a release file and fleshed out here.
+#
+# Related schemas:
+#   .archflow/roadmap.yaml   -> roadmap-schema.yaml   (index; lists releases by ref)
+#   .archflow/backlog.yaml   -> backlog-schema.yaml   (stub stories, pre-promotion)
+#   .archflow/history.yaml   -> history-schema.yaml   (shipped-story intent layer)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Release  (releases/{slug}.yaml and releases/archive/{slug}.yaml)
+# -----------------------------------------------------------------------------
+release:
+  type: object
+  required: [id, name, goal, status, stories]
+  properties:
+    id:
+      type: string
+      pattern: "^[a-z0-9][a-z0-9-]*$"
+      description: "Filesystem-safe slug; matches the release_ref id in the index."
+      example: "checkout-redesign"
+    name:
+      type: string
+      description: "Human display name the user typed; the slug `id` is derived from it."
+      example: "Checkout Redesign"
+    goal:
+      type: string
+      example: "Frictionless checkout with saved cards and one-tap pay"
+    status:
+      type: string
+      enum: [planning, ready, in_progress, released]
+      description: >
+        Full release lifecycle:
+          planning    — PM detailing (many allowed, concurrent)
+          ready       — fully detailed, queued to build
+          in_progress — being implemented (AT MOST ONE across the project)
+          released    — shipped; appears only in releases/archive/
+    version:
+      type: string
+      required: false
+      description: "Set at ship time (git tag). Null/absent until released."
+      example: "v1.4.0"
+    released_at:
+      type: string
+      format: iso8601
+      required: false
+      description: "Set at ship time."
+    release_criteria:
+      type: array
+      required: false
+      description: "Optional release-level acceptance — releasable-when gates above the story level."
+      items:
+        $ref: "#/acceptance_criterion"
+    stories:
+      type: array
+      description: "Fully-detailed stories that ship in this release (inline, not by ID reference)."
+      items:
+        $ref: "#/story"
+
+# -----------------------------------------------------------------------------
+# Story (detailed; lives in a release file)
+# -----------------------------------------------------------------------------
+story:
+  type: object
+  required: [id, title, priority, status, gates, assigned, description, acceptance_criteria, subtasks]
+  properties:
+    id:
+      type: string
+      pattern: "^S[0-9]+-[0-9]+[a-z]?$"
+      description: "Epic-scoped (S{epic}-{seq}, optional letter suffix for split stories e.g. S1-03b); stable across promotion."
+      example: "S2-07"
+    title:
+      type: string
+      example: "Saved payment methods"
+    priority:
+      type: string
+      enum: [Critical, High, Medium, Low]
+    status:
+      type: string
+      enum: [backlog, spec_ready, design_ready, contract_ready, ready, in_progress, review, done]
+      description: >
+        READINESS PIPELINE (Pillar 2), not a flat kanban column:
+          backlog        — stub (only in backlog.yaml)
+          spec_ready     — PM finalized scope + ACs; promoted into a release
+          design_ready   — designer produced screens (skipped if not needs_design)
+          contract_ready — architect specified endpoints (skipped if not needs_contract)
+          ready          — all applicable upstream gates satisfied -> buildable
+          in_progress    — engineer building
+          review         — in QA / acceptance
+          done           — complete
+    gates:
+      $ref: "#/gates"
+    design_artifact:
+      type: string
+      required: false
+      description: "Path to the designer's handoff for this story; present once design_ready."
+      example: "design-artifacts/S2-07/"
+    assigned:
+      type: string
+      description: "Agent or role responsible for the current lane."
+      example: "ui-engineer"
+    description:
+      type: string
+      description: "Detailed description (multi-line YAML block scalar)."
+    acceptance_criteria:
+      type: array
+      description: "Added on promotion from backlog (PM, at spec_ready)."
+      items:
+        $ref: "#/acceptance_criterion"
+    subtasks:
+      type: array
+      items:
+        $ref: "#/subtask"
+    pulled_from:
+      type: string
+      required: false
+      description: "Origin annotation when a story was pulled into this release (`backlog` or a release id)."
+      example: "backlog"
+    started_ungated:
+      type: object
+      required: false
+      description: >
+        Advisory-recorded override stamp (full mode). Written when a story is built
+        before an applicable gate was satisfied — the human kept control, the skip
+        is recorded so review/QA can catch it.
+      properties:
+        gate:   {type: string, enum: [design, contract], description: "Which gate was skipped"}
+        by:     {type: string, description: "Role/agent that overrode"}
+        reason: {type: string}
+        at:     {type: string, format: iso8601}
+
+# -----------------------------------------------------------------------------
+# Gates (which upstream readiness gates apply to a story)
+# -----------------------------------------------------------------------------
+gates:
+  type: object
+  required: [needs_design, needs_contract]
+  description: >
+    Derived from scope: frontend work -> needs_design; new/changed endpoints ->
+    needs_contract. A gate set false is skipped in the readiness pipeline.
+  properties:
+    needs_design:   {type: boolean, default: false}
+    needs_contract: {type: boolean, default: false}
+
+# -----------------------------------------------------------------------------
+# Acceptance Criterion  (used by story.acceptance_criteria and release.release_criteria)
+# -----------------------------------------------------------------------------
+acceptance_criterion:
+  type: object
+  required: [text, met]
+  properties:
+    text:
+      type: string
+      example: "User can pay with a saved card"
+    met:
+      type: boolean
+      default: false
+    verified_by:
+      type: string
+      required: false
+      enum: [pm-maestro-reviewer, qa-engineer, manual]
+    verified_at:
+      type: string
+      format: iso8601
+      required: false
+
+# -----------------------------------------------------------------------------
+# Subtask
+# -----------------------------------------------------------------------------
+subtask:
+  type: object
+  required: [text, completed]
+  properties:
+    text:      {type: string, example: "Build saved-card selector"}
+    completed: {type: boolean, default: false}
+
+# =============================================================================
+# Example — releases/checkout-redesign.yaml
+# =============================================================================
+# id: checkout-redesign
+# name: "Checkout Redesign"
+# goal: "Frictionless checkout with saved cards and one-tap pay"
+# status: in_progress
+# version: null
+# release_criteria:
+#   - {text: "Checkout completion rate >= 80% in staging", met: false}
+# stories:
+#   - id: S2-07
+#     title: "Saved payment methods"
+#     priority: High
+#     status: design_ready
+#     gates: {needs_design: true, needs_contract: true}
+#     design_artifact: design-artifacts/S2-07/
+#     assigned: ui-engineer
+#     description: >
+#       Let users store and reuse cards during checkout.
+#     acceptance_criteria:
+#       - {text: "User can pay with a saved card", met: false}
+#     subtasks:
+#       - {text: "Build saved-card selector", completed: false}
+#     pulled_from: backlog

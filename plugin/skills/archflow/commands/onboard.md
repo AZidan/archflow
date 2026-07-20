@@ -31,25 +31,31 @@ Load `.archflow/phases/phase-onboarding.md` for audit logic, project type detect
 
 **Use the Read tool** to read `.archflow/roadmap.yaml`. Do this immediately — do not skip or defer.
 
-- If the file does not exist → continue to Step E3 (new onboarding)
+- If the file does not exist → continue to Step E3 (new onboarding, produces v2.0 artifacts)
 - If it exists → run Step E2a before doing anything else
 
-### Step E2a: Validate roadmap.yaml format (inline — no external file needed)
+### Step E2a: Detect schema version, then validate (v2.0)
 
-Parse the content you just read and check every rule below. Collect **all** violations.
+First check the schema version of the roadmap you just read:
 
-**Top-level:** `project`, `project_type`, `epics`, `phases` must all be present. `project_type` must be `fullstack|frontend_only|backend_only|mobile`.
+- **v1.0** (has a `phases:` key, or `schema_version` is absent or `"1.0"`) → **STOP onboarding and
+  redirect to migration.** Onboard does not transform old state; that's `/archflow migrate`'s job:
+  > "This project already has an Archflow roadmap in the v1.0 format. Run `/archflow migrate` to
+  > upgrade it to v2.0 (releases replace phases, sprints retired), then re-run onboard if needed."
+  Do not validate v1 format here and do not overwrite it.
 
-**Epics:** each must have `id` (matches `^E[0-9]+$`), `name`, `scope` (`backend|frontend|mobile|both|unknown`), `stories`.
-
-**Stories:** each must have `id` (matches `^S[0-9]+-[0-9]+$`, epic-number prefix matches parent epic), `title`, `priority` (`Critical|High|Medium|Low`), `status` (`backlog|in_progress|review|done`), `assigned`, `description`, `acceptance_criteria`, `subtasks`.
-- `acceptance_criteria` items must be objects with `text` + `met` (boolean). Plain strings = violation.
-- `subtasks` items must be objects with `text` + `completed` (boolean). Plain strings = violation.
-
-**Sprints:** each must have `id` (matches `^sprint-[0-9]+$`), `name`, `status` (`backlog|in_progress|done`), `goal`, `stories`. Missing `status` field = violation (not just invalid values — the field must exist).
-- `stories` must be an array of **strings** (ID references). Embedded objects = violation.
-- Every referenced story ID must exist under an epic. Missing = violation.
-- No story ID may appear in more than one sprint. Duplicates = violation.
+- **v2.0** (`schema_version: "2.0"`) → validate the v2.0 shape against the split schemas in
+  `.archflow/schemas/`. Collect **all** violations:
+  - **Index (`roadmap.yaml`, `roadmap-schema.yaml`):** `schema_version: "2.0"`, `project`,
+    `project_type` (`fullstack|frontend_only|backend_only|mobile`), `mode` (`quick|full`), `epics`
+    (LABELS: id `^E[0-9]+$`, name, scope), `releases[]` (each: id slug, status
+    `planning|ready|in_progress`, file). At most ONE release `in_progress`. No `phases:`/`sprints:` keys.
+  - **Backlog (`backlog.yaml`, `backlog-schema.yaml`):** epics → story stubs (`status: backlog`).
+  - **Releases (`releases/*.yaml`, `release-schema.yaml`):** each release has id/name/goal/status +
+    detailed stories (readiness `status`, `gates {needs_design, needs_contract}`, ACs as `{text,met}`,
+    subtasks as `{text,completed}`).
+  - **Referential:** every `releases[]` ref points at an existing file; a story lives in exactly one
+    place (backlog OR one release).
 
 ### Step E2b: Backfill missing .archflow/ template files
 
@@ -70,6 +76,9 @@ Required template files:
   .archflow/phases/phase-onboarding.md
   .archflow/phases/phase-setup.md
   .archflow/schemas/roadmap-schema.yaml
+  .archflow/schemas/release-schema.yaml
+  .archflow/schemas/backlog-schema.yaml
+  .archflow/schemas/history-schema.yaml
 ```
 
 For each file: check if it exists in the project's `.archflow/`. Collect all missing files into a list.
@@ -132,16 +141,18 @@ If neither violations nor missing files were found, this collapses to just the s
 
 ---
 
-## Roadmap Auto-Fix Rules
+## Roadmap Auto-Fix Rules (v2.0 shape only)
 
-When the user chooses "Yes" to fix violations:
+These apply when validating a **v2.0** roadmap. A v1.0 roadmap is NOT auto-fixed here — it is
+converted by `/archflow migrate` (which retires sprints and splits the files). When the user chooses
+"Yes" to fix v2.0 violations:
 - Plain-string `acceptance_criteria` item → `{text: "<string>", met: false}`
 - Plain-string `subtasks` item → `{text: "<string>", completed: false}`
-- Embedded sprint story object → replace with its `id` string
-- Invalid `status` value → map: `planned`→`backlog`, `completed`→`done`, `wip`→`in_progress`
+- Story missing `gates` → derive `{needs_design, needs_contract}` from scope
+- Invalid readiness `status` value → map to the nearest pipeline state
 - Missing epic `scope` → infer from stories or default to `unknown`
-- Missing sprint `status` → default to `backlog`
-- Sprint references non-existent story ID → remove from sprint, warn
+- More than one release `in_progress` → ask which one is truly being built; others → their stories
+  return to backlog
 
 ---
 
@@ -366,7 +377,11 @@ Load the execution dependency graph and agent filtering table from `.archflow/ph
 **1a. Codebase Audit (inline — NOT a subagent)**
 - Run the full audit checklist from `phase-onboarding.md`, filtered by `project_type`
 - For each audit check: scan for listed file patterns, record found/missing
-- **Format validation**: if `.archflow/roadmap.yaml` is found, run the full Roadmap Format Validation defined in `phase-onboarding.md` — check every rule (top-level structure, epic/story fields, patterns, enum values, acceptance_criteria/subtasks item shapes, sprint ID format, sprint story references as strings, referential integrity, no duplicate story references across sprints). Record `format_valid` and all `format_violations` in the audit report.
+- **Format validation**: if `.archflow/roadmap.yaml` is found, first detect its schema version. If it
+  is **v1.0** (has `phases:` / no `schema_version: "2.0"`), do NOT validate v1 format — record it and
+  redirect the user to `/archflow migrate` (see Step E2a). If it is **v2.0**, validate the split-file
+  shape (index + backlog + releases) per the v2.0 schemas. Record `format_valid` and all
+  `format_violations` in the audit report.
 - Special: if swagger/openapi found, record path for `api_contract_path`
 - Count source files, components, routes, modules, test files
 - Output: `.onboard-audit-report.yaml` (use structured schema from `phase-onboarding.md`)
@@ -431,8 +446,10 @@ Load the execution dependency graph and agent filtering table from `.archflow/ph
 **3b. feature-planner (Task subagent)**
 - Waits for: product-strategist
 - Use prompt template from `phase-onboarding.md` → "feature-planner (Onboarding Mode)"
-- Subagent type: `feature-planner`
-- Output: `.archflow/roadmap.yaml`
+- Subagent type: `feature-planner` (Mode A — produce v2.0 artifacts)
+- Output: `.archflow/roadmap.yaml` (v2.0 index: mode, epic labels, releases pipeline) +
+  `.archflow/backlog.yaml` (stubs). Already-shipped scope may be seeded as a `released` release under
+  `releases/archive/` + the `shipped` ledger. NO `phases:`/`sprints:`.
 
 **After Layer 3:** Update `.onboard-progress.yaml`. All agents complete. Proceed to Phase C.
 
@@ -440,13 +457,18 @@ Load the execution dependency graph and agent filtering table from `.archflow/ph
 
 ## PHASE C: Synthesis & Presentation (main agent, user returns)
 
-### STEP C1: Roadmap Reconciliation
+### STEP C1: Roadmap Reconciliation (v2.0)
 
-Read `.archflow/roadmap.yaml` + `.onboard-audit-report.yaml` + user overrides from `.onboard-progress.yaml`:
-- If feature-planner marks `backlog` but audit shows code exists → upgrade to `in_progress` or `done`
-- If user explicitly overrode a story status → use user's status
-- Stories not assigned to any sprint are forward-looking and should remain `backlog` under their epic
-- Write reconciled `roadmap.yaml`
+Read `.archflow/roadmap.yaml` (index) + `.archflow/backlog.yaml` + any `.archflow/releases/*.yaml` +
+`.onboard-audit-report.yaml` + user overrides from `.onboard-progress.yaml`:
+- If a story is a backlog stub but audit shows the code already exists and shipped → move it into a
+  `released` release under `releases/archive/` + the `shipped` ledger, and add a `history.yaml` entry.
+- If audit shows in-progress code → put those stories in the active `in_progress` release.
+- If the user explicitly overrode a story status → use the user's status.
+- Everything unbuilt stays as backlog stubs.
+- **Set `mode`:** `full` for a substantial codebase or multiple contributors, else `quick`. Write it
+  to `roadmap.yaml` and `current-phase.yaml`, and set `active_release` (the in_progress slug or null).
+- Write the reconciled index + backlog + release files.
 
 ### STEP C2: Phase Determination
 

@@ -87,34 +87,30 @@ Each check targets a specific phase artifact. Checks are filtered by `project_ty
 
 ### Roadmap Format Validation
 
-When `.archflow/roadmap.yaml` is found, validate it exhaustively against `.archflow/schemas/roadmap-schema.yaml`. Collect **all** violations before recording — do not stop at the first failure.
+When `.archflow/roadmap.yaml` is found, FIRST detect its schema version:
 
-**Top-level structure**
-- Required keys present: `project`, `project_type`, `epics`, `phases`
-- `project_type` is one of: `fullstack | frontend_only | backend_only | mobile`
+- **v1.0** (has a `phases:` key, or `schema_version` is absent or `"1.0"`) → do NOT validate v1 here.
+  Record it and redirect the user to **`/archflow migrate`** (which retires sprints and splits the
+  files into the v2.0 layout). Do not overwrite.
+- **v2.0** (`schema_version: "2.0"`) → validate the split-file shape against the v2.0 schemas in
+  `.archflow/schemas/`. Collect **all** violations before recording — do not stop at the first failure.
 
-**Epics**
-- Each epic has all required fields: `id`, `name`, `scope`, `stories`
-- `id` matches pattern `^E[0-9]+$`
-- `scope` is one of: `backend | frontend | mobile | both | unknown`
+**Index (`roadmap.yaml`, `roadmap-schema.yaml`)**
+- Required keys: `schema_version: "2.0"`, `project`, `project_type`, `mode`, `epics`, `releases`
+- `project_type` ∈ `fullstack | frontend_only | backend_only | mobile`; `mode` ∈ `quick | full`
+- `epics` are LABELS: each has `id` (`^E[0-9]+$`), `name`, `scope` (`backend|frontend|mobile|both|unknown`) — no inline stories
+- `releases[]`: each has `id` (slug), `status` (`planning|ready|in_progress`), `file`. At most ONE `in_progress`
+- No `phases:` or `sprints:` keys anywhere
 
-**Stories**
-- Each story has all required fields: `id`, `title`, `priority`, `status`, `assigned`, `description`, `acceptance_criteria`, `subtasks`
-- `id` matches pattern `^S[0-9]+-[0-9]+$`
-- Story ID epic-number prefix matches parent epic (e.g., stories under `E2` must have IDs starting with `S2-`)
-- `priority` is one of: `Critical | High | Medium | Low`
-- `status` is one of: `backlog | in_progress | review | done`
-- `acceptance_criteria` items are objects with `text` (string) and `met` (boolean) — plain strings are a violation
-- `subtasks` items are objects with `text` (string) and `completed` (boolean) — plain strings are a violation
+**Backlog (`backlog.yaml`, `backlog-schema.yaml`)**
+- `epics[] → stories[]` are stubs: `id` (`^S[0-9]+-[0-9]+[a-z]?$`), `title`, `priority`, `status: backlog`, `description`
 
-**Phases & Sprints**
-- Each phase has required fields: `id`, `name`, `sprints`
-- Each sprint has required fields: `id`, `name`, `status`, `goal`, `stories`
-- Sprint `id` matches pattern `^sprint-[0-9]+$`
-- Sprint `status` is one of: `backlog | in_progress | done` (required — missing field is a violation)
-- Sprint `stories` is an array of **strings** (story ID references) — embedded story objects are a violation
-- Every story ID referenced in a sprint exists under an epic (referential integrity)
-- No story ID appears in more than one sprint across the entire roadmap
+**Releases (`releases/*.yaml`, `release-schema.yaml`)**
+- Each: `id`, `name`, `goal`, `status` (`planning|ready|in_progress|released`), `stories[]`
+- Each story: `id`, `title`, `priority`, readiness `status`, `gates {needs_design, needs_contract}`, `assigned`, `description`, `acceptance_criteria` (`{text, met}` objects), `subtasks` (`{text, completed}` objects)
+
+**Referential integrity**
+- Every `releases[]` ref points at an existing file; a story lives in exactly one place (backlog OR one release), never duplicated
 
 **Recording violations**
 
@@ -651,64 +647,68 @@ You are converting a roadmap draft into the canonical Archflow roadmap.yaml form
 INPUTS:
 - Roadmap draft: Read `.onboard-roadmap-draft.yaml`
 - Audit report: Read `.onboard-audit-report.yaml`
-- Canonical schema: Read `.archflow/schemas/roadmap-schema.yaml`
+- Canonical schemas: Read `.archflow/schemas/roadmap-schema.yaml`, `backlog-schema.yaml`, `release-schema.yaml`
 - Project type: {project_type}
 
-CANONICAL OUTPUT FORMAT:
-The output MUST follow the schema at `.archflow/schemas/roadmap-schema.yaml`. Here is the structure:
+CANONICAL OUTPUT FORMAT (v2.0 — Mode A):
+Produce the v2.0 multi-file layout. There are NO `phases:`/`sprints:`. Epics are labels in the index;
+unbuilt scope is stubs in the backlog; already-shipped scope becomes a `released` release under
+`releases/archive/` + the `shipped` ledger.
 
 ```yaml
+# .archflow/roadmap.yaml (index)
+schema_version: "2.0"
 project: "{project_name}"
 project_type: {project_type}
-
+mode: {quick|full}                 # full for a substantial codebase / multiple contributors
+epics:                             # LABELS only
+  - {id: E1, name: "Epic Name", scope: backend}   # backend|frontend|mobile|both|unknown
+active_release: null               # or the in_progress slug
+releases: []                       # planning/ready/in_progress refs (usually empty at onboard)
+shipped: []                        # ledger of already-shipped releases (from existing code)
+```
+```yaml
+# .archflow/backlog.yaml (stubs for unbuilt scope)
 epics:
   - id: E1
-    name: "Epic Name"
-    scope: backend          # backend | frontend | mobile | both | unknown
     stories:
       - id: S1-01
         title: "Short Title"
-        priority: Critical   # Critical | High | Medium | Low
-        status: done         # backlog | in_progress | review | done
-        assigned: ui-engineer
-        description: >
-          Detailed description of the work.
-        acceptance_criteria:
-          - text: "Testable criterion"
-            met: true        # MUST be {text, met} objects, NEVER plain strings
-        subtasks:
-          - text: "Task description"
-            completed: true  # MUST be {text, completed} objects
-
-phases:
-  - id: mvp
-    name: "MVP"
-    sprints:
-      - id: sprint-1
-        name: "Sprint 1: Theme"
-        status: done
-        goal: "What this sprint delivers"
-        stories: [S1-01, S1-02]  # ID references only, NOT inline stories
+        priority: High             # Critical|High|Medium|Low
+        status: backlog
+        description: "One line."
+```
+```yaml
+# .archflow/releases/archive/{slug}.yaml (already-shipped scope, if code exists)
+id: {slug}
+name: "{Milestone}"
+goal: "{what it delivered}"
+status: released
+stories:
+  - id: S1-01
+    title: "Short Title"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: true}
+    assigned: api-engineer
+    description: >
+      Detailed description.
+    acceptance_criteria: [{text: "Testable criterion", met: true}]   # {text,met} objects, NEVER strings
+    subtasks: [{text: "Task", completed: true}]                       # {text,completed} objects
 ```
 
 TASKS:
-1. Group features from the draft into logical epics with `E{N}` IDs
-2. Create stories under each epic with `S{epic}-{seq}` IDs (e.g., S1-01, S1-02, S2-01)
-3. Map status values: completed → done, planned → backlog, in_progress → in_progress
-4. Stories with status "proposed" should be placed under epics with status: backlog and NOT assigned to any sprint
-5. EVERY epic MUST have a `scope` field:
-   - Preserve scope from the roadmap draft (product-strategist already tagged it)
-   - If missing, infer from the feature description and tasks
-   - Tag the TRUE scope of the work, not the repo's project_type
-6. Organize sprints under product delivery phases (e.g., MVP, Growth, Scale)
-   - Each sprint has a goal describing its expected deliverable
-   - Each sprint references stories by ID only
-   - EVERY sprint MUST have a `status` field: `backlog | in_progress | done`
-   - Sprints with all stories `done` → `status: done`; sprints with any `in_progress` story → `status: in_progress`; all others → `status: backlog`
-7. acceptance_criteria MUST be {text, met} objects — NEVER plain strings
-8. subtasks MUST be {text, completed} objects
+1. Group features into epic LABELS with `E{N}` IDs (id/name/scope only — no inline stories in the index).
+2. Create stories with `S{epic}-{seq}` IDs. Derive per-story `gates {needs_design, needs_contract}` from scope.
+3. **Route by state:** already-built/shipped code → a `released` release in `releases/archive/` +
+   `shipped` ledger + a `history.yaml` entry. Unbuilt/proposed scope → backlog STUBS. In-progress code →
+   an `in_progress` release (set `active_release`). At most ONE `in_progress`.
+4. EVERY epic MUST have a `scope` (preserve from the draft; infer if missing; tag the TRUE scope).
+5. Set `mode`: full for a substantial codebase / multiple contributors, else quick.
+6. acceptance_criteria MUST be {text, met} objects; subtasks MUST be {text, completed} objects.
 
-OUTPUT: Write `.archflow/roadmap.yaml`
+OUTPUT: Write `.archflow/roadmap.yaml` (index) + `.archflow/backlog.yaml` (stubs) + any
+`.archflow/releases/archive/{slug}.yaml` + `.archflow/history.yaml`. Never write `phases:`/`sprints:`.
 ```
 
 ---
@@ -788,52 +788,47 @@ agent_outputs:
 
 ---
 
-## Canonical Roadmap Structure
+## Canonical Roadmap Structure (v2.0 — multi-file)
 
-All project types use the SAME structure. Project-type differentiation is handled by the `scope` field on epics, not by structural differences.
+All project types use the SAME structure. Project-type differentiation is handled by the `scope` field
+on epics (labels), not by structural differences. **Epics are labels — they do NOT contain stories.**
+Stories live in `backlog.yaml` (stubs) or a release file (detailed); a story is in exactly ONE place.
 
-See `.archflow/schemas/roadmap-schema.yaml` for the full schema definition.
+Use the "CANONICAL OUTPUT FORMAT (v2.0 — Mode A)" template earlier in this file as the authoritative
+shape, and the split schemas: `roadmap-schema.yaml` (index), `backlog-schema.yaml` (stubs),
+`release-schema.yaml` (detailed releases/stories), `history-schema.yaml`.
 
 ```yaml
+# .archflow/roadmap.yaml — INDEX only (no stories under epics)
+schema_version: "2.0"
 project: "{name}"
 project_type: "{fullstack|frontend_only|backend_only|mobile}"
+mode: "{quick|full}"
+epics:                                    # LABELS only
+  - {id: E1, name: "Epic Name", scope: backend}   # backend|frontend|mobile|both|unknown
+active_release: null                      # or the in_progress slug
+releases: []                              # planning/ready/in_progress refs
+shipped: []                               # ledger of shipped releases
 
-epics:
-  - id: E1
-    name: "Epic Name"
-    scope: backend    # backend | frontend | mobile | both | unknown
-    stories:
-      - id: S1-01
-        title: "Short Title"
-        priority: Critical
-        status: done
-        assigned: ui-engineer
-        description: >
-          Detailed description.
-        acceptance_criteria:
-          - text: "Criterion"
-            met: true
-        subtasks:
-          - text: "Task"
-            completed: true
+# .archflow/backlog.yaml — stubs (unscheduled scope)
+# .archflow/releases/{slug}.yaml — detailed stories (readiness status + gates + ACs + subtasks)
+# .archflow/releases/archive/{slug}.yaml — shipped releases
+# .archflow/history.yaml — shipped-story intent layer
 
-phases:
-  - id: mvp
-    name: "MVP"
-    sprints:
-      - id: sprint-1
-        name: "Sprint 1: Theme"
-        status: done
-        goal: "What this sprint delivers"
-        stories: [S1-01, S1-02]
+# There is NO phases:/sprints: block. Instead:
+#   - roadmap.yaml holds the index (mode, epic LABELS, releases[] pipeline, shipped[] ledger)
+#   - backlog.yaml holds unbuilt scope as stubs
+#   - releases/archive/{slug}.yaml holds already-shipped scope (status: released)
+# See the "CANONICAL OUTPUT FORMAT (v2.0 — Mode A)" section above for the full shape.
 ```
 
 **Key rules:**
 - **Scope field is required on ALL epics** regardless of project type. It represents the TRUE scope of the work, which may differ from the repo's project_type (e.g., a "mobile app" epic imported into a backend repo should have `scope: mobile`).
-- **Stories are defined under epics** — sprints reference them by ID only.
+- **Stories live in exactly one place** — a backlog stub OR one release file. Epics are labels; they don't contain stories in the index.
+- **Every release story has `gates {needs_design, needs_contract}`** derived from scope.
 - **acceptance_criteria** MUST be `{text, met}` objects, NEVER plain strings.
 - **subtasks** MUST be `{text, completed}` objects.
-- **Status** values: `backlog | in_progress | review | done` (not "completed", "planned", etc.).
+- **Readiness status** values: `backlog | spec_ready | design_ready | contract_ready | ready | in_progress | review | done`.
 
 ---
 
@@ -841,17 +836,20 @@ phases:
 
 ### C1: Roadmap Reconciliation
 
-Read `roadmap.yaml` + `.onboard-audit-report.yaml` + user overrides from `.onboard-progress.yaml`:
-- If feature-planner marks `backlog` but audit shows code exists → upgrade to `in_progress` or `done`
-- If user explicitly overrode a feature status in `completed_features_override` → use user's status
-- Stories not assigned to any sprint are forward-looking and should remain `backlog` under their epic
-- If `format_valid: false`: auto-fix all violations from `format_violations` before writing the reconciled roadmap:
-  - Plain-string `acceptance_criteria` → convert to `{text: "...", met: false}`
-  - Plain-string `subtasks` → convert to `{text: "...", completed: false}`
-  - Embedded sprint story objects → extract their `id` and replace with the string reference
-  - Invalid `status` values → map to nearest valid value (`planned` → `backlog`, `completed` → `done`, `wip` → `in_progress`)
-  - Missing `scope` on epics → infer from story descriptions or default to `unknown`
-  - Dangling sprint story references (ID not in any epic) → remove from sprint, log as warning
+Read `roadmap.yaml` (index) + `backlog.yaml` + any `releases/*.yaml` + `.onboard-audit-report.yaml` +
+user overrides from `.onboard-progress.yaml`:
+- If a story is a backlog stub but audit shows the code exists/shipped → move it into a `released`
+  release under `releases/archive/` + the `shipped` ledger + add a `history.yaml` entry.
+- In-progress code → put those stories in the `in_progress` release (set `active_release`).
+- If the user explicitly overrode a status in `completed_features_override` → use the user's status.
+- Everything unbuilt stays as backlog stubs. Set `mode` (full for substantial repos, else quick).
+- If `format_valid: false` (v2.0 shape): auto-fix before writing:
+  - Plain-string `acceptance_criteria` → `{text: "...", met: false}`
+  - Plain-string `subtasks` → `{text: "...", completed: false}`
+  - Story missing `gates` → derive `{needs_design, needs_contract}` from scope
+  - Invalid readiness `status` → map to the nearest pipeline state
+  - Missing `scope` on epics → infer or default to `unknown`
+  - More than one `in_progress` release → ask which is truly being built; others' stories → backlog
 
 ### C2: Phase Determination
 
@@ -892,19 +890,19 @@ N/A phases for the project type should show as: `Phase 2 (Design): N/A (backend 
 If `format_valid: false`, append a violations block after the audit box:
 
 ```
-roadmap.yaml format violations ([N] total):
-  ⚠ epics[0].stories[2].acceptance_criteria[1]
+roadmap format violations ([N] total):
+  ⚠ releases/checkout.yaml → stories[2].acceptance_criteria[1]
     rule: acceptance_criteria item must be {text, met} object
     found: plain string: "User can log in"
-  ⚠ phases[0].sprints[1].stories[0]
-    rule: sprint stories must be string ID references, not embedded objects
-    found: object with keys [id, title, status, ...]
-  ⚠ phases[0].sprints[0].stories[2]
-    rule: referenced story ID "S3-05" does not exist under any epic
-    found: "S3-05"
-  ...
+  ⚠ releases/checkout.yaml → stories[0]
+    rule: story must have gates {needs_design, needs_contract}
+    found: missing gates
+  ⚠ roadmap.yaml → releases
+    rule: at most one release may be in_progress
+    found: 2 in_progress (checkout, q3-launch)
 
 These violations will be fixed during roadmap reconciliation (Step C1).
+(A v1.0 roadmap is not shown here — it is redirected to /archflow migrate.)
 ```
 
 ### C4: Presentation Format
