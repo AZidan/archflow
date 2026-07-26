@@ -140,6 +140,10 @@ The onboarding agents generate ready-to-use `project-context.md`, `roadmap.yaml`
 | `/archflow` | Show available subcommands and current project status |
 | `/archflow init` | Initialize a new project at Phase 1 |
 | `/archflow onboard` | Analyze an existing codebase and generate all artifacts |
+| `/archflow migrate` | Migrate a v1.0 project to schema v2.0 (releases replace phases) |
+| `/archflow mode` | Show or switch the ceremony mode (`quick` \| `full`) |
+| `/archflow release` | Inspect / manage releases (status, new, start, ship) |
+| `/archflow groom` | Detail a backlog stub into a `ready` story (ACs, subtasks, gates) |
 | `/archflow feature` | Add a feature, create branches, assign agents |
 | `/archflow setup-mcp` | Connect external tools (Jira, Notion, Linear, GitHub, etc.) |
 
@@ -212,10 +216,15 @@ archflow/
 │   ├── hooks/hooks.json             # SessionStart hook (loads instructions after compaction)
 │   ├── agents/                      # 17 specialized agent definitions
 │   ├── skills/archflow/             # Slash command implementations
-│   │   ├── SKILL.md                 # Router (onboard, feature, setup-mcp)
+│   │   ├── SKILL.md                 # Router (init, onboard, migrate, mode, release, groom, feature, setup-mcp)
 │   │   ├── mcp-registry.yaml        # Curated MCP server registry
 │   │   └── commands/
+│   │       ├── init.md              # /archflow init
 │   │       ├── onboard.md           # /archflow onboard
+│   │       ├── migrate.md           # /archflow migrate
+│   │       ├── mode.md              # /archflow mode
+│   │       ├── release.md           # /archflow release
+│   │       ├── groom.md             # /archflow groom
 │   │       ├── feature.md           # /archflow feature
 │   │       └── setup-mcp.md         # /archflow setup-mcp
 │   └── .archflow/                   # Framework instructions and phase files

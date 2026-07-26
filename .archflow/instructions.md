@@ -44,6 +44,7 @@ Dynamic phase-based instruction loading for token-efficient development.
 - `/archflow mode [quick|full]` — Show or switch the ceremony mode
 - `/archflow release [new|start|ship]` — Inspect / manage releases (status, create, start, ship)
 - `/archflow setup-mcp` — Configure an MCP server for external tools (Jira, Notion, Linear, GitHub, SuperDesign, etc.)
+- `/archflow groom [story-id]` — Detail a backlog stub into a `ready` story (acceptance criteria, subtasks, gates); stays in the backlog
 - `/archflow feature` — Add a story to the backlog or the active release and start the git development workflow
 
 ## 🚀 Release Model (v2.0 — the outer loop)

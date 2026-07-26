@@ -27,8 +27,11 @@ In `quick` mode, collapse to just the single implicit release's progress.
 1. Derive a slug from `[name]` (lowercase, kebab, filesystem-safe, unique).
 2. Set/suggest the goal: if `[name]` is vague, suggest 2–3 candidate goals from high-priority backlog
    stubs, their `target` clusters, what just shipped (`history.yaml`), and project KPIs.
-3. Invoke **feature-planner (Mode B)**: select stubs from `backlog.yaml`, MOVE them into
-   `.archflow/releases/{slug}.yaml`, detail ACs + subtasks, derive `gates`. Status starts `planning`.
+3. Invoke **feature-planner (Mode B)**: select stubs from `backlog.yaml` and MOVE them into
+   `.archflow/releases/{slug}.yaml` as `spec_ready`. Stories already groomed to `ready` promote
+   as-is; any still-bare stub is groomed first, following `commands/groom.md` for AC shape and
+   gate derivation (Mode B may batch that conversation — it doesn't run the command once per story).
+   Status starts `planning`.
 4. Register the release in `roadmap.yaml → releases` with `status: planning`.
 Creating a release is unconstrained — many may be in `planning`/`ready` at once (a PM preparing ahead
 while an engineer builds the active one).

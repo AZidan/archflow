@@ -17,6 +17,8 @@ Archflow manages the full software development lifecycle through structured phas
 /archflow release        → Inspect / manage releases (status, new, start, ship)
 /archflow setup-mcp      → Configure MCP servers for external tools
 /archflow setup-mcp jira → Configure a specific MCP server
+/archflow groom          → List backlog stubs and pick one to detail
+/archflow groom S2-11    → Detail that stub into a `ready` story
 /archflow feature        → Add a new feature to the roadmap
 /archflow feature login  → Quick-add a feature by name
 ```
@@ -46,6 +48,9 @@ Available subcommands:
 
   /archflow setup-mcp     Configure MCP servers for external tools
                           (Jira, Notion, Linear, GitHub, SuperDesign, etc.)
+
+  /archflow groom         Detail a backlog stub into a `ready` story
+                          (acceptance criteria, subtasks, gates — stays in the backlog)
 
   /archflow feature       Add a new feature to the roadmap and start development
                           (from description, external tool link, or existing roadmap)
@@ -77,6 +82,10 @@ Pass any additional arguments (`new [name]` / `start [slug]` / `ship`) through.
 Read and follow `skills/archflow/commands/setup-mcp.md`
 Pass any additional arguments (e.g., `jira`, `notion`) as the tool name.
 
+### `groom` → Load story grooming
+Read and follow `skills/archflow/commands/groom.md`
+Pass any additional argument (e.g., `S2-11`) as the story id to groom.
+
 ### `feature` → Load feature command
 Read and follow `skills/archflow/commands/feature.md`
 Pass any additional arguments (e.g., `login`) as the feature name for quick-add.
@@ -85,6 +94,6 @@ Pass any additional arguments (e.g., `login`) as the feature name for quick-add.
 ```
 Unknown subcommand: [arg]
 
-Available: init, onboard, migrate, mode, release, setup-mcp, feature
+Available: init, onboard, migrate, mode, release, setup-mcp, groom, feature
 Run /archflow for help.
 ```
