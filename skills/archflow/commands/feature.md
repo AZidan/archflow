@@ -113,9 +113,12 @@ In v2.0 stories are NOT in `roadmap.yaml` (that's the story-less index). Existin
 4. "show all" → also list stories whose epic scope doesn't match, each with a scope-mismatch warning.
 5. User picks one:
    - **Already in the active release** → skip to Step 3 (git workflow).
-   - **A backlog stub** → this is a pull-forward: promote/MOVE it into the active release (detail it,
-     derive `gates`, `status: spec_ready`, annotate `pulled_from: backlog`), then Step 3. If no release
-     is `in_progress`, tell the user to start one first (`/archflow release start`).
+   - **A backlog stub** → this is a pull-forward: promote/MOVE it into the active release, then Step 3.
+     If the stub is not yet groomed (`status: backlog`), run `commands/groom.md` FIRST to detail it —
+     don't detail it inline here. A stub that is already `ready` is promotable as-is. Then MOVE the
+     groomed story into the release file with `status: spec_ready` and `pulled_from: backlog`
+     (`spec_ready` is set by this promotion, never by grooming). If no release is `in_progress`, tell
+     the user to start one first (`/archflow release start`).
 
 ---
 
