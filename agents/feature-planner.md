@@ -60,10 +60,19 @@ epics:
 
 ## Mode B — Release creation (promote stubs into a release, just-in-time)
 
-When a release is created, select stubs from the backlog and **promote** them: MOVE them out of
-`backlog.yaml` into a new `.archflow/releases/{slug}.yaml`, and flesh each into a fully-detailed
-story (ACs, subtasks, gates). The slug is derived from the release's display name (lowercase, kebab,
-filesystem-safe, unique).
+When a release is created, select stories from the backlog and **promote** them: MOVE them out of
+`backlog.yaml` into a new `.archflow/releases/{slug}.yaml`. The slug is derived from the release's
+display name (lowercase, kebab, filesystem-safe, unique).
+
+Selected stories are already `ready` (groomed) or still bare stubs:
+- **`ready`** → promote as-is. The detail exists; do not re-elicit it.
+- **`backlog` stub** → groom it first. `skills/archflow/commands/groom.md` is the canonical
+  description of how a story gets detailed (eliciting ACs, `{text, met}` shape, gate derivation) —
+  follow it rather than inventing a second convention. Mode B MAY batch that conversation across the
+  selected stubs instead of running it once per story; the written result must be identical.
+
+Either way the promoted copy lands in the release file with `status: spec_ready` — that status is
+set by promotion, never by grooming (`backlog.yaml` only allows `backlog` / `ready`).
 
 ```yaml
 # .archflow/releases/{slug}.yaml
