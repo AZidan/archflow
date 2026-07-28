@@ -1,0 +1,12 @@
+{
+  "name": "archflow",
+  "description": "Phase-based AI development framework with 16+ specialized agents, structured phases, and file-based handoffs. Works with greenfield and existing codebases.",
+  "version": "1.2.3",
+  "author": {
+    "name": "AZidan"
+  },
+  "repository": "https://github.com/AZidan/archflow",
+  "homepage": "https://azidan.github.io/archflow/",
+  "license": "MIT",
+  "keywords": ["ai-development", "agents", "workflow", "phase-based", "development-framework"]
+}
