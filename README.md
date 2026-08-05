@@ -1,6 +1,10 @@
 <div align="center">
 
-# Archflow
+<a name="archflow"></a>
+<h1>
+  <img src="docs/logo.png" alt="" width="42" height="42" align="absmiddle" />
+  Archflow
+</h1>
 
 **Turn Claude Code into a structured development team.**
 
