@@ -1,0 +1,6 @@
+# Local Jekyll preview only — GitHub Pages builds server-side.
+_site/
+.jekyll-cache/
+.jekyll-metadata
+vendor/
+.bundle/

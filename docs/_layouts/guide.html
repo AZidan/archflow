@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page.title }} — Archflow</title>
+  <meta name="description" content="{{ page.description }}">
+  <meta property="og:title" content="{{ page.title }} — Archflow">
+  <meta property="og:description" content="{{ page.description }}">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="{{ site.url }}{{ site.baseurl }}/logo.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:image" content="{{ site.url }}{{ site.baseurl }}/logo.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ site.baseurl }}/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ site.baseurl }}/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+  <script>
+    // Runs before paint: without this the page flashes the wrong theme.
+    (function () {
+      try {
+        var t = localStorage.getItem('archflow-theme');
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <!-- Same palette file the landing page uses -->
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/theme.css">
+  <style>
+    * { box-sizing: border-box; }
+    html {
+      background: rgb(var(--c-bg));
+      font-family: 'DM Sans', system-ui, sans-serif;
+    }
+    body {
+      margin: 0;
+      color: rgb(var(--c-text-2));
+      line-height: 1.7;
+    }
+    .wrap { max-width: 46rem; margin: 0 auto; padding: 0 1.5rem; }
+
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--nav-bg);
+      border-bottom: 1px solid var(--nav-border);
+      backdrop-filter: blur(12px) saturate(180%);
+      -webkit-backdrop-filter: blur(12px) saturate(180%);
+    }
+    .nav-inner {
+      max-width: 68.75rem; margin: 0 auto; padding: 0 1.5rem; height: 4rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    .brand { display: flex; align-items: center; gap: .625rem; text-decoration: none; }
+    .brand img { width: 2rem; height: 2rem; }
+    .brand span {
+      font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 600;
+      color: rgb(var(--c-text)); letter-spacing: -.02em;
+    }
+    .nav-right { display: flex; align-items: center; gap: .5rem; }
+    .nav-link {
+      color: rgb(var(--c-text-2)); text-decoration: none; font-size: .875rem;
+      padding: .5rem .75rem; border-radius: .5rem; white-space: nowrap;
+    }
+    .nav-link:hover { color: rgb(var(--c-text)); background: rgb(var(--c-border) / .4); }
+    #theme-toggle {
+      background: none; border: 0; cursor: pointer; color: rgb(var(--c-text-2));
+      padding: .5rem; border-radius: .5rem; display: flex;
+    }
+    #theme-toggle:hover { color: rgb(var(--c-text)); background: rgb(var(--c-border) / .4); }
+    #theme-toggle svg { width: 1.25rem; height: 1.25rem; }
+
+    article { padding: 3.5rem 0 5rem; }
+    .eyebrow {
+      font-size: .75rem; letter-spacing: .12em; text-transform: uppercase;
+      color: rgb(var(--c-accent-text)); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      margin-bottom: .75rem;
+    }
+    article h1 {
+      font-family: 'Outfit', sans-serif; font-weight: 700; letter-spacing: -.025em;
+      font-size: clamp(2rem, 5vw, 2.75rem); line-height: 1.15;
+      color: rgb(var(--c-text)); margin: 0 0 2rem;
+    }
+    article h2 {
+      font-family: 'Outfit', sans-serif; font-weight: 600; letter-spacing: -.02em;
+      font-size: 1.5rem; line-height: 1.3; color: rgb(var(--c-text));
+      margin: 3rem 0 1rem; padding-top: 1.75rem;
+      border-top: 1px solid rgb(var(--c-border) / .55);
+    }
+    article h3 {
+      font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 1.125rem;
+      color: rgb(var(--c-text)); margin: 2rem 0 .625rem;
+    }
+    article p { margin: 0 0 1.125rem; }
+    article strong { color: rgb(var(--c-text)); font-weight: 600; }
+    article a { color: rgb(var(--c-accent-text)); text-decoration: none; border-bottom: 1px solid rgb(var(--c-accent-text) / .35); }
+    article a:hover { border-bottom-color: rgb(var(--c-accent-text)); }
+    article ul, article ol { margin: 0 0 1.125rem; padding-left: 1.25rem; }
+    article li { margin-bottom: .5rem; }
+    article code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .875em;
+      color: rgb(var(--c-accent-text));
+      background: rgb(var(--c-card) / .55);
+      border: 1px solid rgb(var(--c-border) / .6);
+      padding: .1rem .35rem; border-radius: .3rem;
+    }
+    article pre {
+      background: var(--code-bg); border: 1px solid var(--code-border);
+      border-radius: .75rem; padding: 1rem 1.25rem; overflow-x: auto; margin: 0 0 1.5rem;
+    }
+    article pre code { background: none; border: 0; padding: 0; color: rgb(var(--c-text-2)); }
+    article table {
+      width: 100%; border-collapse: collapse; margin: 0 0 1.5rem; font-size: .9375rem;
+      display: block; overflow-x: auto;
+    }
+    article th, article td {
+      text-align: left; padding: .625rem .75rem;
+      border-bottom: 1px solid rgb(var(--c-border) / .6);
+    }
+    article th { color: rgb(var(--c-text)); font-weight: 600; white-space: nowrap; }
+    article blockquote {
+      margin: 0 0 1.5rem; padding: .25rem 0 .25rem 1.125rem;
+      border-left: 3px solid rgb(var(--c-accent) / .5); color: rgb(var(--c-text-3));
+    }
+    article hr { border: 0; border-top: 1px solid rgb(var(--c-border) / .55); margin: 2.5rem 0; }
+    /* The guides put "---" before most "##", which would stack an <hr> on top of the
+       h2's own rule. When they're adjacent, let the <hr> be the only line. */
+    article hr + h2 { border-top: 0; padding-top: 0; margin-top: 0; }
+
+    footer {
+      border-top: 1px solid rgb(var(--c-border) / .55); padding: 2rem 0;
+      text-align: center; color: rgb(var(--c-text-3)); font-size: .875rem;
+    }
+    footer a { color: rgb(var(--c-accent-text)); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a class="brand" href="{{ site.baseurl }}/">
+        <img src="{{ site.baseurl }}/logo-96.png" alt="" width="32" height="32">
+        <span>archflow</span>
+      </a>
+      <div class="nav-right">
+        <a class="nav-link" href="{{ site.baseurl }}/">← Back to site</a>
+        <button id="theme-toggle" type="button" aria-label="Switch theme">
+          <svg class="icon-sun" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="4"/>
+            <path stroke-linecap="round" d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+          </svg>
+          <svg class="icon-moon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <article class="wrap">
+    <div class="eyebrow">Guide</div>
+    {{ content }}
+  </article>
+
+  <footer>
+    <div class="wrap">
+      <a href="{{ site.baseurl }}/">archflow</a> · MIT Licensed
+    </div>
+  </footer>
+
+  <script>
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)');
+    const btn = document.getElementById('theme-toggle');
+    function activeTheme() {
+      return document.documentElement.getAttribute('data-theme')
+          || (prefersLight.matches ? 'light' : 'dark');
+    }
+    function syncLabel() {
+      const next = activeTheme() === 'light' ? 'dark' : 'light';
+      btn.setAttribute('aria-label', 'Switch to ' + next + ' theme');
+      btn.setAttribute('title', 'Switch to ' + next + ' theme');
+    }
+    syncLabel();
+    btn.addEventListener('click', () => {
+      const next = activeTheme() === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('archflow-theme', next); } catch (e) {}
+      syncLabel();
+    });
+    prefersLight.addEventListener('change', syncLabel);
+  </script>
+</body>
+</html>
