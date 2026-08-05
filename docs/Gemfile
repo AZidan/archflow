@@ -1,0 +1,7 @@
+# Local preview only — GitHub Pages builds the site server-side and ignores this file.
+# Pinning to the `github-pages` gem means `bundle exec jekyll build` here uses the same
+# Jekyll version GitHub actually runs, so a local pass means a real pass.
+source "https://rubygems.org"
+
+gem "github-pages", group: :jekyll_plugins
+gem "webrick"       # not bundled with Ruby 3.x, needed by `jekyll serve`

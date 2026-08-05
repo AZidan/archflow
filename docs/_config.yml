@@ -1,0 +1,34 @@
+# GitHub Pages / Jekyll config for the Archflow site (served from /docs).
+#
+# Jekyll only PROCESSES files that have YAML front matter — that's the three
+# guides. index.html has none, so it is copied verbatim and the landing page
+# is completely unaffected by this file.
+
+title: Archflow
+description: Phase-based AI development framework for Claude Code.
+url: https://azidan.github.io
+baseurl: /archflow
+
+# No theme gem. The guides use _layouts/guide.html, which shares
+# assets/theme.css with the landing page so the palette cannot drift.
+plugins: []
+
+# Internal working docs that live in /docs but should not be published.
+# Listed one by one on purpose: a bare "*.md" glob is unsafe here, because
+# Ruby's fnmatch lets * cross "/" and it would swallow guides/*.md too.
+exclude:
+  # local preview toolchain — never part of the published site
+  - vendor
+  - .bundle
+  - Gemfile
+  - Gemfile.lock
+  # internal working docs
+  - archflow-framework-gap-report.md
+  - archflow-framework-gap-report-v2.md
+  - archflow-releases-v2-proposal.md
+  - archflow-skill-scaffolding-proposal.md
+  - groom-command-pompt.md
+  - landing-page-plan.md
+  - linkedin-launch-post.md
+  - roadmap-format-incompatibility.md
+  - "Breadfast Workflow Initiattive.md"

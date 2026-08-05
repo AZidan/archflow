@@ -1,0 +1,140 @@
+/* Archflow theme tokens - the single source for the palette.
+   Shared by the landing page (index.html) and the Jekyll guide layout,
+   so the two can never drift apart. */
+
+/* ============================================================
+   THEME TOKENS
+   Default = whatever the browser/OS prefers. A manual choice sets
+   data-theme on <html> and wins over the media query.
+   ============================================================ */
+:root, :root[data-theme="dark"] {
+  --c-bg: 10 10 15;
+  --c-raised: 13 13 20;
+  --c-card: 17 24 39;
+  --c-border: 30 41 59;
+  --c-border-2: 51 65 85;
+  --c-text: 248 250 252;
+  --c-text-2: 195 204 217;
+  --c-text-3: 151 163 180;
+  --c-accent: 20 184 166;
+  --c-accent-text: 45 212 191;     /* 10.1:1 on the dark page */
+  --c-accent-dark: 13 148 136;
+  --c-accent-darker: 15 118 110;
+  --c-cta: 45 212 191;             /* bright fill... */
+  --c-cta-hover: 94 234 212;
+  --c-cta-ink: 10 10 15;           /* ...with dark ink (10.6:1) */
+
+  --nav-border: rgba(30,41,59,0.35);
+  --nav-border-scrolled: rgba(30,41,59,0.7);
+  --nav-bg: rgba(10,10,15,0.8);
+  --divider: rgba(30,41,59,0.6);
+  --dot: rgba(20,184,166,0.10);
+  --amb-1: rgba(20,184,166,0.10);
+  --amb-2: rgba(45,212,191,0.07);
+  --amb-3: rgba(20,184,166,0.06);
+  --hero-1: rgba(20,184,166,0.12);
+  --hero-2: rgba(20,184,166,0.04);
+  --card-shadow: 0 0 40px rgba(20,184,166,0.08), 0 0 80px rgba(20,184,166,0.04);
+  --btn-shadow: 0 0 20px rgba(20,184,166,0.2), 0 0 60px rgba(20,184,166,0.1);
+  --btn-shadow-hover: 0 0 30px rgba(20,184,166,0.3), 0 0 80px rgba(20,184,166,0.15);
+  --node-shadow: 0 0 12px rgba(20,184,166,0.3);
+  --scroll-track: #0a0a0f;
+  --scroll-thumb: #1e293b;
+  --code-bg: #111827;
+  --code-border: rgba(30,41,59,0.8);
+  --copied: #22c55e;
+}
+
+/* Light: teal has to DARKEN for text (bright teal is 1.8:1 on white),
+   and the CTA flips to white ink on a dark teal fill. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --c-bg: 247 249 251;
+    --c-raised: 255 255 255;
+    --c-card: 255 255 255;
+    --c-border: 223 230 238;
+    --c-border-2: 195 204 217;
+    --c-text: 15 23 42;
+    --c-text-2: 71 85 105;
+    --c-text-3: 100 116 139;
+    --c-accent: 15 118 110;
+    --c-accent-text: 15 118 110;    /* 5.2:1 on the light page */
+    --c-accent-dark: 13 148 136;
+    --c-accent-darker: 17 94 89;
+    --c-cta: 15 118 110;            /* dark fill... */
+    --c-cta-hover: 17 94 89;
+    --c-cta-ink: 255 255 255;       /* ...with white ink (5.5:1) */
+
+    --nav-border: rgba(148,163,184,0.28);
+    --nav-border-scrolled: rgba(148,163,184,0.55);
+    --nav-bg: rgba(255,255,255,0.85);
+    --divider: rgba(148,163,184,0.5);
+    --dot: rgba(15,118,110,0.16);
+    --amb-1: rgba(20,184,166,0.13);
+    --amb-2: rgba(45,212,191,0.13);
+    --amb-3: rgba(20,184,166,0.10);
+    --hero-1: rgba(20,184,166,0.16);
+    --hero-2: rgba(20,184,166,0.06);
+    --card-shadow: 0 6px 20px rgba(15,23,42,0.07), 0 2px 6px rgba(15,23,42,0.04);
+    --btn-shadow: 0 4px 14px rgba(15,118,110,0.25);
+    --btn-shadow-hover: 0 6px 20px rgba(15,118,110,0.35);
+    --node-shadow: 0 2px 8px rgba(15,118,110,0.25);
+    --scroll-track: #eef2f6;
+    --scroll-thumb: #c3ccd9;
+    --code-bg: #ffffff;
+    --code-border: #dfe6ee;
+    --copied: #15803d;
+  }
+}
+/* Explicit choice wins in both directions */
+:root[data-theme="light"] {
+  --c-bg: 247 249 251;
+  --c-raised: 255 255 255;
+  --c-card: 255 255 255;
+  --c-border: 223 230 238;
+  --c-border-2: 195 204 217;
+  --c-text: 15 23 42;
+  --c-text-2: 71 85 105;
+  --c-text-3: 100 116 139;
+  --c-accent: 15 118 110;
+  --c-accent-text: 15 118 110;
+  --c-accent-dark: 13 148 136;
+  --c-accent-darker: 17 94 89;
+  --c-cta: 15 118 110;
+  --c-cta-hover: 17 94 89;
+  --c-cta-ink: 255 255 255;
+
+  --nav-border: rgba(148,163,184,0.28);
+  --nav-border-scrolled: rgba(148,163,184,0.55);
+  --nav-bg: rgba(255,255,255,0.85);
+  --divider: rgba(148,163,184,0.5);
+  --dot: rgba(15,118,110,0.16);
+  --amb-1: rgba(20,184,166,0.13);
+  --amb-2: rgba(45,212,191,0.13);
+  --amb-3: rgba(20,184,166,0.10);
+  --hero-1: rgba(20,184,166,0.16);
+  --hero-2: rgba(20,184,166,0.06);
+  --card-shadow: 0 6px 20px rgba(15,23,42,0.07), 0 2px 6px rgba(15,23,42,0.04);
+  --btn-shadow: 0 4px 14px rgba(15,118,110,0.25);
+  --btn-shadow-hover: 0 6px 20px rgba(15,118,110,0.35);
+  --node-shadow: 0 2px 8px rgba(15,118,110,0.25);
+  --scroll-track: #eef2f6;
+  --scroll-thumb: #c3ccd9;
+  --code-bg: #ffffff;
+  --code-border: #dfe6ee;
+  --copied: #15803d;
+}
+
+/* Toggle shows the theme you'd switch TO, not the one you're in:
+   dark now -> sun (go light);  light now -> moon (go dark). */
+.icon-sun { display: block; }
+.icon-moon { display: none; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .icon-sun { display: none; }
+  :root:not([data-theme="dark"]) .icon-moon { display: block; }
+}
+:root[data-theme="light"] .icon-sun { display: none; }
+:root[data-theme="light"] .icon-moon { display: block; }
+:root[data-theme="dark"] .icon-sun { display: block; }
+:root[data-theme="dark"] .icon-moon { display: none; }
+

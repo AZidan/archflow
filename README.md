@@ -4,9 +4,9 @@
 
 **Turn Claude Code into a structured development team.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Claude Code](https://img.shields.io/badge/Claude%20Code-Framework-blueviolet)](https://docs.anthropic.com/en/docs/claude-code) [![Agents](https://img.shields.io/badge/Agents-16+-blue)](https://github.com/AZidan/archflow) [![Phases](https://img.shields.io/badge/Phases-6-green)](https://github.com/AZidan/archflow)
+[![License: MIT](https://img.shields.io/badge/License-MIT-0f766e)](https://opensource.org/licenses/MIT) [![Claude Code](https://img.shields.io/badge/Claude%20Code-Framework-0f766e)](https://docs.anthropic.com/en/docs/claude-code) [![Agents](https://img.shields.io/badge/Agents-17-0d9488)](https://github.com/AZidan/archflow) [![Phases](https://img.shields.io/badge/Phases-6-0d9488)](https://github.com/AZidan/archflow)
 
-[Website](https://azidan.github.io/archflow/) · [Quick Start](#quick-start) · [How It Works](#how-it-works) · [Phases](#the-phases) · [Agents](#agents) · [Commands](#commands)
+[Website](https://azidan.github.io/archflow/) · [Quick Start](#quick-start) · [Three Ways to Start](#three-ways-to-start) · [Commands](#commands) · [How It Works](#how-it-works) · [Phases](#the-phases) · [Agents](#agents)
 
 <img src="docs/archflow-overview.svg" alt="Archflow Overview" width="700" />
 
@@ -16,11 +16,19 @@
 
 ## What is Archflow?
 
-Archflow is a **phase-based AI development framework** for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). It orchestrates 16+ specialized agents through a structured workflow — from product strategy to production deployment.
+Getting AI to write code stopped being the hard part. Keeping it coherent is. Sessions end and take their context with them. The frontend drifts from the backend. Two weeks in, nobody can say what's actually finished.
 
-Instead of one AI doing everything, each task goes to an agent with deep expertise in its domain. A `product-strategist` defines business goals. A `ux-designer` creates the design system. An `api-contract-architect` locks down API specs. Then `ui-engineer` and `api-engineer` build frontend and backend in parallel — coordinated through file-based handoffs and mandatory approval gates.
+Archflow is a **phase-based AI development framework** for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that fixes this structurally, with 17 specialized agents working from product strategy through to production deployment.
 
-Archflow works with any project type — fullstack, frontend-only, backend-only, or mobile — and adapts its phases, agents, and artifact structure accordingly.
+Instead of one AI doing everything, each task goes to an agent with deep expertise in its domain. A `product-strategist` defines business goals. A `ux-designer` creates the design system. An `api-contract-architect` locks down API specs. Then `ui-engineer` and `api-engineer` build frontend and backend in parallel against that same contract — so they can't quietly disagree. Handoffs happen through files, not chat, so context outlives the session that created it.
+
+Two things keep it practical rather than theoretical:
+
+**It meets your codebase where it is.** A blank directory, an established codebase, or a prototype that outgrew itself — Archflow reads what already exists and picks up from there. It never assumes you're on day one.
+
+**Ceremony scales with the project.** A solo weekend build runs in `quick` mode: one implicit release, gates that record but don't block. A team with a real release pipeline runs in `full` mode. Same schema either way, so switching costs nothing — and Archflow offers the upgrade when it notices you've outgrown the simpler mode.
+
+Works with any project type — fullstack, frontend-only, backend-only, or mobile — adapting its phases, agents, and artifact structure to each.
 
 ---
 
@@ -42,26 +50,90 @@ This saves the plugin reference to `.claude/settings.json` in your repo — any 
 
 Free and open source. No lock-in. Uninstall anytime with `claude plugin uninstall archflow`.
 
-### 3. Start Your Project
-
-Open Claude Code in your project directory:
+### 3. Open Claude Code in your project
 
 ```bash
 cd your-project
 claude
 ```
 
-- **New project?** Archflow starts at Phase 1 (Strategy).
-- **Existing codebase?** Run `/archflow onboard` — agents analyze your code, import context from your tools, and generate all artifacts for approval.
+Then pick the entry point that matches where you actually are.
 
-### 4. Develop Features
+---
+
+## Three Ways to Start
+
+Whichever you pick, Archflow proposes and waits — every artifact is shown to you before it's written, and no phase advances without your approval. Your code is never modified during setup.
+
+### 1. New project — start from strategy
+
+```
+/archflow init
+```
+
+Creates the state files and drops you at Phase 1. A `product-strategist` works out who this is for and what success means, a `feature-planner` turns that into a backlog, and you move through design → API contract → implementation with an approval gate at every step.
+
+Starts in `quick` mode, so you get structure without ceremony until you ask for it.
+
+📖 [Full guide: starting a new project](https://azidan.github.io/archflow/guides/new-project/)
+
+### 2. Existing codebase — onboard it
+
+```
+/archflow onboard
+```
+
+Dispatches up to 9 agents in parallel to read your codebase, imports context from tools you already use (Jira, Notion, Linear, GitHub, Confluence, Slack), and reverse-engineers the artifacts you never wrote down — design system, API contract, user flows, roadmap. Everything is presented for approval before anything is written.
+
+It also works out which phase your project has reached, so you don't redo work that's already done.
+
+📖 [Full guide: onboarding an existing codebase](https://azidan.github.io/archflow/guides/existing-codebase/)
+
+### 3. From prototype to product
+
+Your prototype works. People are using it. What it doesn't have is a roadmap, an API contract, a test plan, or a defensible answer to what "1.0" means.
+
+```
+/archflow onboard
+```
+
+Onboarding audits what you shipped and **reconstructs the plan around it**. Where it finds working code with no story behind it, it writes the story and marks it delivered — so your roadmap opens reflecting reality instead of pretending nothing exists yet.
+
+From there, the road to a real product is the phases a prototype skips:
+
+| What a prototype usually lacks | Where it comes from |
+|---|---|
+| Product direction, personas, success metrics | Phase 1 |
+| A design system instead of ad-hoc styling | Phase 2 |
+| An API contract both sides build against | Phase 2.5 |
+| Tests and acceptance criteria per story | Phase 3 |
+| Security, code quality, and performance review | Phase 4 |
+| CI/CD, versioning, app store prep, analytics | Phase 5 |
+
+You stay in `quick` mode while it's still small. When Archflow spots growth signals — a second release, a second contributor, a size threshold — it *offers* `full` mode with explicit release planning and role-based gates. It never forces the upgrade.
+
+**What this does and doesn't do:** it gives you the plan, contracts, and quality gates your prototype never had, and Phase 4 agents will review code quality, security, and performance. It will not silently rewrite your architecture. You decide what gets refactored — Archflow makes sure you know what needs it.
+
+📖 [Full guide: taking a prototype to production](https://azidan.github.io/archflow/guides/prototype-to-product/)
+
+---
+
+## Then: Develop Features
 
 ```
 /archflow feature          # Interactive wizard
 /archflow feature login    # Quick-add by name
 ```
 
-Archflow creates the feature branch, breaks it into tasks, and guides implementation through the appropriate agents. Features are filtered by scope — a `backend_only` repo only sees backend-scoped features from the roadmap.
+Archflow creates the feature branch, breaks it into tasks, and guides implementation through the appropriate agents. Features are filtered by scope — a `backend_only` repo only sees backend-scoped work.
+
+Capture an idea without committing to it, and detail it later when it's next up:
+
+```
+/archflow feature          # → capture as a backlog stub
+/archflow groom S2-11      # → add acceptance criteria, subtasks, gates
+/archflow feature S2-11    # → pull it into the active release and start building
+```
 
 ---
 
@@ -69,7 +141,7 @@ Archflow creates the feature branch, breaks it into tasks, and guides implementa
 
 Building software with AI means context gets lost, quality varies, and the same mistakes repeat. Archflow fixes this with three ideas:
 
-- **Specialized agents** — A UX designer doesn't write backend code. An API engineer doesn't make design decisions. 16+ agents, each scoped to one domain.
+- **Specialized agents** — A UX designer doesn't write backend code. An API engineer doesn't make design decisions. 17 agents, each scoped to one domain.
 - **File-based handoffs** — Context survives between conversations. Agents communicate through artifacts, not chat — so nothing gets lost when a session ends.
 - **Phase gates** — 6 phases from strategy to deployment. Nothing moves forward without your approval. No skipped steps. No autonomous decisions on what ships.
 - **Contract-first development** — API contracts are defined before implementation. Frontend and backend build against the same spec, so they never disagree.
@@ -95,11 +167,9 @@ Each phase has explicit completion criteria, expected output artifacts, and requ
 
 ---
 
-## Works with Existing Projects
+## Inside `/archflow onboard`
 
-Most AI workflows assume you're starting from scratch. Archflow meets you where you are.
-
-Run `/archflow onboard` and it dispatches up to 9 agents in parallel to deeply analyze your codebase. They import context from tools you already use (Jira, Notion, Linear, GitHub, Confluence, Slack), reverse-engineer your design system and API contracts, and drop you into the right phase based on what already exists.
+Most AI workflows assume you're starting from scratch. This is the one that doesn't — and it's the engine behind both the *existing codebase* and *prototype to product* paths above.
 
 ```
 Phase A: Interactive Collection     Answer 5 questions about your stack and context sources
@@ -112,9 +182,9 @@ Phase B: Autonomous Agent Dispatch  Up to 9 agents analyze your codebase in para
 Phase C: Synthesis & Presentation   Artifacts generated and presented for your approval
 ```
 
-The onboarding agents generate ready-to-use `project-context.md`, `roadmap.yaml`, `api-contract.md`, `theme.yaml`, `styled-dsl.yaml`, and `user-flows.md` — all reverse-engineered from your existing code and imported documentation. It also creates or updates your project's `CLAUDE.md` with architecture context derived from the analysis.
+The onboarding agents generate ready-to-use `project-context.md`, `roadmap.yaml`, `backlog.yaml`, `api-contract.md`, `theme.yaml`, `styled-dsl.yaml`, and `user-flows.md` — all reverse-engineered from your existing code and imported documentation. It also creates or updates your project's `CLAUDE.md` with architecture context derived from the analysis.
 
-**New project?** `/archflow init` starts you at Phase 1 with a clean slate.
+Two things make the result honest rather than aspirational: reconciliation moves any story whose code already exists into a shipped release, and the **gap report** tells you plainly what's missing — no tests, no contract, no design system — so you're choosing what to fix rather than discovering it later.
 
 ---
 
@@ -135,17 +205,33 @@ The onboarding agents generate ready-to-use `project-context.md`, `roadmap.yaml`
 
 ## Commands
 
+Eight subcommands. You'll use three of them regularly.
+
+**Getting set up** — run once per project
+
 | Command | What it does |
 |---------|-------------|
-| `/archflow` | Show available subcommands and current project status |
 | `/archflow init` | Initialize a new project at Phase 1 |
 | `/archflow onboard` | Analyze an existing codebase and generate all artifacts |
-| `/archflow migrate` | Migrate a v1.0 project to schema v2.0 (releases replace phases) |
-| `/archflow mode` | Show or switch the ceremony mode (`quick` \| `full`) |
-| `/archflow release` | Inspect / manage releases (status, new, start, ship) |
-| `/archflow groom` | Detail a backlog stub into a `ready` story (ACs, subtasks, gates) |
-| `/archflow feature` | Add a feature, create branches, assign agents |
 | `/archflow setup-mcp` | Connect external tools (Jira, Notion, Linear, GitHub, etc.) |
+| `/archflow migrate` | Upgrade a v1.0 project to schema v2.0 (releases replace phases) |
+
+**Day to day** — the ones you'll actually type
+
+| Command | What it does |
+|---------|-------------|
+| `/archflow` | Current phase, active release, progress, and what to run next |
+| `/archflow feature` | Add a story — to the backlog, or straight into the active release with a branch |
+| `/archflow groom` | Turn a backlog stub into a `ready` story (acceptance criteria, subtasks, gates) |
+
+**Planning and pace** — when the project grows
+
+| Command | What it does |
+|---------|-------------|
+| `/archflow release` | Inspect and manage releases (`new`, `start`, `ship`) |
+| `/archflow mode` | Show or switch ceremony mode (`quick` \| `full`) |
+
+Run `/archflow` on its own any time you've lost the thread — it reports where the project stands and what's sensible to do next.
 
 ---
 
@@ -190,7 +276,10 @@ Archflow manages these files in your project:
 | File | Purpose |
 |------|---------|
 | `.archflow/project-context.md` | Business goals, tech stack, architecture decisions |
-| `.archflow/roadmap.yaml` | Feature roadmap and sprint planning |
+| `.archflow/roadmap.yaml` | Index — epic labels, release pipeline, ceremony mode |
+| `.archflow/backlog.yaml` | Unscheduled scope: stubs and groomed `ready` stories |
+| `.archflow/releases/{slug}.yaml` | Stories committed to a release, with gates and acceptance criteria |
+| `.archflow/history.yaml` | What shipped, when, and which files it touched |
 | `.archflow/current-phase.yaml` | Phase state tracker (auto-created) |
 | `.archflow/current-feature.yaml` | Active feature scope and task tracking |
 | `docs/api-contract.md` | API specifications (single source of truth) |
@@ -243,7 +332,10 @@ your-project/
 ├── .archflow/                       # Project state (version-controlled)
 │   ├── current-phase.yaml           # Phase state tracker
 │   ├── project-context.md           # Business goals, tech stack, architecture
-│   ├── roadmap.yaml                 # Feature roadmap and sprint planning
+│   ├── roadmap.yaml                 # Index: epics, release pipeline, mode
+│   ├── backlog.yaml                 # Unscheduled scope (stubs + groomed stories)
+│   ├── releases/                    # One file per release; archive/ for shipped
+│   ├── history.yaml                 # Shipped ledger (institutional memory)
 │   └── current-feature.yaml         # Active feature scope and tasks
 ├── .claude/settings.json            # Plugin reference (auto-created on install)
 └── CLAUDE.md                        # Updated with Archflow section by onboarding
