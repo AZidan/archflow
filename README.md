@@ -318,17 +318,15 @@ archflow/
 │   │   ├── groom.md                 # /archflow:groom
 │   │   ├── feature.md               # /archflow:feature
 │   │   └── setup-mcp.md             # /archflow:setup-mcp
-│   ├── skills/archflow/             # Framework knowledge + assets copied into projects
-│   │   ├── SKILL.md                 # Overview skill (what Archflow is, where things live)
-│   │   ├── mcp-registry.yaml        # Curated MCP server registry
-│   │   ├── scripts/migrate.py       # v1.0 → v2.0 migration engine
-│   │   ├── phases/ · schemas/       # Copied into the project's .archflow/ by init/onboard
-│   │   └── workflow.md · instructions.md
-│   └── .archflow/                   # Framework instructions and phase files
-│       ├── instructions.md          # Core instructions (reloaded via hook)
+│   ├── scripts/migrate.py           # v1.0 → v2.0 migration engine (used by /archflow:migrate)
+│   └── skills/archflow/             # Framework knowledge + assets copied into projects
+│       ├── SKILL.md                 # Overview skill (what Archflow is, where things live)
+│       ├── instructions.md          # Core instructions (copied to .archflow/, reloaded via hook)
 │       ├── workflow.md              # Git branching strategy
+│       ├── phases/                  # Phase-specific instruction files (10 files)
+│       ├── schemas/                 # roadmap / release / backlog / history schemas
 │       ├── base-dsl-structure.yaml  # DSL template for design artifacts
-│       └── phases/                  # Phase-specific instruction files (10 files)
+│       └── mcp-registry.yaml        # Curated MCP server registry
 ├── README.md
 └── LICENSE
 ```

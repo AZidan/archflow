@@ -34,8 +34,9 @@ inside another flow (e.g. onboarding calls setup-mcp), read that file and follow
 - `${CLAUDE_PLUGIN_ROOT}/skills/archflow/phases/` — per-phase instruction files
 - `${CLAUDE_PLUGIN_ROOT}/skills/archflow/schemas/` — roadmap / release / backlog / history schemas
 - `${CLAUDE_PLUGIN_ROOT}/skills/archflow/workflow.md` — git branching strategy
+- `${CLAUDE_PLUGIN_ROOT}/skills/archflow/base-dsl-structure.yaml` — DSL template for design artifacts
 - `${CLAUDE_PLUGIN_ROOT}/skills/archflow/mcp-registry.yaml` — curated MCP server registry
-- `${CLAUDE_PLUGIN_ROOT}/skills/archflow/scripts/migrate.py` — v1.0 → v2.0 migration engine
+- `${CLAUDE_PLUGIN_ROOT}/scripts/migrate.py` — v1.0 → v2.0 migration engine
 
 `init` / `onboard` copy `instructions.md`, `phases/`, `schemas/`, and `workflow.md` into the
 project's `.archflow/`. Paths beginning with `.archflow/` are always **project-local**.

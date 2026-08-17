@@ -5,7 +5,7 @@ description: Migrate a v1.0 Archflow project to schema v2.0 (releases replace sp
 # /archflow:migrate — Migrate a project from schema v1.0 to v2.0
 
 Transforms an existing Archflow project's v1.0 roadmap into the v2.0 multi-file **release** model,
-using a deterministic engine (`skills/archflow/scripts/migrate.py` in the plugin) — reconstructing real releases from git shipping
+using a deterministic engine (`scripts/migrate.py` in the plugin) — reconstructing real releases from git shipping
 evidence, not from sprints. Standalone command (NOT part of `onboard`).
 
 **Load-bearing idea: a sprint is NOT a release.** v1 sprints were agile time-boxes; many shipped
@@ -22,12 +22,12 @@ If `roadmap.yaml` already has `schema_version: "2.0"`, say it's already migrated
 
 ## How to run it (the deterministic engine)
 
-The migration is performed by **`${CLAUDE_PLUGIN_ROOT}/skills/archflow/scripts/migrate.py`**, which
+The migration is performed by **`${CLAUDE_PLUGIN_ROOT}/scripts/migrate.py`**, which
 ships with the plugin. It requires `python3` + `pyyaml`. Run it against the target project root.
 
 **1. DRY RUN first (writes nothing) — reconstruct + show the plan:**
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/archflow/scripts/migrate.py --path <project-root> --dry-run
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/migrate.py --path <project-root> --dry-run
 ```
 It prints: detected v1 variant, git deploy boundary, prod branch/release events, the reconstructed
 release timeline (baseline + discrete/rolling releases with story counts), the proposed active
@@ -41,7 +41,7 @@ release, backlog size, and warnings (e.g. multiple `in_progress` sprints, git-da
 
 **3. APPLY — back up and write the v2.0 layout:**
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/archflow/scripts/migrate.py --path <project-root> --apply --active <sprint-id>
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/migrate.py --path <project-root> --apply --active <sprint-id>
 ```
 It backs up v1 to `.archflow/backup-v1/`, then writes `roadmap.yaml` (index), `backlog.yaml`,
 `releases/{active}.yaml`, `releases/archive/{slug}.yaml` per reconstructed release, and `history.yaml`.
