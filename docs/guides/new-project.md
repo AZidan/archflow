@@ -1,7 +1,7 @@
 ---
 layout: guide
 title: "Starting a New Project"
-description: "Run /archflow init on an empty repo and move from strategy through design, API contract, and implementation."
+description: "Run /archflow:init on an empty repo and move from strategy through design, API contract, and implementation."
 permalink: /guides/new-project/
 ---
 
@@ -18,7 +18,7 @@ claude
 ```
 
 ```
-/archflow init
+/archflow:init
 ```
 
 `init` is deliberately small. It:
@@ -82,10 +82,10 @@ on-demand work like internationalization.
 ## Day-to-day loop
 
 ```
-/archflow                  # where am I, what's next
-/archflow feature          # add a story
-/archflow groom S2-11      # detail a stub when it's next up
-/archflow feature S2-11    # pull it into the release, branch, build
+/archflow:status           # where am I, what's next
+/archflow:feature          # add a story
+/archflow:groom S2-11      # detail a stub when it's next up
+/archflow:feature S2-11    # pull it into the release, branch, build
 ```
 
 When adding a story you choose where it goes: **backlog** (capture it, decide later) or **active
@@ -103,7 +103,7 @@ It never switches on its own, and declining is remembered so it doesn't nag.
 readiness gates, and role lanes. Same schema, so switching is instant and nothing is rewritten.
 
 ```
-/archflow mode full
+/archflow:mode full
 ```
 
 ---

@@ -1,7 +1,7 @@
 ---
 layout: guide
 title: "Onboarding an Existing Codebase"
-description: "How /archflow onboard reads your code, imports context from your tools, and reconstructs the artifacts you never wrote down."
+description: "How /archflow:onboard reads your code, imports context from your tools, and reconstructs the artifacts you never wrote down."
 permalink: /guides/existing-codebase/
 ---
 
@@ -22,7 +22,7 @@ claude
 ```
 
 ```
-/archflow onboard
+/archflow:onboard
 ```
 
 Nothing is written until you approve it. Onboarding reads, analyzes, proposes — then waits.
@@ -37,7 +37,7 @@ Archflow detects your stack and project type (`fullstack`, `frontend_only`, `bac
 `mobile`), then asks where your existing context lives — Jira, Notion, Linear, GitHub, Confluence,
 Slack, Google Drive, or nothing at all.
 
-If a tool isn't connected yet, it runs `/archflow setup-mcp` inline rather than making you stop and
+If a tool isn't connected yet, it runs `/archflow:setup-mcp` inline rather than making you stop and
 come back.
 
 ### Phase B — Autonomous analysis *(you can walk away)*
@@ -88,20 +88,20 @@ Your `CLAUDE.md` also gains an architecture section derived from the analysis.
 
 ## Already onboarded?
 
-Running `/archflow onboard` again is safe. It detects existing state and shows a status summary
+Running `/archflow:onboard` again is safe. It detects existing state and shows a status summary
 instead of redoing the work — plus it validates your `roadmap.yaml` against the current schema,
 backfills any missing template files, and offers to auto-fix format violations.
 
-On a v1.0 project it will point you at `/archflow migrate` rather than half-upgrading you.
+On a v1.0 project it will point you at `/archflow:migrate` rather than half-upgrading you.
 
 ---
 
 ## After onboarding
 
 ```
-/archflow                  # confirm the phase it picked
-/archflow feature          # add work
-/archflow groom S2-11      # detail a stub before building it
+/archflow:status           # confirm the phase it picked
+/archflow:feature          # add work
+/archflow:groom S2-11      # detail a stub before building it
 ```
 
 Read the gap report first, though. It usually reorders your priorities.

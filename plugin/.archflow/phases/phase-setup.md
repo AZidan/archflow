@@ -28,14 +28,14 @@ if $has_source_code; then
   # Existing project detected — offer onboarding
   echo "Existing project detected."
   # Ask: "Run onboarding wizard? [Yes / Start fresh]"
-  # If yes: load phases/phase-onboarding.md via /archflow onboard
+  # If yes: load phases/phase-onboarding.md via /archflow:onboard
   # If no: continue with Phase 1 below
 fi
 ```
 
 **When existing source code is detected:**
 - Present to user: "Existing project detected. Run onboarding wizard? [Yes / Start fresh]"
-- If **Yes**: Load `.archflow/phases/phase-onboarding.md` and execute the `/archflow onboard` wizard
+- If **Yes**: Load `.archflow/phases/phase-onboarding.md` and execute the `/archflow:onboard` wizard
 - If **Start fresh**: Continue with normal Phase 1 setup below
 
 ---
@@ -168,7 +168,7 @@ phase_file: ".archflow/phases/phase-{detected_phase}-{name}.md"
 project_type: "{fullstack|frontend_only|backend_only|mobile}"
 
 # v2.0 — ceremony mode + active release pointer
-mode: "{quick|full}"          # quick = /archflow init default; full = onboard of a substantial repo
+mode: "{quick|full}"          # quick = /archflow:init default; full = onboard of a substantial repo
 active_release: null          # slug of the ONE in_progress release (cached from roadmap.yaml); null when none building
 
 # Inference metadata
@@ -189,8 +189,8 @@ completed_at: null
 
 ### Mode default (v2.0)
 
-- **`/archflow init`** (new/small project) → `mode: quick`.
-- **`/archflow onboard`** → `mode: full` when the repo is substantial (real dependencies, multiple
+- **`/archflow:init`** (new/small project) → `mode: quick`.
+- **`/archflow:onboard`** → `mode: full` when the repo is substantial (real dependencies, multiple
   services/tiers) or has multiple contributors; otherwise `quick`.
 - `active_release` mirrors `roadmap.yaml`'s `active_release` (the one `in_progress` release) and is
   re-validated against it on load; it is a cache, not a second source of truth.

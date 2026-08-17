@@ -1,17 +1,24 @@
-# /archflow feature — Add or Start a Feature
+---
+description: Add a story to the backlog or straight into the active release with a branch
+argument-hint: "[name | story-id]"
+---
+
+# /archflow:feature — Add or Start a Feature
+
+Argument (`$ARGUMENTS`): optional feature name for quick-add, or an existing story id to pull into the active release. Empty → interactive wizard.
 
 Add a new feature to the roadmap from a description or external tool link. Optionally starts the git workflow for development.
 
 ## Usage
 ```
-/archflow feature              → Interactive feature wizard
-/archflow feature [name]       → Quick-add a feature by name
+/archflow:feature              → Interactive feature wizard
+/archflow:feature [name]       → Quick-add a feature by name
 ```
 
 ## Prerequisites
-- `.archflow/current-phase.yaml` must exist (run `/archflow onboard` first for existing projects, or complete Phase 1 for new ones)
+- `.archflow/current-phase.yaml` must exist (run `/archflow:onboard` first for existing projects, or complete Phase 1 for new ones)
 - `.archflow/roadmap.yaml` must exist
-- For link-based import: relevant MCP must be configured (will prompt `/archflow setup-mcp` if not)
+- For link-based import: relevant MCP must be configured (will prompt `/archflow:setup-mcp` if not)
 
 ---
 
@@ -57,7 +64,7 @@ Paste the epic/story link:
    ```bash
    claude mcp list
    ```
-3. If NOT configured: run `/archflow setup-mcp [tool]` inline
+3. If NOT configured: run `/archflow:setup-mcp [tool]` inline
 4. Fetch the item via MCP:
    - Get the item + its children/sub-tasks
    - Extract: title, description, acceptance criteria, status, priority, sub-tasks
@@ -114,11 +121,11 @@ In v2.0 stories are NOT in `roadmap.yaml` (that's the story-less index). Existin
 5. User picks one:
    - **Already in the active release** → skip to Step 3 (git workflow).
    - **A backlog stub** → this is a pull-forward: promote/MOVE it into the active release, then Step 3.
-     If the stub is not yet groomed (`status: backlog`), run `commands/groom.md` FIRST to detail it —
+     If the stub is not yet groomed (`status: backlog`), run `${CLAUDE_PLUGIN_ROOT}/commands/groom.md` FIRST to detail it —
      don't detail it inline here. A stub that is already `ready` is promotable as-is. Then MOVE the
      groomed story into the release file with `status: spec_ready` and `pulled_from: backlog`
      (`spec_ready` is set by this promotion, never by grooming). If no release is `in_progress`, tell
-     the user to start one first (`/archflow release start`).
+     the user to start one first (`/archflow:release start`).
 
 ---
 
@@ -171,7 +178,7 @@ Generate the next story ID under the chosen epic: `S{epic}-{seq}`.
   description: "{one line}"
 ```
 Then STOP Step 2 — a backlog stub is not built until it's promoted into a release (via
-`/archflow release new` or pull-forward). Skip Step 3 (no branch yet).
+`/archflow:release new` or pull-forward). Skip Step 3 (no branch yet).
 
 **If Active release** → append a DETAILED story to `.archflow/releases/{active_release}.yaml`, deriving
 `gates` from scope:
@@ -202,7 +209,7 @@ Ready to start development? [Yes / Not yet, just add to roadmap]
 ```
 
 #### If "Not yet"
-> "Feature added to roadmap. Run `/archflow feature` again when ready to start."
+> "Feature added to roadmap. Run `/archflow:feature` again when ready to start."
 Done.
 
 #### If "Yes"
@@ -275,7 +282,7 @@ Follow the branching strategy from `.archflow/workflow.md`:
 
 ### Step 4: Task-Level Git Workflow (During Development)
 
-This step runs during Phase 3 implementation, not during `/archflow feature` itself. It documents how tasks are executed using `workflow.md`.
+This step runs during Phase 3 implementation, not during `/archflow:feature` itself. It documents how tasks are executed using `workflow.md`.
 
 For each task in `.archflow/current-feature.yaml`:
 
@@ -351,7 +358,7 @@ After ALL tasks are complete and approved:
 ## Notes
 - Story IDs follow the pattern `S{epic}-{seq}` (e.g., S1-01, S2-03) and are auto-incremented under their epic
 - Epic IDs follow the pattern `E{N}` (e.g., E1, E2) and are auto-incremented
-- The `/archflow feature` command can be run at any time, not just during Phase 3
+- The `/archflow:feature` command can be run at any time, not just during Phase 3
 - Git operations always require explicit user approval before merging
 - The roadmap follows the canonical schema at `.archflow/schemas/roadmap-schema.yaml`
 - The task-level git workflow (Step 4) is executed during Phase 3, referenced here for completeness

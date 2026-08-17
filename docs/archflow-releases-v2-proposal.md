@@ -48,7 +48,7 @@ institutional memory (Pillar 1). Move per-story design/spec out of the implement
 **readiness pipeline** so roles collaborate in parallel lanes (Pillar 2). Make both scale down to a
 frictionless **quick mode** for small/solo projects and up to **full mode** without a rewrite.
 
-This is a **breaking `schema_version: 2.0`** change with a migration path in `/archflow onboard`.
+This is a **breaking `schema_version: 2.0`** change with a migration path in `/archflow:onboard`.
 
 ---
 
@@ -341,10 +341,10 @@ init, changeable anytime) governs how much ceremony is enforced — it is a prof
 | Roles | one lane (solo) | PM / designer / architect / engineer / QA lanes |
 | History / codemap | still captured on demand | fully on |
 
-**Defaults:** `/archflow init` → `quick` (new small project); `/archflow onboard` → `full` when it
+**Defaults:** `/archflow:init` → `quick` (new small project); `/archflow:onboard` → `full` when it
 detects a substantial codebase or a second contributor, else `quick`.
 
-**Switching mode:** `/archflow mode` (shows current mode) / `/archflow mode full` / `/archflow mode
+**Switching mode:** `/archflow:mode` (shows current mode) / `/archflow:mode full` / `/archflow:mode
 quick`. Switching `quick → full` migrates in place — materialize the implicit release, split the
 backlog, turn gates on. No re-onboard, no data rewrite, because the schema was always the same.
 `full → quick` is also legal (collapse to advisory) for a project that over-scoped itself.
@@ -360,7 +360,7 @@ switch a `quick` project to `full` — it never migrates silently. Triggers:
 - the project **crosses a size threshold** (story count / file count / repo age).
 
 On a trigger: "This project looks like it's outgrowing quick mode (<reason>). Switch to full mode?
-It adds explicit releases and role-based design/spec gates. `/archflow mode full` — or keep going as
+It adds explicit releases and role-based design/spec gates. `/archflow:mode full` — or keep going as
 is." The user decides; declining is remembered so it doesn't nag every session.
 
 ---
@@ -428,18 +428,18 @@ huge.
 9. `workflow.md` (step 8 tracking edits target the active release file; capture footprint for history
    on merge; **readiness-gate handoffs**).
 10. **Mode enforcement layer** — a shared helper the phase docs consult: `quick` auto-satisfies gates
-    and collapses ceremony; `full` enforces. Plus `/archflow mode [quick|full]` (in-place switch) and
+    and collapses ceremony; `full` enforces. Plus `/archflow:mode [quick|full]` (in-place switch) and
     the **smart graduation prompt** (offer full on growth signals; remember a decline).
-11. **New `/archflow migrate` command** — standalone v1 → v2 schema transform (below). *Not* folded
+11. **New `/archflow:migrate` command** — standalone v1 → v2 schema transform (below). *Not* folded
     into `onboard`: different input (existing v1 archflow state, not raw code) and different job
     (transform vs audit-and-build). Keeps `onboard` lean and gives future schema bumps a home.
-12. `/archflow init` + `/archflow onboard` — set **mode defaults** only (init → `quick`; onboard →
+12. `/archflow:init` + `/archflow:onboard` — set **mode defaults** only (init → `quick`; onboard →
     `full`/`quick` by codebase size + contributors). No migration logic here.
-13. `/archflow` status + new `/archflow release` command (surface active release, % done, criteria,
-    **per-story readiness lane**); v1-schema **auto-detect prompt** ("run `/archflow migrate`").
+13. `/archflow:status` + new `/archflow:release` command (surface active release, % done, criteria,
+    **per-story readiness lane**); v1-schema **auto-detect prompt** ("run `/archflow:migrate`").
 14. Mirror all of the above into `plugin/` and `skills/` copies.
 
-## Migration (`/archflow migrate`, v1 → v2)
+## Migration (`/archflow:migrate`, v1 → v2)
 
 Standalone command (not part of `onboard`). Runs only on a project already holding v1 archflow
 state; **auto-detected** on any session where `roadmap.yaml` has `phases:` or `schema_version` is
@@ -467,7 +467,7 @@ absent/`1.0`, which surfaces a prompt to run it (never auto-runs). **Step 0: bac
 - `history.yaml` growth at very large scale — flat/grep-friendly is fine into the thousands; shard
   later if needed.
 - ~~**Graduation trigger**~~ **Resolved:** smart prompt on growth signals (2nd release / 2nd
-  contributor / size threshold), never forced; a decline is remembered. Command is `/archflow mode`,
+  contributor / size threshold), never forced; a decline is remembered. Command is `/archflow:mode`,
   not `upgrade` (avoids paid-action connotation).
 - ~~**Readiness gate strictness in `full`**~~ **Resolved: advisory-recorded.** Building a
   not-`ready` story is warned + overridable, but the override is stamped on the story

@@ -1,18 +1,25 @@
-# /archflow setup-mcp — MCP Server Setup Helper
+---
+description: Configure an MCP server for external tools (Jira, Notion, Linear, GitHub, SuperDesign, ...)
+argument-hint: "[tool-name]"
+---
+
+# /archflow:setup-mcp — MCP Server Setup Helper
+
+Argument (`$ARGUMENTS`): optional tool name (e.g. `jira`, `notion`). Empty → list the registry.
 
 Configure external tool MCP servers for use with Claude Code.
 
 ## Usage
 ```
-/archflow setup-mcp              → List available MCPs from registry
-/archflow setup-mcp [tool-name]  → Configure a specific MCP server
+/archflow:setup-mcp              → List available MCPs from registry
+/archflow:setup-mcp [tool-name]  → Configure a specific MCP server
 ```
 
 ## Registry
-The curated MCP registry is stored in `skills/archflow/mcp-registry.yaml`. Read that file to look up tool details. Edit it to add or update MCP servers.
+The curated MCP registry is stored in `${CLAUDE_PLUGIN_ROOT}/skills/archflow/mcp-registry.yaml`. Read that file to look up tool details. Edit it to add or update MCP servers.
 
 ## Invocation
-When the user runs `/archflow setup-mcp`, follow this flow exactly.
+When the user runs `/archflow:setup-mcp`, follow this flow exactly.
 
 ---
 
@@ -34,7 +41,7 @@ If not found, proceed to Step 2.
 
 ### Step 2: Lookup in Registry
 
-Read `skills/archflow/mcp-registry.yaml` and search for the tool name (case-insensitive). If found, show:
+Read `${CLAUDE_PLUGIN_ROOT}/skills/archflow/mcp-registry.yaml` and search for the tool name (case-insensitive). If found, show:
 > "[Tool] MCP uses [command/url] via [transport] transport."
 > Purpose: [purpose]
 
@@ -77,7 +84,7 @@ claude mcp get [tool-name]
 
 > "Configured [Tool] MCP. Restart Claude Code or run `/mcp` to verify the connection."
 
-If the tool is `onboarding_only: true` and was set up during `/archflow onboard`:
+If the tool is `onboarding_only: true` and was set up during `/archflow:onboard`:
 > "Tip: This MCP was added for onboarding import. You can remove it later with: `claude mcp remove [tool-name]`"
 
 ---
@@ -112,7 +119,7 @@ claude mcp add --transport stdio [tool-name] -- npx -y [package-name]
 
 ## Listing Available MCPs
 
-When invoked without arguments (`/archflow setup-mcp`), read `skills/archflow/mcp-registry.yaml` and show the registry as a table:
+When invoked without arguments (`/archflow:setup-mcp`), read `${CLAUDE_PLUGIN_ROOT}/skills/archflow/mcp-registry.yaml` and show the registry as a table:
 
 ```
 Available MCP Servers:
@@ -129,7 +136,7 @@ Available MCP Servers:
 | trello       | stdio     | env    | Fetch boards, lists, cards           |
 | superdesign  | stdio     | —      | Generate hi-fi UI screens (Phase 2.25)|
 
-Usage: /archflow setup-mcp [tool-name]
+Usage: /archflow:setup-mcp [tool-name]
 ```
 
 Note: Jira and Confluence share the same Atlassian Rovo MCP server — configuring one gives access to both.

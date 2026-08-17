@@ -1,7 +1,7 @@
 # Proposal: Add project-skill scaffolding to `/archflow`
 
 ## Context
-`/archflow init` (new project) and `/archflow onboard` (existing codebase) both produce phase state, project-context, and roadmap files — but neither produces project-scoped Claude Code skills (`.claude/skills/<name>/SKILL.md`). Skills are autoload knowledge packs that let Claude reason about a specific project's architecture, conventions, and gotchas without re-deriving them every session. Without them, every new conversation pays a cold-start tax: Claude re-explores the repo, re-discovers where new code goes, and re-learns project-specific incidents from scratch.
+`/archflow:init` (new project) and `/archflow:onboard` (existing codebase) both produce phase state, project-context, and roadmap files — but neither produces project-scoped Claude Code skills (`.claude/skills/<name>/SKILL.md`). Skills are autoload knowledge packs that let Claude reason about a specific project's architecture, conventions, and gotchas without re-deriving them every session. Without them, every new conversation pays a cold-start tax: Claude re-explores the repo, re-discovers where new code goes, and re-learns project-specific incidents from scratch.
 
 The cost compounds across long-running projects with multiple contributors. The value of a well-grounded skill catalog is that any session loads only the relevant ones via the `description:` frontmatter trigger, giving Claude domain context proportional to the task. The catalog grows over time — onboarding seeds a tight initial set, and projects expand it as patterns emerge.
 
@@ -46,7 +46,7 @@ are the shared substrate every role stands on.
 ("auth uses `AuthGuard`, see …"); an enforceable rule ("NEVER bypass `AuthGuard`") is a CLAUDE.md
 invariant. Knowledge skills must not become a dumping ground for rules.
 
-## Strategy A — `/archflow onboard` (existing codebase, high-value moment)
+## Strategy A — `/archflow:onboard` (existing codebase, high-value moment)
 
 After audit + context import + roadmap backfill, run a **deep-analysis pass** that produces a tailored skill catalog:
 
@@ -64,7 +64,7 @@ After audit + context import + roadmap backfill, run a **deep-analysis pass** th
 
 Output target: **~10–15 skills at onboarding** — foundations (stack-specific, ~5) + top-N modules by code volume (~5–7) + 2–3 "where does X go" scaffolds for the most common feature types. Skip debug skills unless real incident content exists. Each skill 50–150 lines. **Symbol anchors only** (e.g. `class LoginView in apps/auth/views.py`), never line numbers — line numbers rot the moment someone refactors. Cross-references via "See also" sections. The `/archflow scaffold-skills` command expands the catalog later as the project grows.
 
-## Strategy B — `/archflow init` (new project, only foundations)
+## Strategy B — `/archflow:init` (new project, only foundations)
 
 New projects lack code to ground per-module or debug skills. Generating them = hallucination. Instead:
 
@@ -199,8 +199,8 @@ their initial seed.
 ## Deliverables
 
 1. Stack-specific foundation library (templated, version-pinned, in archflow's repo)
-2. `/archflow onboard` extension: deep-analysis + catalog generation, gated on user approval before writing
-3. `/archflow init` extension: drop stack-neutral foundations immediately; add stack-specific stubs once stack is chosen in Phase 1
+2. `/archflow:onboard` extension: deep-analysis + catalog generation, gated on user approval before writing
+3. `/archflow:init` extension: drop stack-neutral foundations immediately; add stack-specific stubs once stack is chosen in Phase 1
 4. New `/archflow scaffold-skills` command for projects past Sprint 1 wanting to backfill
 5. Docs / README update describing the skill-scaffolding flows
 

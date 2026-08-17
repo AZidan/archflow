@@ -1,4 +1,11 @@
-# /archflow release — Inspect and manage releases
+---
+description: Inspect and manage releases (status, new, start, ship)
+argument-hint: "[new <name> | start <slug> | ship]"
+---
+
+# /archflow:release — Inspect and manage releases
+
+Arguments (`$ARGUMENTS`): `new [name]`, `start [slug]`, `ship`, or empty for status.
 
 The release is the v2.0 outer-loop unit. This command surfaces the pipeline and drives the
 release-level lifecycle actions. It reads the index (`roadmap.yaml`), the active release file, and the
@@ -6,10 +13,10 @@ shipped ledger; it does not itself write application code.
 
 ## Usage
 ```
-/archflow release                 → status: pipeline + active release progress + shipped ledger
-/archflow release new [name]      → create a release from the backlog (feature-planner Mode B)
-/archflow release start [slug]    → transition a ready release to in_progress (the build gate)
-/archflow release ship            → run the Phase 5 ship ritual for the active release
+/archflow:release                 → status: pipeline + active release progress + shipped ledger
+/archflow:release new [name]      → create a release from the backlog (feature-planner Mode B)
+/archflow:release start [slug]    → transition a ready release to in_progress (the build gate)
+/archflow:release ship            → run the Phase 5 ship ritual for the active release
 ```
 
 ## `release` (no argument) — status
@@ -29,7 +36,7 @@ In `quick` mode, collapse to just the single implicit release's progress.
    stubs, their `target` clusters, what just shipped (`history.yaml`), and project KPIs.
 3. Invoke **feature-planner (Mode B)**: select stubs from `backlog.yaml` and MOVE them into
    `.archflow/releases/{slug}.yaml` as `spec_ready`. Stories already groomed to `ready` promote
-   as-is; any still-bare stub is groomed first, following `commands/groom.md` for AC shape and
+   as-is; any still-bare stub is groomed first, following `${CLAUDE_PLUGIN_ROOT}/commands/groom.md` for AC shape and
    gate derivation (Mode B may batch that conversation — it doesn't run the command once per story).
    Status starts `planning`.
 4. Register the release in `roadmap.yaml → releases` with `status: planning`.

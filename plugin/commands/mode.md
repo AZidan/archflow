@@ -1,13 +1,20 @@
-# /archflow mode — Show or switch the ceremony mode (quick | full)
+---
+description: Show or switch the ceremony mode (quick | full)
+argument-hint: "[quick|full]"
+---
+
+# /archflow:mode — Show or switch the ceremony mode (quick | full)
+
+Argument (`$ARGUMENTS`): optional target mode `quick` or `full`. Empty → show the current mode.
 
 `mode` is a profile over the SAME v2.0 schema, not a fork. It governs how much ceremony is enforced.
 Switching is an in-place change — no data rewrite, because the schema is identical in both modes.
 
 ## Usage
 ```
-/archflow mode          → show the current mode + what it means
-/archflow mode full     → switch to full
-/archflow mode quick    → switch to quick
+/archflow:mode          → show the current mode + what it means
+/archflow:mode full     → switch to full
+/archflow:mode quick    → switch to quick
 ```
 
 ## The two modes
@@ -47,5 +54,5 @@ When a `quick` project shows growth signals, OFFER (do not auto-switch) a move t
 - the project **crosses a size threshold** (story count / file count / repo age).
 
 Prompt: "This project looks like it's outgrowing quick mode (<reason>). Switch to full mode? It adds
-explicit releases and role-based design/spec gates. `/archflow mode full` — or keep going as is."
+explicit releases and role-based design/spec gates. `/archflow:mode full` — or keep going as is."
 Remember a decline so it doesn't nag every session.

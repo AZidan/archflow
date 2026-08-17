@@ -1,10 +1,14 @@
-# /archflow onboard — Existing Codebase Onboarding Wizard
+---
+description: Onboard an existing codebase (interactive wizard: audit, import context, backfill artifacts, set phase)
+---
+
+# /archflow:onboard — Existing Codebase Onboarding Wizard
 
 Onboard an existing codebase to the phase-based development framework. Three-phase orchestration: gather user input upfront, dispatch specialized agents for deep analysis, then synthesize and present results.
 
 ## Usage
 ```
-/archflow onboard          → Start or resume the onboarding wizard
+/archflow:onboard          → Start or resume the onboarding wizard
 ```
 
 ## Prerequisites
@@ -39,8 +43,8 @@ Load `.archflow/phases/phase-onboarding.md` for audit logic, project type detect
 First check the schema version of the roadmap you just read:
 
 - **v1.0** (has a `phases:` key, or `schema_version` is absent or `"1.0"`) → **STOP onboarding and
-  redirect to migration.** Onboard does not transform old state; that's `/archflow migrate`'s job:
-  > "This project already has an Archflow roadmap in the v1.0 format. Run `/archflow migrate` to
+  redirect to migration.** Onboard does not transform old state; that's `/archflow:migrate`'s job:
+  > "This project already has an Archflow roadmap in the v1.0 format. Run `/archflow:migrate` to
   > upgrade it to v2.0 (releases replace phases, sprints retired), then re-run onboard if needed."
   Do not validate v1 format here and do not overwrite it.
 
@@ -129,12 +133,12 @@ Copy them from the plugin? [Yes / Skip]
   (This is non-destructive — existing files are never overwritten.)
 ```
 
-- **Yes** — copy each missing file from `skills/archflow/` to `.archflow/`. Create subdirectories (`phases/`, `schemas/`) if needed. NEVER overwrite existing files.
+- **Yes** — copy each missing file from `${CLAUDE_PLUGIN_ROOT}/skills/archflow/` to `.archflow/`. Create subdirectories (`phases/`, `schemas/`) if needed. NEVER overwrite existing files.
 - **Skip** — continue without copying
 
 ### Final line
 ```
-Run /archflow feature to kick off work, or tell me what you'd like to do.
+Run /archflow:feature to kick off work, or tell me what you'd like to do.
 ```
 
 If neither violations nor missing files were found, this collapses to just the status summary + final line.
@@ -144,7 +148,7 @@ If neither violations nor missing files were found, this collapses to just the s
 ## Roadmap Auto-Fix Rules (v2.0 shape only)
 
 These apply when validating a **v2.0** roadmap. A v1.0 roadmap is NOT auto-fixed here — it is
-converted by `/archflow migrate` (which retires sprints and splits the files). When the user chooses
+converted by `/archflow:migrate` (which retires sprints and splits the files). When the user chooses
 "Yes" to fix v2.0 violations:
 - Plain-string `acceptance_criteria` item → `{text: "<string>", met: false}`
 - Plain-string `subtasks` item → `{text: "<string>", completed: false}`
@@ -254,8 +258,8 @@ Present options:
    claude mcp list
    ```
 2. If NOT configured:
-   - Run `/archflow setup-mcp [tool]` inline (load `skills/archflow/commands/setup-mcp.md`)
-   - If MCP setup requires restart: save progress to `.onboard-progress.yaml`, instruct user to restart Claude Code, then run `/archflow onboard` again
+   - Run `/archflow:setup-mcp [tool]` inline (load `${CLAUDE_PLUGIN_ROOT}/commands/setup-mcp.md`)
+   - If MCP setup requires restart: save progress to `.onboard-progress.yaml`, instruct user to restart Claude Code, then run `/archflow:onboard` again
 3. Once MCP is available, collect links:
    ```
    Paste the links to the epics/stories you want to import:
@@ -379,7 +383,7 @@ Load the execution dependency graph and agent filtering table from `.archflow/ph
 - For each audit check: scan for listed file patterns, record found/missing
 - **Format validation**: if `.archflow/roadmap.yaml` is found, first detect its schema version. If it
   is **v1.0** (has `phases:` / no `schema_version: "2.0"`), do NOT validate v1 format — record it and
-  redirect the user to `/archflow migrate` (see Step E2a). If it is **v2.0**, validate the split-file
+  redirect the user to `/archflow:migrate` (see Step E2a). If it is **v2.0**, validate the split-file
   shape (index + backlog + releases) per the v2.0 schemas. Record `format_valid` and all
   `format_violations` in the audit report.
 - Special: if swagger/openapi found, record path for `api_contract_path`
@@ -545,9 +549,9 @@ status: "onboarded"
 ```
 
 2. **Copy workflow.md, phases, and schemas into the project's `.archflow/`:**
-   - Copy `skills/archflow/workflow.md` → `.archflow/workflow.md`
-   - Copy `skills/archflow/phases/` → `.archflow/phases/` (skip files that already exist)
-   - Copy `skills/archflow/schemas/` → `.archflow/schemas/` (skip files that already exist)
+   - Copy `${CLAUDE_PLUGIN_ROOT}/skills/archflow/workflow.md` → `.archflow/workflow.md`
+   - Copy `${CLAUDE_PLUGIN_ROOT}/skills/archflow/phases/` → `.archflow/phases/` (skip files that already exist)
+   - Copy `${CLAUDE_PLUGIN_ROOT}/skills/archflow/schemas/` → `.archflow/schemas/` (skip files that already exist)
    - These files define the git branching strategy and canonical formats. They MUST be in the project repo so Phase 3+ agents can read them from the repo context regardless of plugin cache state.
 
 3. **Create or update `CLAUDE.md` with Archflow section:**
@@ -581,8 +585,8 @@ This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based
 - **API Contract**: `docs/api-contract.md`
 
 Commands:
-- `/archflow` — Show status and available commands
-- `/archflow feature` — Start a new feature from the roadmap
+- `/archflow:status` — Show status and available commands
+- `/archflow:feature` — Start a new feature from the roadmap
 ```
 
 If `CLAUDE.md` ALREADY exists, append the Archflow section to the end:
@@ -599,8 +603,8 @@ This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based
 - **API Contract**: `docs/api-contract.md`
 
 Commands:
-- `/archflow` — Show status and available commands
-- `/archflow feature` — Start a new feature from the roadmap
+- `/archflow:status` — Show status and available commands
+- `/archflow:feature` — Start a new feature from the roadmap
 ```
 
 Fill in the actual values from `current-phase.yaml` and the generated artifacts. Only list artifacts that were actually created (e.g., skip API contract line if none was generated, skip design system lines for backend_only).
@@ -639,7 +643,7 @@ Skipped:
   ⏭️ [artifact] ([reason])
 
 Next steps:
-  - /archflow feature to add a new feature to the roadmap
+  - /archflow:feature to add a new feature to the roadmap
   - Review roadmap.yaml, then start current phase
 ```
 
@@ -660,7 +664,7 @@ Next steps:
 ### MCP Restart Required
 If an MCP needs to be configured and requires a Claude Code restart:
 1. Save all progress to `.onboard-progress.yaml`
-2. Tell the user: "Please restart Claude Code, then run `/archflow onboard` to resume."
+2. Tell the user: "Please restart Claude Code, then run `/archflow:onboard` to resume."
 3. On resume, skip completed steps and continue from where we left off.
 
 ### Design Extraction Fails

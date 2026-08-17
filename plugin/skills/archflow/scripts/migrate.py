@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-/archflow migrate — deterministic v1.0 -> v2.0 roadmap migration engine.
+/archflow:migrate — deterministic v1.0 -> v2.0 roadmap migration engine.
 
 Reconstructs REAL releases from git shipping evidence (a sprint is NOT a release),
 routes done work into archived releases + history, the current release into the
@@ -336,7 +336,7 @@ def main():
                         f"— no active release will be created (its done work went to a shipped release)")
 
     # ---- report ----
-    print(f"\n=== /archflow migrate ({'APPLY' if apply else 'DRY-RUN'}) : {v1.get('project')} ===")
+    print(f"\n=== /archflow:migrate ({'APPLY' if apply else 'DRY-RUN'}) : {v1.get('project')} ===")
     print(f"variant: {variant}   stories: {len(stories)}   datable from git: {datable}/{len(stories)}")
     print(f"deploy boundary: {boundary or 'none'}   prod branch: {prod or 'none (continuous)'}   "
           f"release events: {len(events)}")
@@ -462,7 +462,7 @@ def main():
     print(f"\nAPPLIED. Wrote roadmap.yaml (index, {len(open(os.path.join(af,'roadmap.yaml')).readlines())} lines), "
           f"backlog.yaml ({len(backlog)}), {len(shipped)} archived releases, "
           f"{'1 active release, ' if active_slug else ''}history.yaml ({len(history)}).")
-    print(f"Backup at {bk}. Review, then commit .archflow/. Use /archflow release + /archflow mode next.")
+    print(f"Backup at {bk}. Review, then commit .archflow/. Use /archflow:release + /archflow:mode next.")
 
 
 if __name__ == "__main__":

@@ -79,7 +79,7 @@ Check: `.archflow/current-phase.yaml → active_release` is set AND `.archflow/r
 
 #### 0.3 Feature Branch
 Check: `.archflow/current-feature.yaml` exists AND `branch` field is NOT "main"
-- Missing/main → HALT: "Run `/archflow feature` first."
+- Missing/main → HALT: "Run `/archflow:feature` first."
 
 #### 0.4 API Contract (stories with needs_contract)
 Check: contract file exists at `api_contract_path`
@@ -96,7 +96,7 @@ All checks passed → proceed.
 
 ### 🔀 Git Workflow Integration
 Each story follows the branching strategy in `.archflow/workflow.md` (feature → task → subtask
-branches). Feature branch should already exist (from `/archflow feature`). All merges require
+branches). Feature branch should already exist (from `/archflow:feature`). All merges require
 explicit user approval.
 
 ### ⚡ STORY-BY-STORY DEVELOPMENT (ONE AT A TIME)
@@ -127,7 +127,7 @@ a draft release file):
 2. ASK: "S2-11 is in {backlog | q3-launch (draft)}, not this release. Pull it in?"
 3. On approval, **MOVE** it into the active release (never copy):
    - from backlog → promote: remove it from `backlog.yaml`, add it to the release file. If it's a bare
-     `backlog` stub, groom it first (`/archflow groom {id}` — that command owns how a story gets
+     `backlog` stub, groom it first (`/archflow:groom {id}` — that command owns how a story gets
      detailed); if it's already a groomed `ready` story, it's pull-able as-is. The promotion sets
      `status: spec_ready` on the release copy.
    - from a draft release → relocate the story block out of that file into the active release file.

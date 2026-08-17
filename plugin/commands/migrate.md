@@ -1,7 +1,11 @@
-# /archflow migrate — Migrate a project from schema v1.0 to v2.0
+---
+description: Migrate a v1.0 Archflow project to schema v2.0 (releases replace sprints)
+---
+
+# /archflow:migrate — Migrate a project from schema v1.0 to v2.0
 
 Transforms an existing Archflow project's v1.0 roadmap into the v2.0 multi-file **release** model,
-using a deterministic engine (`scripts/migrate.py`) — reconstructing real releases from git shipping
+using a deterministic engine (`skills/archflow/scripts/migrate.py` in the plugin) — reconstructing real releases from git shipping
 evidence, not from sprints. Standalone command (NOT part of `onboard`).
 
 **Load-bearing idea: a sprint is NOT a release.** v1 sprints were agile time-boxes; many shipped
@@ -9,22 +13,21 @@ nothing. The engine reconstructs releases from **git evidence** (deploy-pipeline
 merges, tags) and routes everything else to the backlog. Validated against real 3.4k–5.8k-line roadmaps.
 
 ## When it runs
-- **Manually:** the user runs `/archflow migrate`.
+- **Manually:** the user runs `/archflow:migrate`.
 - **Auto-detected (prompt only, never auto-run):** any session where `.archflow/roadmap.yaml` has a
   `phases:` OR `sprints:` key, OR `schema_version` is absent/`"1.0"`:
-  > "This project uses roadmap schema v1.0. Run `/archflow migrate` to upgrade to v2.0."
+  > "This project uses roadmap schema v1.0. Run `/archflow:migrate` to upgrade to v2.0."
 
 If `roadmap.yaml` already has `schema_version: "2.0"`, say it's already migrated and stop.
 
 ## How to run it (the deterministic engine)
 
-The migration is performed by **`scripts/migrate.py`**, which ships alongside this command in the
-archflow skill (sibling of `commands/`). It requires `python3` + `pyyaml`. Run it from the archflow
-skill directory against the target project root.
+The migration is performed by **`${CLAUDE_PLUGIN_ROOT}/skills/archflow/scripts/migrate.py`**, which
+ships with the plugin. It requires `python3` + `pyyaml`. Run it against the target project root.
 
 **1. DRY RUN first (writes nothing) — reconstruct + show the plan:**
 ```bash
-python3 <archflow-skill>/scripts/migrate.py --path <project-root> --dry-run
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/archflow/scripts/migrate.py --path <project-root> --dry-run
 ```
 It prints: detected v1 variant, git deploy boundary, prod branch/release events, the reconstructed
 release timeline (baseline + discrete/rolling releases with story counts), the proposed active
@@ -33,12 +36,12 @@ release, backlog size, and warnings (e.g. multiple `in_progress` sprints, git-da
 **2. PRESENT the plan to the user; get confirmation / adjustments (MANDATORY).**
 - If it warns of **multiple `in_progress` sprints**, ask which one is truly being built and pass it as
   `--active <sprint-id>`.
-- The user can also plan to merge/rename reconstructed releases *after* migration via `/archflow release`.
+- The user can also plan to merge/rename reconstructed releases *after* migration via `/archflow:release`.
 - Do not proceed to apply until the user confirms.
 
 **3. APPLY — back up and write the v2.0 layout:**
 ```bash
-python3 <archflow-skill>/scripts/migrate.py --path <project-root> --apply --active <sprint-id>
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/archflow/scripts/migrate.py --path <project-root> --apply --active <sprint-id>
 ```
 It backs up v1 to `.archflow/backup-v1/`, then writes `roadmap.yaml` (index), `backlog.yaml`,
 `releases/{active}.yaml`, `releases/archive/{slug}.yaml` per reconstructed release, and `history.yaml`.
@@ -47,7 +50,7 @@ It backs up v1 to `.archflow/backup-v1/`, then writes `roadmap.yaml` (index), `b
 ```bash
 git add .archflow/ && git commit -m "chore: migrate roadmap to schema v2.0 (releases reconstructed from git)"
 ```
-Point the user at `.archflow/backup-v1/` for rollback; note `/archflow release` and `/archflow mode`.
+Point the user at `.archflow/backup-v1/` for rollback; note `/archflow:release` and `/archflow:mode`.
 
 ## What the engine does (reference)
 
