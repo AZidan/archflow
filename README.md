@@ -72,7 +72,7 @@ Whichever you pick, Archflow proposes and waits — every artifact is shown to y
 ### 1. New project — start from strategy
 
 ```
-/archflow init
+/archflow:init
 ```
 
 Creates the state files and drops you at Phase 1. A `product-strategist` works out who this is for and what success means, a `feature-planner` turns that into a backlog, and you move through design → API contract → implementation with an approval gate at every step.
@@ -84,7 +84,7 @@ Starts in `quick` mode, so you get structure without ceremony until you ask for 
 ### 2. Existing codebase — onboard it
 
 ```
-/archflow onboard
+/archflow:onboard
 ```
 
 Dispatches up to 9 agents in parallel to read your codebase, imports context from tools you already use (Jira, Notion, Linear, GitHub, Confluence, Slack), and reverse-engineers the artifacts you never wrote down — design system, API contract, user flows, roadmap. Everything is presented for approval before anything is written.
@@ -98,7 +98,7 @@ It also works out which phase your project has reached, so you don't redo work t
 Your prototype works. People are using it. What it doesn't have is a roadmap, an API contract, a test plan, or a defensible answer to what "1.0" means.
 
 ```
-/archflow onboard
+/archflow:onboard
 ```
 
 Onboarding audits what you shipped and **reconstructs the plan around it**. Where it finds working code with no story behind it, it writes the story and marks it delivered — so your roadmap opens reflecting reality instead of pretending nothing exists yet.
@@ -125,8 +125,8 @@ You stay in `quick` mode while it's still small. When Archflow spots growth sign
 ## Then: Develop Features
 
 ```
-/archflow feature          # Interactive wizard
-/archflow feature login    # Quick-add by name
+/archflow:feature          # Interactive wizard
+/archflow:feature login    # Quick-add by name or description
 ```
 
 Archflow creates the feature branch, breaks it into tasks, and guides implementation through the appropriate agents. Features are filtered by scope — a `backend_only` repo only sees backend-scoped work.
@@ -134,9 +134,9 @@ Archflow creates the feature branch, breaks it into tasks, and guides implementa
 Capture an idea without committing to it, and detail it later when it's next up:
 
 ```
-/archflow feature          # → capture as a backlog stub
-/archflow groom S2-11      # → add acceptance criteria, subtasks, gates
-/archflow feature S2-11    # → pull it into the active release and start building
+/archflow:feature          # → capture as a backlog stub
+/archflow:groom S2-11      # → add acceptance criteria, subtasks, gates
+/archflow:feature S2-11    # → pull it into the active release and start building
 ```
 
 ---
@@ -171,7 +171,7 @@ Each phase has explicit completion criteria, expected output artifacts, and requ
 
 ---
 
-## Inside `/archflow onboard`
+## Inside `/archflow:onboard`
 
 Most AI workflows assume you're starting from scratch. This is the one that doesn't — and it's the engine behind both the *existing codebase* and *prototype to product* paths above.
 
@@ -209,33 +209,33 @@ Two things make the result honest rather than aspirational: reconciliation moves
 
 ## Commands
 
-Eight subcommands. You'll use three of them regularly.
+Nine commands, all namespaced `/archflow:<name>`. You'll use three of them regularly.
 
 **Getting set up** — run once per project
 
 | Command | What it does |
 |---------|-------------|
-| `/archflow init` | Initialize a new project at Phase 1 |
-| `/archflow onboard` | Analyze an existing codebase and generate all artifacts |
-| `/archflow setup-mcp` | Connect external tools (Jira, Notion, Linear, GitHub, etc.) |
-| `/archflow migrate` | Upgrade a v1.0 project to schema v2.0 (releases replace phases) |
+| `/archflow:init` | Initialize a new project at Phase 1 |
+| `/archflow:onboard` | Analyze an existing codebase and generate all artifacts |
+| `/archflow:setup-mcp` | Connect external tools (Jira, Notion, Linear, GitHub, etc.) |
+| `/archflow:migrate` | Upgrade a v1.0 project to schema v2.0 (releases replace phases) |
 
 **Day to day** — the ones you'll actually type
 
 | Command | What it does |
 |---------|-------------|
-| `/archflow` | Current phase, active release, progress, and what to run next |
-| `/archflow feature` | Add a story — to the backlog, or straight into the active release with a branch |
-| `/archflow groom` | Turn a backlog stub into a `ready` story (acceptance criteria, subtasks, gates) |
+| `/archflow:status` | Current phase, active release, progress, and what to run next |
+| `/archflow:feature` | Add a story — to the backlog, or straight into the active release with a branch |
+| `/archflow:groom` | Turn a backlog stub into a `ready` story (acceptance criteria, subtasks, gates) |
 
 **Planning and pace** — when the project grows
 
 | Command | What it does |
 |---------|-------------|
-| `/archflow release` | Inspect and manage releases (`new`, `start`, `ship`) |
-| `/archflow mode` | Show or switch ceremony mode (`quick` \| `full`) |
+| `/archflow:release` | Inspect and manage releases (`new`, `start`, `ship`) |
+| `/archflow:mode` | Show or switch ceremony mode (`quick` \| `full`) |
 
-Run `/archflow` on its own any time you've lost the thread — it reports where the project stands and what's sensible to do next.
+Run `/archflow:status` any time you've lost the thread — it reports where the project stands and what's sensible to do next.
 
 ---
 
@@ -308,28 +308,30 @@ archflow/
 │   ├── .claude-plugin/plugin.json   # Plugin manifest
 │   ├── hooks/hooks.json             # SessionStart hook (loads instructions after compaction)
 │   ├── agents/                      # 17 specialized agent definitions
-│   ├── skills/archflow/             # Slash command implementations
-│   │   ├── SKILL.md                 # Router (init, onboard, migrate, mode, release, groom, feature, setup-mcp)
-│   │   ├── mcp-registry.yaml        # Curated MCP server registry
-│   │   └── commands/
-│   │       ├── init.md              # /archflow init
-│   │       ├── onboard.md           # /archflow onboard
-│   │       ├── migrate.md           # /archflow migrate
-│   │       ├── mode.md              # /archflow mode
-│   │       ├── release.md           # /archflow release
-│   │       ├── groom.md             # /archflow groom
-│   │       ├── feature.md           # /archflow feature
-│   │       └── setup-mcp.md         # /archflow setup-mcp
-│   └── .archflow/                   # Framework instructions and phase files
-│       ├── instructions.md          # Core instructions (reloaded via hook)
+│   ├── commands/                    # Slash commands (namespaced /archflow:<name>)
+│   │   ├── status.md                # /archflow:status
+│   │   ├── init.md                  # /archflow:init
+│   │   ├── onboard.md               # /archflow:onboard
+│   │   ├── migrate.md               # /archflow:migrate
+│   │   ├── mode.md                  # /archflow:mode
+│   │   ├── release.md               # /archflow:release
+│   │   ├── groom.md                 # /archflow:groom
+│   │   ├── feature.md               # /archflow:feature
+│   │   └── setup-mcp.md             # /archflow:setup-mcp
+│   ├── scripts/migrate.py           # v1.0 → v2.0 migration engine (used by /archflow:migrate)
+│   └── skills/archflow/             # Framework knowledge + assets copied into projects
+│       ├── SKILL.md                 # Overview skill (what Archflow is, where things live)
+│       ├── instructions.md          # Core instructions (copied to .archflow/, reloaded via hook)
 │       ├── workflow.md              # Git branching strategy
+│       ├── phases/                  # Phase-specific instruction files (10 files)
+│       ├── schemas/                 # roadmap / release / backlog / history schemas
 │       ├── base-dsl-structure.yaml  # DSL template for design artifacts
-│       └── phases/                  # Phase-specific instruction files (10 files)
+│       └── mcp-registry.yaml        # Curated MCP server registry
 ├── README.md
 └── LICENSE
 ```
 
-### Project (created by `/archflow onboard` or Phase 1 setup)
+### Project (created by `/archflow:onboard` or Phase 1 setup)
 
 ```
 your-project/
@@ -350,7 +352,7 @@ your-project/
 <details>
 <summary><strong>External Tool Integration</strong></summary>
 
-The `/archflow setup-mcp` command configures MCP servers to connect with your existing tools:
+The `/archflow:setup-mcp` command configures MCP servers to connect with your existing tools:
 
 | Tool | Transport | Purpose |
 |------|-----------|---------|
@@ -363,7 +365,7 @@ The `/archflow setup-mcp` command configures MCP servers to connect with your ex
 | Slack | HTTP/OAuth | Import context from channels/threads |
 | Trello | stdio/env | Import boards, lists, cards |
 
-These integrations are primarily used during `/archflow onboard` to pull existing project context into Archflow's format.
+These integrations are primarily used during `/archflow:onboard` to pull existing project context into Archflow's format.
 
 </details>
 

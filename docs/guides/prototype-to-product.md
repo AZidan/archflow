@@ -25,7 +25,7 @@ claude
 ```
 
 ```
-/archflow onboard
+/archflow:onboard
 ```
 
 Onboarding reads your code and **reconstructs the plan around what you already shipped**. Where it
@@ -92,7 +92,7 @@ size threshold — and *offers* the upgrade:
 It never switches on its own, and if you decline it remembers rather than asking every session.
 
 ```
-/archflow mode full
+/archflow:mode full
 ```
 
 `full` adds an explicit release pipeline, enforced readiness gates, and role lanes — the structure
@@ -105,9 +105,9 @@ that matters once more than one person is committing.
 Once the gaps that mattered are closed:
 
 ```
-/archflow release new "1.0"     # carve a release from the backlog
-/archflow release start          # the build gate — at most one release in progress
-/archflow release ship           # the Phase 5 ship ritual
+/archflow:release new "1.0"     # carve a release from the backlog
+/archflow:release start          # the build gate — at most one release in progress
+/archflow:release ship           # the Phase 5 ship ritual
 ```
 
 `ship` verifies the release is actually releasable, tags the version, generates release notes,
@@ -122,15 +122,15 @@ That ledger is the thing prototypes never have and mature products can't work wi
 
 | Day | Do this |
 |---|---|
-| 1 | `/archflow onboard`, read the gap report, don't fix anything yet |
+| 1 | `/archflow:onboard`, read the gap report, don't fix anything yet |
 | 2 | Phase 1 — decide what this product is actually for |
 | 3 | Phase 2.5 — lock the API contract |
 | 4–5 | Backfill tests on whatever you're most afraid to change |
-| Then | `/archflow release new "1.0"` and work the backlog properly |
+| Then | `/archflow:release new "1.0"` and work the backlog properly |
 
 ---
 
 ## Related
 
-- [Onboarding an existing codebase](https://azidan.github.io/archflow/guides/existing-codebase/) — the mechanics of `/archflow onboard`
+- [Onboarding an existing codebase](https://azidan.github.io/archflow/guides/existing-codebase/) — the mechanics of `/archflow:onboard`
 - [Starting a new project](https://azidan.github.io/archflow/guides/new-project/) — the phases in order, from scratch

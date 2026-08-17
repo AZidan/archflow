@@ -20,15 +20,21 @@ Then load the current phase: read `.archflow/current-phase.yaml` → `phase_file
 `.archflow/phases/phase-{current}-{name}.md`.
 
 ## Commands
-- `/archflow` — status + available subcommands
-- `/archflow init` / `onboard` — set up a new / existing project
-- `/archflow migrate` — upgrade a v1.0 project to schema v2.0
-- `/archflow mode [quick|full]` — show/switch ceremony mode
-- `/archflow release [new|start|ship]` — manage releases
-- `/archflow feature` — add a story to the backlog or active release
+- `/archflow:status` — status + available commands
+- `/archflow:init` / `/archflow:onboard` — set up a new / existing project
+- `/archflow:migrate` — upgrade a v1.0 project to schema v2.0
+- `/archflow:mode [quick|full]` — show/switch ceremony mode
+- `/archflow:release [new|start|ship]` — manage releases
+- `/archflow:groom [story-id]` — detail a backlog stub into a `ready` story
+- `/archflow:feature` — add a story to the backlog or active release
+- `/archflow:setup-mcp [tool]` — connect an external tool via MCP
+
+All commands are namespaced (`/archflow:<name>`) and live in `plugin/commands/*.md`. There is no
+argument-style `/archflow <sub>` — never document or suggest that form.
 
 ## Repository-specific rules
 - Commit ONLY the changes you made — never `git add .` / all files.
-- This repo mirrors framework files across four trees (`.archflow/`, `plugin/.archflow/`,
-  `skills/archflow/`, `plugin/skills/archflow/`) — keep any edited framework file identical across
-  all copies.
+- This repo mirrors framework files across two trees: `plugin/skills/archflow/` (the shipped
+  source) and `.archflow/` (this repo's own dogfood copy) — keep any edited framework file
+  identical in both. (`plugin/.archflow/`, the root `skills/` tree, and `skills/archflow.zip` are
+  retired — the plugin is the only distribution.)

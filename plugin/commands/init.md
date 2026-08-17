@@ -1,10 +1,14 @@
-# /archflow init — Initialize Archflow in a Project
+---
+description: Set up Archflow in a NEW, empty project — creates .archflow/ and starts at Phase 1
+---
+
+# /archflow:init — Initialize Archflow in a Project
 
 Lightweight command for setting up Archflow in a new or existing project.
 
 ## Usage
 ```
-/archflow init              → Initialize Archflow in the current project
+/archflow:init              → Initialize Archflow in the current project
 ```
 
 ## Prerequisites
@@ -47,7 +51,7 @@ Archflow is already initialized in this project.
 Current phase: [N] ([Phase Name])
 Project type: [type]
 
-Run /archflow to see available commands.
+Run /archflow:status to see available commands.
 ```
 Done — exit the command.
 
@@ -72,7 +76,7 @@ For existing codebases, use the full onboarding wizard which analyzes
 your code, imports context from external tools, and determines the
 correct development phase.
 ```
-Then load and follow `skills/archflow/commands/onboard.md`.
+Then load and follow `${CLAUDE_PLUGIN_ROOT}/commands/onboard.md`.
 
 ---
 
@@ -88,7 +92,7 @@ mkdir -p .archflow
 ```
 
 2. **Copy `workflow.md` into the project's `.archflow/`:**
-   - Source: the plugin's `skills/archflow/workflow.md` (available at the skill's install path)
+   - Source: `${CLAUDE_PLUGIN_ROOT}/skills/archflow/workflow.md` (the plugin's install path)
    - Destination: `.archflow/workflow.md`
    - This file defines the git branching strategy (feature → task → subtask branches, approval gates). It MUST be present in every Archflow project so Phase 3 agents can read it from the repo context.
 
@@ -103,7 +107,7 @@ project_type: null  # Will be set during Phase 1
 onboarded: false
 
 # v2.0 — ceremony mode + active release pointer
-mode: quick          # new projects start in quick mode; graduate to full when they grow (/archflow mode)
+mode: quick          # new projects start in quick mode; graduate to full when they grow (/archflow:mode)
 active_release: null # slug of the one in_progress release; null until a release is being built
 
 # Phase tracking
@@ -126,9 +130,9 @@ status: "initialized"
 
 ### Step 4: Copy Phases and Schemas (if not present)
 
-If the project's `.archflow/` does not already contain `phases/` and `schemas/` directories, copy them from the plugin's skill folder:
-- `skills/archflow/phases/` → `.archflow/phases/`
-- `skills/archflow/schemas/` → `.archflow/schemas/`
+If the project's `.archflow/` does not already contain `phases/` and `schemas/` directories, copy them from the plugin:
+- `${CLAUDE_PLUGIN_ROOT}/skills/archflow/phases/` → `.archflow/phases/`
+- `${CLAUDE_PLUGIN_ROOT}/skills/archflow/schemas/` → `.archflow/schemas/`
 
 These are reference files that agents read during execution. They must be in the project repo so agents always have access regardless of plugin cache state.
 
@@ -148,8 +152,8 @@ This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based
 - **Current Phase**: 1 (Strategy & Planning) — see `.archflow/current-phase.yaml`
 
 Commands:
-- `/archflow` — Show status and available commands
-- `/archflow feature` — Start a new feature from the roadmap
+- `/archflow:status` — Show status and available commands
+- `/archflow:feature` — Start a new feature from the roadmap
 ```
 
 If `CLAUDE.md` ALREADY exists, append the Archflow section to the end:
@@ -163,8 +167,8 @@ This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based
 - **Current Phase**: 1 (Strategy & Planning) — see `.archflow/current-phase.yaml`
 
 Commands:
-- `/archflow` — Show status and available commands
-- `/archflow feature` — Start a new feature from the roadmap
+- `/archflow:status` — Show status and available commands
+- `/archflow:feature` — Start a new feature from the roadmap
 ```
 
 ### Step 5: Print Summary
@@ -177,7 +181,7 @@ Created:
   CLAUDE.md [created / updated with Archflow section]
 
 Mode: quick (single implicit release, gates auto-satisfied).
-  Switch anytime with /archflow mode full.
+  Switch anytime with /archflow:mode full.
 
 Next steps:
   - Run Phase 1 to define your product strategy
@@ -193,5 +197,5 @@ Next steps:
 
 ## Notes
 - This command is idempotent — it won't overwrite existing `.archflow/current-phase.yaml`
-- For existing codebases, always use `/archflow onboard` instead (it determines the correct phase via audit)
+- For existing codebases, always use `/archflow:onboard` instead (it determines the correct phase via audit)
 - The `project_type` field is left as `null` and will be set during Phase 1

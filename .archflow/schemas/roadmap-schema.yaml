@@ -46,10 +46,10 @@ roadmap:
       description: >
         Ceremony profile over the SAME schema (not a fork).
         quick — one implicit release, readiness gates auto-satisfied, one lane;
-        default for `/archflow init` on small/solo projects.
+        default for `/archflow:init` on small/solo projects.
         full — explicit release pipeline, enforced advisory gates, role lanes;
-        default for `/archflow onboard` of a substantial codebase / multi-contributor.
-        Switch in place with `/archflow mode [quick|full]` — no data rewrite.
+        default for `/archflow:onboard` of a substantial codebase / multi-contributor.
+        Switch in place with `/archflow:mode [quick|full]` — no data rewrite.
 
     epics:
       type: array

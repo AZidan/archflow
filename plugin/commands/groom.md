@@ -1,4 +1,11 @@
-# /archflow groom — Detail a backlog stub into a `ready` story
+---
+description: Turn a backlog stub into a ready story: acceptance criteria, subtasks, gates
+argument-hint: "[story-id]"
+---
+
+# /archflow:groom — Detail a backlog stub into a `ready` story
+
+Argument (`$ARGUMENTS`): optional story id (e.g. `S2-11`). Empty → list stubs and ask which to groom.
 
 Grooming turns a bare stub (title + one line) into a `ready` story with acceptance criteria,
 subtasks, and gates. It is the canonical description of *how a story gets detailed* — `release.md`
@@ -9,8 +16,8 @@ separate on purpose, so a story can be made ready without anyone deciding when t
 
 ## Usage
 ```
-/archflow groom              → list stubs in backlog.yaml, ask which to groom
-/archflow groom S2-11        → groom that story
+/archflow:groom              → list stubs in backlog.yaml, ask which to groom
+/archflow:groom S2-11        → groom that story
 ```
 
 ## Flow
@@ -20,7 +27,7 @@ separate on purpose, so a story can be made ready without anyone deciding when t
    - If the id lives in a release file → HALT: "[{id}] is already committed to release {slug}.
      Grooming only edits the backlog — refine it directly in `.archflow/releases/{slug}.yaml`."
      There is deliberately no release-story edit path here; see Notes.
-   - If the id is unknown → HALT. Never create the story — capture is `/archflow feature`.
+   - If the id is unknown → HALT. Never create the story — capture is `/archflow:feature`.
 3. If the story is already `ready`, say so: you are REFINING existing detail, not starting fresh.
    Show the current ACs/subtasks and amend them — never blind-append duplicates.
 4. **Elicit the detail — do not invent it.** Ask what's in scope and what "done" looks like; propose
@@ -33,9 +40,9 @@ separate on purpose, so a story can be made ready without anyone deciding when t
 6. Confirm, and name the next step without taking it:
    > "Groomed [{id}] {title} — N acceptance criteria, M subtasks, gates: design/contract.
    > Still in the backlog."
-   - `full` mode → next: `/archflow feature {id}` (pull into the active release) or
-     `/archflow release new` (carve a release around it).
-   - `quick` mode → next: `/archflow feature {id}` ONLY. Do not mention `/archflow release new`;
+   - `full` mode → next: `/archflow:feature {id}` (pull into the active release) or
+     `/archflow:release new` (carve a release around it).
+   - `quick` mode → next: `/archflow:feature {id}` ONLY. Do not mention `/archflow:release new`;
      quick has no create/ship ceremony until asked, and graduating to `full` is offered, never forced.
 
 ## Hard constraints
@@ -54,12 +61,12 @@ separate on purpose, so a story can be made ready without anyone deciding when t
 Ceremony mode is a density switch, not a schema fork — `quick` writes the same shape, just with a
 shorter conversation (fewer ACs, skip the `assigned` question — it's optional in the schema).
 
-Grooming matters MORE in quick mode than it looks: `/archflow init` seeds `backlog.yaml` with the
+Grooming matters MORE in quick mode than it looks: `/archflow:init` seeds `backlog.yaml` with the
 full scope as stubs, so a quick project has a large groomable backlog from day one, and grooming a
 stub just before building it is the normal path. Gates are still derived and written — `quick` makes
 them auto-satisfied (non-blocking), not absent.
 
-New scope added later via `/archflow feature` defaults straight into the implicit release with ACs
+New scope added later via `/archflow:feature` defaults straight into the implicit release with ACs
 written inline. That is correct and is NOT rerouted through grooming: `groom` serves the seeded
 backlog, `feature` serves new scope.
 
@@ -67,5 +74,5 @@ backlog, `feature` serves new scope.
 - Schemas: `backlog-schema.yaml` (what grooming writes), `release-schema.yaml` (what promotion later
   writes). Read the backlog schema before writing if unsure of the shape.
 - There is currently no command that refines an existing RELEASE story's acceptance criteria —
-  `/archflow feature` on an in-release story goes straight to the git workflow. That gap is
+  `/archflow:feature` on an in-release story goes straight to the git workflow. That gap is
   deliberate for now; if we want it, it's a separate command, not a wider `groom`.

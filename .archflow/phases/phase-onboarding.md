@@ -1,6 +1,6 @@
 # Phase: Onboarding (Existing Codebase)
 
-This phase is loaded by `/archflow onboard`. It contains project type detection, audit logic, extraction rules, agent prompt templates, structured output schemas, and gap analysis for onboarding existing codebases into the phase-based framework.
+This phase is loaded by `/archflow:onboard`. It contains project type detection, audit logic, extraction rules, agent prompt templates, structured output schemas, and gap analysis for onboarding existing codebases into the phase-based framework.
 
 The onboarding wizard runs in three phases:
 - **Phase A**: Interactive Collection (gather all user input upfront)
@@ -90,7 +90,7 @@ Each check targets a specific phase artifact. Checks are filtered by `project_ty
 When `.archflow/roadmap.yaml` is found, FIRST detect its schema version:
 
 - **v1.0** (has a `phases:` key, or `schema_version` is absent or `"1.0"`) → do NOT validate v1 here.
-  Record it and redirect the user to **`/archflow migrate`** (which retires sprints and splits the
+  Record it and redirect the user to **`/archflow:migrate`** (which retires sprints and splits the
   files into the v2.0 layout). Do not overwrite.
 - **v2.0** (`schema_version: "2.0"`) → validate the split-file shape against the v2.0 schemas in
   `.archflow/schemas/`. Collect **all** violations before recording — do not stop at the first failure.
@@ -902,7 +902,7 @@ roadmap format violations ([N] total):
     found: 2 in_progress (checkout, q3-launch)
 
 These violations will be fixed during roadmap reconciliation (Step C1).
-(A v1.0 roadmap is not shown here — it is redirected to /archflow migrate.)
+(A v1.0 roadmap is not shown here — it is redirected to /archflow:migrate.)
 ```
 
 ### C4: Presentation Format
@@ -932,7 +932,7 @@ If "Yes": present each artifact for approval/editing, one at a time.
 2. Create or update `CLAUDE.md` with Archflow section (see onboard.md for full template):
    - If `CLAUDE.md` does NOT exist: create it with project overview, common commands, architecture, and Archflow section — all derived from onboarding analysis
    - If `CLAUDE.md` ALREADY exists: append the Archflow section to the end
-   - The Archflow section MUST include: current phase, links to project-context.md, roadmap.yaml, api-contract.md (if generated), and available `/archflow` commands
+   - The Archflow section MUST include: current phase, links to project-context.md, roadmap.yaml, api-contract.md (if generated), and available `/archflow:*` commands
    - Only list artifacts that were actually created
 3. Clean up ALL temporary `.onboard-*` files (`rm .onboard-*`). No `.onboard-*` files should remain after finalization
 4. Offer to remove onboarding-only MCPs
@@ -971,4 +971,4 @@ Temporary files (`.onboard-*`) cleaned up in Phase C Step C5.
 
 ---
 
-**This file is loaded by the `/archflow onboard` skill. It provides extraction rules, schemas, agent templates, and synthesis logic; the skill provides the orchestration flow.**
+**This file is loaded by the `/archflow:onboard` skill. It provides extraction rules, schemas, agent templates, and synthesis logic; the skill provides the orchestration flow.**

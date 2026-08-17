@@ -101,14 +101,14 @@ Do NOT include Phase 2.25 (SuperDesign) here. Keep it simple for the landing pag
 
 **Body:** Most AI workflows assume you're starting from scratch. Archflow meets you where you are.
 
-Run `/archflow onboard` and it dispatches up to 9 agents in parallel. They audit your code, import docs from Jira, Notion, Linear, GitHub, and Slack, reverse-engineer your design system and API contracts, and drop you into the right phase.
+Run `/archflow:onboard` and it dispatches up to 9 agents in parallel. They audit your code, import docs from Jira, Notion, Linear, GitHub, and Slack, reverse-engineer your design system and API contracts, and drop you into the right phase.
 
 **3-step visual:**
 1. Answer 5 questions about your stack and context sources
 2. Up to 9 agents analyze your codebase in parallel
 3. Artifacts generated and presented for your approval
 
-**Callout:** New project? `/archflow init` starts you at Phase 1.
+**Callout:** New project? `/archflow:init` starts you at Phase 1.
 
 ---
 
@@ -118,10 +118,10 @@ Run `/archflow onboard` and it dispatches up to 9 agents in parallel. They audit
 
 | Command | What it does |
 |---------|-------------|
-| `/archflow init` | Initialize a new project at Phase 1 |
-| `/archflow onboard` | Analyze an existing codebase and generate all artifacts |
-| `/archflow feature` | Add a feature, create branches, assign agents |
-| `/archflow setup-mcp` | Connect external tools (Jira, Notion, Linear, GitHub) |
+| `/archflow:init` | Initialize a new project at Phase 1 |
+| `/archflow:onboard` | Analyze an existing codebase and generate all artifacts |
+| `/archflow:feature` | Add a feature, create branches, assign agents |
+| `/archflow:setup-mcp` | Connect external tools (Jira, Notion, Linear, GitHub) |
 
 ---
 

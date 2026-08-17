@@ -74,7 +74,7 @@ Upon completion and approval:
 
 1. **Create + start the first release** (sets `active_release`):
    - **full mode:** create it from the backlog — invoke feature-planner **Mode B** (≡
-     `/archflow release new` + `start`): pick the initial slice of backlog stubs, MOVE them into
+     `/archflow:release new` + `start`): pick the initial slice of backlog stubs, MOVE them into
      `.archflow/releases/{slug}.yaml`, detail them (ACs, subtasks, gates), set `status: in_progress`,
      and register it in `roadmap.yaml → releases` with `active_release: {slug}`.
    - **quick mode:** auto-create a single implicit release `.archflow/releases/current.yaml`
@@ -84,7 +84,7 @@ Upon completion and approval:
 3. Load `.archflow/phases/phase-2-design.md` for next phase instructions.
 
 (Every subsequent release is created/started the same way, from the Phase 5 loop-back — see
-`phase-5-launch.md` Step 5D and `/archflow release`.)
+`phase-5-launch.md` Step 5D and `/archflow:release`.)
 
 ---
 **Phase 1 Complete** ✅ → **First release started** → **Phase 2: Design** ➡️

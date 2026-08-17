@@ -37,15 +37,15 @@ Dynamic phase-based instruction loading for token-efficient development.
 - `i18n-engineer` - Internationalization for web/iOS/Android platforms
 
 ## 📌 Available Commands (Archflow)
-- `/archflow` — Show available subcommands and current project status
-- `/archflow init` — Initialize Archflow in a new project (creates `.archflow/` state files, sets Phase 1, mode: quick)
-- `/archflow onboard` — Onboard existing codebase (interactive wizard: audit, import context, backfill artifacts, set phase + mode)
-- `/archflow migrate` — Migrate a v1.0 project to schema v2.0 (releases replace phases, sprints retired, multi-file split)
-- `/archflow mode [quick|full]` — Show or switch the ceremony mode
-- `/archflow release [new|start|ship]` — Inspect / manage releases (status, create, start, ship)
-- `/archflow setup-mcp` — Configure an MCP server for external tools (Jira, Notion, Linear, GitHub, SuperDesign, etc.)
-- `/archflow groom [story-id]` — Detail a backlog stub into a `ready` story (acceptance criteria, subtasks, gates); stays in the backlog
-- `/archflow feature` — Add a story to the backlog or the active release and start the git development workflow
+- `/archflow:status` — Show current project status and available commands
+- `/archflow:init` — Initialize Archflow in a new project (creates `.archflow/` state files, sets Phase 1, mode: quick)
+- `/archflow:onboard` — Onboard existing codebase (interactive wizard: audit, import context, backfill artifacts, set phase + mode)
+- `/archflow:migrate` — Migrate a v1.0 project to schema v2.0 (releases replace phases, sprints retired, multi-file split)
+- `/archflow:mode [quick|full]` — Show or switch the ceremony mode
+- `/archflow:release [new|start|ship]` — Inspect / manage releases (status, create, start, ship)
+- `/archflow:setup-mcp` — Configure an MCP server for external tools (Jira, Notion, Linear, GitHub, SuperDesign, etc.)
+- `/archflow:groom [story-id]` — Detail a backlog stub into a `ready` story (acceptance criteria, subtasks, gates); stays in the backlog
+- `/archflow:feature` — Add a story to the backlog or the active release and start the git development workflow
 
 ## 🚀 Release Model (v2.0 — the outer loop)
 
@@ -66,15 +66,15 @@ sprints**; a release is the story container.)
   in_progress → review → done`, with per-story `gates {needs_design, needs_contract}`. Design/contract
   gates run just-in-time, one step ahead of build.
 - **Modes:** `mode: quick | full` (in `roadmap.yaml` + `current-phase.yaml`). quick = single implicit
-  release, gates auto-satisfied, one lane (default for `/archflow init`). full = explicit release
-  pipeline + enforced advisory gates + role lanes. Switch with `/archflow mode`.
+  release, gates auto-satisfied, one lane (default for `/archflow:init`). full = explicit release
+  pipeline + enforced advisory gates + role lanes. Switch with `/archflow:mode`.
 
 ## 🌐 Project Types
 The framework detects and adapts to project type: `fullstack`, `frontend_only`, `backend_only`, `mobile`.
 - Stored in `.archflow/current-phase.yaml` as `project_type`
 - Phases, agents, and audit checks are filtered by project type
 - Release/backlog story fields are tailored to project type (backend = endpoints/services, frontend = pages/components)
-- Set automatically by `/archflow onboard` or can be set manually in `.archflow/current-phase.yaml`
+- Set automatically by `/archflow:onboard` or can be set manually in `.archflow/current-phase.yaml`
 
 ## 🔀 Git Workflow
 All feature development follows `.archflow/workflow.md` branching strategy:
@@ -82,7 +82,7 @@ All feature development follows `.archflow/workflow.md` branching strategy:
 - Task branches from feature
 - Subtask branches from task
 - Merge only after explicit user approval
-- Use `/archflow feature` to create feature branches and track tasks in `.archflow/current-feature.yaml`
+- Use `/archflow:feature` to create feature branches and track tasks in `.archflow/current-feature.yaml`
 
 ## 🔄 Dynamic Phase Loading
 
@@ -176,7 +176,7 @@ Current Phase Complete:
   5. Load .archflow/phases/phase-{next}.md for next instructions
 
 Phase Files Available:
-  - .archflow/phases/phase-onboarding.md    # For existing codebases (via /archflow onboard)
+  - .archflow/phases/phase-onboarding.md    # For existing codebases (via /archflow:onboard)
   - .archflow/phases/phase-1-strategy.md
   - .archflow/phases/phase-2-design.md
   - .archflow/phases/phase-2.25-hifi-design.md
