@@ -17,7 +17,7 @@ Every Archflow action is a namespaced slash command — there is no argument-sty
 /archflow:status                    → Where the project stands: phase, mode, active release, what's next
 /archflow:init                      → Set up a NEW, empty project (creates .archflow/, Phase 1)
 /archflow:onboard                   → Set up an EXISTING codebase (audit, import context, pick phase)
-/archflow:migrate                   → Upgrade v1.0 (sprints) → v2.0 (releases); dry-run then apply
+/archflow:migrate                   → Upgrade a v1.0 archflow-onboarded project (sprints) → v2.0 (releases); dry-run then apply
 /archflow:mode [quick|full]         → Show/switch ceremony mode: quick (solo) or full (team)
 /archflow:release [new|start|ship]  → Release pipeline: status, cut, start building, ship
 /archflow:setup-mcp [tool]          → Connect an external tool via MCP (Jira, Notion, Linear, ...)

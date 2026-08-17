@@ -1,5 +1,5 @@
 ---
-description: Upgrade a v1.0 project (sprints) to schema v2.0 (releases) — dry-run first, then apply
+description: Upgrade a v1.0 archflow-onboarded project (sprints) to schema v2.0 (releases) — dry-run first, then apply
 ---
 
 # /archflow:migrate — Migrate a project from schema v1.0 to v2.0
