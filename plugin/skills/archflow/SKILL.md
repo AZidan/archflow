@@ -22,7 +22,7 @@ Every Archflow action is a namespaced slash command — there is no argument-sty
 /archflow:release [new|start|ship] → Inspect / manage releases
 /archflow:setup-mcp [tool]      → Configure MCP servers for external tools
 /archflow:groom [story-id]      → Detail a backlog stub into a `ready` story
-/archflow:feature [name|story-id] → Add a story to the backlog / active release
+/archflow:feature [name/description|story-id] → Add a story to the backlog / active release
 ```
 
 Command bodies live in `${CLAUDE_PLUGIN_ROOT}/commands/<name>.md`. When you need to run one from

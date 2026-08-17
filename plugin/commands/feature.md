@@ -1,18 +1,21 @@
 ---
 description: Add a story to the backlog or straight into the active release with a branch
-argument-hint: "[name | story-id]"
+argument-hint: "[name/description | story-id]"
 ---
 
 # /archflow:feature — Add or Start a Feature
 
-Argument (`$ARGUMENTS`): optional feature name for quick-add, or an existing story id to pull into the active release. Empty → interactive wizard.
+Argument (`$ARGUMENTS`): optional. Either a feature **name or free-text description** (used to pre-fill the wizard — see Option A), or an **existing story id** (e.g. `S2-11`) to pull into the active release. Empty → interactive wizard from scratch.
 
 Add a new feature to the roadmap from a description or external tool link. Optionally starts the git workflow for development.
 
 ## Usage
 ```
-/archflow:feature              → Interactive feature wizard
-/archflow:feature [name]       → Quick-add a feature by name
+/archflow:feature                          → Interactive feature wizard
+/archflow:feature login                    → Quick-add by name
+/archflow:feature "users can reset their password via email"
+                                           → Quick-add from a description
+/archflow:feature S2-11                    → Pull an existing backlog story into the active release
 ```
 
 ## Prerequisites
@@ -40,7 +43,11 @@ Options:
 
 #### Option A: "Describe it"
 
-Ask these questions (one at a time):
+If `$ARGUMENTS` was given and is not a story id, use it to pre-fill: a short phrase becomes the
+**name**; a longer sentence becomes the **description** and you derive a concise name from it
+(confirm both with the user in one line). Skip questions already answered by the argument.
+
+Ask the remaining questions (one at a time):
 
 1. **"Feature name?"**
 2. **"Description (what does it do, why)?"**

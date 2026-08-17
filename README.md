@@ -126,7 +126,7 @@ You stay in `quick` mode while it's still small. When Archflow spots growth sign
 
 ```
 /archflow:feature          # Interactive wizard
-/archflow:feature login    # Quick-add by name
+/archflow:feature login    # Quick-add by name or description
 ```
 
 Archflow creates the feature branch, breaks it into tasks, and guides implementation through the appropriate agents. Features are filtered by scope — a `backend_only` repo only sees backend-scoped work.
