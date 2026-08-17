@@ -15,3 +15,10 @@ templates/backend-nestjs/build
 templates/mobile-react-native/ios
 templates/mobile-react-native/android
 templates/mobile-react-native/node_modules
+
+# Marketing materials — keep local only, never commit
+docs/*launch-post*.md
+docs/v2-image*.png
+docs/v2-launch-post.md
+.claude/skills/linkedin-post-creator/
+.claude/skills/reddit-post-creator/
