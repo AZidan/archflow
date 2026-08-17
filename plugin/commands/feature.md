@@ -1,5 +1,5 @@
 ---
-description: Add a story to the backlog or straight into the active release with a branch
+description: Add a story (name or description), or pull a backlog story into the active release
 argument-hint: "[name/description | story-id]"
 ---
 

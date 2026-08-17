@@ -1,5 +1,5 @@
 ---
-description: Onboard an existing codebase (interactive wizard: audit, import context, backfill artifacts, set phase)
+description: Set up Archflow in an EXISTING codebase — audit code, import context, pick the phase
 ---
 
 # /archflow:onboard — Existing Codebase Onboarding Wizard

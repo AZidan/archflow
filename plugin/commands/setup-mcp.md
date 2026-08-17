@@ -1,5 +1,5 @@
 ---
-description: Configure an MCP server for external tools (Jira, Notion, Linear, GitHub, SuperDesign, ...)
+description: Connect an external tool via MCP (Jira, Notion, Linear, GitHub, SuperDesign, ...)
 argument-hint: "[tool-name]"
 ---
 

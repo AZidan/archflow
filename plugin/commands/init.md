@@ -1,5 +1,5 @@
 ---
-description: Initialize Archflow in a new project (creates .archflow/ state files, sets Phase 1)
+description: Set up Archflow in a NEW, empty project — creates .archflow/ and starts at Phase 1
 ---
 
 # /archflow:init — Initialize Archflow in a Project

@@ -14,15 +14,15 @@ phases are the inner loop.
 Every Archflow action is a namespaced slash command — there is no argument-style `/archflow <sub>`.
 
 ```
-/archflow:status                → Current phase, active release, what to run next
-/archflow:init                  → Initialize Archflow in a new project
-/archflow:onboard               → Onboard an existing codebase (interactive wizard)
-/archflow:migrate               → Migrate a v1.0 project to schema v2.0 (releases)
-/archflow:mode [quick|full]     → Show or switch the ceremony mode
-/archflow:release [new|start|ship] → Inspect / manage releases
-/archflow:setup-mcp [tool]      → Configure MCP servers for external tools
-/archflow:groom [story-id]      → Detail a backlog stub into a `ready` story
-/archflow:feature [name/description|story-id] → Add a story to the backlog / active release
+/archflow:status                    → Where the project stands: phase, mode, active release, what's next
+/archflow:init                      → Set up a NEW, empty project (creates .archflow/, Phase 1)
+/archflow:onboard                   → Set up an EXISTING codebase (audit, import context, pick phase)
+/archflow:migrate                   → Upgrade v1.0 (sprints) → v2.0 (releases); dry-run then apply
+/archflow:mode [quick|full]         → Show/switch ceremony mode: quick (solo) or full (team)
+/archflow:release [new|start|ship]  → Release pipeline: status, cut, start building, ship
+/archflow:setup-mcp [tool]          → Connect an external tool via MCP (Jira, Notion, Linear, ...)
+/archflow:groom [story-id]          → Turn a backlog stub into a ready story (ACs, subtasks, gates)
+/archflow:feature [name/description|story-id] → Add a story, or pull one into the active release
 ```
 
 Command bodies live in `${CLAUDE_PLUGIN_ROOT}/commands/<name>.md`. When you need to run one from

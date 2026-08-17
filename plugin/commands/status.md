@@ -1,5 +1,5 @@
 ---
-description: Show the current Archflow project status (phase, project type, mode, active release) and the available commands
+description: Where the project stands: phase, mode, active release, and what to run next
 ---
 
 # /archflow:status — Project status + available commands

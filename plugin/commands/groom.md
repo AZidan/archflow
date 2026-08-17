@@ -1,5 +1,5 @@
 ---
-description: Detail a backlog stub into a `ready` story (acceptance criteria, subtasks, gates)
+description: Turn a backlog stub into a ready story: acceptance criteria, subtasks, gates
 argument-hint: "[story-id]"
 ---
 

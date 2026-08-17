@@ -1,5 +1,5 @@
 ---
-description: Show or switch the ceremony mode (quick | full)
+description: Show or switch ceremony mode: quick (solo, light gates) or full (team, strict gates)
 argument-hint: "[quick|full]"
 ---
 
