@@ -6,8 +6,8 @@
 
 title: Archflow
 description: Phase-based AI development framework for Claude Code.
-url: https://azidan.github.io
-baseurl: /archflow
+url: https://archflowai.dev
+baseurl: ""
 
 # No theme gem. The guides use _layouts/guide.html, which shares
 # assets/theme.css with the landing page so the palette cannot drift.

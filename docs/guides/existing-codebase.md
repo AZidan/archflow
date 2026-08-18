@@ -9,7 +9,7 @@ For a project that already has code — whether it's a mature product with docs 
 something you inherited and barely understand yet.
 
 If your code works but was never really *planned*, read
-[Taking a prototype to production](https://azidan.github.io/archflow/guides/prototype-to-product/) instead. Same command, different
+[Taking a prototype to production](https://archflowai.dev/guides/prototype-to-product/) instead. Same command, different
 emphasis.
 
 ---
@@ -110,5 +110,5 @@ Read the gap report first, though. It usually reorders your priorities.
 
 ## Related
 
-- [Starting a new project](https://azidan.github.io/archflow/guides/new-project/)
-- [Taking a prototype to production](https://azidan.github.io/archflow/guides/prototype-to-product/)
+- [Starting a new project](https://archflowai.dev/guides/new-project/)
+- [Taking a prototype to production](https://archflowai.dev/guides/prototype-to-product/)

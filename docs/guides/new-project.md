@@ -6,7 +6,7 @@ permalink: /guides/new-project/
 ---
 
 For a blank directory, or a repo with nothing in it yet. If you already have code, use
-[onboarding](https://azidan.github.io/archflow/guides/existing-codebase/) instead — it won't make you throw anything away.
+[onboarding](https://archflowai.dev/guides/existing-codebase/) instead — it won't make you throw anything away.
 
 ---
 
@@ -110,5 +110,5 @@ readiness gates, and role lanes. Same schema, so switching is instant and nothin
 
 ## Related
 
-- [Onboarding an existing codebase](https://azidan.github.io/archflow/guides/existing-codebase/)
-- [Taking a prototype to production](https://azidan.github.io/archflow/guides/prototype-to-product/)
+- [Onboarding an existing codebase](https://archflowai.dev/guides/existing-codebase/)
+- [Taking a prototype to production](https://archflowai.dev/guides/prototype-to-product/)
