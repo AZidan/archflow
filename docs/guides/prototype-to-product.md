@@ -132,5 +132,5 @@ That ledger is the thing prototypes never have and mature products can't work wi
 
 ## Related
 
-- [Onboarding an existing codebase](https://azidan.github.io/archflow/guides/existing-codebase/) — the mechanics of `/archflow:onboard`
-- [Starting a new project](https://azidan.github.io/archflow/guides/new-project/) — the phases in order, from scratch
+- [Onboarding an existing codebase](https://archflowai.dev/guides/existing-codebase/) — the mechanics of `/archflow:onboard`
+- [Starting a new project](https://archflowai.dev/guides/new-project/) — the phases in order, from scratch

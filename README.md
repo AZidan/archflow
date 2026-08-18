@@ -10,7 +10,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-0f766e)](https://opensource.org/licenses/MIT) [![Claude Code](https://img.shields.io/badge/Claude%20Code-Framework-0f766e)](https://docs.anthropic.com/en/docs/claude-code) [![Agents](https://img.shields.io/badge/Agents-17-0d9488)](https://github.com/AZidan/archflow) [![Phases](https://img.shields.io/badge/Phases-6-0d9488)](https://github.com/AZidan/archflow)
 
-[Website](https://azidan.github.io/archflow/) · [Quick Start](#quick-start) · [Three Ways to Start](#three-ways-to-start) · [Commands](#commands) · [How It Works](#how-it-works) · [Phases](#the-phases) · [Agents](#agents)
+[Website](https://archflowai.dev/) · [Quick Start](#quick-start) · [Three Ways to Start](#three-ways-to-start) · [Commands](#commands) · [How It Works](#how-it-works) · [Phases](#the-phases) · [Agents](#agents)
 
 <img src="docs/archflow-overview.svg" alt="Archflow Overview" width="700" />
 
@@ -79,7 +79,7 @@ Creates the state files and drops you at Phase 1. A `product-strategist` works o
 
 Starts in `quick` mode, so you get structure without ceremony until you ask for it.
 
-📖 [Full guide: starting a new project](https://azidan.github.io/archflow/guides/new-project/)
+📖 [Full guide: starting a new project](https://archflowai.dev/guides/new-project/)
 
 ### 2. Existing codebase — onboard it
 
@@ -91,7 +91,7 @@ Dispatches up to 9 agents in parallel to read your codebase, imports context fro
 
 It also works out which phase your project has reached, so you don't redo work that's already done.
 
-📖 [Full guide: onboarding an existing codebase](https://azidan.github.io/archflow/guides/existing-codebase/)
+📖 [Full guide: onboarding an existing codebase](https://archflowai.dev/guides/existing-codebase/)
 
 ### 3. From prototype to product
 
@@ -118,7 +118,7 @@ You stay in `quick` mode while it's still small. When Archflow spots growth sign
 
 **What this does and doesn't do:** it gives you the plan, contracts, and quality gates your prototype never had, and Phase 4 agents will review code quality, security, and performance. It will not silently rewrite your architecture. You decide what gets refactored — Archflow makes sure you know what needs it.
 
-📖 [Full guide: taking a prototype to production](https://azidan.github.io/archflow/guides/prototype-to-product/)
+📖 [Full guide: taking a prototype to production](https://archflowai.dev/guides/prototype-to-product/)
 
 ---
 
