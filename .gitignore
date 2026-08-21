@@ -20,5 +20,6 @@ templates/mobile-react-native/node_modules
 docs/*launch-post*.md
 docs/v2-image*.png
 docs/v2-launch-post.md
+docs/landing-page-cro-review.md
 .claude/skills/linkedin-post-creator/
 .claude/skills/reddit-post-creator/

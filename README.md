@@ -41,7 +41,7 @@ Works with any project type — fullstack, frontend-only, backend-only, or mobil
 ### 1. Add the Marketplace (one-time)
 
 ```bash
-claude plugin marketplace add azidan/archflow https://github.com/AZidan/archflow
+claude plugin marketplace add AZidan/archflow
 ```
 
 ### 2. Install the Plugin

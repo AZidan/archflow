@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "archflow",
   "version": "2.0.2",
-  "description": "Phase-based AI development framework for Claude Code. Orchestrates 16+ specialized agents through structured phases from strategy to deployment.",
+  "description": "Phase-based AI development framework for Claude Code. Orchestrates 17 specialized agents through structured phases from strategy to deployment.",
   "owner": {
     "name": "AZidan",
     "email": "azidan@users.noreply.github.com"
@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "archflow",
-      "description": "Phase-based AI development framework with 16+ specialized agents, structured phases, and file-based handoffs. Works with greenfield and existing codebases.",
+      "description": "Phase-based AI development framework with 17 specialized agents, structured phases, and file-based handoffs. Works with greenfield and existing codebases.",
       "version": "2.0.2",
       "author": {
         "name": "AZidan"
