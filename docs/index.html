@@ -273,26 +273,23 @@
              critical path; the poster carries the above-the-fold weight. -->
         <div class="mt-12 max-w-3xl mx-auto">
           <div class="relative rounded-xl overflow-hidden border border-dark-700/60 shadow-2xl">
-            <!-- YouTube facade. Only the poster ships on page load; the player is
-                 injected on scroll-in (see the promo-player script). Hidden until
-                 JS confirms a real video id, so no-JS and bad-id both fall through
-                 to the self-hosted <video> below. -->
-            <button
-              type="button"
-              id="promo-facade"
-              class="hidden group relative w-full block cursor-pointer"
-              aria-label="Play the Archflow overview video">
-              <img src="assets/video/promo-poster.jpg" alt="" width="1280" height="720" class="w-full h-auto block" />
-              <span class="absolute inset-0 flex items-center justify-center">
-                <span class="w-16 h-16 rounded-full bg-accent-cta/95 flex items-center justify-center shadow-2xl transition-transform duration-300 group-hover:scale-110">
-                  <svg class="w-7 h-7 ml-0.5 text-accent-ink" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                </span>
-              </span>
-            </button>
+            <!-- Chrome-free player: no controls, no logo, no title, no channel
+                 avatar, no suggested videos - none of which a YouTube embed can
+                 hide (modestbranding was deprecated 2023, showinfo removed 2020,
+                 rel=0 only narrows suggestions to the same channel).
+                 589KB at CRF30 / 1280w, audio stripped since it plays muted.
+                 preload="none" keeps it off first paint; the 16KB poster carries
+                 the fold until it plays. -->
+            <video
+              id="promo-video"
+              class="w-full h-auto block cursor-pointer"
+              muted loop playsinline preload="none"
+              poster="assets/video/promo-poster.jpg"
+              aria-label="Archflow overview - 59 second walkthrough. Click to pause.">
+              <source src="assets/video/archflow-promo.mp4" type="video/mp4">
+            </video>
 
-            <!-- No-JS fallback: the poster links straight out to YouTube. Keeps
-                 video binaries out of the repo (videos/ is gitignored for the same
-                 reason) and off GitHub Pages bandwidth. -->
+            <!-- No-JS: nothing autoplays, so hand them the real player on YouTube. -->
             <noscript>
               <a href="https://www.youtube.com/watch?v=sc2qEDnDeP0" target="_blank" rel="noopener" class="block">
                 <img src="assets/video/promo-poster.jpg" alt="Watch the Archflow overview on YouTube" width="1280" height="720" class="w-full h-auto block" />
@@ -1067,77 +1064,43 @@
     }
 
     // ============================================================
-    // Promo player.
-    //
-    // Only the 16KB poster loads up front; the YouTube player is
-    // injected when the frame scrolls into view. Pause/play is driven by
-    // postMessage against enablejsapi=1, so the ~100KB iframe_api script is never
-    // needed. youtube-nocookie keeps tracking off until the viewer actually plays.
+    // Promo player. Self-hosted so it can be fully chrome-free - a YouTube embed
+    // cannot hide its logo, title, channel avatar or suggested videos.
+    // Autoplays muted when it scrolls into view, pauses when it leaves, loops so
+    // it never dead-ends on a frozen final frame. Click toggles play/pause, since
+    // with no control bar the element would otherwise be inert.
     // ============================================================
     (function () {
-      const YT_VIDEO_ID = 'sc2qEDnDeP0';
+      const video = document.getElementById('promo-video');
+      if (!video) return;
 
-      const YT_ORIGIN = 'https://www.youtube-nocookie.com';
-      const hasYouTube = /^[A-Za-z0-9_-]{11}$/.test(YT_VIDEO_ID);
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const facade = document.getElementById('promo-facade');
-      if (!facade) return;
+      let pausedByUser = false;
 
-      facade.classList.remove('hidden');
+      // Click is the only affordance without a control bar.
+      video.addEventListener('click', () => {
+        if (video.paused) {
+          pausedByUser = false;
+          video.play().catch(() => {});
+        } else {
+          pausedByUser = true;
+          video.pause();
+        }
+      });
 
-      // Malformed id: don't inject a broken player, just send the click to YouTube.
-      if (!hasYouTube) {
-        facade.addEventListener('click', () => {
-          window.open('https://www.youtube.com/watch?v=' + YT_VIDEO_ID, '_blank', 'noopener');
-        });
-        return;
-      }
-
-      let iframe = null;
-      const command = (func) => {
-        if (!iframe || !iframe.contentWindow) return;
-        iframe.contentWindow.postMessage(
-          JSON.stringify({ event: 'command', func: func, args: [] }),
-          YT_ORIGIN
-        );
-      };
-
-      function mount(autoplay) {
-        if (iframe) return;
-        const params = new URLSearchParams({
-          autoplay: autoplay ? '1' : '0',
-          mute: '1',
-          playsinline: '1',
-          rel: '0',
-          modestbranding: '1',
-          enablejsapi: '1',
-          origin: location.origin,
-        });
-        iframe = document.createElement('iframe');
-        iframe.src = YT_ORIGIN + '/embed/' + YT_VIDEO_ID + '?' + params.toString();
-        iframe.title = 'Archflow overview';
-        iframe.className = 'w-full aspect-video block';
-        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-        iframe.setAttribute('allowfullscreen', '');
-        facade.replaceWith(iframe);
-      }
-
-      // Clicking the poster always plays, reduced-motion or not.
-      facade.addEventListener('click', () => mount(true));
-
+      // Reduced motion: leave it on the poster, still clickable.
       if (reduceMotion) return;
 
       new IntersectionObserver(
         (entries) => entries.forEach((e) => {
           if (e.isIntersecting) {
-            iframe ? command('playVideo') : mount(true);
-          } else {
-            command('pauseVideo');
+            if (!pausedByUser) video.play().catch(() => {});
+          } else if (!video.paused) {
+            video.pause();
           }
         }),
         { threshold: 0.4 }
-      ).observe(facade.parentElement);
+      ).observe(video);
     })();
 
     // Live GitHub star count. Unauthenticated API is rate-limited per IP, so this
