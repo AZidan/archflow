@@ -977,38 +977,30 @@
       </div>
 
       <!-- ============================================ -->
-      <!-- CHANGELOG SIGNUP (Kit / ConvertKit)                                 -->
-      <!-- Static-host safe: plain form POST, no JS, no backend.               -->
-      <!-- TODO(before launch): replace KIT_FORM_ID with the real form id from -->
-      <!-- Kit -> Grow -> Landing Pages & Forms -> your form -> Embed -> HTML. -->
+      <!-- CHANGELOG SIGNUP (joinbox)                                          -->
+      <!-- Cross-origin iframe, so its interior can't be themed - it ships     -->
+      <!-- light with its own "Subscribe" label and a "Save" button. Framed as -->
+      <!-- a deliberate light card so it reads as inset rather than broken,    -->
+      <!-- and the surrounding copy stays short to avoid repeating its labels. -->
+      <!-- loading="lazy" keeps the third-party request off first paint.       -->
       <!-- ============================================ -->
       <div class="fade-in max-w-xl mx-auto mt-16 pt-12 border-t border-dark-700/40">
         <div class="text-center mb-6">
           <h3 class="font-heading text-xl md:text-2xl font-700 mb-2">Archflow is early.</h3>
           <p class="text-text-secondary leading-relaxed">
-            New agents, phases, and integrations ship most weeks.
+            New agents, phases, and integrations ship most weeks. Release notes and
+            breaking changes only &mdash; no marketing.
           </p>
         </div>
-        <form action="https://app.kit.com/forms/KIT_FORM_ID/subscriptions"
-              method="post"
-              target="_blank"
-              class="flex flex-col sm:flex-row gap-3">
-          <label for="changelog-email" class="sr-only">Email address</label>
-          <input
-            id="changelog-email"
-            type="email"
-            name="email_address"
-            required
-            autocomplete="email"
-            placeholder="your@email.com"
-            class="flex-1 px-4 py-3 rounded-xl bg-dark-800/60 border border-dark-700 text-text-primary placeholder:text-text-muted font-mono text-sm focus:outline-none focus:border-accent/50 transition-colors">
-          <button type="submit" class="px-6 py-3 rounded-xl bg-accent-cta text-accent-ink font-heading font-600 text-sm btn-glow hover:bg-accent-cta-hover whitespace-nowrap">
-            Get the changelog
-          </button>
-        </form>
-        <p class="text-text-muted text-xs text-center mt-3">
-          No marketing. Release notes and breaking changes only.
-        </p>
+        <div class="rounded-xl overflow-hidden bg-white/95 p-2 shadow-2xl">
+          <iframe
+            src="https://joinbox.today/form/6a88a0b5f836260001e9d77f/6a88b17b5177fb2d3097768e"
+            title="Subscribe to the Archflow changelog"
+            width="540" height="305"
+            loading="lazy"
+            frameborder="0" scrolling="auto" allowfullscreen
+            style="display:block;margin:0 auto;max-width:100%;border:0;"></iframe>
+        </div>
       </div>
     </div>
   </section>
