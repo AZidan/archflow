@@ -993,22 +993,47 @@
         <div
           class="rounded-2xl px-6 py-8 sm:px-8"
           style="background:#111827;border:1px solid #1E293B;box-shadow:0 10px 40px rgba(0,0,0,.35)">
-          <div class="text-center mb-6">
+          <!-- FORM VIEW: swapped out for the confirmation once the iframe
+               navigates to joinbox's success page (see the signup script). -->
+          <div id="signup-form-view">
+            <div class="text-center mb-6">
+              <h3 class="font-heading text-xl md:text-2xl font-700 mb-2" style="color:#F8FAFC">
+                Archflow is early.
+              </h3>
+              <p class="leading-relaxed" style="color:#C3CCD9">
+                New agents, phases, and integrations ship most weeks. Release notes and
+                breaking changes only &mdash; no marketing.
+              </p>
+            </div>
+            <iframe
+              id="signup-frame"
+              src="https://joinbox.today/form/6a88a0b5f836260001e9d77f/6a88b17b5177fb2d3097768e"
+              title="Subscribe to the Archflow changelog"
+              width="540" height="220"
+              loading="lazy"
+              frameborder="0" scrolling="no" allowfullscreen
+              style="display:block;margin:0 auto;max-width:100%;border:0;color-scheme:dark;"></iframe>
+          </div>
+
+          <!-- CONFIRMATION VIEW: our own, because joinbox's success page is an
+               unstyled white template and its CSP (form-action 'self') blocks
+               redirecting to a page of ours - Chrome accepts the POST then
+               refuses the cross-origin navigation, leaving a blank frame. -->
+          <div id="signup-done-view" class="hidden text-center py-6" role="status" aria-live="polite">
+            <div class="mx-auto mb-4 flex items-center justify-center"
+                 style="width:52px;height:52px;border-radius:999px;background:rgba(45,212,191,.14)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#2DD4BF" stroke-width="2.5"
+                   stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px">
+                <path d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            </div>
             <h3 class="font-heading text-xl md:text-2xl font-700 mb-2" style="color:#F8FAFC">
-              Archflow is early.
+              You&rsquo;re subscribed.
             </h3>
             <p class="leading-relaxed" style="color:#C3CCD9">
-              New agents, phases, and integrations ship most weeks. Release notes and
-              breaking changes only &mdash; no marketing.
+              The next release note will land in your inbox.
             </p>
           </div>
-          <iframe
-            src="https://joinbox.today/form/6a88a0b5f836260001e9d77f/6a88b17b5177fb2d3097768e"
-            title="Subscribe to the Archflow changelog"
-            width="540" height="220"
-            loading="lazy"
-            frameborder="0" scrolling="no" allowfullscreen
-            style="display:block;margin:0 auto;max-width:100%;border:0;color-scheme:dark;"></iframe>
         </div>
       </div>
     </div>
@@ -1102,6 +1127,40 @@
         }),
         { threshold: 0.4 }
       ).observe(video);
+    })();
+
+    // ============================================================
+    // Signup confirmation swap.
+    //
+    // joinbox serves an unstyled white success page, and its CSP header
+    // (form-action 'self') means a redirect to a page of ours can never work:
+    // Chrome accepts the POST, then blocks the cross-origin navigation and
+    // leaves the frame blank. Verified with a replica that reproduces the
+    // form-action violation.
+    //
+    // So detect it from this side instead. The success page IS same-origin for
+    // joinbox, so the iframe really does navigate and fires load a second time.
+    // First load is the form; a second means the visitor submitted.
+    //
+    // Known limits: a server-side error page also fires load, so a backend
+    // failure would show a false confirmation (client-side validation catches
+    // malformed emails before submit, so that window is narrow). And the swap
+    // happens on load, so a brief flash of their page is possible - detecting
+    // the submit click across origins isn't possible.
+    // ============================================================
+    (function () {
+      const frame = document.getElementById('signup-frame');
+      const formView = document.getElementById('signup-form-view');
+      const doneView = document.getElementById('signup-done-view');
+      if (!frame || !formView || !doneView) return;
+
+      let loads = 0;
+      frame.addEventListener('load', () => {
+        loads += 1;
+        if (loads < 2) return; // the form itself
+        formView.classList.add('hidden');
+        doneView.classList.remove('hidden');
+      });
     })();
 
     // Live GitHub star count. Unauthenticated API is rate-limited per IP, so this
