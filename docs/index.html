@@ -983,6 +983,12 @@
       <!-- not theme tokens, so it stays dark in light mode too: a dark callout -->
       <!-- on a light page reads as deliberate, whereas a light box on the dark -->
       <!-- page reads as broken. loading="lazy" keeps joinbox off first paint.  -->
+      <!-- HEIGHT: 305 fits the form AS CURRENTLY CONFIGURED. Once the form is   -->
+      <!-- trimmed (62px wrapper margin removed, #form-body-canvas painted       -->
+      <!-- #111827, useinbox logo hidden) its content measures 116px and this    -->
+      <!-- should drop to 130. Erring large on purpose: slack is near-invisible  -->
+      <!-- once form and panel share a background, but clipping hides the submit -->
+      <!-- button entirely, which is what 130 did to the unedited form.          -->
       <!-- ============================================ -->
       <div class="fade-in max-w-xl mx-auto mt-16 pt-12 border-t border-dark-700/40">
         <div
@@ -1000,7 +1006,7 @@
           <iframe
             src="https://joinbox.today/form/6a88a0b5f836260001e9d77f/6a88b17b5177fb2d3097768e"
             title="Subscribe to the Archflow changelog"
-            width="540" height="130"
+            width="540" height="305"
             loading="lazy"
             frameborder="0" scrolling="no" allowfullscreen
             style="display:block;margin:0 auto;max-width:100%;border:0;color-scheme:dark;"></iframe>
