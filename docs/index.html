@@ -977,29 +977,33 @@
       </div>
 
       <!-- ============================================ -->
-      <!-- CHANGELOG SIGNUP (joinbox)                                          -->
-      <!-- Cross-origin iframe, so its interior can't be themed - it ships     -->
-      <!-- light with its own "Subscribe" label and a "Save" button. Framed as -->
-      <!-- a deliberate light card so it reads as inset rather than broken,    -->
-      <!-- and the surrounding copy stays short to avoid repeating its labels. -->
-      <!-- loading="lazy" keeps the third-party request off first paint.       -->
+      <!-- CHANGELOG SIGNUP (joinbox)                                           -->
+      <!-- A cross-origin iframe can't follow the theme toggle, so the form is  -->
+      <!-- styled for dark and sits in a PERMANENTLY dark panel. Hardcoded hex, -->
+      <!-- not theme tokens, so it stays dark in light mode too: a dark callout -->
+      <!-- on a light page reads as deliberate, whereas a light box on the dark -->
+      <!-- page reads as broken. loading="lazy" keeps joinbox off first paint.  -->
       <!-- ============================================ -->
       <div class="fade-in max-w-xl mx-auto mt-16 pt-12 border-t border-dark-700/40">
-        <div class="text-center mb-6">
-          <h3 class="font-heading text-xl md:text-2xl font-700 mb-2">Archflow is early.</h3>
-          <p class="text-text-secondary leading-relaxed">
-            New agents, phases, and integrations ship most weeks. Release notes and
-            breaking changes only &mdash; no marketing.
-          </p>
-        </div>
-        <div class="rounded-xl overflow-hidden bg-white/95 p-2 shadow-2xl">
+        <div
+          class="rounded-2xl px-6 py-8 sm:px-8"
+          style="background:#111827;border:1px solid #1E293B;box-shadow:0 10px 40px rgba(0,0,0,.35)">
+          <div class="text-center mb-6">
+            <h3 class="font-heading text-xl md:text-2xl font-700 mb-2" style="color:#F8FAFC">
+              Archflow is early.
+            </h3>
+            <p class="leading-relaxed" style="color:#C3CCD9">
+              New agents, phases, and integrations ship most weeks. Release notes and
+              breaking changes only &mdash; no marketing.
+            </p>
+          </div>
           <iframe
             src="https://joinbox.today/form/6a88a0b5f836260001e9d77f/6a88b17b5177fb2d3097768e"
             title="Subscribe to the Archflow changelog"
-            width="540" height="305"
+            width="540" height="140"
             loading="lazy"
-            frameborder="0" scrolling="auto" allowfullscreen
-            style="display:block;margin:0 auto;max-width:100%;border:0;"></iframe>
+            frameborder="0" scrolling="no" allowfullscreen
+            style="display:block;margin:0 auto;max-width:100%;border:0;color-scheme:dark;"></iframe>
         </div>
       </div>
     </div>
