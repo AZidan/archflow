@@ -38,6 +38,11 @@ release and keeps the roadmap bounded. Perform IN ORDER:
 
 1. **Verify releasable**: every story `done`, all ACs `met`, all `release_criteria` `met`, Phase 4
    regression passed. Any gap → HALT.
+   - **Parked stories block the ship.** Any story with `status: parked` and
+     `parked.blocks_release: true` → HALT and print its `parked.question`: a release does not ship
+     with an unanswered product question inside it. Resolving it means the user answers, the story
+     is built out and marked `done` — or the user explicitly sets `blocks_release: false` on that
+     story. Never clear the flag yourself to get past this check.
 
 2. **Set version + mark released** in `.archflow/releases/{active_release}.yaml`:
    `status: released`, `version: vX.Y.Z`, `released_at: <iso8601>`.

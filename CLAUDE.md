@@ -27,6 +27,7 @@ Then load the current phase: read `.archflow/current-phase.yaml` → `phase_file
 - `/archflow:release [new|start|ship]` — manage releases
 - `/archflow:groom [story-id]` — detail a backlog stub into a `ready` story
 - `/archflow:feature` — add a story to the backlog or active release
+- `/archflow:autopilot` — run queued release stories unattended on one branch (interview, then silent)
 - `/archflow:setup-mcp [tool]` — connect an external tool via MCP
 
 All commands are namespaced (`/archflow:<name>`) and live in `plugin/commands/*.md`. There is no

@@ -141,13 +141,38 @@ Capture an idea without committing to it, and detail it later when it's next up:
 
 ---
 
+## Or: Let It Run Unattended
+
+```
+/archflow:autopilot        # interview, then build the release's stories while you sleep
+```
+
+Autopilot is the unattended lane. It asks you everything it can't decide alone **up front, in one
+batch** — product behaviour, trade-offs, anything irreversible — then goes silent and builds story
+after story, running QA and acceptance on each. One report at the end.
+
+The part that makes it safe is what happens when a *new* blocker appears at 3am. It never guesses and
+it never stalls the run: the story is **parked** with the open question and 2–4 candidate answers, the
+work-in-progress stays committed but unmerged, and the run moves to the next story. A parked story
+blocks the release until you answer.
+
+Everything lands on one branch. **Autopilot never merges to `main`, never opens a PR, never ships** —
+you review a night's work in the morning and merge it yourself.
+
+```
+/archflow:autopilot --plan     # interview + show the queue, don't start
+/archflow:autopilot resume     # answer the parked questions, pick up where it stopped
+```
+
+---
+
 ## How It Works
 
 Building software with AI means context gets lost, quality varies, and the same mistakes repeat. Archflow fixes this with three ideas:
 
 - **Specialized agents** — A UX designer doesn't write backend code. An API engineer doesn't make design decisions. 17 agents, each scoped to one domain.
 - **File-based handoffs** — Context survives between conversations. Agents communicate through artifacts, not chat — so nothing gets lost when a session ends.
-- **Phase gates** — 6 phases from strategy to deployment. Nothing moves forward without your approval. No skipped steps. No autonomous decisions on what ships.
+- **Phase gates** — 6 phases from strategy to deployment. Nothing moves forward without your approval. No skipped steps. No autonomous decisions on what ships. (`/archflow:autopilot` pre-authorizes those gates for one unattended run — and still stops short of `main`.)
 - **Contract-first development** — API contracts are defined before implementation. Frontend and backend build against the same spec, so they never disagree.
 - **Focused context** — Each phase loads only what the active agents need. Less noise, better results.
 - **Acceptance testing** — Features aren't done until they pass acceptance testing against your roadmap criteria.
@@ -209,7 +234,7 @@ Two things make the result honest rather than aspirational: reconciliation moves
 
 ## Commands
 
-Nine commands, all namespaced `/archflow:<name>`. You'll use three of them regularly.
+Ten commands, all namespaced `/archflow:<name>`. You'll use three of them regularly.
 
 **Getting set up** — run once per project
 
@@ -234,6 +259,7 @@ Nine commands, all namespaced `/archflow:<name>`. You'll use three of them regul
 |---------|-------------|
 | `/archflow:release` | Inspect and manage releases (`new`, `start`, `ship`) |
 | `/archflow:mode` | Show or switch ceremony mode (`quick` \| `full`) |
+| `/archflow:autopilot` | Build the release's queued stories unattended on one branch |
 
 Run `/archflow:status` any time you've lost the thread — it reports where the project stands and what's sensible to do next.
 
@@ -317,6 +343,7 @@ archflow/
 │   │   ├── release.md               # /archflow:release
 │   │   ├── groom.md                 # /archflow:groom
 │   │   ├── feature.md               # /archflow:feature
+│   │   ├── autopilot.md             # /archflow:autopilot
 │   │   └── setup-mcp.md             # /archflow:setup-mcp
 │   ├── scripts/migrate.py           # v1.0 → v2.0 migration engine (used by /archflow:migrate)
 │   └── skills/archflow/             # Framework knowledge + assets copied into projects
@@ -324,7 +351,7 @@ archflow/
 │       ├── instructions.md          # Core instructions (copied to .archflow/, reloaded via hook)
 │       ├── workflow.md              # Git branching strategy
 │       ├── phases/                  # Phase-specific instruction files (10 files)
-│       ├── schemas/                 # roadmap / release / backlog / history schemas
+│       ├── schemas/                 # roadmap / release / backlog / history / autopilot schemas
 │       ├── base-dsl-structure.yaml  # DSL template for design artifacts
 │       └── mcp-registry.yaml        # Curated MCP server registry
 ├── README.md

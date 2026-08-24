@@ -23,6 +23,7 @@ Every Archflow action is a namespaced slash command — there is no argument-sty
 /archflow:setup-mcp [tool]          → Connect an external tool via MCP (Jira, Notion, Linear, ...)
 /archflow:groom [story-id]          → Turn a backlog stub into a ready story (ACs, subtasks, gates)
 /archflow:feature [name/description|story-id] → Add a story, or pull one into the active release
+/archflow:autopilot [story-id ...]  → Run queued stories unattended on one branch (interview, then silent)
 ```
 
 Command bodies live in `${CLAUDE_PLUGIN_ROOT}/commands/<name>.md`. When you need to run one from
