@@ -204,6 +204,8 @@
           <a href="#phases" class="px-3 py-2 text-sm text-text-secondary hover:text-text-primary rounded-lg hover:bg-dark-800/60 transition-colors duration-200">Phases</a>
           <a href="#prototype" class="px-3 py-2 text-sm text-text-secondary hover:text-text-primary rounded-lg whitespace-nowrap hover:bg-dark-800/60 transition-colors duration-200">Prototype to product</a>
           <a href="#commands" class="px-3 py-2 text-sm text-text-secondary hover:text-text-primary rounded-lg hover:bg-dark-800/60 transition-colors duration-200">Commands</a>
+          <!-- lg-only: the md row is already full at "Prototype to product" -->
+          <a href="#autopilot" class="hidden lg:block px-3 py-2 text-sm text-text-secondary hover:text-text-primary rounded-lg hover:bg-dark-800/60 transition-colors duration-200">Autopilot</a>
         </div>
         <!-- Theme toggle: follows the browser until the user overrides it -->
         <button id="theme-toggle" type="button" aria-label="Switch theme"
@@ -436,7 +438,7 @@
           </div>
           <h3 class="font-heading text-xl font-600 text-text-primary mb-3">Phase Gates</h3>
           <p class="text-text-secondary text-sm leading-relaxed">
-            6 phases from strategy to deployment. Nothing moves forward without your approval. No skipped steps. No autonomous decisions on what ships.
+            6 phases from strategy to deployment. Nothing moves forward without your approval. No skipped steps. No autonomous decisions on what ships &mdash; even <a href="#autopilot" class="text-accent-light hover:underline">autopilot</a> stops short of <span class="font-mono text-xs">main</span>.
           </p>
         </div>
       </div>
@@ -801,7 +803,76 @@
             <code class="text-accent-light font-mono text-xs">/archflow:migrate</code>
             <span class="text-text-muted text-xs block mt-1">Upgrade a v1.0 project to v2.0</span>
           </div>
+          <div class="rounded-lg border border-dark-700/40 bg-dark-800/25 px-4 py-3">
+            <code class="text-accent-light font-mono text-xs">/archflow:autopilot</code>
+            <span class="text-text-muted text-xs block mt-1">Build a release unattended, on one branch</span>
+          </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ============================================ -->
+  <!-- AUTOPILOT -->
+  <!-- ============================================ -->
+  <section id="autopilot" class="relative py-14 md:py-20">
+    <div class="max-w-container mx-auto px-6">
+      <div class="fade-in text-center mb-10">
+        <h2 class="font-heading text-3xl md:text-4xl lg:text-5xl font-700 leading-tight tracking-tight max-w-3xl mx-auto">
+          Hand it the release. Go to sleep.
+        </h2>
+        <p class="text-text-secondary text-lg leading-relaxed max-w-2xl mx-auto mt-5">
+          Autopilot asks you everything it can&rsquo;t decide alone up front &mdash; in one batch &mdash; then goes silent and builds story after story. One report in the morning.
+        </p>
+      </div>
+
+      <div class="fade-in max-w-3xl mx-auto mb-12">
+        <div class="rounded-2xl border border-accent/20 bg-accent/5 p-8 md:p-10">
+          <div class="font-mono text-sm text-accent-light mb-4">/archflow:autopilot</div>
+          <p class="text-text-secondary text-base leading-relaxed">
+            The interview comes first: product behaviour, trade-offs, anything irreversible, each as a question with real options to pick from. Your answers are <span class="text-text-primary font-500">written to a run ledger before any code moves</span> &mdash; so they survive the hours, and the context compactions, that follow.
+          </p>
+        </div>
+      </div>
+
+      <div class="fade-in max-w-4xl mx-auto grid md:grid-cols-3 gap-4 mb-10">
+        <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-6">
+          <h3 class="font-heading text-base font-600 text-text-primary mb-2">It asks before, not during</h3>
+          <p class="text-text-secondary text-sm leading-relaxed">
+            Every blocker it can see in the queued stories gets asked while you&rsquo;re still awake. Nothing it could have looked up in the API contract or design artifacts becomes a question.
+          </p>
+        </div>
+        <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-6">
+          <h3 class="font-heading text-base font-600 text-text-primary mb-2">It parks, it never guesses</h3>
+          <p class="text-text-secondary text-sm leading-relaxed">
+            A new decision at 3am doesn&rsquo;t stall the night or get answered for you. The story is parked with the open question, its work committed but unmerged, and the run moves on.
+          </p>
+        </div>
+        <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-6">
+          <h3 class="font-heading text-base font-600 text-text-primary mb-2">It stops short of <span class="font-mono text-sm">main</span></h3>
+          <p class="text-text-secondary text-sm leading-relaxed">
+            Everything lands on one branch. No merge to <span class="font-mono text-xs">main</span>, no pull request, no deploy, nothing that costs money. You review a night&rsquo;s work and merge it yourself.
+          </p>
+        </div>
+      </div>
+
+      <div class="fade-in max-w-2xl mx-auto">
+        <p class="text-text-muted text-sm uppercase tracking-wider mb-5 text-center">What you wake up to</p>
+        <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-6 font-mono text-xs leading-relaxed overflow-x-auto">
+          <div class="text-text-primary">Autopilot run 2026-08-24-1 &mdash; 4 done, 1 parked, 0 failed</div>
+          <div class="text-text-muted mb-3">Branch: checkout-redesign-overnight (14 commits, not merged to main)</div>
+          <div class="text-accent-light">DONE</div>
+          <div class="text-text-secondary">&nbsp;&nbsp;[S3-04] Saved payment methods &mdash; QA pass, accepted</div>
+          <div class="text-text-secondary mb-3">&nbsp;&nbsp;[S3-05] Card deletion &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&mdash; QA pass, accepted</div>
+          <div class="text-accent-light">PARKED (blocking the release)</div>
+          <div class="text-text-secondary">&nbsp;&nbsp;[S3-07] Refund flow</div>
+          <div class="text-text-muted">&nbsp;&nbsp;&nbsp;&nbsp;Q: Partial refunds &mdash; original card, or store credit?</div>
+        </div>
+        <p class="text-text-muted text-sm leading-relaxed mt-6 pt-6 border-t border-dark-700/50">
+          A parked story blocks the release until you answer it &mdash; a release doesn&rsquo;t ship with an open product question inside it. Answer, then <span class="font-mono text-xs text-accent-light">/archflow:autopilot resume</span> picks up where it stopped.
+        </p>
       </div>
     </div>
   </section>

@@ -1,0 +1,257 @@
+# =============================================================================
+# Archflow AUTOPILOT RUN LEDGER Schema — v2.0
+# =============================================================================
+# Canonical schema for one unattended run:
+#   .archflow/autopilot/{run-id}.yaml
+#
+# Written by /archflow:autopilot. The ledger is the DURABLE state of a run: a
+# multi-hour unattended run compacts its context, and after compaction this file
+# is the only thing that still knows what the user answered in the interview,
+# which stories landed, and which are parked. It is re-read at the top of every
+# story, and it is the source the final report is generated from.
+#
+# Committed, not ignored — it is the audit trail of what an unattended agent
+# decided and why.
+#
+# Related schemas:
+#   .archflow/releases/{slug}.yaml -> release-schema.yaml  (story status, incl. parked)
+#   .archflow/roadmap.yaml         -> roadmap-schema.yaml  (index; active_release)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Run  (autopilot/{run-id}.yaml)
+# -----------------------------------------------------------------------------
+run:
+  type: object
+  required: [run_id, started_at, status, base_branch, run_branch, release, envelope, queue]
+  properties:
+    run_id:
+      type: string
+      pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$"
+      description: "{YYYY-MM-DD}-{n}; n is the next free sequence for that day."
+      example: "2026-08-24-1"
+    started_at:  {type: string, format: iso8601}
+    finished_at: {type: string, format: iso8601, required: false, description: "Set when the run reports (autopilot.md step 4)."}
+    status:
+      type: string
+      enum: [preflight, running, finished, aborted]
+      description: >
+        preflight — interview done, queue written, not started (--plan). Resumable.
+        running   — the loop is live (or the session died mid-run). Resumable.
+        finished  — the run reached a stop condition and reported.
+        aborted   — the user aborted; branches and commits left intact.
+    base_branch:
+      type: string
+      description: "Branch the run branch was cut from — the active feature branch, else the release slug's branch."
+      example: "checkout-redesign"
+    run_branch:
+      type: string
+      description: "The single branch everything lands on. NEVER main. Confirmed in the interview."
+      example: "checkout-redesign-overnight"
+    release:
+      type: string
+      description: "Slug of the release the queued stories belong to."
+      example: "checkout-redesign"
+    mode_at_start:
+      type: string
+      enum: [quick, full]
+      description: >
+        Ceremony mode when the run started. A `full` run borrows quick-mode gate
+        semantics for its duration (recorded here, never switched on the project)
+        and still stamps started_ungated on any story it builds past a gate.
+    parked_policy:
+      type: string
+      enum: [blocks_release, non_blocking]
+      default: blocks_release
+      description: "Answer to the interview's parked-stories question; seeds parked.blocks_release per story."
+    envelope:
+      $ref: "#/envelope"
+    stop_conditions:
+      $ref: "#/stop_conditions"
+    decisions:
+      type: array
+      description: "Every interview answer. Re-read before each story — this outlives context compaction."
+      items:
+        $ref: "#/decision"
+    queue:
+      type: array
+      description: "Ordered stories for this run. Order is dependency, then priority, then id."
+      items:
+        $ref: "#/queue_item"
+    events:
+      type: array
+      required: false
+      description: "Append-only terse trail. One line per meaningful transition; not narration."
+      items:
+        type: object
+        required: [at, event]
+        properties:
+          at:     {type: string, format: iso8601}
+          story:  {type: string, required: false, example: "S3-07"}
+          event:  {type: string, enum: [started, merged, parked, failed, skipped, stopped]}
+          detail: {type: string, required: false}
+
+# -----------------------------------------------------------------------------
+# Envelope — the pre-authorized authority for this run
+# -----------------------------------------------------------------------------
+# Recorded so the report and any later audit show exactly what the agent was
+# allowed to do. The MUST NOT list in the command is absolute: these flags may
+# narrow the envelope, never widen it. merge_to_main has no `true` case.
+# -----------------------------------------------------------------------------
+envelope:
+  type: object
+  required: [merge_to_run_branch, merge_to_main, open_pr, run_qa, run_acceptance]
+  properties:
+    merge_to_run_branch: {type: boolean, default: true,  description: "subtask -> task -> run branch"}
+    merge_to_main:       {type: boolean, enum: [false],  description: "Always false. The user merges to main."}
+    open_pr:             {type: boolean, enum: [false],  description: "Always false."}
+    run_qa:              {type: boolean, default: true,  description: "qa-engineer after implementation"}
+    run_acceptance:      {type: boolean, default: true,  description: "pm-maestro-reviewer after QA"}
+
+# -----------------------------------------------------------------------------
+# Stop conditions
+# -----------------------------------------------------------------------------
+stop_conditions:
+  type: object
+  properties:
+    max_stories:
+      type: integer
+      required: false
+      description: "Story cap from the interview. Absent = run the whole queue."
+    deadline:
+      type: string
+      format: iso8601
+      required: false
+      description: "Wall-clock stop from the interview (e.g. 07:00 local)."
+    max_consecutive_parks:
+      type: integer
+      default: 2
+      description: >
+        Repeated parking means the interview missed something structural; stop
+        rather than burn the rest of the night on a queue that will also park.
+    max_qa_retries:
+      type: integer
+      default: 2
+      description: "pm-maestro-reviewer REJECTED retries before the story is failed."
+
+# -----------------------------------------------------------------------------
+# Decision — one answered interview question
+# -----------------------------------------------------------------------------
+decision:
+  type: object
+  required: [id, question, answer, applies_to]
+  properties:
+    id:       {type: string, pattern: "^D[0-9]+$", example: "D3"}
+    question: {type: string, example: "Where do partial refunds go?"}
+    answer:   {type: string, example: "Back to the original card"}
+    applies_to:
+      type: array
+      description: "Story ids this answer governs, or the single entry `all` for run-policy answers."
+      items: {type: string}
+      example: ["S3-07"]
+    asked_at: {type: string, format: iso8601, required: false}
+
+# -----------------------------------------------------------------------------
+# Queue item — one story's run record
+# -----------------------------------------------------------------------------
+queue_item:
+  type: object
+  required: [story_id, title, order, state]
+  properties:
+    story_id: {type: string, pattern: "^S[0-9]+-[0-9]+[a-z]?$", example: "S3-07"}
+    title:    {type: string}
+    order:    {type: integer, description: "1-based position in the run queue."}
+    state:
+      type: string
+      enum: [pending, in_progress, done, parked, failed, skipped]
+      description: >
+        done    — merged into the run branch, story marked done in the release file
+        parked  — an undecided question; WIP committed, NOT merged
+        failed  — broken, not undecided (QA retries exhausted); WIP committed, NOT merged
+        skipped — dropped in the interview (too vague, or gate override declined)
+    branch:       {type: string, required: false, description: "Task branch for this story."}
+    started_at:   {type: string, format: iso8601, required: false}
+    finished_at:  {type: string, format: iso8601, required: false}
+    commits:
+      type: array
+      required: false
+      description: "Short SHAs landed for this story."
+      items: {type: string}
+    review_risk:
+      type: string
+      required: false
+      enum: [high, medium, low]
+      description: "Drives the report's REVIEW FIRST ordering (auth, payments, migrations -> high)."
+    park:
+      type: object
+      required: false
+      description: "Present when state is parked. Mirrors the story's `parked` block in the release file."
+      properties:
+        question:  {type: string}
+        context:   {type: string, description: "What the user needs to know to answer in one read."}
+        options:
+          type: array
+          description: "2-4 candidate answers, so resuming is one tap in AskUserQuestion."
+          items: {type: string}
+        at:        {type: string, format: iso8601}
+    failure:
+      type: object
+      required: false
+      description: "Present when state is failed."
+      properties:
+        summary:  {type: string}
+        attempts: {type: integer}
+        at:       {type: string, format: iso8601}
+
+# =============================================================================
+# Example — autopilot/2026-08-24-1.yaml
+# =============================================================================
+# run_id: "2026-08-24-1"
+# started_at: "2026-08-24T23:40:00Z"
+# status: running
+# base_branch: checkout-redesign
+# run_branch: checkout-redesign-overnight
+# release: checkout-redesign
+# mode_at_start: quick
+# parked_policy: blocks_release
+# envelope:
+#   merge_to_run_branch: true
+#   merge_to_main: false
+#   open_pr: false
+#   run_qa: true
+#   run_acceptance: true
+# stop_conditions:
+#   deadline: "2026-08-25T05:00:00Z"
+#   max_consecutive_parks: 2
+#   max_qa_retries: 2
+# decisions:
+#   - id: D1
+#     question: "Parked stories — block the release or flag as open questions?"
+#     answer: "Block the release"
+#     applies_to: ["all"]
+#   - id: D2
+#     question: "Where do partial refunds go?"
+#     answer: "Back to the original card"
+#     applies_to: ["S3-07"]
+# queue:
+#   - story_id: S3-04
+#     title: "Saved payment methods"
+#     order: 1
+#     state: done
+#     branch: checkout/saved-cards
+#     commits: ["a1b2c3d", "e4f5a6b"]
+#     review_risk: high
+#   - story_id: S3-07
+#     title: "Refund flow"
+#     order: 2
+#     state: parked
+#     branch: refund-flow/partial-refunds
+#     park:
+#       question: "Do partial refunds need finance approval above $500?"
+#       context: "The contract has no approval endpoint; adding one changes the refund state machine."
+#       options: ["No approval, refund immediately", "Approval above $500", "Approval for every partial refund"]
+#       at: "2026-08-25T01:12:00Z"
+# events:
+#   - {at: "2026-08-24T23:41:00Z", story: S3-04, event: started}
+#   - {at: "2026-08-25T00:58:00Z", story: S3-04, event: merged}
+#   - {at: "2026-08-25T01:12:00Z", story: S3-07, event: parked, detail: "refund approval threshold"}

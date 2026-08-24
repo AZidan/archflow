@@ -45,4 +45,7 @@ Archflow — Phase-Based Development Workflow
 
   /archflow:feature       Add a story — to the backlog, or straight into the active release
                           (from description, external tool link, or existing backlog stub)
+
+  /archflow:autopilot     Run queued release stories unattended on one branch
+                          (blocker interview first, then silent; one report at the end)
 ```

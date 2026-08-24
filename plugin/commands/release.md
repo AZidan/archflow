@@ -23,8 +23,10 @@ shipped ledger; it does not itself write application code.
 Read `.archflow/roadmap.yaml`. Print:
 - **Active release** (`active_release`): its goal, and story progress from
   `.archflow/releases/{active_release}.yaml` — count by readiness status
-  (spec_ready / design_ready / contract_ready / ready / in_progress / review / done), release_criteria
-  met/total, and any stories carrying `started_ungated`.
+  (spec_ready / design_ready / contract_ready / ready / in_progress / review / parked / done),
+  release_criteria met/total, and any stories carrying `started_ungated`.
+- **Parked stories**, each with its open `parked.question` and whether it blocks the ship. A release
+  quietly stuck on an unanswered decision must be visible here, not only in an autopilot ledger.
 - **Pipeline** (`releases[]`): each planning/ready/in_progress release with its status.
 - **Shipped** (`shipped[]`): the ledger (id, version, released_at).
 - **Backlog**: count of stubs in `backlog.yaml` (grep, don't load fully).
@@ -54,9 +56,10 @@ while an engineer builds the active one).
 
 ## `release ship` — finalize
 Run the **Phase 5 ship ritual** (`.archflow/phases/phase-5-launch.md`, Step 5C) for the active
-release: verify releasable → mark released + version + tag → generate `docs/releases/{slug}.md` →
-archive the release file → append `history.yaml` (with `touched` from the tag-to-tag diff) → roll off
-the index into `shipped` → clear `active_release` → commit. Then offer the next release (Step 5D).
+release: verify releasable (a `parked` story with `blocks_release: true` HALTs here) → mark
+released + version + tag → generate `docs/releases/{slug}.md` → archive the release file → append
+`history.yaml` (with `touched` from the tag-to-tag diff) → roll off the index into `shipped` →
+clear `active_release` → commit. Then offer the next release (Step 5D).
 
 ## Notes
 - Source of truth for status is `roadmap.yaml` + the release files; `current-phase.yaml → active_release`

@@ -46,6 +46,8 @@ Dynamic phase-based instruction loading for token-efficient development.
 - `/archflow:setup-mcp` — Configure an MCP server for external tools (Jira, Notion, Linear, GitHub, SuperDesign, etc.)
 - `/archflow:groom [story-id]` — Detail a backlog stub into a `ready` story (acceptance criteria, subtasks, gates); stays in the backlog
 - `/archflow:feature` — Add a story to the backlog or the active release and start the git development workflow
+- `/archflow:autopilot` — Run queued release stories unattended on one branch (blocker interview first,
+  then silent; parks undecided stories; one report at the end)
 
 ## 🚀 Release Model (v2.0 — the outer loop)
 
@@ -64,7 +66,8 @@ sprints**; a release is the story container.)
   release. At most ONE release is `in_progress`; many may be `planning`/`ready` concurrently.
 - **Readiness pipeline (per story):** `backlog → spec_ready → design_ready → contract_ready → ready →
   in_progress → review → done`, with per-story `gates {needs_design, needs_contract}`. Design/contract
-  gates run just-in-time, one step ahead of build.
+  gates run just-in-time, one step ahead of build. One side status: `parked` — stopped on an open
+  question only the human can answer (written by `/archflow:autopilot`; blocks the ship by default).
 - **Modes:** `mode: quick | full` (in `roadmap.yaml` + `current-phase.yaml`). quick = single implicit
   release, gates auto-satisfied, one lane (default for `/archflow:init`). full = explicit release
   pipeline + enforced advisory gates + role lanes. Switch with `/archflow:mode`.
@@ -114,6 +117,7 @@ fi
 - `.archflow/history.yaml` - Shipped-story intent layer (loaded only on lookup)
 - `.archflow/current-feature.yaml` - Active development scope (git task/subtask tracking)
 - `.archflow/current-phase.yaml` - Phase + mode + active_release tracker (PROJECT-SCOPED, auto-created)
+- `.archflow/autopilot/{run-id}.yaml` - Unattended run ledger (only when `/archflow:autopilot` is used)
 
 ## 💡 Universal Critical Rules (Apply to ALL Phases)
 
@@ -139,6 +143,11 @@ fi
 - **USER APPROVAL REQUIRED**: Stop and wait for explicit user approval after EVERY phase
 - **NO PHASE SKIPPING**: Complete every phase in exact sequence
 - **DEMO REQUIRED**: Working features must be demonstrated before approval
+- **THE ONE EXCEPTION — `/archflow:autopilot`**: an unattended run pre-authorizes these gates in a
+  single up-front interview. It relaxes *synchronous* review, never review itself: everything lands
+  on one branch, and **merging to `main` stays the user's**. An undecided question parks the story
+  (`status: parked`) instead of being guessed, and a parked story blocks the release by default.
+  Nothing else in the framework may skip an approval gate.
 
 ### 🎯 Agent Selection Rules (ALL Phases)
 - **SPECIALIZED AGENTS ONLY**: Always use sub-agents when possible. Never use `general-purpose` agent

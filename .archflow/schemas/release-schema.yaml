@@ -85,7 +85,7 @@ story:
       enum: [Critical, High, Medium, Low]
     status:
       type: string
-      enum: [backlog, spec_ready, design_ready, contract_ready, ready, in_progress, review, done]
+      enum: [backlog, spec_ready, design_ready, contract_ready, ready, in_progress, review, parked, done]
       description: >
         READINESS PIPELINE (Pillar 2), not a flat kanban column:
           backlog        — stub (only in backlog.yaml)
@@ -95,6 +95,12 @@ story:
           ready          — all applicable upstream gates satisfied -> buildable
           in_progress    — engineer building
           review         — in QA / acceptance
+          parked         — started, then stopped on an OPEN QUESTION only the human can
+                           answer (see `parked`). Work-in-progress is committed on the
+                           story's branch but unmerged. Set by /archflow:autopilot when a
+                           run hits an undecided question; clears back to in_progress once
+                           the question is answered. NOT a failure state and NOT a pause —
+                           broken work stays in_progress.
           done           — complete
     gates:
       $ref: "#/gates"
@@ -124,6 +130,45 @@ story:
       required: false
       description: "Origin annotation when a story was pulled into this release (`backlog` or a release id)."
       example: "backlog"
+    parked:
+      type: object
+      required: false
+      description: >
+        Present when `status: parked`. The open question that stopped the story,
+        stated so it can be answered in one read, with candidate answers so
+        resuming is a single choice. Written by /archflow:autopilot; mirrored in
+        the run ledger (autopilot-schema.yaml).
+      properties:
+        question:
+          type: string
+          example: "Do partial refunds need finance approval above $500?"
+        context:
+          type: string
+          description: "What the human needs to know to decide, without reopening the code."
+        options:
+          type: array
+          required: false
+          description: "2-4 candidate answers."
+          items: {type: string}
+        blocks_release:
+          type: boolean
+          default: true
+          description: >
+            TRUE (the default) makes the Phase 5 ship ritual HALT on this story:
+            a release does not ship with an unanswered product question inside it.
+            Only the human may set it false — per story, when they answer, never
+            silently at ship time and never by an agent.
+        branch:
+          type: string
+          required: false
+          description: "Branch holding the unmerged work-in-progress."
+        at: {type: string, format: iso8601}
+        by:
+          type: string
+          required: false
+          description: "Who/what parked it, e.g. an autopilot run id."
+          example: "autopilot:2026-08-24-1"
+
     started_ungated:
       type: object
       required: false
