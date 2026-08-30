@@ -8,7 +8,7 @@ permalink: /guides/prototype-to-product/
 You built something fast. It works. People are using it.
 
 What it doesn't have is a roadmap, an API contract, a test plan, or a defensible answer to what
-version 1.0 means. That's not a failure — that's what shipping quickly costs, and the tradeoff was
+version 1.0 means. That's not a failure: that's what shipping quickly costs, and the tradeoff was
 probably correct at the time. The problem is that the tradeoff compounds, and at some point the next
 feature starts costing more than the last three combined.
 
@@ -30,14 +30,14 @@ claude
 
 Onboarding reads your code and **reconstructs the plan around what you already shipped**. Where it
 finds working features with no story behind them, it writes the story and marks it delivered. Your
-roadmap opens describing reality — not pretending you're on day one.
+roadmap opens describing reality, not pretending you're on day one.
 
 Two outputs matter most here:
 
-**The gap report** — a plain list of what's missing. No tests. No API contract. No design system.
+**The gap report**: a plain list of what's missing. No tests. No API contract. No design system.
 Auth handled three different ways. Read this one twice; it usually reorders your priorities.
 
-**The phase assessment** — where you actually are. Most prototypes land in Phase 2 or 2.5: code
+**The phase assessment**: where you actually are. Most prototypes land in Phase 2 or 2.5: code
 exists, but the design system and contract that should have preceded it don't.
 
 Nothing is written without your approval.
@@ -71,7 +71,7 @@ find.
 
 **It does not** silently rewrite your architecture. Archflow won't refactor your prototype behind
 your back or quietly restructure your data model. It makes sure you *know* what needs attention and
-gives you a structured way to work through it — but what gets refactored, and when, stays your call.
+gives you a structured way to work through it, but what gets refactored, and when, stays your call.
 
 If you were hoping to point a tool at a messy codebase and get a clean one back, no framework
 honestly offers that. What you can get is knowing exactly what's wrong and having a plan.
@@ -83,8 +83,7 @@ honestly offers that. What you can get is knowing exactly what's wrong and havin
 Stay in `quick` mode while it's still small. One implicit release, gates that record but don't
 block, no ship ritual until you ask for one.
 
-Archflow watches for signs you've outgrown it — a second release, a second contributor, crossing a
-size threshold — and *offers* the upgrade:
+Archflow watches for signs you've outgrown it (a second release, a second contributor, crossing a size threshold) and *offers* the upgrade:
 
 > This project looks like it's outgrowing quick mode (second contributor joined). Switch to full
 > mode? It adds explicit releases and role-based design/spec gates.
@@ -95,8 +94,7 @@ It never switches on its own, and if you decline it remembers rather than asking
 /archflow:mode full
 ```
 
-`full` adds an explicit release pipeline, enforced readiness gates, and role lanes — the structure
-that matters once more than one person is committing.
+`full` adds an explicit release pipeline, enforced readiness gates, and role lanes: the structure that matters once more than one person is committing.
 
 ---
 
@@ -106,12 +104,12 @@ Once the gaps that mattered are closed:
 
 ```
 /archflow:release new "1.0"     # carve a release from the backlog
-/archflow:release start          # the build gate — at most one release in progress
+/archflow:release start          # the build gate: at most one release in progress
 /archflow:release ship           # the Phase 5 ship ritual
 ```
 
 `ship` verifies the release is actually releasable, tags the version, generates release notes,
-archives the release file, and appends to `history.yaml` — which later tells you *"`PaymentForm.tsx`
+archives the release file, and appends to `history.yaml`, which later tells you *"`PaymentForm.tsx`
 last shipped for S3-04; its acceptance criterion was X"* before an agent modifies it.
 
 That ledger is the thing prototypes never have and mature products can't work without.
@@ -123,8 +121,8 @@ That ledger is the thing prototypes never have and mature products can't work wi
 | Day | Do this |
 |---|---|
 | 1 | `/archflow:onboard`, read the gap report, don't fix anything yet |
-| 2 | Phase 1 — decide what this product is actually for |
-| 3 | Phase 2.5 — lock the API contract |
+| 2 | Phase 1: decide what this product is actually for |
+| 3 | Phase 2.5: lock the API contract |
 | 4–5 | Backfill tests on whatever you're most afraid to change |
 | Then | `/archflow:release new "1.0"` and work the backlog properly |
 
@@ -132,5 +130,5 @@ That ledger is the thing prototypes never have and mature products can't work wi
 
 ## Related
 
-- [Onboarding an existing codebase](https://archflowai.dev/guides/existing-codebase/) — the mechanics of `/archflow:onboard`
-- [Starting a new project](https://archflowai.dev/guides/new-project/) — the phases in order, from scratch
+- [Onboarding an existing codebase](https://archflowai.dev/guides/existing-codebase/): the mechanics of `/archflow:onboard`
+- [Starting a new project](https://archflowai.dev/guides/new-project/): the phases in order, from scratch

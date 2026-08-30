@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ page.title }} — Archflow</title>
+  <title>{{ page.title }} | Archflow</title>
   <meta name="description" content="{{ page.description }}">
-  <meta property="og:title" content="{{ page.title }} — Archflow">
+  <meta property="og:title" content="{{ page.title }} | Archflow">
   <meta property="og:description" content="{{ page.description }}">
   <meta property="og:type" content="article">
   <meta property="og:image" content="{{ site.url }}{{ site.baseurl }}/logo.png">
@@ -70,11 +70,21 @@
     #theme-toggle:hover { color: rgb(var(--c-text)); background: rgb(var(--c-border) / .4); }
     #theme-toggle svg { width: 1.25rem; height: 1.25rem; }
 
-    article { padding: 3.5rem 0 5rem; }
+    /* article.wrap, not article: `.wrap` (0,1,0) outranks a bare `article`
+       (0,0,1) and sets `padding: 0 1.5rem`, so a shorthand here was silently
+       discarded and the page opened flush against the nav. Longhand keeps
+       .wrap's horizontal padding intact. */
+    article.wrap { padding-top: 4.5rem; padding-bottom: 5rem; }
     .eyebrow {
       font-size: .75rem; letter-spacing: .12em; text-transform: uppercase;
       color: rgb(var(--c-accent-text)); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       margin-bottom: .75rem;
+    }
+    /* The page description, rendered as a standfirst rather than as the first
+       body paragraph. Negative top margin closes the h1's 2rem bottom gap. */
+    .lede {
+      font-size: 1.125rem; line-height: 1.65; color: rgb(var(--c-text-3));
+      margin: -1.25rem 0 2.25rem;
     }
     article h1 {
       font-family: 'Outfit', sans-serif; font-weight: 700; letter-spacing: -.025em;
@@ -123,6 +133,21 @@
       border-left: 3px solid rgb(var(--c-accent) / .5); color: rgb(var(--c-text-3));
     }
     article hr { border: 0; border-top: 1px solid rgb(var(--c-border) / .55); margin: 2.5rem 0; }
+
+    /* Screencasts. These carry native controls rather than the landing page's
+       chrome-free autoplay: a reader of a 90-second walkthrough wants to scrub
+       and pause it, which is the opposite of what a hero loop wants.
+       preload=none keeps them off the page's critical path; the poster carries
+       the slot until play. */
+    article figure { margin: 0 0 1.75rem; }
+    article figure video {
+      display: block; width: 100%; height: auto;
+      border: 1px solid rgb(var(--c-border) / .6); border-radius: .75rem;
+      background: rgb(var(--c-card));
+    }
+    article figcaption {
+      margin-top: .5rem; font-size: .8125rem; color: rgb(var(--c-text-3)); text-align: center;
+    }
     /* The guides put "---" before most "##", which would stack an <hr> on top of the
        h2's own rule. When they're adjacent, let the <hr> be the only line. */
     article hr + h2 { border-top: 0; padding-top: 0; margin-top: 0; }
@@ -159,6 +184,8 @@
 
   <article class="wrap">
     <div class="eyebrow">Guide</div>
+    <h1>{{ page.title }}</h1>
+    {% if page.description %}<p class="lede">{{ page.description }}</p>{% endif %}
     {{ content }}
   </article>
 

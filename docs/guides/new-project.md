@@ -6,7 +6,7 @@ permalink: /guides/new-project/
 ---
 
 For a blank directory, or a repo with nothing in it yet. If you already have code, use
-[onboarding](https://archflowai.dev/guides/existing-codebase/) instead — it won't make you throw anything away.
+[onboarding](https://archflowai.dev/guides/existing-codebase/) instead; it won't make you throw anything away.
 
 ---
 
@@ -29,7 +29,7 @@ claude
 - adds an Archflow section to your `CLAUDE.md`
 - makes the initial commit
 
-You start in **`quick` mode** — one implicit release, no ceremony. You can grow into `full` later
+You start in **`quick` mode**: one implicit release, no ceremony. You can grow into `full` later
 without migrating anything.
 
 ---
@@ -39,7 +39,7 @@ without migrating anything.
 Archflow moves through phases. Each one produces artifacts the next one reads, and none of them
 advance without you approving what came out.
 
-### Phase 1 — Strategy
+### Phase 1: Strategy
 
 `product-strategist` works out who this is for, what problem it solves, and what success looks like
 → `.archflow/project-context.md`
@@ -47,18 +47,17 @@ advance without you approving what came out.
 `feature-planner` turns that into epic labels and a backlog of story stubs
 → `.archflow/roadmap.yaml` + `.archflow/backlog.yaml`
 
-Stubs are intentionally thin at this stage — a title and one line. Detail comes later, when a story
+Stubs are intentionally thin at this stage: a title and one line. Detail comes later, when a story
 is actually next up. Planning everything in full detail on day one is how roadmaps rot.
 
-### Phase 2 — Design
+### Phase 2: Design
 
 `ux-designer` produces user flows, a theme, and wireframes. `dsl-generator` turns those into
 component specs → `design-artifacts/styled-dsl.yaml`
 
-Optional Phase 2.25 generates hi-fi screens if you have the SuperDesign MCP configured. Skip it
-freely — Phase 2 → 2.5 is a supported path.
+Optional Phase 2.25 generates hi-fi screens if you have the SuperDesign MCP configured. Skip it freely: Phase 2 → 2.5 is a supported path.
 
-### Phase 2.5 — API Contract
+### Phase 2.5: API Contract
 
 `api-contract-architect` writes `docs/api-contract.md` from the wireframes. This becomes the single
 source of truth: frontend and backend both build against it, and neither is permitted to deviate.
@@ -66,13 +65,13 @@ source of truth: frontend and backend both build against it, and neither is perm
 This is the phase people are most tempted to skip. Don't. It's the one that stops the frontend and
 backend from quietly disagreeing for two weeks.
 
-### Phase 3 — Implementation
+### Phase 3: Implementation
 
 `ui-engineer` and `api-engineer` run in parallel against the contract. Then `qa-engineer`, then
 `pm-maestro-reviewer` checks the work against the story's acceptance criteria and returns a verdict.
 A story isn't done until that verdict is ACCEPTED.
 
-### Phases 4–6 — Quality, Launch, Enhancement
+### Phases 4–6: Quality, Launch, Enhancement
 
 Code review, performance, security. Then CI/CD, versioning, app store prep, analytics. Then
 on-demand work like internationalization.
@@ -95,8 +94,7 @@ release** (build it now). In `quick` mode the release is the default, since ther
 
 ## When to graduate to `full` mode
 
-Stay in `quick` while it's just you and one line of work. Archflow will *offer* `full` when it
-notices growth — a second release, a second contributor, or the project crossing a size threshold.
+Stay in `quick` while it's just you and one line of work. Archflow will *offer* `full` when it notices growth: a second release, a second contributor, or the project crossing a size threshold.
 It never switches on its own, and declining is remembered so it doesn't nag.
 
 `full` adds an explicit release pipeline (`planning → ready → in_progress → released`), enforced
