@@ -3,20 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Archflow — Turn Claude Code into a structured development team</title>
-  <meta name="description" content="Turn Claude Code into a structured development team. 17 specialized agents across 6 phases, handing off through files in your repo — so context outlives the session that created it. Works on the codebase you already have. Free and MIT.">
-  <meta property="og:title" content="Archflow — Turn Claude Code into a structured development team">
-  <meta property="og:description" content="17 specialized agents across 6 phases, handing off through files in your repo — so context outlives the session that created it. Works on the codebase you already have.">
+  <title>Archflow: Turn Claude Code into a structured development team</title>
+  <meta name="description" content="Turn Claude Code into a structured development team. 17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have. Free and MIT.">
+  <meta property="og:title" content="Archflow: Turn Claude Code into a structured development team">
+  <meta property="og:description" content="17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://archflowai.dev">
-  <meta property="og:image" content="https://archflowai.dev/logo.png">
-  <meta property="og:image:width" content="520">
-  <meta property="og:image:height" content="520">
-  <!-- `summary` (not summary_large_image): the logo is square, and a wide card would letterbox it. -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:image" content="https://archflowai.dev/logo.png">
-  <meta name="twitter:title" content="Archflow — Turn Claude Code into a structured development team">
-  <meta name="twitter:description" content="17 specialized agents across 6 phases, handing off through files in your repo — so context outlives the session that created it. Works on the codebase you already have.">
+  <!-- Wide card carrying the product, not the mark: a launch share should show
+       the board. 1280x720 is already the right shape, so nothing letterboxes.
+       (Was a 520x520 logo on `summary`, which shrank every share to an icon.) -->
+  <meta property="og:image" content="https://archflowai.dev/assets/video/studio-poster.jpg">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="720">
+  <meta property="og:image:alt" content="Archflow Studio: a release board with stories moving through ready, in progress and done">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://archflowai.dev/assets/video/studio-poster.jpg">
+  <meta name="twitter:image:alt" content="Archflow Studio: a release board with stories moving through ready, in progress and done">
+  <meta name="twitter:title" content="Archflow: Turn Claude Code into a structured development team">
+  <meta name="twitter:description" content="17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have.">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -180,6 +184,39 @@
       backdrop-filter: blur(12px) saturate(180%);
       -webkit-backdrop-filter: blur(12px) saturate(180%);
     }
+    /* Start-path tabs. Selected state keys off aria-selected, so the ARIA
+       attribute IS the style hook - they can never disagree. */
+    .start-tab {
+      border: 1px solid rgb(var(--c-border) / 0.6);
+      background: rgb(var(--c-card) / 0.4);
+      color: rgb(var(--c-text-2));
+      transition: color .2s ease, border-color .2s ease, background-color .2s ease;
+    }
+    .start-tab:hover { color: rgb(var(--c-text)); border-color: rgb(var(--c-border-2)); }
+    .start-tab[aria-selected="true"] {
+      border-color: rgb(var(--c-accent) / 0.5);
+      background: rgb(var(--c-accent) / 0.12);
+      color: rgb(var(--c-accent-text));
+    }
+
+    /* FAQ <details>. list-none on the summary kills the native marker in
+       Firefox; ::-webkit-details-marker does the same in Safari/Chrome. */
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary:hover .faq-chevron { color: rgb(var(--c-text-2)); }
+    .faq-chevron { transition: transform .2s ease, color .2s ease; }
+    .faq[open] > summary .faq-chevron { transform: rotate(180deg); }
+    @media (prefers-reduced-motion: reduce) {
+      .faq-chevron { transition: none; }
+    }
+    /* Announcement bar. Its height feeds ONE variable, so the fixed nav, the
+       body offset and every anchor's scroll-margin stay in agreement; nothing
+       has to know the bar's pixel height. Dismissing sets it to 0. */
+    :root { --announce-h: 0px; }
+    #announce { position: fixed; top: 0; left: 0; right: 0; z-index: 45; }
+    body { padding-top: var(--announce-h); }
+    #site-nav { top: var(--announce-h); }
+    /* overrides the flat 5rem above, so a #hash never lands under nav + bar */
+    section[id] { scroll-margin-top: calc(5rem + var(--announce-h)); }
   </style>
 </head>
 <body class="text-text-primary antialiased">
@@ -187,9 +224,53 @@
   <div class="ambient fixed inset-0 -z-10 pointer-events-none"></div>
 
   <!-- ============================================ -->
+  <!-- ANNOUNCEMENT BAR                                                        -->
+  <!-- Message match for campaign traffic: someone who clicked "Studio is here" -->
+  <!-- should not have to scroll to section 5 to find it. Doubles as discovery  -->
+  <!-- for cold traffic. Delete this block when the launch is over.             -->
+  <!-- ============================================ -->
+  <div id="announce" hidden class="border-b border-accent/20 bg-accent/10">
+    <div class="max-w-container mx-auto px-6 py-2.5 flex items-center justify-center gap-3 text-center">
+      <a href="#studio" data-ph="announce_click"
+         class="text-sm text-text-secondary hover:text-text-primary transition-colors duration-200">
+        <span class="font-heading font-600 text-accent-light">New</span>
+        <span class="mx-2 text-text-muted" aria-hidden="true">&middot;</span>
+        Archflow Studio: run the whole workflow in a browser
+        <span class="text-accent-light ml-1" aria-hidden="true">&rarr;</span>
+      </a>
+      <button type="button" id="announce-close" aria-label="Dismiss announcement"
+              class="absolute right-4 p-2 -m-2 text-text-muted hover:text-text-primary transition-colors duration-200 cursor-pointer">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+
+  <script>
+    // Runs inline, right after the bar, so the height is committed before the
+    // rest of the page paints: no visible jump on load.
+    (function () {
+      var bar = document.getElementById('announce');
+      if (!bar) return;
+      try { if (localStorage.getItem('archflow-announce-dismissed') === '1') return; } catch (e) {}
+      bar.hidden = false;
+      var root = document.documentElement;
+      function size() { root.style.setProperty('--announce-h', bar.offsetHeight + 'px'); }
+      size();
+      addEventListener('resize', size);
+      document.getElementById('announce-close').addEventListener('click', function () {
+        bar.hidden = true;
+        root.style.setProperty('--announce-h', '0px');
+        try { localStorage.setItem('archflow-announce-dismissed', '1'); } catch (e) {}
+      });
+    })();
+  </script>
+  <!-- ============================================ -->
   <!-- NAV -->
   <!-- ============================================ -->
-  <nav class="fixed top-0 left-0 right-0 z-50 nav-blur bg-[var(--nav-bg)] border-b border-dark-700/50">
+  <nav id="site-nav" class="fixed top-0 left-0 right-0 z-50 nav-blur bg-[var(--nav-bg)] border-b border-dark-700/50">
     <div class="max-w-container mx-auto px-6 h-16 flex items-center justify-between">
       <!-- Logo -->
       <a href="#" class="flex items-center gap-2.5">
@@ -201,10 +282,12 @@
         <!-- Section quick links (hidden on small screens so the CTA stays dominant) -->
         <div class="hidden md:flex items-center gap-1 mr-2">
           <a href="#how-it-works" class="px-3 py-2 text-sm text-text-secondary hover:text-text-primary rounded-lg hover:bg-dark-800/60 transition-colors duration-200">How it works</a>
+          <a href="#studio" class="px-3 py-2 text-sm text-text-secondary hover:text-text-primary rounded-lg hover:bg-dark-800/60 transition-colors duration-200">Studio</a>
           <a href="#phases" class="px-3 py-2 text-sm text-text-secondary hover:text-text-primary rounded-lg hover:bg-dark-800/60 transition-colors duration-200">Phases</a>
-          <a href="#prototype" class="px-3 py-2 text-sm text-text-secondary hover:text-text-primary rounded-lg whitespace-nowrap hover:bg-dark-800/60 transition-colors duration-200">Prototype to product</a>
           <a href="#commands" class="px-3 py-2 text-sm text-text-secondary hover:text-text-primary rounded-lg hover:bg-dark-800/60 transition-colors duration-200">Commands</a>
-          <!-- lg-only: the md row is already full at "Prototype to product" -->
+          <!-- lg-only: the md row is full at "Commands". Studio took the slot
+               "Prototype to product" used to hold - it is the more visual sell. -->
+          <a href="#start" class="hidden lg:block px-3 py-2 text-sm text-text-secondary hover:text-text-primary rounded-lg whitespace-nowrap hover:bg-dark-800/60 transition-colors duration-200">Where to start</a>
           <a href="#autopilot" class="hidden lg:block px-3 py-2 text-sm text-text-secondary hover:text-text-primary rounded-lg hover:bg-dark-800/60 transition-colors duration-200">Autopilot</a>
         </div>
         <!-- Theme toggle: follows the browser until the user overrides it -->
@@ -240,11 +323,11 @@
           Turn Claude Code into a structured development team
         </h1>
         <p class="text-text-secondary text-lg md:text-xl leading-relaxed max-w-2xl mx-auto mb-4">
-          17 specialized agents across 6 phases, handing off through files in your repo — so context outlives the session that created it. Works on the codebase you already have.
+          17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have.
         </p>
         <!-- Proof line: moved up from the problem section. Strongest trust asset on the page. -->
         <p class="text-text-muted text-sm md:text-base mb-10">
-          Built and refined across <span class="text-text-secondary font-500">20+ real projects</span> — including this one.
+          Built and refined across <span class="text-text-secondary font-500">20+ real projects</span>, including this one.
         </p>
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button onclick="copyInstallCommands(this)" class="px-8 py-3.5 rounded-xl bg-accent-cta text-accent-ink font-600 font-heading font-600 text-base btn-glow hover:bg-accent-cta-hover inline-flex items-center gap-2">
@@ -271,34 +354,15 @@
           </p>
         </div>
 
-        <!-- Promo video: text-only, so it reads muted. preload=none keeps it off the
-             critical path; the poster carries the above-the-fold weight. -->
-        <div class="mt-12 max-w-3xl mx-auto">
-          <div class="relative rounded-xl overflow-hidden border border-dark-700/60 shadow-2xl">
-            <!-- Chrome-free player: no controls, no logo, no title, no channel
-                 avatar, no suggested videos - none of which a YouTube embed can
-                 hide (modestbranding was deprecated 2023, showinfo removed 2020,
-                 rel=0 only narrows suggestions to the same channel).
-                 589KB at CRF30 / 1280w, audio stripped since it plays muted.
-                 preload="none" keeps it off first paint; the 16KB poster carries
-                 the fold until it plays. -->
-            <video
-              id="promo-video"
-              class="w-full h-auto block cursor-pointer"
-              muted loop playsinline preload="none"
-              poster="assets/video/promo-poster.jpg"
-              aria-label="Archflow overview - 59 second walkthrough. Click to pause.">
-              <source src="assets/video/archflow-promo.mp4" type="video/mp4">
-            </video>
-
-            <!-- No-JS: nothing autoplays, so hand them the real player on YouTube. -->
-            <noscript>
-              <a href="https://www.youtube.com/watch?v=sc2qEDnDeP0" target="_blank" rel="noopener" class="block">
-                <img src="assets/video/promo-poster.jpg" alt="Watch the Archflow overview on YouTube" width="1280" height="720" class="w-full h-auto block" />
-              </a>
-            </noscript>
-          </div>
-        </div>
+        <!-- The 59s overview is a LINK now, not a player. The hero already
+             carries a headline, subhead, proof line, two CTAs and the install
+             block; a sixth element restating the headline in animated text was
+             the weakest of the six. The page's real product footage lives in
+             #studio, where it proves something. -->
+        <p class="text-text-muted text-xs mt-6 text-center leading-relaxed">
+          <a href="https://www.youtube.com/watch?v=sc2qEDnDeP0" target="_blank" rel="noopener"
+             class="text-text-secondary hover:text-text-primary underline underline-offset-2">Watch the 59-second overview</a>
+        </p>
       </div>
     </div>
   </section>
@@ -335,7 +399,7 @@
 
       <!-- Dogfooding: the most credible claim available pre-testimonials. -->
       <p class="fade-in text-center text-text-muted text-sm mt-6">
-        Archflow plans and ships Archflow — the
+        Archflow plans and ships Archflow: the
         <code class="font-mono text-text-secondary">.archflow/</code>
         directory is in
         <a href="https://github.com/AZidan/archflow/tree/main/.archflow" target="_blank" rel="noopener" class="text-accent-light hover:underline">this repo</a>.
@@ -380,11 +444,11 @@
           Vibe coding gets you to a demo. It doesn't get you to a product.
         </h2>
         <p class="text-text-secondary text-lg leading-relaxed max-w-2xl mx-auto mt-5">
-          That's not a knock — moving fast is the right call early on. But when an LLM hits a gap in context, it doesn't stop. It fills the gap with whatever looks right, and those guesses compound. Archflow closes the gaps before code is written, so what you build holds together as it grows.
+          That's not a knock: moving fast is the right call early on. But when an LLM hits a gap in context, it doesn't stop. It fills the gap with whatever looks right, and those guesses compound. Archflow closes the gaps before code is written, so what you build holds together as it grows.
         </p>
       </div>
       <div class="fade-in max-w-4xl mx-auto">
-        <img id="vs-diagram" src="vibecoding-vs-archflow.svg" alt="Vibe Coding vs Archflow — comparison showing how vibe coding loops through gaps and hallucinations while Archflow uses structured phases with human approval gates" class="w-full h-auto rounded-2xl border border-dark-700/40" />
+        <img id="vs-diagram" src="vibecoding-vs-archflow.svg" alt="Vibe Coding vs Archflow: comparison showing how vibe coding loops through gaps and hallucinations while Archflow uses structured phases with human approval gates" class="w-full h-auto rounded-2xl border border-dark-700/40" />
       </div>
     </div>
   </section>
@@ -438,11 +502,98 @@
           </div>
           <h3 class="font-heading text-xl font-600 text-text-primary mb-3">Phase Gates</h3>
           <p class="text-text-secondary text-sm leading-relaxed">
-            6 phases from strategy to deployment. Nothing moves forward without your approval. No skipped steps. No autonomous decisions on what ships &mdash; even <a href="#autopilot" class="text-accent-light hover:underline">autopilot</a> stops short of <span class="font-mono text-xs">main</span>.
+            6 phases from strategy to deployment. Nothing moves forward without your approval. No skipped steps. No autonomous decisions on what ships; even <a href="#autopilot" class="text-accent-light hover:underline">autopilot</a> stops short of <span class="font-mono text-xs">main</span>.
           </p>
         </div>
       </div>
     </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ============================================ -->
+  <!-- STUDIO                                                                  -->
+  <!-- Third on the page, before Phases: "what does this actually look like"   -->
+  <!-- is the question a reader forms right after How it works, and Studio is  -->
+  <!-- the only answer that is visual. Beta is stated, not buried.             -->
+  <!-- ============================================ -->
+  <section id="studio" class="relative py-14 md:py-20">
+    <div class="max-w-container mx-auto px-6">
+      <div class="fade-in text-center mb-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1 mb-5 rounded-full border border-accent/30 bg-accent/10">
+          <span class="font-heading text-xs font-600 text-accent-light uppercase tracking-wider">Beta</span>
+        </div>
+        <h2 class="font-heading text-3xl md:text-4xl lg:text-5xl font-700 leading-tight tracking-tight max-w-3xl mx-auto">
+          Or don&rsquo;t use the terminal at all
+        </h2>
+        <p class="text-text-secondary text-lg leading-relaxed max-w-2xl mx-auto mt-5">
+          One command opens a local workspace over the same files: the roadmap becomes a board, the release a pipeline. Install the plugin, open Studio, and the terminal is optional from there.
+        </p>
+      </div>
+
+      <div class="fade-in max-w-2xl mx-auto mb-10 text-center">
+        <code class="font-mono text-sm text-accent-light">/archflow:studio</code>
+      </div>
+
+      <!-- The loop belongs HERE, not in the hero: this is the section whose
+           whole claim is "it is visual", and it was the only feature section
+           with no visual. 167KB, preload=none, same player behaviour as the
+           hero promo (scroll to play, click to pause, reduced-motion aware). -->
+      <div class="fade-in max-w-3xl mx-auto mb-12">
+        <div class="relative rounded-xl overflow-hidden border border-dark-700/60 shadow-2xl">
+          <video
+            id="studio-video" data-video-autoplay
+            class="w-full h-auto block cursor-pointer"
+            muted loop playsinline preload="none"
+            poster="assets/video/studio-poster.jpg"
+            aria-label="Archflow Studio cutting a release and starting it. Click to pause.">
+            <source src="assets/video/studio-loop.mp4" type="video/mp4">
+          </video>
+          <noscript>
+            <img src="assets/video/studio-poster.jpg" alt="Archflow Studio showing a release board" width="1280" height="720" class="w-full h-auto block" />
+          </noscript>
+        </div>
+        <p class="text-text-muted text-xs mt-2.5 text-center">Cutting a release and starting it, in Studio.</p>
+      </div>
+
+      <div class="fade-in max-w-4xl mx-auto grid md:grid-cols-3 gap-4">
+        <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-6">
+          <h3 class="font-heading text-base font-600 text-text-primary mb-2">It sets itself up</h3>
+          <p class="text-text-secondary text-sm leading-relaxed">
+            Point it at a folder and Studio runs onboarding for you. An older project gets a one-button migration to the current schema. Either way you land on a board, not a blank file.
+          </p>
+        </div>
+        <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-6">
+          <h3 class="font-heading text-base font-600 text-text-primary mb-2">Its chat is your session, forked</h3>
+          <p class="text-text-secondary text-sm leading-relaxed">
+            Opened beside a running Claude Code session, Studio&rsquo;s chat starts with that conversation&rsquo;s history on a branch, so you don&rsquo;t re-explain the project to a second assistant.
+          </p>
+        </div>
+        <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-6">
+          <h3 class="font-heading text-base font-600 text-text-primary mb-2">Local, and only local</h3>
+          <p class="text-text-secondary text-sm leading-relaxed">
+            Binds to <span class="font-mono text-xs">127.0.0.1</span> with an origin allowlist. No cloud service, no telemetry, no account. Your code and your credentials never leave the machine.
+          </p>
+        </div>
+      </div>
+
+    </div>
+      <!-- Beta is doing RECRUITMENT here, not disclosure: it is there to pull in
+           early adopters who report back. A label with no channel recruits
+           nobody and just reads as "unfinished", so it ships with the ask and a
+           link. The proof line is the same device the hero uses ("20+ real
+           projects, including this one") and is checkable in the repo. -->
+      <p class="fade-in text-text-muted text-sm text-center mt-10 max-w-2xl mx-auto leading-relaxed">
+        Studio is what ships Studio: <span class="text-text-secondary">4 releases and 71 stories</span> so far,
+        planned and driven from the board above. It&rsquo;s marked beta because features are still landing, and because
+        <a href="https://github.com/AZidan/archflow/issues" target="_blank" rel="noopener"
+           class="text-accent-light hover:underline">what you tell us is missing</a> decides which land next.
+      </p>
+      <p class="fade-in text-center mt-6">
+        <a href="guides/studio/" class="inline-flex items-center gap-1.5 text-sm text-accent-light hover:underline">Full guide: using Archflow Studio<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+      </p>
+
+
   </section>
 
   <div class="section-divider"></div>
@@ -566,19 +717,19 @@
         <div class="space-y-3">
           <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <span class="text-text-secondary text-sm flex-1">&ldquo;I can&rsquo;t decide what to build next.&rdquo;</span>
-            <span class="text-accent-light font-mono text-xs sm:text-right sm:w-64">Phase 1 &mdash; strategy, personas, KPIs</span>
+            <span class="text-accent-light font-mono text-xs sm:text-right sm:w-64">Phase 1: strategy, personas, KPIs</span>
           </div>
           <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <span class="text-text-secondary text-sm flex-1">&ldquo;Frontend and backend disagree about the API.&rdquo;</span>
-            <span class="text-accent-light font-mono text-xs sm:text-right sm:w-64">Phase 2.5 &mdash; one contract, both sides</span>
+            <span class="text-accent-light font-mono text-xs sm:text-right sm:w-64">Phase 2.5: one contract, both sides</span>
           </div>
           <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <span class="text-text-secondary text-sm flex-1">&ldquo;I&rsquo;m scared to change anything.&rdquo;</span>
-            <span class="text-accent-light font-mono text-xs sm:text-right sm:w-64">Phase 3 &mdash; tests and acceptance criteria</span>
+            <span class="text-accent-light font-mono text-xs sm:text-right sm:w-64">Phase 3: tests and acceptance criteria</span>
           </div>
         </div>
         <p class="text-text-muted text-xs text-center mt-6">
-          <a href="#prototype" class="text-accent-light hover:underline">See all six &rarr;</a>
+          <a href="#start" data-select-tab="tab-proto" class="text-accent-light hover:underline">See all six &rarr;</a>
         </p>
       </div>
     </div>
@@ -587,158 +738,121 @@
   <div class="section-divider"></div>
 
   <!-- ============================================ -->
-  <!-- PROTOTYPE TO PRODUCT -->
+  <!-- START PATHS (tabs)                                                      -->
+  <!-- Was two full sections, 317 words and 8 cards, with the three guide      -->
+  <!-- links buried in their prose. A visitor is exactly ONE of these three    -->
+  <!-- and never needs the other two - the one shape tabs genuinely fit.       -->
+  <!-- Panels ship WITHOUT [hidden]: script adds it, so no-JS shows all three  -->
+  <!-- rather than trapping content behind a control that never loaded.        -->
   <!-- ============================================ -->
-  <section id="prototype" class="relative py-14 md:py-20">
+  <section id="start" class="relative py-14 md:py-20">
     <div class="max-w-container mx-auto px-6">
       <div class="fade-in text-center mb-10">
         <h2 class="font-heading text-3xl md:text-4xl lg:text-5xl font-700 leading-tight tracking-tight max-w-3xl mx-auto">
-          Already shipped something? Start from there.
+          Start from wherever you already are
         </h2>
         <p class="text-text-secondary text-lg leading-relaxed max-w-2xl mx-auto mt-5">
-          Your prototype works. People are using it. What it doesn't have is a roadmap, an API contract, a test plan, or a defensible answer to what 1.0 means.
+          Archflow reads what exists before it plans anything. Pick whichever sounds like your repo.
         </p>
-      </div>
-
-      <div class="fade-in max-w-3xl mx-auto mb-12">
-        <div class="rounded-2xl border border-accent/20 bg-accent/5 p-8 md:p-10">
-          <div class="font-mono text-sm text-accent-light mb-4">/archflow:onboard</div>
-          <p class="text-text-secondary text-base leading-relaxed">
-            Onboarding audits what you shipped and <span class="text-text-primary font-500">reconstructs the plan around it</span>. Where it finds working code with no story behind it, it writes the story and marks it delivered — so your roadmap opens describing reality, not pretending you're on day one.
-          </p>
-        </div>
       </div>
 
       <div class="fade-in max-w-3xl mx-auto">
-        <p class="text-text-muted text-sm uppercase tracking-wider mb-6 text-center">Then close the gaps that are costing you</p>
-        <div class="grid sm:grid-cols-2 gap-4">
-          <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-5">
-            <p class="text-text-secondary text-sm leading-relaxed">Can't decide what to build next</p>
-            <p class="text-accent-light font-mono text-xs mt-2">Phase 1 — strategy, personas, KPIs</p>
-          </div>
-          <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-5">
-            <p class="text-text-secondary text-sm leading-relaxed">Every screen looks slightly different</p>
-            <p class="text-accent-light font-mono text-xs mt-2">Phase 2 — design system</p>
-          </div>
-          <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-5">
-            <p class="text-text-secondary text-sm leading-relaxed">Frontend and backend disagree about the API</p>
-            <p class="text-accent-light font-mono text-xs mt-2">Phase 2.5 — contract both sides build against</p>
-          </div>
-          <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-5">
-            <p class="text-text-secondary text-sm leading-relaxed">Scared to change anything</p>
-            <p class="text-accent-light font-mono text-xs mt-2">Phase 3 — tests and acceptance criteria</p>
-          </div>
-          <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-5">
-            <p class="text-text-secondary text-sm leading-relaxed">No idea if it's secure or fast enough</p>
-            <p class="text-accent-light font-mono text-xs mt-2">Phase 4 — review and optimization</p>
-          </div>
-          <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-5">
-            <p class="text-text-secondary text-sm leading-relaxed">No repeatable way to ship</p>
-            <p class="text-accent-light font-mono text-xs mt-2">Phase 5 — CI/CD, versioning, app store</p>
-          </div>
+        <div role="tablist" data-tabs="start" aria-label="Ways to start" class="flex flex-wrap justify-center gap-2 mb-8">
+          <button type="button" role="tab" id="tab-existing" aria-controls="panel-existing" aria-selected="true"
+                  class="start-tab font-heading text-sm font-500 px-5 py-3 rounded-xl cursor-pointer">I have a codebase</button>
+          <button type="button" role="tab" id="tab-proto" aria-controls="panel-proto" aria-selected="false"
+                  class="start-tab font-heading text-sm font-500 px-5 py-3 rounded-xl cursor-pointer">I have a prototype</button>
+          <button type="button" role="tab" id="tab-new" aria-controls="panel-new" aria-selected="false"
+                  class="start-tab font-heading text-sm font-500 px-5 py-3 rounded-xl cursor-pointer">I&rsquo;m starting fresh</button>
         </div>
 
-        <p class="text-text-muted text-sm leading-relaxed mt-8 pt-6 border-t border-dark-700/50">
-          <span class="text-text-secondary font-500">What this does and doesn't do:</span> you get the plan, contracts, and quality gates your prototype never had, and Phase 4 agents review code quality, security, and performance. Archflow will not silently rewrite your architecture. You decide what gets refactored — it makes sure you know what needs it.
-        </p>
+        <!-- PANEL 1 - existing codebase (default: the largest audience) -->
+        <div role="tabpanel" id="panel-existing" aria-labelledby="tab-existing" tabindex="0" class="focus:outline-none">
+          <div class="rounded-2xl border border-accent/20 bg-accent/5 p-8 md:p-10 mb-6">
+            <div class="font-mono text-sm text-accent-light mb-4">/archflow:onboard</div>
+            <p class="text-text-secondary text-base leading-relaxed">
+              Most AI workflows assume you&rsquo;re starting from scratch. This is the step that doesn&rsquo;t. It dispatches up to 9 agents in parallel: they audit your code, import docs from Jira, Notion, Linear, GitHub and Slack, <span class="text-text-primary font-500">reverse-engineer your design system and API contracts</span>, and drop you into the right phase.
+            </p>
+          </div>
+          <div class="grid sm:grid-cols-3 gap-6 mb-6">
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
+                <span class="font-heading font-700 text-accent-light text-sm">1</span>
+              </div>
+              <p class="text-text-secondary text-sm pt-1">Answer 5 questions</p>
+            </div>
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
+                <span class="font-heading font-700 text-accent-light text-sm">2</span>
+              </div>
+              <p class="text-text-secondary text-sm pt-1">Up to 9 agents analyze in parallel</p>
+            </div>
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
+                <span class="font-heading font-700 text-accent-light text-sm">3</span>
+              </div>
+              <p class="text-text-secondary text-sm pt-1">Artifacts generated for your approval</p>
+            </div>
+          </div>
+          <a href="guides/existing-codebase/" class="inline-flex items-center gap-1.5 text-sm text-accent-light hover:underline">Full guide: onboarding an existing codebase<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+        </div>
 
-        <a href="guides/prototype-to-product/" class="inline-flex items-center gap-1.5 mt-6 text-sm text-accent-light hover:underline">Full guide: taking a prototype to production<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+        <!-- PANEL 2 - prototype -->
+        <div role="tabpanel" id="panel-proto" aria-labelledby="tab-proto" tabindex="0" class="focus:outline-none">
+          <div class="rounded-2xl border border-accent/20 bg-accent/5 p-8 md:p-10 mb-6">
+            <div class="font-mono text-sm text-accent-light mb-4">/archflow:onboard</div>
+            <p class="text-text-secondary text-base leading-relaxed">
+              Your prototype works. People are using it. What it doesn&rsquo;t have is a roadmap, an API contract, a test plan, or a defensible answer to what 1.0 means. Onboarding audits what you shipped and <span class="text-text-primary font-500">reconstructs the plan around it</span>; where it finds working code with no story behind it, it writes the story and marks it delivered.
+            </p>
+          </div>
+          <p class="text-text-muted text-sm uppercase tracking-wider mb-4">Then close the gaps that are costing you</p>
+          <div class="grid sm:grid-cols-2 gap-3 mb-6">
+            <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-4">
+              <p class="text-text-secondary text-sm leading-relaxed">Can&rsquo;t decide what to build next</p>
+              <p class="text-accent-light font-mono text-xs mt-1.5">Phase 1: strategy, personas, KPIs</p>
+            </div>
+            <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-4">
+              <p class="text-text-secondary text-sm leading-relaxed">Every screen looks slightly different</p>
+              <p class="text-accent-light font-mono text-xs mt-1.5">Phase 2: design system</p>
+            </div>
+            <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-4">
+              <p class="text-text-secondary text-sm leading-relaxed">Frontend and backend disagree about the API</p>
+              <p class="text-accent-light font-mono text-xs mt-1.5">Phase 2.5: contract both sides build against</p>
+            </div>
+            <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-4">
+              <p class="text-text-secondary text-sm leading-relaxed">Scared to change anything</p>
+              <p class="text-accent-light font-mono text-xs mt-1.5">Phase 3: tests and acceptance criteria</p>
+            </div>
+            <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-4">
+              <p class="text-text-secondary text-sm leading-relaxed">No idea if it&rsquo;s secure or fast enough</p>
+              <p class="text-accent-light font-mono text-xs mt-1.5">Phase 4: review and optimization</p>
+            </div>
+            <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-4">
+              <p class="text-text-secondary text-sm leading-relaxed">No repeatable way to ship</p>
+              <p class="text-accent-light font-mono text-xs mt-1.5">Phase 5: CI/CD, versioning, app store</p>
+            </div>
+          </div>
+          <p class="text-text-muted text-sm leading-relaxed mb-5 pt-5 border-t border-dark-700/50">
+            <span class="text-text-secondary font-500">What this does and doesn&rsquo;t do:</span> you get the plan, contracts, and quality gates your prototype never had, and Phase 4 agents review code quality, security, and performance. Archflow will not silently rewrite your architecture. You decide what gets refactored; it makes sure you know what needs it.
+          </p>
+          <a href="guides/prototype-to-product/" class="inline-flex items-center gap-1.5 text-sm text-accent-light hover:underline">Full guide: taking a prototype to production<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+        </div>
+
+        <!-- PANEL 3 - new project -->
+        <div role="tabpanel" id="panel-new" aria-labelledby="tab-new" tabindex="0" class="focus:outline-none">
+          <div class="rounded-2xl border border-accent/20 bg-accent/5 p-8 md:p-10 mb-6">
+            <div class="font-mono text-sm text-accent-light mb-4">/archflow:init</div>
+            <p class="text-text-secondary text-base leading-relaxed">
+              A blank directory starts at Phase 1, where a <span class="text-text-primary font-500">product-strategist</span> works out who this is for and what success means before a line of code exists. Design, API contract, then implementation, each phase gated on your approval.
+            </p>
+          </div>
+          <a href="guides/new-project/" class="inline-flex items-center gap-1.5 text-sm text-accent-light hover:underline">Full guide: starting a new project<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+        </div>
       </div>
     </div>
   </section>
 
-  <div class="section-divider"></div>
 
-  <!-- ============================================ -->
-  <!-- EXISTING PROJECTS -->
-  <!-- ============================================ -->
-  <section class="relative py-14 md:py-20">
-    <div class="max-w-container mx-auto px-6">
-      <div class="fade-in max-w-3xl mx-auto">
-        <h2 class="font-heading text-3xl md:text-4xl lg:text-5xl font-700 leading-tight tracking-tight mb-6">
-          Inside <span class="font-mono text-accent-light">/archflow:onboard</span>
-        </h2>
-        <p class="text-text-secondary text-lg leading-relaxed mb-8">
-          Most AI workflows assume you're starting from scratch. This is the step that doesn't — here's exactly what it does to your repo.
-        </p>
-        <p class="text-text-secondary text-base leading-relaxed mb-10">
-          Run <code class="text-accent-light font-mono text-sm bg-dark-800 px-2 py-0.5 rounded">/archflow:onboard</code> and it dispatches up to 9 agents in parallel. They audit your code, import docs from Jira, Notion, Linear, GitHub, and Slack, reverse-engineer your design system and API contracts, and drop you into the right phase.
-        </p>
-
-        <!-- Steps -->
-        <div class="grid sm:grid-cols-3 gap-6 mb-10">
-          <div class="fade-in flex items-start gap-4">
-            <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
-              <span class="font-heading font-700 text-accent-light text-sm">1</span>
-            </div>
-            <p class="text-text-secondary text-sm pt-1">Answer 5 questions</p>
-          </div>
-          <div class="fade-in flex items-start gap-4" style="transition-delay: 0.1s;">
-            <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
-              <span class="font-heading font-700 text-accent-light text-sm">2</span>
-            </div>
-            <p class="text-text-secondary text-sm pt-1">Up to 9 agents analyze in parallel</p>
-          </div>
-          <div class="fade-in flex items-start gap-4" style="transition-delay: 0.2s;">
-            <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
-              <span class="font-heading font-700 text-accent-light text-sm">3</span>
-            </div>
-            <p class="text-text-secondary text-sm pt-1">Artifacts generated for your approval</p>
-          </div>
-        </div>
-
-        <!-- Callout -->
-        <div class="fade-in rounded-xl border border-dark-700/60 bg-dark-800/30 px-6 py-4">
-          <p class="text-text-muted text-sm">
-            New project? <code class="text-accent-light font-mono text-xs bg-dark-800 px-1.5 py-0.5 rounded">/archflow:init</code> starts you at Phase 1.
-          </p>
-          <div class="flex flex-wrap gap-x-6 gap-y-2 mt-3">
-            <a href="guides/existing-codebase/" class="inline-flex items-center gap-1.5 text-sm text-accent-light hover:underline">Full guide: onboarding an existing codebase<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
-            <a href="guides/new-project/" class="inline-flex items-center gap-1.5 text-sm text-accent-light hover:underline">Full guide: starting a new project<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <div class="section-divider"></div>
-
-  <!-- ============================================ -->
-  <!-- SCALES WITH YOU (objection: too much process) -->
-  <!-- ============================================ -->
-  <section class="relative py-14 md:py-20">
-    <div class="max-w-container mx-auto px-6">
-      <div class="fade-in text-center mb-10">
-        <h2 class="font-heading text-3xl md:text-4xl lg:text-5xl font-700 leading-tight tracking-tight max-w-3xl mx-auto">
-          Too much process for a weekend project?
-        </h2>
-        <p class="text-text-secondary text-lg leading-relaxed max-w-2xl mx-auto mt-5">
-          Then don't run it. Archflow has two modes over the same schema, and new projects start in the light one.
-        </p>
-      </div>
-
-      <div class="fade-in grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-        <div class="rounded-2xl border border-accent/30 bg-dark-800/50 p-8">
-          <div class="font-mono text-sm text-accent-light mb-3">quick</div>
-          <h3 class="font-heading text-lg font-600 text-text-primary mb-3">Solo, small, moving fast</h3>
-          <p class="text-text-secondary text-sm leading-relaxed">
-            One implicit release. Gates that record but never block. No ship ceremony until you ask for one. You still get agents, contracts, and phases — without the paperwork.
-          </p>
-        </div>
-        <div class="rounded-2xl border border-dark-700/60 bg-dark-800/50 p-8">
-          <div class="font-mono text-sm text-text-muted mb-3">full</div>
-          <h3 class="font-heading text-lg font-600 text-text-primary mb-3">Team, releases, real stakes</h3>
-          <p class="text-text-secondary text-sm leading-relaxed">
-            Explicit release pipeline, enforced readiness gates, role lanes for PM, design, architecture, and QA. Everything a second contributor makes necessary.
-          </p>
-        </div>
-      </div>
-
-      <p class="fade-in text-text-muted text-sm text-center mt-10 max-w-xl mx-auto">
-        Same schema either way, so switching costs nothing. When Archflow notices you've outgrown <span class="font-mono text-text-secondary">quick</span> — a second release, a second contributor — it offers the upgrade. It never forces it.
-      </p>
-    </div>
-  </section>
 
   <div class="section-divider"></div>
 
@@ -766,7 +880,7 @@
         <!-- Command 2 -->
         <div class="fade-in card-glow rounded-xl border border-dark-700/60 bg-dark-800/40 p-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6" style="transition-delay: 0.08s;">
           <code class="text-accent-light font-mono text-sm font-500 whitespace-nowrap">/archflow:feature</code>
-          <span class="text-text-muted text-sm">Add a story — capture it, or branch and build it now</span>
+          <span class="text-text-muted text-sm">Add a story: capture it, or branch and build it now</span>
         </div>
 
         <!-- Command 3 -->
@@ -776,39 +890,18 @@
         </div>
       </div>
 
-      <div class="fade-in max-w-2xl mx-auto mt-10">
-        <p class="text-text-muted text-sm uppercase tracking-wider mb-5 text-center">Plus, when you need them</p>
-        <div class="grid sm:grid-cols-2 gap-3">
-          <div class="rounded-lg border border-dark-700/40 bg-dark-800/25 px-4 py-3">
-            <code class="text-accent-light font-mono text-xs">/archflow:init</code>
-            <span class="text-text-muted text-xs block mt-1">Start a new project at Phase 1</span>
-          </div>
-          <div class="rounded-lg border border-dark-700/40 bg-dark-800/25 px-4 py-3">
-            <code class="text-accent-light font-mono text-xs">/archflow:onboard</code>
-            <span class="text-text-muted text-xs block mt-1">Analyze an existing codebase</span>
-          </div>
-          <div class="rounded-lg border border-dark-700/40 bg-dark-800/25 px-4 py-3">
-            <code class="text-accent-light font-mono text-xs">/archflow:release</code>
-            <span class="text-text-muted text-xs block mt-1">Create, start, and ship releases</span>
-          </div>
-          <div class="rounded-lg border border-dark-700/40 bg-dark-800/25 px-4 py-3">
-            <code class="text-accent-light font-mono text-xs">/archflow:mode</code>
-            <span class="text-text-muted text-xs block mt-1">Switch between quick and full</span>
-          </div>
-          <div class="rounded-lg border border-dark-700/40 bg-dark-800/25 px-4 py-3">
-            <code class="text-accent-light font-mono text-xs">/archflow:setup-mcp</code>
-            <span class="text-text-muted text-xs block mt-1">Connect Jira, Notion, Linear, GitHub</span>
-          </div>
-          <div class="rounded-lg border border-dark-700/40 bg-dark-800/25 px-4 py-3">
-            <code class="text-accent-light font-mono text-xs">/archflow:migrate</code>
-            <span class="text-text-muted text-xs block mt-1">Upgrade a v1.0 project to v2.0</span>
-          </div>
-          <div class="rounded-lg border border-dark-700/40 bg-dark-800/25 px-4 py-3">
-            <code class="text-accent-light font-mono text-xs">/archflow:autopilot</code>
-            <span class="text-text-muted text-xs block mt-1">Build a release unattended, on one branch</span>
-          </div>
-        </div>
-      </div>
+      <p class="fade-in max-w-2xl mx-auto mt-8 text-text-muted text-sm text-center leading-relaxed">
+        Plus eight more for setup, releases and pace:
+        <span class="font-mono text-xs">init</span>,
+        <span class="font-mono text-xs">onboard</span>,
+        <span class="font-mono text-xs">release</span>,
+        <span class="font-mono text-xs">mode</span>,
+        <span class="font-mono text-xs">autopilot</span>,
+        <span class="font-mono text-xs">studio</span>,
+        <span class="font-mono text-xs">setup-mcp</span>,
+        <span class="font-mono text-xs">migrate</span>.
+        <a href="https://github.com/AZidan/archflow#commands" target="_blank" rel="noopener" class="text-accent-light hover:underline">Full reference</a>
+      </p>
     </div>
   </section>
 
@@ -824,7 +917,7 @@
           Hand it the release. Go to sleep.
         </h2>
         <p class="text-text-secondary text-lg leading-relaxed max-w-2xl mx-auto mt-5">
-          Autopilot asks you everything it can&rsquo;t decide alone up front &mdash; in one batch &mdash; then goes silent and builds story after story. One report in the morning.
+          Autopilot asks you everything it can&rsquo;t decide alone up front (in one batch), then goes silent and builds story after story. One report in the morning.
         </p>
       </div>
 
@@ -832,7 +925,7 @@
         <div class="rounded-2xl border border-accent/20 bg-accent/5 p-8 md:p-10">
           <div class="font-mono text-sm text-accent-light mb-4">/archflow:autopilot</div>
           <p class="text-text-secondary text-base leading-relaxed">
-            The interview comes first: product behaviour, trade-offs, anything irreversible, each as a question with real options to pick from. Your answers are <span class="text-text-primary font-500">written to a run ledger before any code moves</span> &mdash; so they survive the hours, and the context compactions, that follow.
+            The interview comes first: product behaviour, trade-offs, anything irreversible, each as a question with real options to pick from. Your answers are <span class="text-text-primary font-500">written to a run ledger before any code moves</span>, so they survive the hours, and the context compactions, that follow.
           </p>
         </div>
       </div>
@@ -861,17 +954,17 @@
       <div class="fade-in max-w-2xl mx-auto">
         <p class="text-text-muted text-sm uppercase tracking-wider mb-5 text-center">What you wake up to</p>
         <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-6 font-mono text-xs leading-relaxed overflow-x-auto">
-          <div class="text-text-primary">Autopilot run 2026-08-24-1 &mdash; 4 done, 1 parked, 0 failed</div>
+          <div class="text-text-primary">Autopilot run 2026-08-24-1: 4 done, 1 parked, 0 failed</div>
           <div class="text-text-muted mb-3">Branch: checkout-redesign-overnight (14 commits, not merged to main)</div>
           <div class="text-accent-light">DONE</div>
-          <div class="text-text-secondary">&nbsp;&nbsp;[S3-04] Saved payment methods &mdash; QA pass, accepted</div>
-          <div class="text-text-secondary mb-3">&nbsp;&nbsp;[S3-05] Card deletion &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&mdash; QA pass, accepted</div>
+          <div class="text-text-secondary">&nbsp;&nbsp;[S3-04] Saved payment methods: QA pass, accepted</div>
+          <div class="text-text-secondary mb-3">&nbsp;&nbsp;[S3-05] Card deletion:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; QA pass, accepted</div>
           <div class="text-accent-light">PARKED (blocking the release)</div>
           <div class="text-text-secondary">&nbsp;&nbsp;[S3-07] Refund flow</div>
-          <div class="text-text-muted">&nbsp;&nbsp;&nbsp;&nbsp;Q: Partial refunds &mdash; original card, or store credit?</div>
+          <div class="text-text-muted">&nbsp;&nbsp;&nbsp;&nbsp;Q: Partial refunds, to the original card or store credit?</div>
         </div>
         <p class="text-text-muted text-sm leading-relaxed mt-6 pt-6 border-t border-dark-700/50">
-          A parked story blocks the release until you answer it &mdash; a release doesn&rsquo;t ship with an open product question inside it. Answer, then <span class="font-mono text-xs text-accent-light">/archflow:autopilot resume</span> picks up where it stopped.
+          A parked story blocks the release until you answer it: a release doesn&rsquo;t ship with an open product question inside it. Answer, then <span class="font-mono text-xs text-accent-light">/archflow:autopilot resume</span> picks up where it stopped.
         </p>
       </div>
     </div>
@@ -879,111 +972,117 @@
 
   <div class="section-divider"></div>
 
+  <!-- Project types: was a full section with four icon cards for 23 words of
+       copy. The chrome outweighed the content, so it is a strip now. -->
+  <div class="relative py-10">
+    <div class="max-w-container mx-auto px-6">
+      <p class="fade-in text-text-muted text-sm text-center max-w-2xl mx-auto leading-relaxed">
+        Adapts to what you&rsquo;re building:
+        <span class="text-text-secondary">fullstack</span>,
+        <span class="text-text-secondary">frontend</span>,
+        <span class="text-text-secondary">backend</span>, or
+        <span class="text-text-secondary">mobile</span>.
+        Phases, agents, and roadmap structure adjust to the project type, set automatically during onboarding.
+      </p>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
   <!-- ============================================ -->
-  <!-- PROJECT TYPES -->
+  <!-- OBJECTIONS (accordion)                                                  -->
+  <!-- Was two full sections, 346 words: "too much process for a weekend       -->
+  <!-- project?" and "isn't this just a big CLAUDE.md file?". Both are the     -->
+  <!-- page's strongest objection handling, so nothing here is cut - it is     -->
+  <!-- collapsed. <details> is used rather than a JS accordion because it is   -->
+  <!-- keyboard- and screen-reader-correct for free, and degrades to plain     -->
+  <!-- open content with no script at all. The first stays open so a scroller  -->
+  <!-- still catches an answer in passing.                                     -->
   <!-- ============================================ -->
-  <section class="relative py-14 md:py-20">
+  <section id="objections" class="relative py-14 md:py-20">
     <div class="max-w-container mx-auto px-6">
       <div class="fade-in text-center mb-10">
         <h2 class="font-heading text-3xl md:text-4xl lg:text-5xl font-700 leading-tight tracking-tight">
-          Adapts to what you're building
+          The two questions everyone asks
         </h2>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-3xl mx-auto">
-        <!-- Fullstack -->
-        <div class="fade-in card-glow rounded-2xl border border-dark-700/60 bg-dark-800/40 p-6 text-center">
-          <div class="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-4">
-            <svg class="w-6 h-6 text-accent-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L12 12.75 6.429 9.75m11.142 0l4.179 2.25-9.75 5.25-9.75-5.25 4.179-2.25"/>
+      <div class="fade-in max-w-3xl mx-auto space-y-4">
+
+        <details class="faq group rounded-2xl border border-dark-700/60 bg-dark-800/40 overflow-hidden" open>
+          <summary class="cursor-pointer select-none list-none px-6 py-5 flex items-center justify-between gap-4">
+            <span class="font-heading text-lg md:text-xl font-600 text-text-primary">Too much process for a weekend project?</span>
+            <svg class="faq-chevron w-5 h-5 flex-shrink-0 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
             </svg>
+          </summary>
+          <div class="px-6 pb-6">
+            <p class="text-text-secondary leading-relaxed mb-6">
+              Then don&rsquo;t run it. Archflow has two modes over the same schema, and new projects start in the light one.
+            </p>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="rounded-xl border border-accent/30 bg-dark-800/50 p-6">
+                <div class="font-mono text-sm text-accent-light mb-2">quick</div>
+                <h3 class="font-heading text-base font-600 text-text-primary mb-2">Solo, small, moving fast</h3>
+                <p class="text-text-secondary text-sm leading-relaxed">
+                  One implicit release. Gates that record but never block. No ship ceremony until you ask for one. You still get agents, contracts, and phases, without the paperwork.
+                </p>
+              </div>
+              <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-6">
+                <div class="font-mono text-sm text-text-muted mb-2">full</div>
+                <h3 class="font-heading text-base font-600 text-text-primary mb-2">Team, releases, real stakes</h3>
+                <p class="text-text-secondary text-sm leading-relaxed">
+                  Explicit release pipeline, enforced readiness gates, role lanes for PM, design, architecture, and QA. Everything a second contributor makes necessary.
+                </p>
+              </div>
+            </div>
+            <p class="text-text-muted text-sm mt-5 leading-relaxed">
+              Same schema either way, so switching costs nothing. When Archflow notices you&rsquo;ve outgrown <span class="font-mono text-text-secondary">quick</span> (a second release, a second contributor), it offers the upgrade. It never forces it.
+            </p>
           </div>
-          <h3 class="font-heading text-sm font-600 text-text-primary">Fullstack</h3>
-        </div>
+        </details>
 
-        <!-- Frontend -->
-        <div class="fade-in card-glow rounded-2xl border border-dark-700/60 bg-dark-800/40 p-6 text-center" style="transition-delay: 0.08s;">
-          <div class="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-4">
-            <svg class="w-6 h-6 text-accent-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"/>
+        <details class="faq group rounded-2xl border border-dark-700/60 bg-dark-800/40 overflow-hidden">
+          <summary class="cursor-pointer select-none list-none px-6 py-5 flex items-center justify-between gap-4">
+            <span class="font-heading text-lg md:text-xl font-600 text-text-primary">Isn&rsquo;t this just a big CLAUDE.md file?</span>
+            <svg class="faq-chevron w-5 h-5 flex-shrink-0 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
             </svg>
+          </summary>
+          <div class="px-6 pb-6 space-y-6">
+            <p class="text-text-secondary leading-relaxed">
+              That&rsquo;s the right question, and for a while it was. Here&rsquo;s what a prompt file can&rsquo;t do.
+            </p>
+            <div>
+              <h3 class="font-heading text-base font-600 text-text-primary mb-2">A prompt file describes the process. Archflow runs it.</h3>
+              <p class="text-text-secondary text-sm leading-relaxed">
+                <code class="font-mono text-sm text-text-primary">CLAUDE.md</code> tells the model how you&rsquo;d like it to behave, then hopes it complies for the rest of the session. Archflow&rsquo;s phases are state on disk: <code class="font-mono text-sm text-text-primary">current-phase.yaml</code> knows where you are, and the agent for that phase loads only that phase&rsquo;s instructions.
+              </p>
+            </div>
+            <div>
+              <h3 class="font-heading text-base font-600 text-text-primary mb-2">One context per job, not one context for everything.</h3>
+              <p class="text-text-secondary text-sm leading-relaxed">
+                A single instruction file means every agent carries every rule: the UX designer reads your API conventions, the API engineer reads your design system. 17 scoped agents each load what their own job needs. Less noise, and no cross-contamination of concerns.
+              </p>
+            </div>
+            <div>
+              <h3 class="font-heading text-base font-600 text-text-primary mb-2">Handoffs are files you can review, not chat you have to trust.</h3>
+              <p class="text-text-secondary text-sm leading-relaxed">
+                The API contract, roadmap, and design system are artifacts in your repo. They diff in a pull request. A teammate can read them. Next month&rsquo;s session reads them too. Chat scrollback does none of that.
+              </p>
+            </div>
+            <div>
+              <h3 class="font-heading text-base font-600 text-text-primary mb-2">It reads what you already built.</h3>
+              <p class="text-text-secondary text-sm leading-relaxed">
+                <code class="font-mono text-sm text-text-primary">/archflow:onboard</code> audits an existing codebase and reconstructs the plan around it. No prompt file does archaeology.
+              </p>
+            </div>
+            <p class="text-text-secondary text-sm leading-relaxed pt-5 border-t border-dark-700/40">
+              Archflow is also <em>made of</em> files: plain markdown and YAML in <code class="font-mono text-sm text-text-primary">.archflow/</code>. If you want to fork the whole process and change every phase, that&rsquo;s a text editor and a pull request. MIT.
+            </p>
           </div>
-          <h3 class="font-heading text-sm font-600 text-text-primary">Frontend</h3>
-        </div>
+        </details>
 
-        <!-- Backend -->
-        <div class="fade-in card-glow rounded-2xl border border-dark-700/60 bg-dark-800/40 p-6 text-center" style="transition-delay: 0.16s;">
-          <div class="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-4">
-            <svg class="w-6 h-6 text-accent-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z"/>
-            </svg>
-          </div>
-          <h3 class="font-heading text-sm font-600 text-text-primary">Backend</h3>
-        </div>
-
-        <!-- Mobile -->
-        <div class="fade-in card-glow rounded-2xl border border-dark-700/60 bg-dark-800/40 p-6 text-center" style="transition-delay: 0.24s;">
-          <div class="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-4">
-            <svg class="w-6 h-6 text-accent-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/>
-            </svg>
-          </div>
-          <h3 class="font-heading text-sm font-600 text-text-primary">Mobile</h3>
-        </div>
-      </div>
-
-      <p class="fade-in text-text-muted text-sm text-center mt-10 max-w-lg mx-auto">
-        Phases, agents, and roadmap structure adjust based on project type. Set automatically during onboarding.
-      </p>
-    </div>
-  </section>
-
-  <div class="section-divider"></div>
-
-  <!-- ============================================ -->
-  <!-- OBJECTION: isn't this just a CLAUDE.md file? -->
-  <!-- ============================================ -->
-  <section class="relative py-14 md:py-20">
-    <div class="max-w-container mx-auto px-6">
-      <div class="fade-in text-center mb-4">
-        <h2 class="font-heading text-3xl md:text-4xl lg:text-5xl font-700 leading-tight tracking-tight mb-4">
-          Isn&rsquo;t this just a big CLAUDE.md file?
-        </h2>
-        <p class="text-text-secondary text-lg leading-relaxed max-w-2xl mx-auto">
-          That&rsquo;s the right question, and for a while it was. Here&rsquo;s what a prompt file can&rsquo;t do.
-        </p>
-      </div>
-
-      <div class="fade-in max-w-3xl mx-auto mt-12 space-y-8">
-        <div>
-          <h3 class="font-heading text-lg md:text-xl font-600 mb-2">A prompt file describes the process. Archflow runs it.</h3>
-          <p class="text-text-secondary leading-relaxed">
-            <code class="font-mono text-sm text-text-primary">CLAUDE.md</code> tells the model how you&rsquo;d like it to behave, then hopes it complies for the rest of the session. Archflow&rsquo;s phases are state on disk &mdash; <code class="font-mono text-sm text-text-primary">current-phase.yaml</code> knows where you are, and the agent for that phase loads only that phase&rsquo;s instructions.
-          </p>
-        </div>
-        <div>
-          <h3 class="font-heading text-lg md:text-xl font-600 mb-2">One context per job, not one context for everything.</h3>
-          <p class="text-text-secondary leading-relaxed">
-            A single instruction file means every agent carries every rule &mdash; the UX designer reads your API conventions, the API engineer reads your design system. 17 scoped agents each load what their own job needs. Less noise, and no cross-contamination of concerns.
-          </p>
-        </div>
-        <div>
-          <h3 class="font-heading text-lg md:text-xl font-600 mb-2">Handoffs are files you can review, not chat you have to trust.</h3>
-          <p class="text-text-secondary leading-relaxed">
-            The API contract, roadmap, and design system are artifacts in your repo. They diff in a pull request. A teammate can read them. Next month&rsquo;s session reads them too. Chat scrollback does none of that.
-          </p>
-        </div>
-        <div>
-          <h3 class="font-heading text-lg md:text-xl font-600 mb-2">It reads what you already built.</h3>
-          <p class="text-text-secondary leading-relaxed">
-            <code class="font-mono text-sm text-text-primary">/archflow:onboard</code> audits an existing codebase and reconstructs the plan around it. No prompt file does archaeology.
-          </p>
-        </div>
-        <div class="border-t border-dark-700/40">
-          <p class="text-text-secondary leading-relaxed pt-6">
-            Archflow is also <em>made of</em> files &mdash; plain markdown and YAML in <code class="font-mono text-sm text-text-primary">.archflow/</code>. If you want to fork the whole process and change every phase, that&rsquo;s a text editor and a pull request. MIT.
-          </p>
-        </div>
       </div>
     </div>
   </section>
@@ -1031,6 +1130,14 @@
         </div>
       </div>
 
+      <!-- The fork that makes the widened audience real rather than claimed:
+           the install used to end at a slash command only. -->
+      <p class="fade-in text-text-secondary text-sm text-center mb-4 max-w-xl mx-auto leading-relaxed">
+        Then run <span class="font-mono text-xs text-accent-light">/archflow:onboard</span> in your project, or
+        <a href="#studio" class="font-mono text-xs text-accent-light hover:underline">/archflow:studio</a>
+        to do the whole thing in the browser instead.
+      </p>
+
       <!-- Trust signals -->
       <p class="fade-in text-text-muted text-sm text-center mb-10">
         Free and open source. MIT licensed.
@@ -1073,7 +1180,7 @@
               </h3>
               <p class="leading-relaxed" style="color:#C3CCD9">
                 New agents, phases, and integrations ship most weeks. Release notes and
-                breaking changes only &mdash; no marketing.
+                breaking changes only. No marketing.
               </p>
             </div>
             <iframe
@@ -1161,43 +1268,48 @@
     }
 
     // ============================================================
-    // Promo player. Self-hosted so it can be fully chrome-free - a YouTube embed
-    // cannot hide its logo, title, channel avatar or suggested videos.
-    // Autoplays muted when it scrolls into view, pauses when it leaves, loops so
-    // it never dead-ends on a frozen final frame. Click toggles play/pause, since
-    // with no control bar the element would otherwise be inert.
+    // Video players (hero promo + studio loop). Self-hosted so they can be
+    // fully chrome-free - a YouTube embed cannot hide its logo, title, channel
+    // avatar or suggested videos. Each autoplays muted when it scrolls into
+    // view, pauses when it leaves, and loops so it never dead-ends on a frozen
+    // final frame. Click toggles play/pause, since with no control bar the
+    // element would otherwise be inert. Driven off [data-video-autoplay] rather
+    // than an id, so adding a third video needs no new script.
     // ============================================================
     (function () {
-      const video = document.getElementById('promo-video');
-      if (!video) return;
+      const videos = document.querySelectorAll('video[data-video-autoplay]');
+      if (!videos.length) return;
 
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      let pausedByUser = false;
 
-      // Click is the only affordance without a control bar.
-      video.addEventListener('click', () => {
-        if (video.paused) {
-          pausedByUser = false;
-          video.play().catch(() => {});
-        } else {
-          pausedByUser = true;
-          video.pause();
-        }
-      });
+      videos.forEach((video) => {
+        let pausedByUser = false;
 
-      // Reduced motion: leave it on the poster, still clickable.
-      if (reduceMotion) return;
-
-      new IntersectionObserver(
-        (entries) => entries.forEach((e) => {
-          if (e.isIntersecting) {
-            if (!pausedByUser) video.play().catch(() => {});
-          } else if (!video.paused) {
+        // Click is the only affordance without a control bar.
+        video.addEventListener('click', () => {
+          if (video.paused) {
+            pausedByUser = false;
+            video.play().catch(() => {});
+          } else {
+            pausedByUser = true;
             video.pause();
           }
-        }),
-        { threshold: 0.4 }
-      ).observe(video);
+        });
+
+        // Reduced motion: leave it on the poster, still clickable.
+        if (reduceMotion) return;
+
+        new IntersectionObserver(
+          (entries) => entries.forEach((e) => {
+            if (e.isIntersecting) {
+              if (!pausedByUser) video.play().catch(() => {});
+            } else if (!video.paused) {
+              video.pause();
+            }
+          }),
+          { threshold: 0.4 }
+        ).observe(video);
+      });
     })();
 
     // ============================================================
@@ -1242,7 +1354,7 @@
         .then((d) => {
           const n = d.stargazers_count;
           if (typeof n !== 'number') return;
-          // Below this, the count is weaker than no count at all — a visibly small
+          // Below this, the count is weaker than no count at all: a visibly small
           // number reads as "nobody uses this". Stays hidden until it clears the bar.
           if (n < 100) return;
           document.getElementById('star-count').textContent =
@@ -1331,6 +1443,152 @@
       // theme's own border and paints a hard dark line.
       nav.classList.toggle('nav-scrolled', window.scrollY > 10);
     });
+    // Start-path tabs. The markup ships every panel VISIBLE; this is what
+    // introduces the hidden state, so content is only ever collapsed while
+    // there is script running to expand it again.
+    (function () {
+      const list = document.querySelector('[data-tabs="start"]');
+      if (!list) return;
+      const tabs = Array.from(list.querySelectorAll('[role="tab"]'));
+      const panelOf = (t) => document.getElementById(t.getAttribute('aria-controls'));
+      if (tabs.some((t) => !panelOf(t))) return;   // markup drift: leave it open
+
+      function select(tab, moveFocus) {
+        tabs.forEach((t) => {
+          const on = t === tab;
+          t.setAttribute('aria-selected', on ? 'true' : 'false');
+          t.tabIndex = on ? 0 : -1;                // roving tabindex
+          panelOf(t).hidden = !on;
+        });
+        if (moveFocus) tab.focus();
+      }
+
+      tabs.forEach((t) => t.addEventListener('click', () => select(t)));
+
+      list.addEventListener('keydown', (e) => {
+        const i = tabs.indexOf(document.activeElement);
+        if (i < 0) return;
+        const last = tabs.length - 1;
+        let n = null;
+        if (e.key === 'ArrowRight') n = i === last ? 0 : i + 1;
+        else if (e.key === 'ArrowLeft') n = i === 0 ? last : i - 1;
+        else if (e.key === 'Home') n = 0;
+        else if (e.key === 'End') n = last;
+        if (n === null) return;
+        e.preventDefault();
+        select(tabs[n], true);
+      });
+
+      // A link elsewhere on the page can target a specific panel
+      // (e.g. "See all six" in the phases section -> the prototype tab).
+      document.querySelectorAll('[data-select-tab]').forEach((link) => {
+        link.addEventListener('click', () => {
+          const t = document.getElementById(link.dataset.selectTab);
+          if (t && tabs.includes(t)) select(t);
+        });
+      });
+
+      // Same for an inbound #hash naming a tab or its panel.
+      function fromHash() {
+        const id = location.hash.slice(1);
+        if (!id) return;
+        const t = tabs.find((x) => x.id === id || x.getAttribute('aria-controls') === id);
+        if (t) select(t);
+      }
+      window.addEventListener('hashchange', fromHash);
+
+      select(tabs[0]);
+      fromHash();
+    })();
+  </script>
+
+  <!-- ============================================ -->
+  <!-- ANALYTICS (PostHog)                                                     -->
+  <!-- PASTE YOUR KEY BELOW. Project Settings -> Project API Key (phc_...).     -->
+  <!-- Set POSTHOG_HOST to the EU cloud if that is where the project lives.     -->
+  <!--                                                                         -->
+  <!-- Configured cookie-free on purpose: persistence is memory-only, so no     -->
+  <!-- cookie and no localStorage entry is written, which is what lets this      -->
+  <!-- site keep running with no consent banner. The cost is honest: a repeat   -->
+  <!-- visitor counts as a new person, so treat "unique users" as "sessions".   -->
+  <!-- Flip persistence to 'localStorage+cookie' if you would rather have real  -->
+  <!-- returning-user counts and are willing to add a banner.                   -->
+  <!-- ============================================ -->
+  <script>
+    window.POSTHOG_KEY  = 'phc_nuuik2SamCaEPcZ8DNF7nfqDZ534zFQ8Ae8cYmEsjMcq';
+    window.POSTHOG_HOST = 'https://us.i.posthog.com';
+  </script>
+  <script>
+    (function () {
+      var key = window.POSTHOG_KEY;
+      if (!key || key.indexOf('phc_') !== 0 || key === 'phc_REPLACE_ME') return;  // not configured yet
+      if (navigator.doNotTrack === '1' || window.doNotTrack === '1') return;       // honour DNT
+
+      !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+
+      posthog.init(key, {
+        api_host: window.POSTHOG_HOST,
+        persistence: 'memory',            // no cookie, no localStorage -> no banner
+        autocapture: false,               // explicit events only; see below
+        capture_pageview: true,
+        disable_session_recording: true,
+        // PostHog's REMOTE config re-enables extras regardless of the flags
+        // above: without these four it also fetches surveys.js,
+        // dead-clicks-autocapture.js and web-vitals-with-attribution.js. This
+        // is a static marketing page - none of that is wanted, and each one is
+        // another script on the critical path of a launch page.
+        disable_surveys: true,
+        capture_dead_clicks: false,
+        capture_performance: false,       // web vitals
+        advanced_disable_feature_flags: true
+      });
+
+      // --- The events a launch actually needs to answer "did it work?" -------
+      function cap(name, props) { try { posthog.capture(name, props || {}); } catch (e) {} }
+
+      // 1. THE conversion: someone took the install command.
+      document.querySelectorAll('[onclick*="copyInstallCommands"]').forEach(function (el) {
+        el.addEventListener('click', function () {
+          cap('install_command_copied', { location: el.closest('#install') ? 'install_section' : 'hero' });
+        });
+      });
+
+      // 2. Did campaign traffic reach the thing it was promised?
+      var studio = document.getElementById('studio');
+      if (studio && 'IntersectionObserver' in window) {
+        var seen = false;
+        new IntersectionObserver(function (es) {
+          es.forEach(function (e) { if (e.isIntersecting && !seen) { seen = true; cap('studio_section_viewed'); } });
+        }, { threshold: 0.3 }).observe(studio);
+      }
+
+      // 3. Audience mix: which of the three entry paths people pick.
+      document.querySelectorAll('[data-tabs="start"] [role="tab"]').forEach(function (t) {
+        t.addEventListener('click', function () { cap('start_path_selected', { path: t.id.replace('tab-', '') }); });
+      });
+
+      // 4. Which objection actually bites.
+      document.querySelectorAll('details.faq').forEach(function (d) {
+        d.addEventListener('toggle', function () {
+          if (d.open) cap('objection_opened', { question: d.querySelector('summary span').textContent.trim() });
+        });
+      });
+
+      // 5. Outbound intent + the announcement bar's own click-through.
+      document.querySelectorAll('a[href^="http"]').forEach(function (a) {
+        a.addEventListener('click', function () { cap('outbound_click', { href: a.href }); });
+      });
+      document.querySelectorAll('[data-ph]').forEach(function (el) {
+        el.addEventListener('click', function () { cap(el.dataset.ph); });
+      });
+      document.querySelectorAll('a[href^="guides/"]').forEach(function (a) {
+        a.addEventListener('click', function () { cap('guide_click', { guide: a.getAttribute('href') }); });
+      });
+
+      // 6. Did the Studio demo actually get watched?
+      var sv = document.getElementById('studio-video');
+      if (sv) sv.addEventListener('play', function () { cap('studio_video_played'); }, { once: true });
+    })();
   </script>
 </body>
 </html>

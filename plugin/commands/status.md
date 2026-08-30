@@ -48,4 +48,7 @@ Archflow — Phase-Based Development Workflow
 
   /archflow:autopilot     Run queued release stories unattended on one branch
                           (blocker interview first, then silent; one report at the end)
+
+  /archflow:studio        Open Archflow Studio, a local web workspace over these files
+                          (beta — stop | status | port <n>)
 ```
