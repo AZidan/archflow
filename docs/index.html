@@ -212,7 +212,17 @@
        body offset and every anchor's scroll-margin stay in agreement; nothing
        has to know the bar's pixel height. Dismissing sets it to 0. */
     :root { --announce-h: 0px; }
-    #announce { position: fixed; top: 0; left: 0; right: 0; z-index: 45; }
+    #announce {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 45;
+      /* MUST be opaque: the bar is fixed, so the page scrolls underneath it.
+         `bg-accent/10` alone is a 10% tint over nothing, and the content
+         showed through. Opaque page ground first, accent tint painted on top
+         of it via background-image, so both stay theme-aware. No
+         backdrop-filter: with an opaque ground there is nothing to blur
+         through, and it would only cost a compositing layer. */
+      background-color: rgb(var(--c-bg));
+      background-image: linear-gradient(rgb(var(--c-accent) / .10), rgb(var(--c-accent) / .10));
+    }
     body { padding-top: var(--announce-h); }
     #site-nav { top: var(--announce-h); }
     /* overrides the flat 5rem above, so a #hash never lands under nav + bar */
@@ -229,7 +239,7 @@
   <!-- should not have to scroll to section 5 to find it. Doubles as discovery  -->
   <!-- for cold traffic. Delete this block when the launch is over.             -->
   <!-- ============================================ -->
-  <div id="announce" hidden class="border-b border-accent/20 bg-accent/10">
+  <div id="announce" hidden class="border-b border-accent/20">
     <div class="max-w-container mx-auto px-6 py-2.5 flex items-center justify-center gap-3 text-center">
       <a href="#studio" data-ph="announce_click"
          class="text-sm text-text-secondary hover:text-text-primary transition-colors duration-200">
