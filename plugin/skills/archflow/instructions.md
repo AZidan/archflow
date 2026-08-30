@@ -48,6 +48,8 @@ Dynamic phase-based instruction loading for token-efficient development.
 - `/archflow:feature` — Add a story to the backlog or the active release and start the git development workflow
 - `/archflow:autopilot` — Run queued release stories unattended on one branch (blocker interview first,
   then silent; parks undecided stories; one report at the end)
+- `/archflow:studio [stop|status|port <n>]` — Start (or stop) Archflow Studio, a local web workspace
+  over the same `.archflow/` files; runs onboarding and migration from the UI (beta)
 
 ## 🚀 Release Model (v2.0 — the outer loop)
 

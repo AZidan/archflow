@@ -24,6 +24,7 @@ Every Archflow action is a namespaced slash command — there is no argument-sty
 /archflow:groom [story-id]          → Turn a backlog stub into a ready story (ACs, subtasks, gates)
 /archflow:feature [name/description|story-id] → Add a story, or pull one into the active release
 /archflow:autopilot [story-id ...]  → Run queued stories unattended on one branch (interview, then silent)
+/archflow:studio [stop|status|port n] → Local web workspace over the same files; onboards and migrates from the UI (beta)
 ```
 
 Command bodies live in `${CLAUDE_PLUGIN_ROOT}/commands/<name>.md`. When you need to run one from

@@ -9,6 +9,16 @@
             "command": "cat .archflow/instructions.md 2>/dev/null || true"
           }
         ]
+      },
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/studio-session-context.mjs\"",
+            "timeout": 5
+          }
+        ]
       }
     ]
   }
