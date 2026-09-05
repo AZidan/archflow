@@ -15,7 +15,26 @@ Design splits into TWO kinds of work (v2.0 — Pillar 2):
 - `ux-designer` - User flows + visual design + themes + wireframes (foundation) AND per-story screens (gate)
 - `dsl-generator` - Screen DSL creation + styling + component specs
 
+## 🎨 Design system gate (BEFORE any design output)
+
+Read `.archflow/design-system.yaml`.
+
+- **Present** — read and follow `.archflow/design-systems/{design_system}.md` before producing a
+  single wireframe or token. Every component name in `user-flows.md`, `wireframes/` and
+  `styled-dsl.yaml` comes from its `## Component vocabulary` table; `theme.yaml` is built on the
+  scales in its `## Layout, spacing, and type scale` section, inside the constraints in `## Rules`.
+- **Missing, and the project has a UI** — STOP. The choice was deferred at init. Read
+  `${CLAUDE_PLUGIN_ROOT}/commands/design.md` and follow **Step 3 — `pick`** inline, write
+  `.archflow/design-system.yaml`, and only then continue. Do not guess a system and do not invent
+  one per screen.
+- **`backend_only`** — this whole phase is not applicable.
+
+Every `ux-designer` and `dsl-generator` dispatch in this phase carries the path in its own prompt:
+`Design system: read .archflow/design-system.yaml, then read and follow
+.archflow/design-systems/{design_system}.md before producing any output.`
+
 ## 📚 Prerequisites
+- `.archflow/design-system.yaml` + `.archflow/design-systems/{design_system}.md` (see the gate above)
 - Phase 1 outputs: `.archflow/project-context.md`, `.archflow/roadmap.yaml`, `.archflow/backlog.yaml`
 - The active release (`.archflow/releases/{active_release}.yaml`) — **created + started at the Phase
   1→2 boundary** (see `phase-1-strategy.md` Phase Transition), or by the Phase 5 loop-back for later
@@ -56,7 +75,8 @@ gate above, just-in-time before each story's build.
 
 ## 📤 Expected Outputs
 - `design-artifacts/user-flows.md` - Complete user journey documentation
-- `design-artifacts/theme.yaml` - Design system tokens (colors, typography, spacing)
+- `design-artifacts/theme.yaml` - Design system tokens (colors, typography, spacing) — derived from
+  the chosen system's scales, not invented
 - `design-artifacts/wireframes/` - Screen layouts and mockups
 - `design-artifacts/styled-dsl.yaml` - Component specifications with styling
 
@@ -73,6 +93,10 @@ gate above, just-in-time before each story's build.
 - **USER APPROVAL MANDATORY**: Present design artifacts to user and wait for explicit approval
 - **NO PROCEEDING**: Do not move to Phase 2.5 without approval
 - **CONSISTENCY**: Maintain design system consistency across all artifacts
+- **DESIGN SYSTEM IS BINDING**: All component names come from the `## Component vocabulary` table of
+  `.archflow/design-systems/{design_system}.md`. Nothing in `## Anti-patterns` may appear in the
+  artifacts. A component the system genuinely lacks is composed from its primitives and logged in
+  `design-artifacts/component-gaps.md`
 
 ## Phase Completion: Commit Artifacts
 

@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Material 3 — Login</title><link rel="stylesheet" href="theme.css"></head><body>
+<div class="screen" style="background:var(--surface)">
+  <div class="status"><span>9:41</span><div class="dots"><i></i></div></div>
+  <div style="flex:1;padding:0 24px;display:flex;flex-direction:column">
+    <div style="height:56px"></div>
+    <div style="width:64px;height:64px;border-radius:var(--r-l);background:var(--primary);
+         color:var(--on-primary);display:grid;place-items:center;margin-bottom:24px">
+      <svg width="32" height="32" viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>
+    </div>
+    <h1 class="headline-m" style="margin:0 0 8px">Sign in to Fieldnote</h1>
+    <p class="body-m muted" style="margin:0 0 32px">Track fieldwork, assign tasks, and keep your crew in sync.</p>
+
+    <div class="field focused"><label>Email</label><input value="rowan@fieldnote.app"></div>
+    <div class="field" style="margin-top:20px"><label>Password</label>
+      <input type="password" value="············">
+      <button class="iconbtn trail" aria-label="Show password"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg></button>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin:8px 0 24px">
+      <button class="btn btn-text">Forgot password?</button>
+    </div>
+    <button class="btn btn-filled full">Sign in</button>
+    <div style="display:flex;align-items:center;gap:16px;margin:24px 0">
+      <div style="flex:1;height:1px;background:var(--outline-variant)"></div>
+      <span class="body-s muted">or</span>
+      <div style="flex:1;height:1px;background:var(--outline-variant)"></div>
+    </div>
+    <button class="btn btn-outlined full">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 12v3.6h5.1c-.2 1.3-1.6 3.9-5.1 3.9-3.1 0-5.6-2.5-5.6-5.6S8.9 8.3 12 8.3c1.8 0 2.9.7 3.6 1.4l2.4-2.4C16.5 5.9 14.4 5 12 5a9 9 0 100 18c5.2 0 8.6-3.6 8.6-8.7 0-.6-.1-1-.1-1.5H12z"/></svg>
+      Continue with Google</button>
+    <div style="flex:1"></div>
+    <div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-bottom:32px">
+      <span class="body-m muted">No account yet?</span>
+      <button class="btn btn-text">Create one</button>
+    </div>
+  </div>
+</div></body></html>

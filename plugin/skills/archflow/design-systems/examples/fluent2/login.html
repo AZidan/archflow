@@ -1,0 +1,42 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Fluent 2 — Login</title><link rel="stylesheet" href="theme.css"></head><body>
+<div style="height:800px;display:grid;place-items:center;
+     background:linear-gradient(140deg,#EEF3FA 0%,#F5F5F5 42%,#F7F3F8 100%)">
+  <div class="card" style="width:440px;box-shadow:var(--sh16);border-radius:var(--r-xl);padding:44px 44px 36px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px">
+      <div style="width:28px;height:28px;border-radius:var(--r-m);background:var(--brand-bg);color:#fff;
+           display:grid;place-items:center">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg></div>
+      <span class="subtitle2">Fieldnote</span>
+    </div>
+    <h1 class="title3" style="margin-bottom:6px">Sign in</h1>
+    <p class="body1 fg3" style="margin-bottom:26px">Use your work or school account to continue.</p>
+
+    <div class="field" style="margin-bottom:16px">
+      <label>Email<span style="color:var(--red)"> *</span></label>
+      <input class="inp lg" value="rowan@fieldnote.app">
+    </div>
+    <div class="field" style="margin-bottom:8px">
+      <label>Password<span style="color:var(--red)"> *</span></label>
+      <input class="inp lg" type="password" value="••••••••••••">
+      <span class="hint">At least 12 characters, including a number.</span>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 24px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px">
+        <span class="checkbox on"><svg width="11" height="11" viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></span>
+        Keep me signed in</label>
+      <a class="body1" style="color:var(--brand-fg-link)">Forgot password?</a>
+    </div>
+    <button class="btn btn-primary btn-lg btn-full">Sign in</button>
+    <div style="display:flex;align-items:center;gap:12px;margin:22px 0">
+      <div style="flex:1;height:1px;background:var(--stroke2)"></div>
+      <span class="caption1 fg3">OR</span>
+      <div style="flex:1;height:1px;background:var(--stroke2)"></div>
+    </div>
+    <button class="btn btn-lg btn-full">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path d="M2 2h9.5v9.5H2zM12.5 2H22v9.5h-9.5zM2 12.5h9.5V22H2zM12.5 12.5H22V22h-9.5z"/></svg>
+      Sign in with Microsoft</button>
+    <p class="caption1 fg3" style="margin-top:24px;text-align:center">
+      No account? <a style="color:var(--brand-fg-link)">Contact your workspace admin</a></p>
+  </div>
+</div></body></html>
