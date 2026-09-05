@@ -58,3 +58,8 @@ videos/
 
 # codemap index cache
 .codemap/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
