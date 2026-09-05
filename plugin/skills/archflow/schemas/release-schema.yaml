@@ -109,6 +109,17 @@ story:
       required: false
       description: "Path to the designer's handoff for this story; present once design_ready."
       example: "design-artifacts/S2-07/"
+    contract_endpoints:
+      type: array
+      required: false
+      description: |
+        Operation identifiers this story added to the API contract; present once contract_ready.
+        The counterpart to design_artifact — a POINTER into docs/api-contract.md, never a copy of
+        the endpoint definitions, which live in the contract and nowhere else. Written by
+        /archflow:contract {story-id}. Lets a consumer draw the reverse edge from an endpoint back
+        to the story that needed it.
+      items: {type: string}
+      example: ["listCartItems", "addCartItem"]
     assigned:
       type: string
       description: "Agent or role responsible for the current lane."
@@ -211,7 +222,7 @@ acceptance_criterion:
     verified_by:
       type: string
       required: false
-      enum: [pm-maestro-reviewer, qa-engineer, manual]
+      enum: [pm-reviewer, qa-engineer, manual]
     verified_at:
       type: string
       format: iso8601
@@ -244,6 +255,7 @@ subtask:
 #     status: design_ready
 #     gates: {needs_design: true, needs_contract: true}
 #     design_artifact: design-artifacts/S2-07/
+#     contract_endpoints: [listCartItems, addCartItem]
 #     assigned: ui-engineer
 #     description: >
 #       Let users store and reuse cards during checkout.
