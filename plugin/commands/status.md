@@ -59,7 +59,8 @@ Archflow — Phase-Based Development Workflow
                           (/archflow:contract S7-20 clears that story's contract gate)
 
   /archflow:doctor        Check the environment and project state — what is missing and
-                          how to fix it (add --validate to check state files against schemas)
+                          how to fix it (--validate checks state files against schemas,
+                          --fix repairs drift after a plugin upgrade)
 
   /archflow:studio        Open Archflow Studio, a local web workspace over these files
                           (beta — stop | status | port <n>)

@@ -142,12 +142,22 @@ status: "initialized"
 
 ### Step 4: Copy Phases, Schemas and Design Systems (if not present)
 
-If the project's `.archflow/` does not already contain `phases/`, `schemas/` and `design-systems/`
-directories, copy them from the plugin:
+Copy these from the plugin into the project's `.archflow/`:
 - `${CLAUDE_PLUGIN_ROOT}/skills/archflow/phases/` → `.archflow/phases/`
 - `${CLAUDE_PLUGIN_ROOT}/skills/archflow/schemas/` → `.archflow/schemas/`
 - `${CLAUDE_PLUGIN_ROOT}/skills/archflow/design-systems/` → `.archflow/design-systems/`
 - `${CLAUDE_PLUGIN_ROOT}/skills/archflow/stacks/` → `.archflow/stacks/`
+- `${CLAUDE_PLUGIN_ROOT}/skills/archflow/workflow.md` → `.archflow/workflow.md`
+- `${CLAUDE_PLUGIN_ROOT}/skills/archflow/test-accounts.example.yaml` → `.archflow/`
+
+**Copy per FILE, not per directory.** Skip a file that already exists; copy every one that does not.
+Checking whether the *directory* exists is how a project ends up permanently missing files added by
+a later plugin version — it has `schemas/`, so nothing is ever copied into it again, and an agent
+told to read a file that was never delivered stops. `/archflow:doctor` reports this drift and
+`--fix` repairs it, but the cheap fix is not to create it here.
+
+Never overwrite a file the project already has. A user may have edited a design system or a phase
+file deliberately.
 
 These are reference files that agents read during execution. They must be in the project repo so agents always have access regardless of plugin cache state.
 

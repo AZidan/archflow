@@ -48,6 +48,17 @@ properties:
   onboarded:      {type: boolean, default: false}
   onboarded_at:   {type: string, format: iso8601, required: false}
 
+  plugin_version:
+    type: [string, "null"]
+    required: false
+    description: |
+      The Archflow plugin version that last touched this project. Stamped by
+      /archflow:init, /archflow:onboard and /archflow:doctor --fix. Its absence, or a
+      value older than the installed plugin, is how an upgrade is detected — the state
+      files themselves carry no other version signal, since schema_version tracks the
+      data model rather than the framework.
+    example: "2.2.1"
+
   api_contract_path:
     type: [string, "null"]
     default: "docs/api-contract.md"

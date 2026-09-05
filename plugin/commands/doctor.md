@@ -1,15 +1,17 @@
 ---
 description: Check the environment and project state — what Archflow needs, what is missing, and how to fix it
-argument-hint: "[--validate]"
+argument-hint: "[--validate] [--fix]"
 ---
 
 # /archflow:doctor — Environment and project health check
 
-Argument (`$ARGUMENTS`): optional `--validate` to also validate every `.archflow/` state file against
-its schema. Empty → environment and project checks only.
+Arguments (`$ARGUMENTS`): `--validate` also validates every `.archflow/` state file against its
+schema. `--fix` repairs the mechanical drift between this project and the installed plugin. Empty →
+environment and project checks only.
 
-Report only. `doctor` never installs anything, never edits state, and never changes a phase. It ends
-with the exact commands the user can run themselves.
+Report only, **except with `--fix`**, which is the one mode that writes. Without it, `doctor` never
+installs anything, never edits state, and never changes a phase. It ends with the exact commands the
+user can run themselves.
 
 ## How to read the results
 
@@ -136,6 +138,54 @@ That is a FAIL too, but say which it is: a project with no schemas is not a proj
 If PyYAML is missing the validator says so and exits 2. Report the install command rather than
 trying to validate by hand.
 
+## Step 5b — Upgrade drift (always checked, repaired only with `--fix`)
+
+A project's `.archflow/` is a COPY of framework files made when it was set up. The plugin then moves
+on and nothing reconciles the two, so a project onboarded months ago runs against files the agents no
+longer match. Report this every run; it is the most common cause of "it used to work".
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/upgrade_archflow.py" . \
+  --plugin-root "${CLAUDE_PLUGIN_ROOT}"
+```
+
+It reports and changes nothing. Exit 1 means drift was found, which is a **WARN**, not a FAIL — the
+project still works, it is just behind. It detects:
+
+| Drift | Why it matters |
+|---|---|
+| A retired agent name in release or history files | A story assigned to it dispatches an agent that does not exist, and `verified_by` fails validation |
+| `tech_stack:` present, `stack:` absent | Agents read `stack:`. Without it each one stops and asks on its first dispatch |
+| No stack at all | Same, but nothing to convert from. **Not auto-fixable** — offer `/archflow:onboard` detection |
+| Framework files the plugin ships that the project lacks | An agent told to read a missing design system stops rather than guessing |
+| `plugin_version` behind the installed plugin | The only signal a project has fallen behind |
+
+### With `--fix`
+
+Show the dry-run plan FIRST and get explicit approval. This writes to the user's project.
+
+```
+This will change {n} thing(s) in .archflow/:
+  {the plan from the dry run}
+
+Originals are backed up to .archflow/backup-upgrade-{timestamp}/.
+Apply? [Apply / Cancel]
+```
+
+On approval:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/upgrade_archflow.py" . \
+  --plugin-root "${CLAUDE_PLUGIN_ROOT}" --apply
+```
+
+Then report what it did, name the backup directory, and repeat anything it flagged as needing a
+human. Suggest committing `.archflow/` afterwards so the change is reviewable.
+
+`--fix` is deliberately narrow. It renames, converts and copies. It never writes project content,
+never picks a stack, and never resolves anything that needs a judgement — those are reported for the
+user to decide.
+
 ## Step 6 — Report
 
 Print the three sections, then a summary line, then only the fixes that apply:
@@ -170,7 +220,8 @@ If everything passes, say so in one line and stop. Do not pad a clean report.
 
 ## Rules
 
-1. **Report only.** Never install, never fix, never edit state. Print the command and let the user run it.
+1. **Report only, unless `--fix` was asked for.** Never install. Never edit state without it, and
+   even with it, show the plan and get approval before writing.
 2. **A missing optional tool is a WARN, never a FAIL.** Archflow works without codemap.
 3. **Name the cost, not just the gap.** "codemap missing" is less useful than what it costs.
 4. **Never invent a check.** If you cannot determine something, report UNKNOWN and say why.

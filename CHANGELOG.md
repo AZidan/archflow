@@ -36,6 +36,22 @@ Nothing yet.
   while an unattended autopilot run is live. In any other repo it exits immediately. A `Stop` hook
   warns when state files have drifted from their schemas. Both fail open.
 
+### Upgrading from 2.2.0
+
+Run **`/archflow:doctor`** first. A project's `.archflow/` is a copy of framework files made when it
+was set up and was never refreshed, so an existing project needs four things reconciled. `doctor`
+reports them and **`/archflow:doctor --fix`** repairs the mechanical ones, backing up everything it
+touches.
+
+- **Release files naming `pm-maestro-reviewer` fail validation**, and a story assigned to it would
+  dispatch an agent that no longer exists. `--fix` renames it.
+- **No `stack:` block**, so every code-writing agent stops and asks on its first dispatch. Projects
+  onboarded before this have a `tech_stack:` block holding most of the answer; `--fix` converts it.
+  A project with neither needs `/archflow:onboard` detection, or a hand-written `stack:`.
+- **No `design-systems/`**, so an agent told to read one stops rather than guessing. `--fix` copies
+  the missing framework files.
+- **No `plugin_version`**, so nothing could detect the drift. `--fix` stamps it.
+
 ### Added
 
 - **`/archflow:contract`** — the release's API contract architecture, and per-story endpoint specs

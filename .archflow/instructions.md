@@ -53,7 +53,7 @@ Dynamic phase-based instruction loading for token-efficient development.
   specs that clear a story's `needs_contract` gate
 - `/archflow:autopilot` — Run queued release stories unattended on one branch (blocker interview first,
   then silent; parks undecided stories; one report at the end)
-- `/archflow:doctor [--validate]` — Check the environment and project state: what Archflow needs,
+- `/archflow:doctor [--validate] [--fix]` — Check the environment and project state: what Archflow needs,
   what is missing, and the exact command to fix each gap. Report only; installs nothing
 - `/archflow:studio [stop|status|port <n>]` — Start (or stop) Archflow Studio, a local web workspace
   over the same `.archflow/` files; runs onboarding and migration from the UI (beta)
@@ -201,6 +201,18 @@ rules, never a replacement for them.
 - **A BLOCK IS NOT A PUZZLE**: when the guard blocks, it names the run and the ledger file. Resolve
   it by finishing the run, or by setting the run's `status` to `finished`/`aborted` if it is
   genuinely over. Never work around it
+
+### ⬆️ Upgrading (a project's .archflow/ is a COPY)
+- **THE COPY GOES STALE**: `.archflow/` is populated from the plugin at setup and never refreshed.
+  A project set up on an older plugin runs against files the current agents no longer match
+- **DETECT IT**: `/archflow:doctor` reports the drift on every run — a retired agent name in release
+  files, a `tech_stack:` block with no `stack:`, framework files the plugin ships that the project
+  lacks, a `plugin_version` behind the installed one
+- **REPAIR IT**: `/archflow:doctor --fix` renames, converts and copies, backing up everything it
+  touches. It never writes project content and never picks a stack — anything needing a judgement is
+  reported for the user
+- **COPY PER FILE, NEVER PER DIRECTORY**: setup steps that check whether a *directory* exists are how
+  a project ends up permanently missing files added by a later plugin version
 
 ### ✅ Acceptance Testing (Phases 3-4)
 - **ACCEPTANCE GATE**: After qa-engineer completes, launch `pm-reviewer` to validate acceptance criteria from the active release file (`.archflow/releases/{active_release}.yaml`)

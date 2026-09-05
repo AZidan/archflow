@@ -694,6 +694,8 @@ status: "onboarded"
    - Copy `${CLAUDE_PLUGIN_ROOT}/skills/archflow/phases/` → `.archflow/phases/` (skip files that already exist)
    - Copy `${CLAUDE_PLUGIN_ROOT}/skills/archflow/schemas/` → `.archflow/schemas/` (skip files that already exist)
    - Copy `${CLAUDE_PLUGIN_ROOT}/skills/archflow/design-systems/` → `.archflow/design-systems/` (skip files that already exist; skip the whole directory for `backend_only`)
+   - Copy `${CLAUDE_PLUGIN_ROOT}/skills/archflow/stacks/` → `.archflow/stacks/` (skip files that already exist)
+   - Copy `${CLAUDE_PLUGIN_ROOT}/skills/archflow/test-accounts.example.yaml` → `.archflow/` (skip if present)
    - These files define the git branching strategy, the canonical formats and the design-system references. They MUST be in the project repo so Phase 3+ agents can read them from the repo context regardless of plugin cache state.
 
 2b. **Write `.archflow/design-system.yaml`** from what STEP A3 recorded (skip for `backend_only`,

@@ -30,7 +30,8 @@ Then load the current phase: read `.archflow/current-phase.yaml` → `phase_file
 - `/archflow:autopilot` — run queued release stories unattended on one branch (interview, then silent)
 - `/archflow:design [pick|list|name|story-id]` — the project's design system, and per-story screen design
 - `/archflow:contract [story-id]` — the API contract architecture, and per-story endpoint specs
-- `/archflow:doctor [--validate]` — check environment + project state; report only, installs nothing
+- `/archflow:doctor [--validate] [--fix]` — check environment + project state; `--fix` repairs drift
+  between the project and an upgraded plugin
 - `/archflow:studio [stop|status|port <n>]` — open Archflow Studio, a local web workspace (beta)
 - `/archflow:setup-mcp [tool]` — connect an external tool via MCP
 

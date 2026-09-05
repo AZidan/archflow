@@ -26,7 +26,7 @@ Every Archflow action is a namespaced slash command — there is no argument-sty
 /archflow:autopilot [story-id ...]  → Run queued stories unattended on one branch (interview, then silent)
 /archflow:design [pick|list|name]   → Show or change the project's design system (once per project)
 /archflow:contract [story-id]        → Contract architecture, or one story's endpoints
-/archflow:doctor [--validate]        → Environment + project health check; report only
+/archflow:doctor [--validate|--fix]  → Environment + project health check; --fix repairs upgrade drift
 /archflow:studio [stop|status|port n] → Local web workspace over the same files; onboards and migrates from the UI (beta)
 ```
 
