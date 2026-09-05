@@ -126,13 +126,20 @@ Then, for each `pending` story in queue order:
 1. **Re-read the ledger** (`decisions[]` especially) — treat it, not your context, as the truth.
 2. Task branch per `.archflow/workflow.md`: `{feature}/{task-name}` off the run branch.
 3. Implement with the agents allowed by `project_type` (`backend_only` → `api-engineer`,
+
+> **DESIGN SYSTEM IN THE PROMPT, NOT THE CONTEXT.** Every dispatch of a UI agent
+> (`ui-engineer`, `ux-designer`, `dsl-generator`, `ui-animation-designer`) must carry this line
+> verbatim in its prompt: *Design system: read `.archflow/design-system.yaml`, then read and follow
+> `.archflow/design-systems/{design_system}.md` before producing any output.* A subagent does not
+> inherit this session's context.
+
    `frontend_only` → `ui-engineer`, `fullstack` → both, scoped per subtask). Every applicable
    universal rule still holds — the API contract is still sacred, agents still hand off via files.
-4. `qa-engineer`, then `pm-maestro-reviewer` against the story's acceptance criteria.
+4. `qa-engineer`, then `pm-reviewer` against the story's acceptance criteria.
 5. On ACCEPTED: merge the task branch into the run branch, mark the story `done` in
    `.archflow/releases/{active_release}.yaml` (ACs `met`, subtasks `completed`), append the story
    result to the ledger, delete the task branch.
-6. On REJECTED: fix and re-run `pm-maestro-reviewer`, up to `max_qa_retries` (default 2). Still
+6. On REJECTED: fix and re-run `pm-reviewer`, up to `max_qa_retries` (default 2). Still
    rejected → **fail** the story (below).
 7. Commit the ledger and the release file with the story's work. Move to the next story.
 
@@ -210,7 +217,7 @@ may and may not do is fixed here and is not negotiable at runtime.
 **MAY, without asking:**
 - Create subtask / task branches; commit; push.
 - Merge subtask → task → **the run branch**.
-- Run `qa-engineer` and `pm-maestro-reviewer`, and fix its own failures.
+- Run `qa-engineer` and `pm-reviewer`, and fix its own failures.
 - Update `.archflow/releases/{active_release}.yaml` — **only for stories in its queue**.
 - Update `.archflow/current-feature.yaml`, `.archflow/current-phase.yaml → current_feature`, and its
   own ledger.

@@ -4,6 +4,10 @@ description: Set up Archflow in a NEW, empty project — creates .archflow/ and 
 
 # /archflow:init — Initialize Archflow in a Project
 
+> **Before you start:** run `/archflow:doctor` to see what is installed and what is
+> missing. It reports only — it never installs anything — and it names the exact command
+> for each gap.
+
 Lightweight command for setting up Archflow in a new or existing project.
 
 ## Usage
@@ -128,13 +132,45 @@ feature_status: "ready"
 status: "initialized"
 ```
 
-### Step 4: Copy Phases and Schemas (if not present)
+### Step 4: Copy Phases, Schemas and Design Systems (if not present)
 
-If the project's `.archflow/` does not already contain `phases/` and `schemas/` directories, copy them from the plugin:
+If the project's `.archflow/` does not already contain `phases/`, `schemas/` and `design-systems/`
+directories, copy them from the plugin:
 - `${CLAUDE_PLUGIN_ROOT}/skills/archflow/phases/` → `.archflow/phases/`
 - `${CLAUDE_PLUGIN_ROOT}/skills/archflow/schemas/` → `.archflow/schemas/`
+- `${CLAUDE_PLUGIN_ROOT}/skills/archflow/design-systems/` → `.archflow/design-systems/`
 
 These are reference files that agents read during execution. They must be in the project repo so agents always have access regardless of plugin cache state.
+
+### Step 4b: Choose the Design System
+
+The design system is chosen **once per project**. Every agent that produces or reviews UI builds
+against it for the rest of the project's life — it is never a per-feature decision.
+
+Skip this step entirely if the user says the project has no UI (a library, a CLI, a backend-only
+service). Write no `design-system.yaml` in that case.
+
+1. **Ask the platform**, then run the picker. Both live in one place: read
+   `${CLAUDE_PLUGIN_ROOT}/commands/design.md` and follow **Step 3 — `pick`** inline. It asks the
+   platform, filters `.archflow/design-systems/*.md` by that platform's compatibility (frontmatter
+   `platforms` map — a hard gate, so e.g. Liquid Glass is never offered for a web target), shows
+   each surviving file's section 1 as the option text, always offers
+   "Custom / match my brand" (which selects `custom-tokens` and asks for a tokens file path or
+   offers to generate a starter one), and writes `.archflow/design-system.yaml`.
+
+2. **If the user answers "Decide later"** to the platform question, write no
+   `design-system.yaml`. Phase 2 (Design) will run the picker before it produces its first
+   wireframe — the gate is in `.archflow/phases/phase-2-design.md`.
+
+The file written is:
+```yaml
+design_system: material3          # matches the filename in .archflow/design-systems/
+platform: flutter                 # the project's UI platform
+library: flutter_material         # concrete package/library to import from
+theme:
+  mode: [light, dark]
+  brand_tokens: null              # optional path to a tokens.json override
+```
 
 ### Step 5: Update Project CLAUDE.md
 
@@ -150,10 +186,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based development framework.
 
 - **Current Phase**: 1 (Strategy & Planning) — see `.archflow/current-phase.yaml`
+- **Design system**: see `.archflow/design-system.yaml` — every UI agent must read it and follow
+  `.archflow/design-systems/{design_system}.md` before producing any UI output
 
 Commands:
 - `/archflow:status` — Show status and available commands
 - `/archflow:feature` — Start a new feature from the roadmap
+- `/archflow:design` — Show or change the project's design system
 ```
 
 If `CLAUDE.md` ALREADY exists, append the Archflow section to the end:
@@ -165,10 +204,13 @@ If `CLAUDE.md` ALREADY exists, append the Archflow section to the end:
 This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based development framework.
 
 - **Current Phase**: 1 (Strategy & Planning) — see `.archflow/current-phase.yaml`
+- **Design system**: see `.archflow/design-system.yaml` — every UI agent must read it and follow
+  `.archflow/design-systems/{design_system}.md` before producing any UI output
 
 Commands:
 - `/archflow:status` — Show status and available commands
 - `/archflow:feature` — Start a new feature from the roadmap
+- `/archflow:design` — Show or change the project's design system
 ```
 
 ### Step 5: Print Summary
@@ -178,10 +220,14 @@ Archflow initialized at Phase 1 (Strategy & Planning).
 
 Created:
   .archflow/current-phase.yaml
+  .archflow/design-system.yaml       [or: not set — chosen in Phase 2]
   CLAUDE.md [created / updated with Archflow section]
 
 Mode: quick (single implicit release, gates auto-satisfied).
   Switch anytime with /archflow:mode full.
+
+Design system: [Label] ([platform] · [library])
+  Change it anytime with /archflow:design.
 
 Next steps:
   - Run Phase 1 to define your product strategy
@@ -199,3 +245,6 @@ Next steps:
 - This command is idempotent — it won't overwrite existing `.archflow/current-phase.yaml`
 - For existing codebases, always use `/archflow:onboard` instead (it determines the correct phase via audit)
 - The `project_type` field is left as `null` and will be set during Phase 1
+- The design system is a once-per-project choice. If it is deferred at init, Phase 2 asks before
+  producing the first wireframe. Change it later with `/archflow:design` — note that changing it
+  does not retrofit UI already built

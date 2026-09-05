@@ -306,6 +306,13 @@ For each task in `.archflow/current-feature.yaml`:
 3. **Implement** using appropriate agents:
    - Check `project_type` from `.archflow/current-phase.yaml`
    - `backend_only`: only use `api-engineer`
+
+> **DESIGN SYSTEM IN THE PROMPT, NOT THE CONTEXT.** Every dispatch of a UI agent
+> (`ui-engineer`, `ux-designer`, `dsl-generator`, `ui-animation-designer`) must carry this line
+> verbatim in its prompt: *Design system: read `.archflow/design-system.yaml`, then read and follow
+> `.archflow/design-systems/{design_system}.md` before producing any output.* A subagent does not
+> inherit this session's context.
+
    - `frontend_only`: only use `ui-engineer`
    - `fullstack`: use both based on task `type` field
 

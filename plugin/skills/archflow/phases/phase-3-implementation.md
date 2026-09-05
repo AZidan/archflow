@@ -87,8 +87,8 @@ Check: contract file exists at `api_contract_path`
 - **frontend_only / mobile**: if `api_contract_path` is set, HALT if missing; if null, skip.
 
 #### 0.5 Codemap
-- `.codemap/` missing → `codemap init .`
-- Watcher: `pgrep -f "codemap watch" > /dev/null || codemap watch . -q &`
+- `.codemap/` missing AND codemap installed → `codemap init .` (skip silently if not installed)
+- Watcher (optional, user-agreed): `command -v codemap >/dev/null 2>&1 && pgrep -f "codemap watch" >/dev/null || true`
 
 All checks passed → proceed.
 
@@ -177,12 +177,18 @@ codemap find "related-symbol-name"
 codemap show src/components/   # or relevant directory
 ```
 
+> **DESIGN SYSTEM IN THE PROMPT, NOT THE CONTEXT.** Every dispatch below that produces or touches
+> UI carries the design-system line verbatim. Never rely on this session's context to carry it into
+> a subagent — a subagent does not inherit it.
+
 **Project-type-aware agent dispatch:**
 
 #### fullstack (parallel within the story)
 ```bash
 # Frontend (uses the story's design_artifact + contract integration points)
 ui-engineer: {design_artifact} + {api_contract_path} → src/components/[FeatureName]/
+  - Design system: read `.archflow/design-system.yaml`, then read and follow
+    `.archflow/design-systems/{design_system}.md` before producing any output
   - Build components using the contract for API integration points
   - Service layers matching contract endpoints exactly
   - Error handling for all contract-defined error codes
@@ -196,6 +202,8 @@ api-engineer: MUST READ + FOLLOW {api_contract_path} EXACTLY → backend/src/[fe
 #### frontend_only
 ```bash
 ui-engineer: {design_artifact} → src/components/[FeatureName]/
+  - Design system: read `.archflow/design-system.yaml`, then read and follow
+    `.archflow/design-systems/{design_system}.md` before producing any output
   - If consuming external APIs: read {api_contract_path} for integration
 ```
 
@@ -208,12 +216,16 @@ api-engineer: MUST READ + FOLLOW {api_contract_path} EXACTLY → backend/src/[fe
 #### mobile
 ```bash
 ui-engineer: {design_artifact} + {api_contract_path} → mobile components
+  - Design system: read `.archflow/design-system.yaml`, then read and follow
+    `.archflow/design-systems/{design_system}.md` before producing any output
 api-engineer: {api_contract_path} → backend/src/[feature-name]/
 ```
 
 ### 🔗 Step 3B: INTEGRATION (skip for backend_only)
 ```bash
 ui-engineer: {api_contract_path} → connect frontend ↔ backend
+  - Design system: read `.archflow/design-system.yaml`, then read and follow
+    `.archflow/design-systems/{design_system}.md` before producing any output
   - Test API calls against actual endpoints; verify data flow matches the contract
   - Handle all error scenarios; verify auth integration
 ```
@@ -228,7 +240,7 @@ details → re-run qa-engineer. Do NOT proceed.
 
 ### 🎯 Step 3D: ACCEPTANCE TESTING (auto-triggered after 3C passes)
 IMMEDIATELY after qa-engineer reports all tests passing:
-  → Dispatch pm-maestro-reviewer with story ID + acceptance criteria (from the release file)
+  → Dispatch pm-reviewer with story ID + acceptance criteria (from the release file)
   → Output: `docs/acceptance-reports/{story-id}-review.md`
 
 If REJECTED → re-dispatch implementation agent → re-run 3C → re-run 3D. Do NOT proceed until ACCEPTED.
@@ -294,7 +306,7 @@ If "Changes needed": re-dispatch agent with feedback → re-run 3C → 3D → ba
 - [ ] Built by the assigned agent; readiness gates honored (or override recorded)
 - [ ] API contract compliance (100% for endpoints that exist)
 - [ ] Integration working (if applicable); all tests passing
-- [ ] Acceptance ACCEPTED by pm-maestro-reviewer
+- [ ] Acceptance ACCEPTED by pm-reviewer
 - [ ] Git workflow completed; user approved
 
 ## 🚨 Critical Requirements

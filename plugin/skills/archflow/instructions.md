@@ -21,13 +21,14 @@ Dynamic phase-based instruction loading for token-efficient development.
 - `ui-engineer` - All frontend (React, React Native, SwiftUI, Jetpack Compose) + integration with backend APIs. Also updates screens after ux-designer changes `styled-dsl.yaml`
 - `api-engineer` - NestJS/PostgreSQL backends, MUST follow docs/api-contract.md exactly (zero tolerance)
 - `qa-engineer` - Comprehensive testing (unit, integration, e2e) across all platforms. Runs AFTER feature agents complete
-- `pm-maestro-reviewer` - Acceptance testing via Maestro. Runs AFTER qa-engineer, validates acceptance criteria from the active release file (.archflow/releases/{active_release}.yaml) → docs/acceptance-reports/
+- `pm-reviewer` - Acceptance testing with the project's existing e2e tooling; asks before
+  installing any tool. Runs AFTER qa-engineer, validates acceptance criteria from the active release file (.archflow/releases/{active_release}.yaml) → docs/acceptance-reports/
 - `ux-designer` - Design updates on specific screens. Updates `styled-dsl.yaml` file
 
 **Phase 4: Quality & Optimization**
 - `code-reviewer` - Code quality, security, best practices analysis + improvement reports
 - `performance-optimizer` - Performance bottleneck identification and optimization
-- `pm-maestro-reviewer` - Acceptance regression suite scoped to the active release's stories
+- `pm-reviewer` - Acceptance regression suite scoped to the active release's stories
 
 **Phase 5: Launch & Operations**
 - `devops-engineer` - CI/CD pipelines, deployment infrastructure, app store preparation
@@ -46,8 +47,14 @@ Dynamic phase-based instruction loading for token-efficient development.
 - `/archflow:setup-mcp` — Configure an MCP server for external tools (Jira, Notion, Linear, GitHub, SuperDesign, etc.)
 - `/archflow:groom [story-id]` — Detail a backlog stub into a `ready` story (acceptance criteria, subtasks, gates); stays in the backlog
 - `/archflow:feature` — Add a story to the backlog or the active release and start the git development workflow
+- `/archflow:design [pick|list|name|story-id]` — The project's design system (chosen once, followed by
+  every UI agent), and per-story screen design that clears a story's `needs_design` gate
+- `/archflow:contract [story-id]` — The release's API contract architecture, and per-story endpoint
+  specs that clear a story's `needs_contract` gate
 - `/archflow:autopilot` — Run queued release stories unattended on one branch (blocker interview first,
   then silent; parks undecided stories; one report at the end)
+- `/archflow:doctor [--validate]` — Check the environment and project state: what Archflow needs,
+  what is missing, and the exact command to fix each gap. Report only; installs nothing
 - `/archflow:studio [stop|status|port <n>]` — Start (or stop) Archflow Studio, a local web workspace
   over the same `.archflow/` files; runs onboarding and migration from the UI (beta)
 
@@ -119,6 +126,7 @@ fi
 - `.archflow/history.yaml` - Shipped-story intent layer (loaded only on lookup)
 - `.archflow/current-feature.yaml` - Active development scope (git task/subtask tracking)
 - `.archflow/current-phase.yaml` - Phase + mode + active_release tracker (PROJECT-SCOPED, auto-created)
+- `.archflow/design-system.yaml` - The project's chosen design system (PROJECT-SCOPED; absent only for `backend_only`). Names the file to follow: `.archflow/design-systems/{design_system}.md`
 - `.archflow/autopilot/{run-id}.yaml` - Unattended run ledger (only when `/archflow:autopilot` is used)
 
 ## 💡 Universal Critical Rules (Apply to ALL Phases)
@@ -131,14 +139,41 @@ fi
 - **Prototype exception**: When building HTML prototypes/screens in `design-artifacts/`, static mock data is expected and correct.
 
 ### 🎨 SuperDesign MCP (Phase 2.25)
-- **MCP SETUP**: Projects using Phase 2.25 require the SuperDesign MCP server: `npx -y github:AZidan/superdesign-mcp-claude-code`
+- **MCP SETUP**: Projects using Phase 2.25 require the SuperDesign MCP server:
+  `npx -y github:AZidan/superdesign-mcp-claude-code#1bd2d1766b1e4d9a5828cd553da0f4e67e5a3ffe`
+  The `#<sha>` is an immutable pin, not decoration — an unpinned `github:` ref runs whatever is on
+  `main` at install time. Never replace it with a branch name. See SECURITY.md
+- **ASK BEFORE INSTALLING**: Never install this (or any other tool) silently. Say what it is and
+  where it comes from, and let the user decide
 - **OPTIONAL PHASE**: If SuperDesign MCP is unavailable, Phase 2.25 can be skipped (Phase 2 → 2.5 directly)
 - **VISUAL APPROVAL**: Hi-fi screens must be approved before API architecture begins
 
+### 🎨 Design System Compliance (Phases 2-4)
+- **CHOSEN ONCE**: The design system is picked at `/archflow:init` or `/archflow:onboard` and stored in `.archflow/design-system.yaml`. It is NOT a per-feature decision. Change it only via `/archflow:design`
+- **READ BEFORE ANY UI OUTPUT**: Every agent that produces wireframes, screens, UI code, or reviews UI MUST read `.archflow/design-system.yaml`, then read and follow `.archflow/design-systems/{design_system}.md`, before producing output
+- **VOCABULARY IS BINDING**: Component names in wireframes, `styled-dsl.yaml`, and every handoff file come from that file's `## Component vocabulary` table. Never a generic term where a system name exists
+- **LIBRARY IS BINDING**: Import from the `library` named in `design-system.yaml`. A second UI kit in the dependency list is a violation
+- **ANTI-PATTERNS ARE A GATE**: `qa-engineer` and `code-reviewer` treat the `## Anti-patterns` section as a mandatory checklist and FAIL the review on any violation, reporting file, line, and the vocabulary term that should have been used
+- **GAPS ARE LOGGED**: A component the system genuinely lacks is composed from its primitives and recorded in `design-artifacts/component-gaps.md` — never silently invented
+- **MISSING FILE = STOP**: If `.archflow/design-system.yaml` is absent on a project with a UI, stop and run `/archflow:design` before any UI work
+
+### 🚦 Readiness Gates (the two just-in-time gates)
+- **EVERY GATE HAS A VERB**: `gates.needs_design` is cleared by `/archflow:design {story-id}`;
+  `gates.needs_contract` is cleared by `/archflow:contract {story-id}`. Both run just-in-time, one
+  step ahead of that story's build
+- **THE PHASE FILE OWNS THE TRANSITION**: the commands are entry points, not second definitions.
+  `phase-2-design.md` § "Per-story design gate" and `phase-2.5-api-architecture.md` § "Per-story
+  contract gate" define what each writes and how the status advances. Never restate them elsewhere
+- **FOUNDATION vs PER-STORY**: both commands own both halves. Bare `/archflow:design` is the project
+  design system; bare `/archflow:contract` is the release contract architecture. A story-id argument
+  selects the per-story gate
+- **HUMAN ACCEPTS**: the agent produces the artifact, the user accepts it. Neither command advances a
+  status before that
+
 ### ✅ Acceptance Testing (Phases 3-4)
-- **ACCEPTANCE GATE**: After qa-engineer completes, launch `pm-maestro-reviewer` to validate acceptance criteria from the active release file (`.archflow/releases/{active_release}.yaml`)
-- **VERDICT REQUIRED**: Feature is not complete until pm-maestro-reviewer returns ACCEPTED verdict
-- **REJECTION FLOW**: If REJECTED, fix blocking defects and re-run pm-maestro-reviewer — do not proceed
+- **ACCEPTANCE GATE**: After qa-engineer completes, launch `pm-reviewer` to validate acceptance criteria from the active release file (`.archflow/releases/{active_release}.yaml`)
+- **VERDICT REQUIRED**: Feature is not complete until pm-reviewer returns ACCEPTED verdict
+- **REJECTION FLOW**: If REJECTED, fix blocking defects and re-run pm-reviewer — do not proceed
 - **REPORTS**: Acceptance reports saved to `docs/acceptance-reports/{story-id}-review.md`
 
 ### ⚠️ Mandatory Approval Gates (ALL Phases)
@@ -156,10 +191,17 @@ fi
 - **PHASE-APPROPRIATE AGENTS**: Only use agents listed for current phase
 - **MANDATORY FILE NAMING**: Follow exact output naming conventions
 
-### 🗺️ Codemap Navigation (ALL Phases)
-- **CODEMAP FIRST**: Always use `codemap find` before reading full files or using grep/glob
+### 🗺️ Codemap Navigation (ALL Phases — optional, for token optimization)
+Codemap is a token optimization. It is RECOMMENDED, not required: Archflow works without it, and
+every rule below degrades to ordinary Glob/Grep/Read when it is absent.
+
+- **CHECK FIRST**: `command -v codemap >/dev/null 2>&1` before invoking it. If it is not installed,
+  use Glob/Grep and targeted reads instead, and do not prompt the user about it mid-story
+- **PREFER CODEMAP WHEN INSTALLED**: `codemap find` before reading full files or using grep/glob
 - **TARGETED READS**: Use `codemap show` to get file structure, then read only the relevant line ranges
-- **INIT ON SETUP**: Run `codemap init .` when starting any new project, then `codemap watch . -q &`
+- **INIT ON SETUP**: When installed, run `codemap init .` on a new project. `codemap watch . -q &` is
+  a long-lived background process — start it only with the user's agreement, and tell them
+  `pkill -f "codemap watch"` stops it
 - **VALIDATE BEFORE TRUSTING**: Run `codemap validate` before using cached line numbers after compaction
 - **See `.claude/skills/codemap/SKILL.md`** for full usage guide
 
@@ -168,9 +210,10 @@ fi
 
 ### ⚡ Development Efficiency (ALL Phases)
 - **AGENT TEAMS**: For Phase 3+ features, launch ui-engineer and api-engineer simultaneously when both have clear, independent scopes from the API contract
-- **SEQUENTIAL DEPENDENCY**: qa-engineer runs AFTER feature agents complete, never in parallel. pm-maestro-reviewer runs AFTER qa-engineer
+- **SEQUENTIAL DEPENDENCY**: qa-engineer runs AFTER feature agents complete, never in parallel. pm-reviewer runs AFTER qa-engineer
 - **AGENT SCOPING**: Each agent works on ONE feature boundary. Never give an agent a cross-cutting concern
 - **HANDOFF VIA FILES**: Agents communicate through files, not messages. api-engineer produces endpoints; ui-engineer consumes docs/api-contract.md and styled-dsl.yaml
+- **DESIGN SYSTEM IN THE PROMPT, NOT THE CONTEXT**: Every subagent that touches UI gets the path written into its dispatch prompt verbatim — `Design system: read .archflow/design-system.yaml, then read and follow .archflow/design-systems/{design_system}.md before producing any output.` Never rely on the parent's context carrying it
 - **CONFLICT PREVENTION**: Only ONE agent may modify a given file. If two agents need the same file, sequence them
 - **TOKEN EFFICIENCY**: Use codemap find + targeted line reads instead of full file scans
 - **ONE STORY AT A TIME**: In Phase 3, complete one story's full cycle (build → test → accept → approve → merge) before the next. Only one story `in_progress` in the active release at a time.
@@ -206,21 +249,22 @@ For projects without `.archflow/current-phase.yaml`:
 
 ## 🚀 Getting Started
 
-**On Every New Session (ALWAYS do this first):**
+**On Every New Session:**
 ```bash
-# Start codemap watch if not already running
-pgrep -f "codemap watch" > /dev/null || codemap watch . -q &
+# Optional token optimization. Skips silently when codemap is not installed.
+# The watcher is a long-lived background process — only start it if the user has agreed to it.
+command -v codemap >/dev/null 2>&1 && pgrep -f "codemap watch" > /dev/null || true
 ```
 
 **Normal Operation (.archflow/current-phase.yaml exists):**
-1. Start codemap watch (above)
+1. Start codemap watch if installed and agreed (above)
 2. Load current phase from `.archflow/current-phase.yaml`
 3. Load detailed instructions from `.archflow/phases/phase-{current}.md`
 4. Follow phase-specific execution steps
 5. Complete approval gates before proceeding to next phase
 
 **Project Setup (.archflow/current-phase.yaml missing):**
-1. Start codemap watch (above)
+1. Start codemap watch if installed and agreed (above)
 2. Load setup system from `.archflow/phases/phase-setup.md`
 3. Auto-detect phase from project state or start Phase 1
 4. Create `.archflow/current-phase.yaml` and continue with normal operation

@@ -13,7 +13,7 @@ Read `.archflow/current-phase.yaml` to determine `project_type` and select appro
 | `qa-engineer` | Yes | Yes | Yes | Yes |
 | `code-reviewer` | Yes | Yes | Yes | Yes |
 | `performance-optimizer` | If needed | If needed | If needed | If needed |
-| `pm-maestro-reviewer` | Yes | Yes | Yes | Yes |
+| `pm-reviewer` | Yes | Yes | Yes | Yes |
 
 **Agent scope adjustments by project type:**
 - **backend_only**: code-reviewer skips UI review, qa-engineer skips frontend tests, performance-optimizer focuses on API/DB
@@ -64,7 +64,7 @@ code-reviewer: complete codebase review → docs/code-review-report.md
   - Maintainability assessment
 
 # Acceptance Regression Suite (scoped to the ACTIVE RELEASE)
-pm-maestro-reviewer: .archflow/releases/{active_release}.yaml → docs/acceptance-reports/regression-report.md
+pm-reviewer: .archflow/releases/{active_release}.yaml → docs/acceptance-reports/regression-report.md
   - Re-run ALL acceptance tests for THIS release's stories as regression
   - Verify no cross-story regressions within the release
   - Produce a consolidated acceptance regression report for the release
@@ -137,7 +137,7 @@ performance-optimizer: analyze and optimize → docs/performance-report.md
 Quality Assessment:
   - qa-engineer: comprehensive testing (scope based on project_type)
   - code-reviewer: quality assessment (scope based on project_type)
-  - pm-maestro-reviewer: acceptance regression suite
+  - pm-reviewer: acceptance regression suite
   - performance-optimizer: optimization (if needed, scope based on project_type)
 
 Review & Approval:

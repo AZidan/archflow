@@ -10,6 +10,8 @@ Read `.archflow/current-phase.yaml` if it exists and report:
 - current phase + `phase_file`
 - `project_type`
 - `mode` (quick | full)
+- design system: from `.archflow/design-system.yaml` — `{design_system} ({platform} · {library})`, or
+  `not set — run /archflow:design` when the project has a UI and the file is missing
 - `active_release` (and, from `.archflow/releases/{active_release}.yaml`, its progress: stories done / total)
 - what is sensible to run next (see the command list below)
 
@@ -48,6 +50,16 @@ Archflow — Phase-Based Development Workflow
 
   /archflow:autopilot     Run queued release stories unattended on one branch
                           (blocker interview first, then silent; one report at the end)
+
+  /archflow:design        The project's design system, or one story's screens
+                          (/archflow:design S7-20 clears that story's design gate)
+                          (chosen once per project; every UI agent builds against it)
+
+  /archflow:contract      The API contract architecture, or one story's endpoints
+                          (/archflow:contract S7-20 clears that story's contract gate)
+
+  /archflow:doctor        Check the environment and project state — what is missing and
+                          how to fix it (add --validate to check state files against schemas)
 
   /archflow:studio        Open Archflow Studio, a local web workspace over these files
                           (beta — stop | status | port <n>)

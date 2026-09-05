@@ -106,7 +106,7 @@ envelope:
     merge_to_main:       {type: boolean, enum: [false],  description: "Always false. The user merges to main."}
     open_pr:             {type: boolean, enum: [false],  description: "Always false."}
     run_qa:              {type: boolean, default: true,  description: "qa-engineer after implementation"}
-    run_acceptance:      {type: boolean, default: true,  description: "pm-maestro-reviewer after QA"}
+    run_acceptance:      {type: boolean, default: true,  description: "pm-reviewer after QA"}
 
 # -----------------------------------------------------------------------------
 # Stop conditions
@@ -132,7 +132,7 @@ stop_conditions:
     max_qa_retries:
       type: integer
       default: 2
-      description: "pm-maestro-reviewer REJECTED retries before the story is failed."
+      description: "pm-reviewer REJECTED retries before the story is failed."
 
 # -----------------------------------------------------------------------------
 # Decision — one answered interview question

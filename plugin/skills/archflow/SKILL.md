@@ -24,6 +24,9 @@ Every Archflow action is a namespaced slash command — there is no argument-sty
 /archflow:groom [story-id]          → Turn a backlog stub into a ready story (ACs, subtasks, gates)
 /archflow:feature [name/description|story-id] → Add a story, or pull one into the active release
 /archflow:autopilot [story-id ...]  → Run queued stories unattended on one branch (interview, then silent)
+/archflow:design [pick|list|name]   → Show or change the project's design system (once per project)
+/archflow:contract [story-id]        → Contract architecture, or one story's endpoints
+/archflow:doctor [--validate]        → Environment + project health check; report only
 /archflow:studio [stop|status|port n] → Local web workspace over the same files; onboards and migrates from the UI (beta)
 ```
 
@@ -38,10 +41,13 @@ inside another flow (e.g. onboarding calls setup-mcp), read that file and follow
 - `${CLAUDE_PLUGIN_ROOT}/skills/archflow/workflow.md` — git branching strategy
 - `${CLAUDE_PLUGIN_ROOT}/skills/archflow/base-dsl-structure.yaml` — DSL template for design artifacts
 - `${CLAUDE_PLUGIN_ROOT}/skills/archflow/mcp-registry.yaml` — curated MCP server registry
+- `${CLAUDE_PLUGIN_ROOT}/skills/archflow/design-systems/` — design-system reference files, one plain
+  markdown file per system (not skills, not commands — loaded by explicit path only)
 - `${CLAUDE_PLUGIN_ROOT}/scripts/migrate.py` — v1.0 → v2.0 migration engine
 
-`init` / `onboard` copy `instructions.md`, `phases/`, `schemas/`, and `workflow.md` into the
-project's `.archflow/`. Paths beginning with `.archflow/` are always **project-local**.
+`init` / `onboard` copy `instructions.md`, `phases/`, `schemas/`, `design-systems/`, and
+`workflow.md` into the project's `.archflow/`. Paths beginning with `.archflow/` are always
+**project-local**.
 
 ## When this skill is invoked directly
 
@@ -52,6 +58,10 @@ If the user runs this skill on its own (`/archflow:archflow`), behave exactly li
 
 1. Read `.archflow/current-phase.yaml` → `phase_file`, then follow
    `.archflow/phases/phase-{current}-{name}.md`.
-2. `.archflow/instructions.md` (loaded by the SessionStart hook) is the source of truth for agents
+2. **Before producing or reviewing any UI**, read `.archflow/design-system.yaml`, then read and
+   follow `.archflow/design-systems/{design_system}.md`. Component names in wireframes, DSL files
+   and handoffs come from its vocabulary table. If the file is missing on a project with a UI,
+   stop and run `/archflow:design`.
+3. `.archflow/instructions.md` (loaded by the SessionStart hook) is the source of truth for agents
    per phase, the release model, and the critical rules — do not restate it here.
-3. Stop for explicit user approval at every phase gate.
+4. Stop for explicit user approval at every phase gate.
