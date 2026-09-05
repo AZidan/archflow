@@ -19,6 +19,10 @@
 # -----------------------------------------------------------------------------
 # history.yaml is an array of history_entry
 # -----------------------------------------------------------------------------
+# Document root: `history_entry` (the file is a LIST of these)
+$root: history_entry
+$root_is_list: true
+
 history_entry:
   type: object
   required: [story, release, shipped_at, summary, touched, acceptance_criteria]

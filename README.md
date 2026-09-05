@@ -381,6 +381,8 @@ Archflow is distributed as a Claude Code plugin marketplace. The plugin contains
 ```
 archflow/
 ├── .claude-plugin/marketplace.json  # Marketplace registry
+├── .github/workflows/ci.yml         # Mirror check, schema validation, tests
+├── tests/                           # Framework tests + fixture projects
 ├── plugin/                          # Installable plugin
 │   ├── .claude-plugin/plugin.json   # Plugin manifest
 │   ├── hooks/                       # Two SessionStart hooks

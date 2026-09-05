@@ -1,0 +1,14 @@
+id: broken
+name: "Broken release"
+goal: "Exercise the validator"
+status: in_progress
+stories:
+  - id: NOT-A-STORY-ID
+    title: "Bad id pattern"
+    priority: Critical
+    status: teleported
+    gates: {needs_design: true}
+    assigned: ui-engineer
+    description: "status is not on the ladder, id fails the pattern, gates is missing a required key."
+    acceptance_criteria:
+      - {text: "something", met: "yes"}

@@ -21,6 +21,9 @@
 # -----------------------------------------------------------------------------
 # Run  (autopilot/{run-id}.yaml)
 # -----------------------------------------------------------------------------
+# Document root: `run`
+$root: run
+
 run:
   type: object
   required: [run_id, started_at, status, base_branch, run_branch, release, envelope, queue]

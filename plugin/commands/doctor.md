@@ -107,18 +107,34 @@ Show `(not set)` for null. Omit whole sections that do not apply to the project 
 
 ## Step 5 — `--validate` (only when asked)
 
-Validate each state file against its schema in `.archflow/schemas/`:
+Run the validator that ships with the plugin. Do not re-implement the checks here.
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/validate_archflow.py" .
+```
+
+It validates every `.archflow/` state file against its schema and exits 0 for clean, 1 for
+violations, 2 if it could not run. Add `--json` if you need to reason about the output rather than
+show it.
 
 | File | Schema |
 |---|---|
+| `current-phase.yaml` | `current-phase-schema.yaml` |
 | `roadmap.yaml` | `roadmap-schema.yaml` |
 | `backlog.yaml` | `backlog-schema.yaml` |
-| `releases/*.yaml` | `release-schema.yaml` |
+| `releases/*.yaml`, `releases/archive/*.yaml` | `release-schema.yaml` |
 | `history.yaml` | `history-schema.yaml` |
 | `autopilot/*.yaml` | `autopilot-schema.yaml` |
 
-Report per file: PASS, or the failing field path with what was expected and what was found. A schema
-violation is a **FAIL** — the state files are the contract every agent reads.
+Report its output as-is: it already names the file, the field path and what it expected. A schema
+violation is a **FAIL** — the state files are the contract every agent reads, and a field that has
+drifted surfaces later as an agent doing the wrong thing somewhere unrelated.
+
+Exit code 2 means the validator could not run, usually a missing `.archflow/schemas/` directory.
+That is a FAIL too, but say which it is: a project with no schemas is not a project with bad data.
+
+If PyYAML is missing the validator says so and exits 2. Report the install command rather than
+trying to validate by hand.
 
 ## Step 6 — Report
 

@@ -1,0 +1,18 @@
+id: checkout-redesign
+name: "Checkout redesign"
+goal: "Cut checkout abandonment"
+status: in_progress
+stories:
+  - id: S2-07
+    title: "Saved payment methods"
+    priority: High
+    status: design_ready
+    gates: {needs_design: true, needs_contract: true}
+    design_artifact: "design-artifacts/S2-07/"
+    contract_endpoints: [listCards, addCard]
+    assigned: ui-engineer
+    description: "Store and reuse cards during checkout."
+    acceptance_criteria:
+      - {text: "User can pay with a saved card", met: false}
+    subtasks:
+      - {text: "Build saved-card selector", completed: false}

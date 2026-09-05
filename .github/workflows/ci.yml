@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Framework checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install test dependencies
+        run: python -m pip install --quiet pyyaml pytest
+
+      # The state files are the contract every agent reads. A schema that will
+      # not parse takes the validator down with it, so check them first.
+      - name: YAML parses
+        run: |
+          python - <<'PY'
+          import glob, sys, yaml
+          bad = []
+          for f in sorted(glob.glob(".archflow/**/*.yaml", recursive=True)
+                          + glob.glob("plugin/**/*.yaml", recursive=True)
+                          + glob.glob(".github/workflows/*.yml")):
+              try:
+                  yaml.safe_load(open(f))
+              except yaml.YAMLError as e:
+                  bad.append(f"{f}: {str(e).splitlines()[0]}")
+          print(f"checked {len(glob.glob('.archflow/**/*.yaml', recursive=True))} state/schema files")
+          if bad:
+              print("\n".join(bad)); sys.exit(1)
+          PY
+
+      # Frontmatter is YAML too, and an unquoted colon silently breaks a
+      # command. This caught four shipped commands the day it was written.
+      - name: Agent and command frontmatter parses
+        run: |
+          python - <<'PY'
+          import glob, re, sys, yaml
+          bad = []
+          for f in sorted(glob.glob("plugin/agents/*.md") + glob.glob("plugin/commands/*.md")):
+              m = re.match(r"^---\n(.*?)\n---", open(f).read(), re.S)
+              if not m:
+                  bad.append(f"{f}: no frontmatter"); continue
+              try:
+                  d = yaml.safe_load(m.group(1))
+                  if not d.get("description"):
+                      bad.append(f"{f}: no description")
+              except yaml.YAMLError as e:
+                  bad.append(f"{f}: {str(e).splitlines()[0]}")
+          if bad:
+              print("\n".join(bad)); sys.exit(1)
+          print("all frontmatter valid")
+          PY
+
+      - name: Mirrored trees are identical
+        run: diff -r -x SKILL.md -x mcp-registry.yaml -x .DS_Store .archflow plugin/skills/archflow
+
+      - name: Validator self-check on fixtures
+        run: |
+          python plugin/scripts/validate_archflow.py tests/fixtures/valid-project
+          # The invalid fixture MUST fail. A validator that never fails is worse
+          # than none, because it buys confidence it has not earned.
+          if python plugin/scripts/validate_archflow.py tests/fixtures/invalid-project; then
+            echo "::error::the invalid fixture passed validation"; exit 1
+          fi
+          echo "validator fails on drift, as intended"
+
+      - name: Tests
+        run: python -m pytest tests/ -q
+
+      - name: Plugin validate (best effort)
+        continue-on-error: true
+        run: |
+          if command -v claude >/dev/null 2>&1; then
+            claude plugin validate ./plugin
+          else
+            echo "claude CLI not available on the runner; skipping"
+          fi
+
+  markdown:
+    name: Markdown lint
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          globs: |
+            plugin/**/*.md
+            .archflow/**/*.md
+            *.md

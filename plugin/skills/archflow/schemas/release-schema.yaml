@@ -18,6 +18,9 @@
 # -----------------------------------------------------------------------------
 # Release  (releases/{slug}.yaml and releases/archive/{slug}.yaml)
 # -----------------------------------------------------------------------------
+# Document root: `release`
+$root: release
+
 release:
   type: object
   required: [id, name, goal, status, stories]

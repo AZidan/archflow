@@ -1,0 +1,16 @@
+# Deliberately permissive. These files are prompts, not prose for a linter:
+# long lines carry paths, and duplicate headings recur across phase files.
+config:
+  MD013: false   # line length
+  MD024: false   # duplicate headings
+  MD029: false   # ordered-list numbering
+  MD033: false   # inline HTML (the untrusted-content delimiters)
+  MD041: false   # first line need not be a heading (frontmatter)
+  MD036: false   # bold used as a pseudo-heading
+globs:
+  - "plugin/**/*.md"
+  - ".archflow/**/*.md"
+  - "*.md"
+ignores:
+  - "node_modules/**"
+  - "plugin/dist/**"

@@ -1,0 +1,27 @@
+# v1.0 roadmap, variant B: top-level sprints with inline story objects.
+project: "Demo app B"
+project_type: backend_only
+
+sprints:
+  - id: S1
+    name: "Ingest"
+    status: completed
+    stories:
+      - id: S1-01
+        title: "Webhook receiver"
+        priority: P0
+        status: done
+        description: "Accept and verify inbound webhooks."
+        acceptance_criteria:
+          - "Signature is verified"
+  - id: S2
+    name: "Reporting"
+    status: in_progress
+    stories:
+      - id: S2-01
+        title: "Daily rollup"
+        priority: P1
+        status: in_progress
+        description: "Aggregate events per day."
+        acceptance_criteria:
+          - "Rollup runs nightly"

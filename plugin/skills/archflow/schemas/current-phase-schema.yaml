@@ -5,6 +5,9 @@
 #
 # Validate with: /archflow:doctor --validate
 
+# Document root: the object below (no named definitions in this file)
+$root: null
+
 type: object
 required: [phase, phase_file, project_type, mode]
 

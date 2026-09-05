@@ -1,0 +1,52 @@
+# v1.0 roadmap, variant A: stories defined under epics, sprints reference them by id.
+project: "Demo app"
+project_type: fullstack
+
+epics:
+  - id: E1
+    name: "Authentication"
+    stories:
+      - id: S1-01
+        title: "Email login"
+        priority: P0
+        status: done
+        description: "Users sign in with email and password."
+        acceptance_criteria:
+          - "Login form validates input"
+          - "Failed login shows an error"
+        subtasks:
+          - "Build login form"
+          - "Wire the auth endpoint"
+  - id: E2
+    name: "Checkout"
+    stories:
+      - id: S2-01
+        title: "Saved cards"
+        priority: P1
+        status: in_progress
+        description: "Store and reuse payment cards."
+        acceptance_criteria:
+          - "User can pay with a saved card"
+        subtasks:
+          - "Card selector component"
+      - id: S2-02
+        title: "Guest checkout"
+        priority: P2
+        status: todo
+        description: "Buy without an account."
+        acceptance_criteria:
+          - "Order completes without a login"
+
+phases:
+  - id: P1
+    name: "MVP"
+    status: in_progress
+    sprints:
+      - id: S1
+        name: "Auth"
+        status: completed
+        stories: [S1-01]
+      - id: S2
+        name: "Checkout"
+        status: in_progress
+        stories: [S2-01, S2-02]
