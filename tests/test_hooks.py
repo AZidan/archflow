@@ -50,7 +50,34 @@ def on_main(project):
 
 
 # --------------------------------------------------------------------------
-# Always blocked, run or no run
+# Scope: Archflow projects only
+#
+# Installing a development framework is not consent to a global git policy. The
+# guard ships with the plugin and therefore loads in every session, so it has to
+# decline jurisdiction itself.
+# --------------------------------------------------------------------------
+
+def test_guard_is_silent_in_a_non_archflow_repo(tmp_path):
+    (tmp_path / ".git").mkdir()
+    (tmp_path / ".git" / "HEAD").write_text("ref: refs/heads/main\n")
+    code, err = guard("git push --force origin main", tmp_path)
+    assert code == ALLOW, "the guard must not police repos that never opted in"
+    assert err.strip() == ""
+
+
+def test_guard_is_silent_in_a_plain_directory(tmp_path):
+    code, _ = guard("git push --force origin main", tmp_path)
+    assert code == ALLOW
+
+
+def test_block_message_names_the_project(project):
+    code, err = guard("git push --force origin main", project)
+    assert code == BLOCK
+    assert project.name in err, "a block must say which project it applies to"
+
+
+# --------------------------------------------------------------------------
+# Blocked in an Archflow project, run or no run
 # --------------------------------------------------------------------------
 
 def test_force_push_to_main_is_always_blocked(project):

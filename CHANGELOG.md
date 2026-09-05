@@ -31,9 +31,10 @@ Nothing yet.
   summarize, never instructions to follow. Directives found inside are surfaced, not acted on.
 - **Added `SECURITY.md`** covering the pinning policy, the untrusted-content convention, the shell
   surface, credential handling, and how to report a vulnerability.
-- **Two guard hooks.** A `PreToolUse` hook blocks a force-push to `main`, and any push, checkout or
-  merge touching `main` while an unattended autopilot run is live. A `Stop` hook warns when state
-  files have drifted from their schemas. Both fail open.
+- **Two guard hooks, scoped to Archflow projects.** In a directory with an `.archflow/`, a
+  `PreToolUse` hook blocks a force-push to `main`, and any push, checkout or merge touching `main`
+  while an unattended autopilot run is live. In any other repo it exits immediately. A `Stop` hook
+  warns when state files have drifted from their schemas. Both fail open.
 
 ### Added
 

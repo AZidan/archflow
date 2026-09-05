@@ -10,16 +10,22 @@
  *
  * This turns the one rule that cannot be undone into a mechanical block.
  *
- * WHAT IT BLOCKS
- *   During an ACTIVE autopilot run only:
+ * SCOPE
+ *   Archflow projects only — a directory with an .archflow/. Installing a
+ *   development framework is not consent to a global git policy, and a plugin
+ *   that silently polices git in unrelated repos gets uninstalled rather than
+ *   reported. In any other directory this exits immediately.
+ *
+ * WHAT IT BLOCKS (inside an Archflow project)
+ *   During an ACTIVE autopilot run:
  *     - git push  targeting main/master
  *     - git merge while main/master is checked out
  *     - git checkout/switch to main/master (the setup move for both)
- *   Always:
+ *   Any time:
  *     - git push --force / --force-with-lease targeting main/master
  *
  * WHAT IT DOES NOT DO
- *   Outside an autopilot run it blocks nothing except a force-push to main. The
+ *   Outside an autopilot run it blocks nothing except a force-push. The
  *   framework's approval gates are the control there, and a hook that fought
  *   every ordinary merge would be turned off within a day.
  *
@@ -32,8 +38,8 @@
  * Exit codes: 0 allow · 2 block (stderr goes back to the model)
  */
 
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { basename, join } from "node:path";
 
 const PROTECTED = /^(?:main|master|origin\/main|origin\/master)$/;
 
@@ -43,6 +49,11 @@ function readStdin() {
   } catch {
     return "";
   }
+}
+
+/** Is this an Archflow project at all? One stat; everything else is gated on it. */
+function isArchflowProject(cwd) {
+  return existsSync(join(cwd, ".archflow"));
 }
 
 /** Is an autopilot run live in this project? Cheap: one directory read. */
@@ -141,16 +152,22 @@ function main() {
   if (typeof command !== "string" || !command.includes("git")) process.exit(0);
 
   const cwd = input.cwd || process.cwd();
+
+  // Archflow projects only. Everywhere else this guard has no standing.
+  if (!isArchflowProject(cwd)) process.exit(0);
+
   const findings = segments(command).map(analyse).filter(Boolean);
   if (findings.length === 0) process.exit(0);
 
-  // Always: a force-push to a protected branch rewrites shared history.
+  const project = basename(cwd) || cwd;
+
+  // A force-push to a protected branch rewrites history other people have.
   const forcePush = findings.find((f) => f.kind === "push" && f.forced);
   if (forcePush) {
     block(
-      "Blocked: force-push to a protected branch.",
-      `Archflow never rewrites history on main or master. If this is genuinely intended, run it\n` +
-        `yourself outside the agent session.\n\n  ${forcePush.segment}`
+      `Blocked: force-push to a protected branch in ${project}.`,
+      `Archflow does not rewrite history on main or master in a project it manages. If this is\n` +
+        `genuinely intended, run it yourself outside the agent session.\n\n  ${forcePush.segment}`
     );
   }
 

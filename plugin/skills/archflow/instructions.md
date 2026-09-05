@@ -187,10 +187,12 @@ fi
 Two hooks back the rules that cannot be undone by an apology. They are a floor under the prompt
 rules, never a replacement for them.
 
-- **`PreToolUse` on Bash — `guard-git.mjs`**: blocks a force-push to `main`/`master` always, and
-  during an ACTIVE `/archflow:autopilot` run also blocks pushing to, checking out, or merging into
-  those branches. Outside a run it blocks nothing but the force-push, because the approval gates are
-  the control there and a guard that fights ordinary merges gets switched off
+- **`PreToolUse` on Bash — `guard-git.mjs`**: **inside an Archflow project only** (a directory with
+  an `.archflow/`), blocks a force-push to `main`/`master`, and during an ACTIVE
+  `/archflow:autopilot` run also blocks pushing to, checking out, or merging into those branches.
+  Elsewhere it exits immediately: installing a framework is not consent to a global git policy.
+  Outside a run it blocks nothing but the force-push, because the approval gates are the control
+  there and a guard that fights ordinary merges gets switched off
 - **`Stop` — `check-state.mjs`**: runs the schema validator and warns when a session leaves
   `.archflow/` state drifted. ADVISORY: it prints and exits 0, because a story is often half-written
   when a turn ends
