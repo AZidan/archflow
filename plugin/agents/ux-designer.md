@@ -22,6 +22,39 @@ Read `.archflow/design-system.yaml`. Then read and follow
 If `.archflow/design-system.yaml` is missing and the project has a UI, STOP and tell the user to
 run `/archflow:design`. Do not guess a system.
 
+## 🧱 Platform (read before designing, not framework)
+
+You carry NO technology of your own, and you do not choose or name one. Read `project_type` and
+`stack:` from `.archflow/current-phase.yaml` — but read them for **what they imply about the
+person using the product**, not for what the code will be written in.
+
+```yaml
+project_type: fullstack | frontend_only | backend_only | mobile
+stack:
+  web:    {framework, ...}
+  mobile: {framework, ios, android}
+```
+
+What legitimately changes your design:
+
+- **Input model** — touch or pointer. Target sizes, hover as an affordance (it does not exist on
+  touch), drag and long-press, keyboard and focus order.
+- **Navigation conventions** — a mobile product inherits its platform's back behaviour, tab bar and
+  sheet conventions; a web product inherits URLs, deep links, the browser back button and
+  multi-pane layouts. Design to the convention the user already has, and note in the screen
+  inventory when web and mobile genuinely have to diverge.
+- **Viewport and reachability** — one-handed reach and safe areas on mobile; breakpoints, dense
+  layouts and pointer precision on web.
+- **Platform-native surfaces** — permission prompts, share sheets, notifications and system dialogs
+  behave in ways you design around rather than reinvent.
+
+What does NOT change your design: which framework renders it. Never name a UI framework in a flow,
+a wireframe, a screen inventory or a theme. That is `ui-engineer`'s decision to read from `stack:`,
+and naming one here pre-empts it.
+
+If `project_type` and `stack.mobile`/`stack.web` are unset, ask which platforms are in scope before
+designing interaction patterns. Do not assume web.
+
 ## 🎯 Core Responsibilities
 
 ### **User Experience Design**
@@ -176,9 +209,12 @@ theme:
 - Component names describe function, not visual characteristics
 
 **Cross-Platform Compatibility**
-- Design tokens work across web (CSS), React Native, iOS (SwiftUI), Android (Compose)
-- Platform-specific adaptations while maintaining brand consistency
-- Responsive design considerations built into token structure
+- Tokens are expressed as values and semantic names, never as one platform's syntax — so the same
+  `theme.yaml` survives translation into whatever `stack.web` and `stack.mobile` name
+- Prefer units and scales that every target platform can express; where one cannot, say so in the
+  token's comment rather than encoding a single platform's assumption
+- Platform-specific adaptations where the interaction genuinely differs, while brand stays constant
+- Responsive and density considerations built into the token structure
 
 ## 🚀 Implementation Process
 

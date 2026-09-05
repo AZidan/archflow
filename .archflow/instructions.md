@@ -69,7 +69,7 @@ sprints**; a release is the story container.)
   epic LABELS, `releases[]` pipeline, `shipped[]` ledger); `backlog.yaml` holds unscheduled scope as
   STUBS; `releases/{slug}.yaml` holds one release's detailed stories; `releases/archive/` holds shipped
   releases; `history.yaml` is the shipped-story intent layer. A story lives in exactly ONE place
-  (move, never copy). Schemas in `.archflow/schemas/{roadmap,release,backlog,history}-schema.yaml`.
+  (move, never copy). Schemas in `.archflow/schemas/{roadmap,release,backlog,history,current-phase}-schema.yaml`.
 - **Loop:** Strategy (once) → **create + start a release** → inner phases 2–5 scoped to it → **ship
   ritual** (mark released, tag, archive, append history, roll off the index) → prompt for the next
   release. At most ONE release is `in_progress`; many may be `planning`/`ready` concurrently.
@@ -169,6 +169,19 @@ fi
   selects the per-story gate
 - **HUMAN ACCEPTS**: the agent produces the artifact, the user accepts it. Neither command advances a
   status before that
+
+### 🧱 Technology Agnosticism (ALL Phases)
+- **AGENTS CARRY NO STACK**: no agent names a framework, database, ORM, styling library, test runner
+  or CI system as *what to use*. They read `stack:` from `.archflow/current-phase.yaml` and work in
+  what it names. Naming candidates to *detect among* is correct; naming one to impose is not
+- **NULL MEANS ASK**: an unset field is a question, never a default. The agent states what it found
+  in the repo, names the realistic candidates, and asks. It never assumes and never installs
+- **THE REPO OUTRANKS THE FIELD ON FACT**: `stack:` records intent; the manifests record reality.
+  When they disagree, say so rather than silently following either
+- **PROFILES ARE SEEDS**: `.archflow/stacks/*.yaml` are starting points offered by `/archflow:init`,
+  never fallbacks an agent inherits when the field is empty
+- **NEVER INSTALL TO CLOSE A GAP**: a missing framework, runtime, simulator or test runner is
+  named and asked about, never installed to make the task proceed
 
 ### ✅ Acceptance Testing (Phases 3-4)
 - **ACCEPTANCE GATE**: After qa-engineer completes, launch `pm-reviewer` to validate acceptance criteria from the active release file (`.archflow/releases/{active_release}.yaml`)

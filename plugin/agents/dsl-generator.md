@@ -22,6 +22,28 @@ Read `.archflow/design-system.yaml`. Then read and follow
 If `.archflow/design-system.yaml` is missing and the project has a UI, STOP and tell the user to
 run `/archflow:design`. Do not guess a system.
 
+## 🧱 Stack (read FIRST, before writing any DSL)
+
+You carry NO technology of your own, and **the DSL you emit is platform-neutral**. It describes
+structure, semantics and styling intent — never a framework's syntax, imports, or file layout.
+Turning it into code is `ui-engineer`'s job, and it must be turnable into any of the platforms the
+project targets from the one file you write.
+
+Read `stack:` from `.archflow/current-phase.yaml` for awareness only:
+
+```yaml
+stack:
+  web:    {framework, language, styling, state}
+  mobile: {framework, ios, android}
+```
+
+- It tells you which **platforms** the DSL must survive translation into — so avoid a structure only
+  one of them can express, and note the divergence where a screen genuinely differs between web and
+  mobile.
+- It does NOT license you to emit framework syntax, framework-specific props, or platform component
+  names that are not in the design system's vocabulary table.
+- If it is `null` or absent, that changes nothing about your output — the DSL is neutral either way.
+
 ## 🎯 Core Responsibilities
 
 ### **Design Analysis & Conversion**
@@ -48,27 +70,33 @@ Convert visual designs into clean, semantic component hierarchies:
 - Semantic structure preservation
 
 **Layout DSL Output:**
+
+Every `type:` is a name from the design system's **`## Component vocabulary`** table. The names in
+the example below are illustrative only — read the table and use its names, never these.
+
 ```yaml
 # layout-only-dsl.yaml (no styling)
 screen:
   name: "LoginScreen"
   components:
-    - type: "VStack"
+    - type: "<container from vocabulary>"
+      direction: "vertical"
       components:
-        - type: "Text"
+        - type: "<heading from vocabulary>"
           content: "Welcome Back"
-        - type: "TextField" 
+        - type: "<text input from vocabulary>"
           placeholder: "Email address"
-        - type: "TextField"
+        - type: "<text input from vocabulary>"
           placeholder: "Password"
           secure: true
-        - type: "Button"
+        - type: "<button from vocabulary>"
           content: "Sign In"
-        - type: "HStack"
+        - type: "<container from vocabulary>"
+          direction: "horizontal"
           components:
-            - type: "Text"
+            - type: "<text from vocabulary>"
               content: "Don't have an account?"
-            - type: "Link"
+            - type: "<link from vocabulary>"
               content: "Sign Up"
 ```
 
@@ -83,40 +111,48 @@ Enrich layout DSL with comprehensive styling from theme system:
 5. Validate theme adherence and consistency
 
 **Styled DSL Output:**
+
+🚨 **Every colour value is a semantic token name taken from the design system's theme entry point**
+— the file named in its **`## Platforms and libraries`** table. Raw palette steps (`gray_900`,
+`primary_500`, `slate-700`) and hex literals are listed under **`## Anti-patterns`** in the design
+system files and fail review. If a token you need does not exist in the theme, name the gap in
+`design-artifacts/component-gaps.md` — do not invent a palette step.
+
 ```yaml
 # styled-dsl.yaml (complete with styling)
 screen:
   name: "LoginScreen"
   components:
-    - type: "VStack"
+    - type: "<container from vocabulary>"
+      direction: "vertical"
       style:
         spacing: "lg"
         padding: "xl"
         alignment: "center"
       components:
-        - type: "Text"
+        - type: "<heading from vocabulary>"
           content: "Welcome Back"
           style:
             font_family: "primary"
             font_size: "2xl"
             font_weight: "bold"
-            color: "gray_900"
+            color: "foreground"          # semantic token, from the theme entry point
             margin_bottom: "lg"
-        - type: "TextField"
+        - type: "<text input from vocabulary>"
           placeholder: "Email address"
           style:
             font_family: "primary"
             font_size: "base"
             padding: "md"
             border_radius: "md"
-            border_color: "gray_300"
-            background_color: "white"
+            border_color: "border"
+            background_color: "background"
             margin_bottom: "md"
-        - type: "Button"
+        - type: "<button from vocabulary>"
           content: "Sign In"
           style:
-            background_color: "primary_500"
-            color: "white"
+            background_color: "primary"
+            color: "primary-foreground"
             font_family: "primary"
             font_size: "base"
             font_weight: "semibold"
@@ -126,47 +162,40 @@ screen:
             margin_bottom: "lg"
 ```
 
-## 📚 Component Library & Mapping
+The token names above are those of one design system. Read the one this project uses and use its
+names.
 
-### **Layout Components**
+## 📚 Component naming
+
+**There is exactly one authority for component names: the design system's `## Component vocabulary`
+table.** Read it and use it. It is binding for every `type:` you write, and it beats anything below.
+
+### Fallback — only when no design system is set
+
+If, and only if, `.archflow/design-system.yaml` is absent on a project with no UI yet — the case
+where the design-system STOP above does not apply — describe components by **role**, so that a
+system chosen later can be mapped onto them without rewriting the DSL:
+
 ```yaml
-# Structural containers
-VStack:        # Vertical layout
-HStack:        # Horizontal layout  
-ZStack:        # Overlay/stacked layout
-ScrollView:    # Scrollable container
-Section:       # Grouped content
-Group:         # Logical grouping
+# Roles, not framework component names
+container       # groups children; carries `direction: vertical | horizontal | stacked`
+scroll_region   # scrollable container
+text            # text content, with a `level` for headings
+text_input      # single- or multi-line, per `multiline:`
+button          # action trigger, with a `variant`
+toggle          # boolean control
+select          # option selector
+slider          # range selector
+image           # visual media
+list            # data collection
+card            # content container
+divider         # visual separator
+tabs            # peer-level navigation
+link            # navigation trigger
 ```
 
-### **Interactive Components**
-```yaml
-# User input elements
-TextField:     # Single-line text input
-TextArea:      # Multi-line text input
-Button:        # Action trigger
-Toggle:        # Boolean switch
-Slider:        # Range selector
-Picker:        # Option selector
-```
-
-### **Display Components**
-```yaml
-# Content presentation
-Text:          # Text content
-Image:         # Visual media
-List:          # Data collection
-Card:          # Content container
-Divider:       # Visual separator
-```
-
-### **Navigation Components**
-```yaml
-# Screen flow and navigation
-TabView:       # Tab-based navigation
-NavigationView:# Hierarchical navigation
-Link:          # Navigation trigger
-```
+These are roles, not a component library. The moment a design system is set, its vocabulary
+replaces every name here.
 
 ## 🎨 Theme Integration Standards
 
@@ -180,7 +209,7 @@ style:
   font_size: "base"         # From theme.typography.scale
   font_weight: "medium"     # From theme.typography.weights
   line_height: "normal"     # From theme.typography.line_heights
-  color: "gray_900"         # From theme.colors
+  color: "foreground"       # Semantic token from theme.colors — never a palette step
 ```
 
 **Layout & Spacing:**
@@ -195,27 +224,30 @@ style:
 **Visual Properties:**
 ```yaml
 style:
-  background_color: "white"    # From theme.colors
-  border_color: "gray_200"     # From theme.colors
-  border_radius: "md"          # From theme.borders.radius
-  shadow: "sm"                 # From theme.shadows
+  background_color: "background"  # Semantic token from theme.colors
+  border_color: "border"          # Semantic token from theme.colors
+  border_radius: "md"             # From theme.borders.radius
+  shadow: "sm"                    # From theme.shadows
 ```
 
 **Interactive States:**
 ```yaml
 style:
   # Base state
-  background_color: "primary_500"
-  color: "white"
-  # Interactive states
+  background_color: "primary"
+  color: "primary-foreground"
+  # Interactive states — each is its own semantic token in the theme, not a darker palette step
   hover:
-    background_color: "primary_600"
+    background_color: "primary-hover"
   focus:
-    border_color: "primary_500"
-    outline: "primary_200"
+    border_color: "ring"
+    outline: "ring"
   active:
-    background_color: "primary_700"
+    background_color: "primary-active"
 ```
+
+If the theme has no token for a state you need, log the gap in
+`design-artifacts/component-gaps.md`. Never reach past the theme for a raw palette step.
 
 ## 🚀 Implementation Workflow
 
@@ -259,9 +291,12 @@ design-artifacts/
 
 ### **Platform Readiness**
 Generated styled DSL should be immediately usable by:
-- `ui-engineer` for React/React Native/SwiftUI/Compose implementation
+- `ui-engineer`, for implementation in whatever `stack.web` / `stack.mobile` names
 - Platform-specific mappers for direct code generation
 - Design system validation and consistency checking
+
+A styled DSL file that only one platform can express is a defect. If a screen genuinely has to
+diverge between web and mobile, say so explicitly in the file rather than silently favouring one.
 
 Your comprehensive approach ensures pixel-perfect translation from design concepts to structured, styled component specifications that maintain design system consistency while enabling efficient platform implementation.
 ## 📤 Output contract

@@ -1,0 +1,11 @@
+name: native-mobile
+label: "Native iOS + Android"
+project_types: [mobile]
+description: "SwiftUI and Jetpack Compose, built and tested per platform."
+
+stack:
+  language: null            # Swift and Kotlin
+  mobile:   {framework: native, ios: swiftui, android: jetpack-compose}
+  test:     {unit: null, integration: null, e2e: null}   # per-platform; onboard detects
+  ci: github-actions
+  package_manager: null

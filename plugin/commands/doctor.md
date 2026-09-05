@@ -79,9 +79,25 @@ ls .archflow/ 2>/dev/null
 | `design-systems/{design_system}.md` | **FAIL** if named but absent | The agents are told to read a file that is not there |
 | `api_contract_path` in `current-phase.yaml` | **WARN** if unset | Phase 3 reads it. Default is `docs/api-contract.md` |
 | `test-accounts.yaml` | **WARN** if absent on a project with a UI | `pm-reviewer` needs credentials. Template is `.archflow/test-accounts.example.yaml` |
+| `stack` in `current-phase.yaml` | **WARN** if absent or empty past Phase 1 | Agents carry no technology of their own. An unset stack means each one stops and asks mid-story. Fix with `/archflow:onboard` detection, or write it by hand from `.archflow/stacks/*.yaml` |
 
 Also report, without judging them: current phase, mode, active release with stories done over total,
 and any story with `status: parked`, since a parked story blocks the ship by default.
+
+**Report the stack as a block**, naming every `null` field rather than hiding it. A null is not a
+failure — it is a question an agent will ask later — but the user should see them together now
+rather than one at a time mid-story:
+
+```
+  Stack
+    language          typescript
+    backend           nestjs · postgresql · prisma
+    web               react · tailwind
+    test              jest · — · playwright
+    ci                github-actions
+    hosting           (not set)
+```
+Show `(not set)` for null. Omit whole sections that do not apply to the project type.
 
 ## Step 4 — Repo hygiene
 

@@ -227,16 +227,34 @@ All user input gathered in one pass. No heavy analysis, no agent dispatch.
 ### STEP A1: Project Detection
 
 **Actions:**
-1. Scan directory for code indicators:
-   - `package.json` (read dependencies for framework detection)
-   - `src/`, `backend/`, `frontend/`, `ios/`, `android/` directories
-   - Config files: `next.config.*`, `vite.config.*`, `nest-cli.json`, `angular.json`
-   - Database: `prisma/`, `typeorm`, `sequelize` in deps, `*.entity.ts`
-   - CI/CD: `.github/workflows/`, `.gitlab-ci.yml`, `Dockerfile`
-2. Detect tech stack from dependencies and file patterns
+1. Scan for code indicators. Read manifests first — they are declarative and reliable — then fall
+   back to file patterns:
+   - **Manifests**: `package.json`, `pyproject.toml`, `requirements.txt`, `go.mod`, `Gemfile`,
+     `pom.xml`, `build.gradle`, `Cargo.toml`, `composer.json`, `Podfile`, `*.csproj`
+   - **Lockfiles** for the package manager: `pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`,
+     `uv.lock`, `poetry.lock`, `Gemfile.lock`
+   - **Layout**: `src/`, `backend/`, `frontend/`, `ios/`, `android/`, `e2e/`, `tests/`
+   - **Config**: any framework's own config file, `Dockerfile`, `.github/workflows/`, `.gitlab-ci.yml`
+2. **Detect the stack** and write it to `stack:` in `current-phase.yaml` (template below). Fill only
+   what the evidence supports:
+   - `language`, `package_manager` — from the manifest and lockfile
+   - `backend.framework` / `backend.database` / `backend.orm` / `backend.auth` — from dependencies
+     and data-layer files
+   - `web.framework` / `web.language` / `web.styling` / `web.state` — from dependencies and config
+   - `mobile.framework` / `mobile.ios` / `mobile.android` — from `Podfile`, `build.gradle`, or a
+     cross-platform framework in the manifest
+   - `test.unit` / `test.integration` / `test.e2e` — from dev dependencies, test scripts, and the
+     test directories that actually exist
+   - `ci`, `hosting` — from CI config and deploy config
+
+   **Write `null` for anything the evidence does not support.** Do not infer a database from an ORM,
+   or an e2e runner from the presence of a `tests/` folder. A null makes the agent ask with the repo
+   in front of it; a wrong value makes it silently build the wrong thing. Detection confidence is
+   not a reason to guess — it is exactly what the confirmation step below is for.
 3. Detect project type using rules from `.archflow/phases/phase-onboarding.md`:
    - `fullstack` | `frontend_only` | `backend_only` | `mobile`
-4. Run `codemap init .` and `codemap stats` for codebase metrics
+4. If codemap is installed, run `codemap init .` and `codemap stats` for codebase metrics. Skip
+   silently if it is not — it is an optional token optimization, not a prerequisite.
 
 **Present to user:**
 ```
@@ -414,7 +432,8 @@ Clarify extraction mode by project type:
 
 **Also ask:**
 ```
-Any corrections to the detected tech stack? [Confirm / Edit]
+Any corrections to the detected stack? Anything shown as null will be asked again later
+by whichever agent needs it. [Confirm / Edit]
 ```
 
 ---
@@ -633,11 +652,21 @@ phase_file: "phases/phase-{N}-{name}.md"
 project_type: "{detected_type}"
 onboarded: true
 onboarded_at: "{ISO timestamp}"
-tech_stack:
-  language: "{language}"
-  frontend: "{framework}"    # omitted for backend_only
-  backend: "{framework}"     # omitted for frontend_only
-  database: "{database}"
+
+# The project's technologies, DETECTED from the repo (see Step below). Agents carry none of
+# their own — they read this and build in what it names. Write null for anything you could not
+# determine; an honest null makes the agent ask, a wrong value makes it silently misbuild.
+# Omit whole sections that do not apply to this project_type.
+# Schema: .archflow/schemas/current-phase-schema.yaml
+stack:
+  language: "{detected_or_null}"
+  backend:  {framework: "...", database: "...", orm: "...", auth: "..."}
+  web:      {framework: "...", language: "...", styling: "...", state: "..."}
+  mobile:   {framework: "...", ios: "...", android: "..."}
+  test:     {unit: "...", integration: "...", e2e: "..."}
+  ci: "{detected_or_null}"
+  hosting: "{detected_or_null}"
+  package_manager: "{detected_or_null}"
 
 # API contract (flexible path — any format)
 api_contract_path: "{found_path_or_null}"
