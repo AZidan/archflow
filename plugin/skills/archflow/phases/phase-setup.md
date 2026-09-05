@@ -138,20 +138,26 @@ echo "6. Enhancement"
 
 ## 🗺️ Codemap Initialization
 
-When setting up any project, initialize Codemap for token-efficient navigation:
+Codemap is an OPTIONAL token optimization. Agents use `codemap find` and `codemap show` instead of
+scanning whole files, which cuts navigation token consumption by roughly 60-80%. Archflow works
+without it — every agent falls back to Glob/Grep/Read.
 
 ```bash
-# Install codemap (if not available)
-pip install git+https://github.com/AZidan/codemap.git
-
-# Initialize index for the project
-codemap init .
-
-# Start watch mode for live index updates
-codemap watch . -q &
+# Is it already here?
+command -v codemap >/dev/null 2>&1 && codemap init . || echo "codemap not installed — skipping"
 ```
 
-This enables all agents to use `codemap find` and `codemap show` instead of scanning full files, reducing token consumption by 60-80%.
+If it is NOT installed, do not install it silently. Tell the user what it is, what it costs them not
+to have it, and the exact command, then let them decide:
+
+```bash
+# Pinned to the v1.3.1 release on purpose — see SECURITY.md, which records the commit
+# this tag must resolve to. Never replace it with a branch name.
+pip install "git+https://github.com/AZidan/codemap.git@v1.3.1"
+```
+
+`codemap watch . -q &` keeps the index live, but it is a long-lived background process. Start it
+only if the user agrees, and tell them `pkill -f "codemap watch"` stops it.
 
 For existing projects with code already in place, run `codemap stats` after init to verify the index covers the codebase.
 

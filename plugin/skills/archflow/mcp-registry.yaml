@@ -78,7 +78,9 @@ registry:
   superdesign:
     name: "SuperDesign"
     transport: stdio
-    command: "npx -y github:AZidan/superdesign-mcp-claude-code"
+    # Pinned to an immutable commit on purpose (see SECURITY.md). An unpinned github: ref
+    # executes whatever is on main at install time. Never swap this for a branch name.
+    command: "npx -y github:AZidan/superdesign-mcp-claude-code#1bd2d1766b1e4d9a5828cd553da0f4e67e5a3ffe"
     purpose: "Generate high-fidelity UI screens from styled-dsl.yaml (Phase 2.25)"
     notes: "Required for Phase 2.25 (High-Fidelity Design). Must be installed before starting hi-fi screen generation."
     onboarding_only: false

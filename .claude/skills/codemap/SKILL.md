@@ -133,7 +133,8 @@ If a project doesn't have a `.codemap/` directory:
 ### Installation
 ```bash
 # Install codemap from GitHub (NOT from PyPI - there's a different package there)
-pip install git+https://github.com/AZidan/codemap.git
+# Pinned to the v1.3.1 release on purpose — see SECURITY.md. Never use a branch here.
+pip install "git+https://github.com/AZidan/codemap.git@v1.3.1"
 
 # Initialize index
 codemap init .

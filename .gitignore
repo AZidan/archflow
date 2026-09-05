@@ -40,3 +40,21 @@ docs/internal/*
 
 # Internal marketing workspace — same reasoning.
 .claude/skills/archflow-marketing/
+
+# HyperFrames video skills (local tooling, installed via `npx skills add heygen-com/hyperframes`)
+.agents/
+.claude/skills/*
+!.claude/skills/codemap/
+skills-lock.json
+
+# HyperFrames video projects (local renders)
+videos/
+
+# Acceptance test credentials (template is .example.yaml)
+.archflow/test-accounts.yaml
+
+# macOS
+.DS_Store
+
+# codemap index cache
+.codemap/

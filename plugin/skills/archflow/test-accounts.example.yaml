@@ -1,0 +1,19 @@
+# Test accounts for acceptance runs (pm-reviewer).
+#
+# Copy to .archflow/test-accounts.yaml and fill in. The real file is gitignored —
+# never commit credentials, and never paste them into an agent definition or a flow file.
+
+app_url: http://localhost:3000
+login_path: /login
+
+accounts:
+  admin:
+    email: CHANGE_ME
+    password: CHANGE_ME
+  user:
+    email: CHANGE_ME
+    password: CHANGE_ME
+
+# If the project's login has an extra step (MFA, SSO redirect), describe it here so the
+# reviewer can build the right helper flow. Do not store MFA seeds in this file.
+notes: ""
