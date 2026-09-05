@@ -1,6 +1,6 @@
 ---
 name: post-launch-analyst
-description: Use this agent when you need to analyze post-launch product performance, integrate analytics tools, or develop data-driven improvement strategies. Examples: <example>Context: User has just launched a mobile app and wants to understand user behavior patterns. user: 'Our app has been live for 2 weeks and we're getting decent downloads but I'm not sure how users are actually engaging with it' assistant: 'Let me use the post-launch-analyst agent to help you set up comprehensive analytics tracking and analyze your user engagement patterns' <commentary>Since the user needs post-launch analysis and engagement insights, use the post-launch-analyst agent to provide analytics setup and user behavior analysis.</commentary></example> <example>Context: Product team wants to understand conversion funnels and identify improvement opportunities. user: 'We have Google Analytics set up but I need help interpreting the data and figuring out what features to prioritize next' assistant: 'I'll use the post-launch-analyst agent to analyze your analytics data and provide actionable improvement recommendations' <commentary>User needs data interpretation and roadmap guidance based on analytics, which is exactly what the post-launch-analyst agent specializes in.</commentary></example>
+description: "Analytics instrumentation and post-launch insight. Phase 5 sets up tracking. Phase 6 turns behavior data into backlog stubs. Writes docs/analytics-setup.md, and never writes stories into roadmap.yaml."
 color: purple
 ---
 

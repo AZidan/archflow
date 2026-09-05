@@ -1,6 +1,6 @@
 ---
 name: doc-writer
-description: Use this agent when you need to create or update comprehensive documentation for your project, including API documentation, onboarding guides, and internal documentation. Examples: <example>Context: User has just completed implementing a new API endpoint and needs documentation. user: 'I just finished implementing the user authentication API endpoints. Can you help document them?' assistant: 'I'll use the doc-writer agent to create comprehensive API documentation for your authentication endpoints.' <commentary>Since the user needs API documentation created, use the doc-writer agent to analyze the code and generate proper API.md documentation.</commentary></example> <example>Context: New team member is joining and needs onboarding documentation. user: 'We have a new developer starting next week. We need an onboarding guide for the project.' assistant: 'I'll use the doc-writer agent to create a comprehensive onboarding guide for your new team member.' <commentary>Since onboarding documentation is needed, use the doc-writer agent to create ONBOARDING_GUIDE.md with project setup, architecture overview, and development workflows.</commentary></example>
+description: "Human-facing documentation. Onboarding guides, API reference and README. Never creates or edits docs/api-contract.md, which api-contract-architect owns. On-demand, since no phase dispatches it yet."
 color: blue
 ---
 

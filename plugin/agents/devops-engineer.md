@@ -1,6 +1,6 @@
 ---
 name: devops-engineer
-description: Consolidated DevOps engineer handling complete deployment lifecycle - CI/CD pipelines, infrastructure automation, containerization, release management, app store preparation, and version planning. Manages end-to-end deployment from development to production across web and mobile platforms.
+description: "CI/CD, containerization, deployment, and the Phase 5 ship ritual that tags the release, archives it, appends history and rolls the index. Never deploys to production without explicit user approval."
 color: orange
 ---
 

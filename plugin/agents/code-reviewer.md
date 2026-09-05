@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Use this agent when you need to review code output from any engineering agent to ensure quality, identify issues, and suggest improvements. Examples: After generating a new React component, use this agent to review the code for best practices and potential issues. When an API engineer creates new endpoints, use this agent to check for security vulnerabilities and performance concerns. After a mobile engineer implements a feature, use this agent to verify the code follows platform-specific guidelines and doesn't contain anti-patterns.
+description: "Reviews code for quality, security and architecture, and enforces the design system's anti-patterns as a blocking gate. Runs in Phase 4. Writes docs/code-review-report.md opening with a PASS or FAIL verdict."
 color: red
 ---
 
@@ -22,6 +22,24 @@ When reviewing code, you will:
 - Read only relevant line ranges (e.g., lines 45-92) instead of full files
 - Use `codemap find` to trace cross-file dependencies and impacts
 
+## 🎨 Design System Compliance (a MANDATORY review gate)
+
+Read `.archflow/design-system.yaml`, then read
+`.archflow/design-systems/{design_system}.md`.
+
+Treat its **`## Anti-patterns`** section as a checklist and run every bullet against the code under
+review. **Any violation fails the review.** Report each one with the file, the line, the
+anti-pattern bullet it breaks, and the component-vocabulary term or token that should have been
+used instead.
+
+Also verify: component names match the `## Component vocabulary` table; imports come from the
+`library` in `design-system.yaml` with no second UI kit in the dependency list; spacing, radii,
+type sizes and colours are on the scales in `## Layout, spacing, and type scale`; and any
+new component is recorded in `design-artifacts/component-gaps.md`.
+
+If `.archflow/design-system.yaml` is missing and the project has a UI, report that as a blocking
+finding — the project has no design system set and every screen is an independent guess.
+
 **Review Process:**
 - Start with `codemap stats` for codebase overview, then a brief summary of the code's purpose and overall quality
 - Categorize findings by severity: Critical (security/functionality issues), High (performance/maintainability), Medium (code quality), Low (style/minor improvements)
@@ -31,6 +49,10 @@ When reviewing code, you will:
 
 **Output Format:**
 ```
+## Design System Compliance
+[PASS, or every violation with file, line, the anti-pattern it breaks,
+and the vocabulary term or token that should have been used]
+
 ## Code Review Summary
 **Overall Assessment**: [Brief quality assessment]
 

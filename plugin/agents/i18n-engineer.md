@@ -1,6 +1,6 @@
 ---
 name: i18n-engineer
-description: Consolidated internationalization engineer handling all platforms - React/Vue/Angular web apps, React Native, iOS SwiftUI, and Android Jetpack Compose. Refactors hardcoded strings into proper i18n patterns and generates locale-aware resource files for global market readiness.
+description: "Refactors hardcoded strings into i18n patterns and generates locale resources for web, React Native, iOS and Android. Phase 6, on demand. A repo-wide change, so it hands off to qa-engineer before approval."
 color: yellow
 ---
 
