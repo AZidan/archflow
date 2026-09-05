@@ -381,6 +381,9 @@ Archflow is distributed as a Claude Code plugin marketplace. The plugin contains
 ```
 archflow/
 ├── .claude-plugin/marketplace.json  # Marketplace registry
+├── CHANGELOG.md                     # Release history
+├── CONTRIBUTING.md                  # How to add an agent, command or schema
+├── SECURITY.md                      # Pinning policy, untrusted content, shell surface
 ├── .github/workflows/ci.yml         # Mirror check, schema validation, tests
 ├── tests/                           # Framework tests + fixture projects
 ├── plugin/                          # Installable plugin
@@ -555,6 +558,12 @@ one-button migration Studio offers.
 ---
 
 ## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, the mirrored-tree rule, how to add an agent or a
+command, and what an agent must never contain. Participation is covered by our
+[Code of Conduct](CODE_OF_CONDUCT.md), and security reports go through [SECURITY.md](SECURITY.md).
+Release history is in [CHANGELOG.md](CHANGELOG.md).
+
 
 **Archflow Studio's files are generated, not authored here.** `plugin/server/`, `plugin/dist/`,
 `plugin/commands/studio.md` and `plugin/hooks/studio-session-context.mjs` are built in the

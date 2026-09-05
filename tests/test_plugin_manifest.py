@@ -97,3 +97,31 @@ def test_agent_count_claims_match_reality():
     actual = len(list(AGENTS.glob("*.md")))
     plugin = (REPO / "plugin" / ".claude-plugin" / "plugin.json").read_text()
     assert f"{actual} specialized agents" in plugin, f"plugin.json does not say {actual} agents"
+
+
+# --------------------------------------------------------------------------
+# Release hygiene (AF-30)
+# --------------------------------------------------------------------------
+
+def test_hygiene_files_exist():
+    for name in ("CHANGELOG.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "SECURITY.md", "LICENSE"):
+        assert (REPO / name).exists(), f"{name} is missing"
+
+
+def test_changelog_has_a_section_for_the_current_version():
+    """The release workflow builds its notes from this section. No section, no release."""
+    version = json.loads((REPO / "plugin" / ".claude-plugin" / "plugin.json").read_text())["version"]
+    changelog = (REPO / "CHANGELOG.md").read_text()
+    m = re.search(rf"^## \[{re.escape(version)}\][^\n]*\n(.*?)(?=^## \[|\Z)", changelog, re.S | re.M)
+    assert m, f"CHANGELOG.md has no section for {version}"
+    assert m.group(1).strip(), f"the {version} section is empty"
+
+
+def test_changelog_keeps_an_unreleased_section():
+    assert "## [Unreleased]" in (REPO / "CHANGELOG.md").read_text()
+
+
+def test_release_workflow_verifies_the_tag_against_the_manifests():
+    wf = (REPO / ".github" / "workflows" / "release.yml").read_text()
+    assert "plugin.json" in wf and "marketplace.json" in wf, \
+        "the release workflow must refuse a tag that disagrees with the manifests"
