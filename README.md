@@ -385,7 +385,7 @@ archflow/
 ├── tests/                           # Framework tests + fixture projects
 ├── plugin/                          # Installable plugin
 │   ├── .claude-plugin/plugin.json   # Plugin manifest
-│   ├── hooks/                       # Two SessionStart hooks
+│   ├── hooks/                       # SessionStart, PreToolUse guard, Stop check
 │   │   ├── hooks.json               #   registration for both
 │   │   └── studio-session-context.mjs #  publishes session id/cwd for Studio companion mode
 │   ├── agents/                      # 17 specialized agent definitions (the ONLY agents tree)
@@ -536,6 +536,10 @@ Archflow drives Claude Code, so everything runs as ordinary tool calls you can s
 - **Project commands** — your own test, build and lint scripts.
 - **One optional background process** — `codemap watch`, which keeps the index current. It is
   opt-in, it starts only if codemap is installed, and `pkill -f "codemap watch"` stops it.
+- **Two guard hooks** — a `PreToolUse` hook that blocks a force-push to `main`, and any push,
+  checkout or merge touching `main` while an unattended `/archflow:autopilot` run is live; and a
+  `Stop` hook that warns when state files have drifted from their schemas. Both fail open, so a
+  bug in a guard can never break your session.
 
 External code it can install is listed under [Supply chain](#supply-chain), and nothing there
 installs without asking you first.

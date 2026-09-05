@@ -183,6 +183,23 @@ fi
 - **NEVER INSTALL TO CLOSE A GAP**: a missing framework, runtime, simulator or test runner is
   named and asked about, never installed to make the task proceed
 
+### 🔒 Mechanical Safety Envelope (enforced by hooks, not prompts)
+Two hooks back the rules that cannot be undone by an apology. They are a floor under the prompt
+rules, never a replacement for them.
+
+- **`PreToolUse` on Bash — `guard-git.mjs`**: blocks a force-push to `main`/`master` always, and
+  during an ACTIVE `/archflow:autopilot` run also blocks pushing to, checking out, or merging into
+  those branches. Outside a run it blocks nothing but the force-push, because the approval gates are
+  the control there and a guard that fights ordinary merges gets switched off
+- **`Stop` — `check-state.mjs`**: runs the schema validator and warns when a session leaves
+  `.archflow/` state drifted. ADVISORY: it prints and exits 0, because a story is often half-written
+  when a turn ends
+- **BOTH FAIL OPEN**: a guard that breaks the session when its own parsing is wrong is worse than the
+  risk it removes. Any internal error allows the command and prints a warning
+- **A BLOCK IS NOT A PUZZLE**: when the guard blocks, it names the run and the ledger file. Resolve
+  it by finishing the run, or by setting the run's `status` to `finished`/`aborted` if it is
+  genuinely over. Never work around it
+
 ### ✅ Acceptance Testing (Phases 3-4)
 - **ACCEPTANCE GATE**: After qa-engineer completes, launch `pm-reviewer` to validate acceptance criteria from the active release file (`.archflow/releases/{active_release}.yaml`)
 - **VERDICT REQUIRED**: Feature is not complete until pm-reviewer returns ACCEPTED verdict
