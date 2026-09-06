@@ -74,3 +74,41 @@ def test_per_type_section_does_not_re_specify_the_payload():
 def test_phase3_mirrors_match():
     other = REPO / "plugin" / "skills" / "archflow" / "phases" / "phase-3-implementation.md"
     assert other.read_text() == PHASE3.read_text()
+
+
+# --------------------------------------------------------------------------
+# Story-id dispatch
+#
+# /archflow:design and /archflow:contract both choose their mode by matching the
+# argument against the story-id pattern. If that pattern drifts from the schema,
+# a story id silently falls through to the foundation branch — which re-runs the
+# design-system picker instead of designing a story.
+# --------------------------------------------------------------------------
+
+import yaml as _yaml
+
+STORY_ID_PATTERN = "^S[0-9]+-[0-9]+[a-z]?$"
+
+
+def test_story_id_pattern_matches_the_schema():
+    release = _yaml.safe_load(
+        (REPO / ".archflow" / "schemas" / "release-schema.yaml").read_text()
+    )
+    assert release["story"]["properties"]["id"]["pattern"] == STORY_ID_PATTERN
+
+
+def test_both_dual_mode_commands_dispatch_on_that_pattern():
+    for name in ("design", "contract"):
+        body = (REPO / "plugin" / "commands" / f"{name}.md").read_text()
+        assert STORY_ID_PATTERN in body, (
+            f"/archflow:{name} does not use the story-id pattern to choose its mode; "
+            "a story id would fall through to the foundation branch"
+        )
+
+
+def test_both_say_which_mode_they_entered():
+    """A mistyped story id must surface, not silently run the other mode."""
+    for name in ("design", "contract"):
+        body = (REPO / "plugin" / "commands" / f"{name}.md").read_text()
+        assert re.search(r"[Ss]tate the mode", body), \
+            f"/archflow:{name} does not state which mode it entered"

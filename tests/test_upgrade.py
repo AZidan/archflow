@@ -133,6 +133,7 @@ def test_apply_renames_the_retired_agent(stale):
 
 
 def test_apply_converts_tech_stack_preserving_the_values(stale):
+    """tech_stack -> stack is a shape-independent rewrite, so it stays scripted."""
     run(stale, "--apply")
     doc = yaml.safe_load((stale / ".archflow" / "current-phase.yaml").read_text())
     assert "tech_stack" not in doc
@@ -146,6 +147,7 @@ def test_apply_converts_tech_stack_preserving_the_values(stale):
 
 
 def test_apply_keeps_the_rest_of_current_phase_intact(stale):
+    """Scripted repairs touch only what they claim to. The split is not one of them."""
     before = yaml.safe_load((stale / ".archflow" / "current-phase.yaml").read_text())
     run(stale, "--apply")
     after = yaml.safe_load((stale / ".archflow" / "current-phase.yaml").read_text())
@@ -185,10 +187,12 @@ def test_repaired_project_validates(stale):
     assert proc.returncode == 0, f"repaired project still fails validation:\n{proc.stdout}"
 
 
-def test_upgrade_is_idempotent(stale):
+def test_upgrade_is_idempotent_for_what_it_repairs(stale):
+    """Only the manual split should remain outstanding after --apply."""
     run(stale, "--apply")
     code, data = report(stale)
-    assert code == 0, f"drift remains after repair: {data}"
+    remaining = {f["key"] for f in data["findings"]}
+    assert remaining <= {"split-project-settings"}, f"scripted repairs are not idempotent: {remaining}"
     second = run(stale, "--apply")
     assert second.returncode == 0
 
@@ -197,9 +201,11 @@ def test_a_current_project_reports_no_drift(tmp_path):
     af = tmp_path / ".archflow"
     shutil.copytree(REPO / ".archflow", af, ignore=shutil.ignore_patterns("*.md.bak"))
     (af / "current-phase.yaml").write_text(
-        "phase: 1\nphase_file: x\nproject_type: fullstack\nmode: quick\n"
+        "phase: 1\nphase_file: x\nmode: quick\n"
         'plugin_version: "9.9.9"\n'
-        "stack: {language: typescript}\n"
+    )
+    (af / "project-settings.yaml").write_text(
+        'schema_version: "2.1"\nproject_type: fullstack\nstack: {language: typescript}\n'
     )
     code, data = report(tmp_path)
     assert code == 0, f"a current project reported drift: {data}"

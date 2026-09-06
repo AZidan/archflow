@@ -17,7 +17,7 @@ from pathlib import Path
 import yaml
 
 REPO = Path(__file__).resolve().parents[1]
-SCHEMA = REPO / ".archflow" / "schemas" / "current-phase-schema.yaml"
+SCHEMA = REPO / ".archflow" / "schemas" / "project-settings-schema.yaml"
 PHASES = REPO / ".archflow" / "phases"
 COMMANDS = REPO / "plugin" / "commands"
 
