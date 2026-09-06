@@ -539,6 +539,9 @@ Archflow drives Claude Code, so everything runs as ordinary tool calls you can s
 - **Project commands** — your own test, build and lint scripts.
 - **One optional background process** — `codemap watch`, which keeps the index current. It is
   opt-in, it starts only if codemap is installed, and `pkill -f "codemap watch"` stops it.
+- **An upgrade notice.** When the plugin updates ahead of your project's `.archflow/`, a
+  `SessionStart` hook says so before your first command, names what drifted, and points at
+  `/archflow:doctor --fix`. It goes quiet once the project is repaired.
 - **Two guard hooks, scoped to Archflow projects.** In a directory with an `.archflow/`, a
   `PreToolUse` hook blocks a force-push to `main`, and any push, checkout or merge touching `main`
   while an unattended `/archflow:autopilot` run is live. In any other repo it exits immediately and

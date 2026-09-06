@@ -213,6 +213,10 @@ rules, never a replacement for them.
   reported for the user
 - **COPY PER FILE, NEVER PER DIRECTORY**: setup steps that check whether a *directory* exists are how
   a project ends up permanently missing files added by a later plugin version
+- **THE SESSION SAYS SO FIRST**: a `SessionStart` hook compares `plugin_version` against the
+  installed plugin and prints what has drifted before the first command runs. Relay it to the user,
+  then do what they asked. Never repair without being asked. The notice stops once `--fix` stamps
+  the new version, so it is self-silencing rather than permanent noise
 
 ### ✅ Acceptance Testing (Phases 3-4)
 - **ACCEPTANCE GATE**: After qa-engineer completes, launch `pm-reviewer` to validate acceptance criteria from the active release file (`.archflow/releases/{active_release}.yaml`)

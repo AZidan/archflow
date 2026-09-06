@@ -7,6 +7,7 @@ gets switched off, and then it protects nothing.
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -239,3 +240,99 @@ def test_hooks_json_registers_both_hooks():
     pre = json.dumps(hooks["PreToolUse"])
     assert "guard-git.mjs" in pre and '"Bash"' in pre
     assert "check-state.mjs" in json.dumps(hooks["Stop"])
+
+
+# --------------------------------------------------------------------------
+# The upgrade notice (SessionStart)
+#
+# A project's .archflow/ is a copy that goes stale when the plugin updates. This
+# is the only thing that tells the user before their first command rather than
+# midway through a story.
+# --------------------------------------------------------------------------
+
+import json as _json
+import os as _os
+
+CHECK_UPGRADE = REPO / "plugin" / "hooks" / "check-upgrade.mjs"
+
+
+def run_check_upgrade(cwd):
+    return subprocess.run(
+        ["node", str(CHECK_UPGRADE)],
+        capture_output=True, text=True, timeout=15,
+        env={"PATH": _os.environ["PATH"],
+             "CLAUDE_PROJECT_DIR": str(cwd),
+             "CLAUDE_PLUGIN_ROOT": str(REPO / "plugin")},
+    )
+
+
+@pytest.fixture
+def stale_project(tmp_path):
+    af = tmp_path / ".archflow"
+    (af / "schemas").mkdir(parents=True)
+    (af / "schemas" / "release-schema.yaml").write_text(
+        (REPO / ".archflow" / "schemas" / "release-schema.yaml").read_text()
+    )
+    (af / "current-phase.yaml").write_text(
+        "phase: 3\nphase_file: x\nproject_type: fullstack\nmode: quick\n"
+        "tech_stack:\n  language: typescript\n  backend: nestjs\n"
+    )
+    return tmp_path
+
+
+def _installed_version():
+    return _json.loads(
+        (REPO / "plugin" / ".claude-plugin" / "plugin.json").read_text()
+    )["version"]
+
+
+def test_notice_fires_on_a_stale_project(stale_project):
+    proc = run_check_upgrade(stale_project)
+    assert proc.returncode == 0
+    assert "behind the installed Archflow plugin" in proc.stdout
+    assert "/archflow:doctor --fix" in proc.stdout
+
+
+def test_notice_names_what_is_wrong(stale_project):
+    out = run_check_upgrade(stale_project).stdout
+    assert "tech_stack" in out
+    assert "framework file" in out
+
+
+def test_notice_is_silent_once_the_stamp_matches(stale_project):
+    """--fix stamps plugin_version, and the same field silences the notice."""
+    subprocess.run(
+        [sys.executable, str(REPO / "plugin" / "scripts" / "upgrade_archflow.py"),
+         str(stale_project), "--plugin-root", str(REPO / "plugin"),
+         "--version", _installed_version(), "--apply"],
+        capture_output=True, check=True,
+    )
+    proc = run_check_upgrade(stale_project)
+    assert proc.stdout.strip() == "", "the notice should stop once the project is repaired"
+
+
+def test_notice_is_silent_outside_an_archflow_project(tmp_path):
+    proc = run_check_upgrade(tmp_path)
+    assert proc.returncode == 0
+    assert proc.stdout.strip() == ""
+
+
+def test_notice_fast_path_is_cheap(tmp_path):
+    """Runs on every session start. An up-to-date project must cost almost nothing."""
+    import time
+    af = tmp_path / ".archflow"
+    af.mkdir()
+    (af / "current-phase.yaml").write_text(
+        f'phase: 1\nphase_file: x\nproject_type: fullstack\nmode: quick\n'
+        f'plugin_version: "{_installed_version()}"\n'
+    )
+    start = time.monotonic()
+    proc = run_check_upgrade(tmp_path)
+    elapsed = time.monotonic() - start
+    assert proc.stdout.strip() == ""
+    assert elapsed < 1.5, f"fast path took {elapsed:.2f}s; it must not run the detector"
+
+
+def test_upgrade_hook_registered_on_session_start():
+    hooks = _json.loads((REPO / "plugin" / "hooks" / "hooks.json").read_text())["hooks"]
+    assert "check-upgrade.mjs" in _json.dumps(hooks["SessionStart"])

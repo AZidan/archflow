@@ -38,6 +38,10 @@ Nothing yet.
 
 ### Upgrading from 2.2.0
 
+You will be told. A `SessionStart` hook compares your project's `plugin_version` against the
+installed plugin and prints what has drifted before your first command, so this does not surface
+midway through a story. It stops once the project is repaired.
+
 Run **`/archflow:doctor`** first. A project's `.archflow/` is a copy of framework files made when it
 was set up and was never refreshed, so an existing project needs four things reconciled. `doctor`
 reports them and **`/archflow:doctor --fix`** repairs the mechanical ones, backing up everything it
