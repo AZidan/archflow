@@ -29,7 +29,7 @@ structure, semantics and styling intent — never a framework's syntax, imports,
 Turning it into code is `ui-engineer`'s job, and it must be turnable into any of the platforms the
 project targets from the one file you write.
 
-Read `stack:` from `.archflow/current-phase.yaml` for awareness only:
+Read `stack:` from `.archflow/project-settings.yaml` for awareness only:
 
 ```yaml
 stack:

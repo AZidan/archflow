@@ -18,7 +18,7 @@ merges, tags) and routes everything else to the backlog. Validated against real 
   `phases:` OR `sprints:` key, OR `schema_version` is absent/`"1.0"`:
   > "This project uses roadmap schema v1.0. Run `/archflow:migrate` to upgrade to v2.0."
 
-If `roadmap.yaml` already has `schema_version: "2.0"`, say it's already migrated and stop.
+If `roadmap.yaml` already has `schema_version: "2.1"`, say it's already migrated and stop.
 
 ## How to run it (the deterministic engine)
 

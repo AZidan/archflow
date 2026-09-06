@@ -52,9 +52,9 @@ First check the schema version of the roadmap you just read:
   > upgrade it to v2.0 (releases replace phases, sprints retired), then re-run onboard if needed."
   Do not validate v1 format here and do not overwrite it.
 
-- **v2.0** (`schema_version: "2.0"`) → validate the v2.0 shape against the split schemas in
+- **v2.x** (`schema_version: "2.0"` or `"2.1"`) → validate the split-file shape against the schemas in
   `.archflow/schemas/`. Collect **all** violations:
-  - **Index (`roadmap.yaml`, `roadmap-schema.yaml`):** `schema_version: "2.0"`, `project`,
+  - **Index (`roadmap.yaml`, `roadmap-schema.yaml`):** `schema_version: "2.1"`, `project`,
     `project_type` (`fullstack|frontend_only|backend_only|mobile`), `mode` (`quick|full`), `epics`
     (LABELS: id `^E[0-9]+$`, name, scope), `releases[]` (each: id slug, status
     `planning|ready|in_progress`, file). At most ONE release `in_progress`. No `phases:`/`sprints:` keys.
@@ -235,7 +235,7 @@ All user input gathered in one pass. No heavy analysis, no agent dispatch.
      `uv.lock`, `poetry.lock`, `Gemfile.lock`
    - **Layout**: `src/`, `backend/`, `frontend/`, `ios/`, `android/`, `e2e/`, `tests/`
    - **Config**: any framework's own config file, `Dockerfile`, `.github/workflows/`, `.gitlab-ci.yml`
-2. **Detect the stack** and write it to `stack:` in `current-phase.yaml` (template below). Fill only
+2. **Detect the stack** and write it to `stack:` in `project-settings.yaml` (template below). Fill only
    what the evidence supports:
    - `language`, `package_manager` — from the manifest and lockfile
    - `backend.framework` / `backend.database` / `backend.orm` / `backend.auth` — from dependencies
@@ -505,7 +505,7 @@ Load the execution dependency graph and agent filtering table from `.archflow/ph
 - Run the full audit checklist from `phase-onboarding.md`, filtered by `project_type`
 - For each audit check: scan for listed file patterns, record found/missing
 - **Format validation**: if `.archflow/roadmap.yaml` is found, first detect its schema version. If it
-  is **v1.0** (has `phases:` / no `schema_version: "2.0"`), do NOT validate v1 format — record it and
+  is **v1.0** (has `phases:` / no `schema_version: "2.1"`), do NOT validate v1 format — record it and
   redirect the user to `/archflow:migrate` (see Step E2a). If it is **v2.0**, validate the split-file
   shape (index + backlog + releases) per the v2.0 schemas. Record `format_valid` and all
   `format_violations` in the audit report.
@@ -559,7 +559,7 @@ Load the execution dependency graph and agent filtering table from `.archflow/ph
 - Waits for: Route/API Extraction + product-strategist (needs project-context.md)
 - Use prompt template from `phase-onboarding.md` → "api-contract-architect (Onboarding Mode)"
 - Subagent type: `api-contract-architect`
-- Output: `docs/api-contract.md`
+- Output: `{api_contract_path}`
 
 **Note:** product-strategist runs first in Layer 2. ux-designer and api-contract-architect both depend on its output. If product-strategist completes, dispatch ux-designer and api-contract-architect in parallel.
 
@@ -642,22 +642,21 @@ If "Yes": present each artifact for approval/editing, one at a time.
 
 ### STEP C5: Finalize & Cleanup
 
-1. **Create `.archflow/current-phase.yaml`:**
+1. **Create the two project files.** Settings that describe the project and the cursor that says
+   where it is are separate on purpose — the cursor is rewritten at every phase transition.
+
+**`.archflow/project-settings.yaml`:**
 ```yaml
-phase: {recommended_phase}
-phase_name: "{phase_name}"
-phase_file: "phases/phase-{N}-{name}.md"
-
-# Project metadata
+schema_version: "2.1"
 project_type: "{detected_type}"
-onboarded: true
-onboarded_at: "{ISO timestamp}"
 
-# The project's technologies, DETECTED from the repo (see Step below). Agents carry none of
-# their own — they read this and build in what it names. Write null for anything you could not
-# determine; an honest null makes the agent ask, a wrong value makes it silently misbuild.
-# Omit whole sections that do not apply to this project_type.
-# Schema: .archflow/schemas/current-phase-schema.yaml
+# API contract (flexible path — any format)
+api_contract_path: "{found_path_or_null}"
+
+# The project's technologies, DETECTED from the repo. Agents carry none of their own — they read
+# this and build in what it names. Write null for anything you could not determine; an honest null
+# makes the agent ask, a wrong value makes it silently misbuild. Omit sections that do not apply.
+# Schema: .archflow/schemas/project-settings-schema.yaml
 stack:
   language: "{detected_or_null}"
   backend:  {framework: "...", database: "...", orm: "...", auth: "..."}
@@ -668,8 +667,18 @@ stack:
   hosting: "{detected_or_null}"
   package_manager: "{detected_or_null}"
 
-# API contract (flexible path — any format)
-api_contract_path: "{found_path_or_null}"
+# Which optional agents run automatically (Step 2a2). Empty list = on request only.
+optional_agents: {}
+```
+
+**`.archflow/current-phase.yaml`:**
+```yaml
+phase: {recommended_phase}
+phase_name: "{phase_name}"
+phase_file: "phases/phase-{N}-{name}.md"
+
+onboarded: true
+onboarded_at: "{ISO timestamp}"
 
 # Phase tracking
 phases_completed: [...]
@@ -698,7 +707,7 @@ status: "onboarded"
    - Copy `${CLAUDE_PLUGIN_ROOT}/skills/archflow/test-accounts.example.yaml` → `.archflow/` (skip if present)
    - These files define the git branching strategy, the canonical formats and the design-system references. They MUST be in the project repo so Phase 3+ agents can read them from the repo context regardless of plugin cache state.
 
-2a2. **Ask about optional review steps** and write `optional_agents` into `current-phase.yaml`.
+2a2. **Ask about optional review steps** and write `optional_agents` into `project-settings.yaml`.
    Same question and same mode-based pre-selection as `/archflow:init` Step 4a2 — read that file and
    follow it rather than restating the options here.
 
@@ -744,9 +753,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based development framework.
 
 - **Current Phase**: [N] ([Phase Name]) — see `.archflow/current-phase.yaml`
+- **Project Settings**: `.archflow/project-settings.yaml` — type, stack, contract path,
+  optional agents. Agents read the stack from here and build in what it names
 - **Project Context**: `.archflow/project-context.md`
 - **Roadmap**: `.archflow/roadmap.yaml` ([N] epics, [M] proposed features)
-- **API Contract**: `docs/api-contract.md`
+- **API Contract**: `{api_contract_path}`
 - **Design System**: `.archflow/design-system.yaml` — every UI agent must read it and follow
   `.archflow/design-systems/{design_system}.md` before producing any UI output
 
@@ -764,9 +775,11 @@ If `CLAUDE.md` ALREADY exists, append the Archflow section to the end:
 This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based development framework.
 
 - **Current Phase**: [N] ([Phase Name]) — see `.archflow/current-phase.yaml`
+- **Project Settings**: `.archflow/project-settings.yaml` — type, stack, contract path,
+  optional agents. Agents read the stack from here and build in what it names
 - **Project Context**: `.archflow/project-context.md`
 - **Roadmap**: `.archflow/roadmap.yaml` ([N] epics, [M] proposed features)
-- **API Contract**: `docs/api-contract.md`
+- **API Contract**: `{api_contract_path}`
 - **Design System**: `.archflow/design-system.yaml` — every UI agent must read it and follow
   `.archflow/design-systems/{design_system}.md` before producing any UI output
 
@@ -775,7 +788,8 @@ Commands:
 - `/archflow:feature` — Start a new feature from the roadmap
 ```
 
-Fill in the actual values from `current-phase.yaml` and the generated artifacts. Only list artifacts that were actually created (e.g., skip API contract line if none was generated, skip design system lines for backend_only).
+Fill in the actual values from `current-phase.yaml` and `project-settings.yaml`, plus the
+generated artifacts. Only list artifacts that were actually created (e.g., skip API contract line if none was generated, skip design system lines for backend_only).
 
 4. **MCP cleanup** (if any onboarding-only MCPs were added):
 ```

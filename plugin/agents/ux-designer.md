@@ -25,7 +25,7 @@ run `/archflow:design`. Do not guess a system.
 ## 🧱 Platform (read before designing, not framework)
 
 You carry NO technology of your own, and you do not choose or name one. Read `project_type` and
-`stack:` from `.archflow/current-phase.yaml` — but read them for **what they imply about the
+`stack:` from `.archflow/project-settings.yaml` — but read them for **what they imply about the
 person using the product**, not for what the code will be written in.
 
 ```yaml

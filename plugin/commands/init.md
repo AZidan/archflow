@@ -100,31 +100,35 @@ mkdir -p .archflow
    - Destination: `.archflow/workflow.md`
    - This file defines the git branching strategy (feature → task → subtask branches, approval gates). It MUST be present in every Archflow project so Phase 3 agents can read it from the repo context.
 
-3. **Create `.archflow/current-phase.yaml`** with Phase 1 defaults:
+3. **Create the two project files.** They are split on purpose: one is a CURSOR rewritten at every
+   phase transition, the other is SETTINGS that change almost never.
+
+   **`.archflow/project-settings.yaml`** — how this project works:
+```yaml
+schema_version: "2.1"
+project_type: null          # set during Phase 1, or detected by /archflow:onboard
+api_contract_path: "docs/api-contract.md"
+
+# Agents carry no technology of their own — they read this and build in what it names.
+# null means "not determined": the agent asks rather than assuming.
+stack: {}                   # filled by Step 4a
+
+# Which optional agents run automatically, and where. Empty list = available on
+# request but never automatic.
+optional_agents: {}         # filled by Step 4a2
+```
+
+   **`.archflow/current-phase.yaml`** — where this project is:
 ```yaml
 phase: 1
 phase_name: "Strategy & Planning"
 phase_file: "phases/phase-1-strategy.md"
 
-# Project metadata
-project_type: null  # Will be set during Phase 1
 onboarded: false
 
-# v2.0 — ceremony mode + active release pointer
-mode: quick          # new projects start in quick mode; graduate to full when they grow (/archflow:mode)
-active_release: null # slug of the one in_progress release; null until a release is being built
-
-# Where the API contract lives. Agents resolve it through this field, never a hardcoded path.
-api_contract_path: "docs/api-contract.md"
-
-# The project's technologies. Agents carry none of their own — they read this and build in what
-# it names. null means "not determined": the agent says what it found, names the candidates, and
-# ASKS. It never assumes a default. See .archflow/schemas/current-phase-schema.yaml.
-stack: {}            # filled by the step below
-
-# Which optional agents join automatically, and where. Empty list = available on
-# request but never automatic. See .archflow/schemas/current-phase-schema.yaml.
-optional_agents: {}  # filled by the step below
+# Ceremony mode + active release pointer
+mode: quick          # new projects start in quick; graduate to full when they grow (/archflow:mode)
+active_release: null # slug of the one in_progress release; null until one is being built
 
 # Phase tracking
 phases_completed: []
@@ -167,7 +171,7 @@ These are reference files that agents read during execution. They must be in the
 
 ### Step 4a: Choose the Stack
 
-Every agent that writes code reads `stack:` from `current-phase.yaml` and builds in what it names.
+Every agent that writes code reads `stack:` from `project-settings.yaml` and builds in what it names.
 The agents carry no technology of their own, so an unset field is not a default — it is a question
 the agent will ask you later, mid-story. Answering here is cheaper.
 
@@ -186,7 +190,7 @@ the agent will ask you later, mid-story. Answering here is cheaper.
      7. Decide later                     agents will ask when they need it
    ```
 
-2. **On a profile**, copy its `stack:` block into `current-phase.yaml`, then show it and offer to
+2. **On a profile**, copy its `stack:` block into `project-settings.yaml`, then show it and offer to
    change any field. A profile is a starting point, not a commitment.
 
 3. **On "Something else"**, ask only the fields the project type actually needs. A `backend_only`
@@ -336,7 +340,7 @@ Next steps:
 ## Notes
 - This command is idempotent — it won't overwrite existing `.archflow/current-phase.yaml`
 - For existing codebases, always use `/archflow:onboard` instead (it determines the correct phase via audit)
-- The `project_type` field is left as `null` and will be set during Phase 1
+- `project_type` is left `null` in `project-settings.yaml` and is set during Phase 1
 - The design system is a once-per-project choice. If it is deferred at init, Phase 2 asks before
   producing the first wireframe. Change it later with `/archflow:design` — note that changing it
   does not retrofit UI already built

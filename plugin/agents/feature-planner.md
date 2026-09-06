@@ -36,7 +36,7 @@ releases are carved from the backlog just-in-time (Mode B).
 
 ```yaml
 # .archflow/roadmap.yaml  (index)
-schema_version: "2.0"
+schema_version: "2.1"
 project: "{name}"
 project_type: "{fullstack|frontend_only|backend_only|mobile}"
 mode: "{quick|full}"                 # set by init/onboard; leave as provided

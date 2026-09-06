@@ -11,7 +11,7 @@ gender and RTL actually behave, and what a translator needs in order to do their
 
 ## 🧱 Stack (read FIRST, before writing any code)
 
-You carry NO technology of your own. Read `stack:` from `.archflow/current-phase.yaml` and work in
+You carry NO technology of your own. Read `stack:` from `.archflow/project-settings.yaml` and work in
 whatever it names.
 
 ```yaml

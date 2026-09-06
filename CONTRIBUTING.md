@@ -58,7 +58,7 @@ and three projects each invented a different format. Two copies of a rule become
 
 ### What an agent must not contain
 
-- **A technology.** Agents read `stack:` from `.archflow/current-phase.yaml` and work in what it
+- **A technology.** Agents read `stack:` from `.archflow/project-settings.yaml` and work in what it
   names. Naming candidates to *detect among* is fine; naming one to impose is not. A test enforces
   the imperative forms.
 - **A long description.** It loads into every session. One shape: what it does, when it runs, what it
@@ -85,6 +85,10 @@ command that exists but is not listed is a command nobody finds.
 Schemas live in `.archflow/schemas/` and its mirror, in a small hand-written dialect rather than JSON
 Schema: `type`, `required`, `properties`, `enum`, `items`, `pattern`, `$ref`, `format`, and a `$root`
 saying which definition validates the document.
+
+The state files split by lifetime: `current-phase.yaml` is a CURSOR rewritten at every phase
+transition, `project-settings.yaml` is how the project works and changes almost never. Putting a
+setting in the cursor buries it in phase churn. That is what v2.1 fixed.
 
 Adding a required field is breaking for existing projects. Either give it a default, or add a
 migration path, and say which in the changelog.

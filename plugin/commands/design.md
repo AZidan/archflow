@@ -210,7 +210,8 @@ it; do not restate it here.** This command is the entry point, not a second defi
 
 ### 5a. Resolve the story
 
-1. Read `.archflow/current-phase.yaml` for `active_release`, `mode` and `project_type`.
+1. Read `.archflow/current-phase.yaml` for `active_release` and `mode`, and
+   `.archflow/project-settings.yaml` for `project_type`.
 2. Read `.archflow/releases/{active_release}.yaml` and find the story by id.
 
 If it is not there, look in `.archflow/backlog.yaml`. If it is in the backlog, say so plainly and

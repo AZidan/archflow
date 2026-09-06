@@ -26,7 +26,7 @@ finding — the project has no design system set and every screen is an independ
 
 ## 🧱 Stack (read FIRST, before writing any test)
 
-You carry NO technology of your own. Read `stack:` from `.archflow/current-phase.yaml` and test in
+You carry NO technology of your own. Read `stack:` from `.archflow/project-settings.yaml` and test in
 whatever it names.
 
 ```yaml
@@ -164,7 +164,12 @@ If a test is flaky, run it three times and say so rather than reporting the run 
 
 ## 🚨 API Contract Verification (backend work)
 
-`docs/api-contract.md` (or `api_contract_path` from `.archflow/current-phase.yaml`) is the single
+**Resolve the contract path once, at the start.** Read `api_contract_path` from
+`.archflow/project-settings.yaml`; default to `docs/api-contract.md` only when that field is unset.
+A project that configured a different location and an agent that assumed the default will not meet,
+and the failure is silent — the file simply is not where you looked.
+
+The contract is the single
 source of truth. For every endpoint the story touches, verify the implementation against it: path,
 method, parameters, response schema field-for-field, and error codes. Contract drift is a FAIL, not
 a note — report it the same way as a design-system violation, with the contract line and the

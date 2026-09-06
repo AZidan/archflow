@@ -6,7 +6,7 @@ description: "Where the project stands: phase, mode, active release, and what to
 
 ## Step 1 — Project status
 
-Read `.archflow/current-phase.yaml` if it exists and report:
+Read `.archflow/current-phase.yaml` and `.archflow/project-settings.yaml` if they exist, and report:
 - current phase + `phase_file`
 - `project_type`
 - `mode` (quick | full)

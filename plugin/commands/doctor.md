@@ -73,15 +73,17 @@ ls .archflow/ 2>/dev/null
 | Check | Severity | Notes |
 |---|---|---|
 | `.archflow/` exists | **FAIL** if missing | Not an Archflow project. Suggest `/archflow:init` or `/archflow:onboard` |
-| `current-phase.yaml` | **FAIL** if missing | Everything reads `phase`, `mode`, `project_type`, `active_release` from it |
-| `schema_version: "2.0"` in `roadmap.yaml` | **FAIL** if v1.0 | A `phases:` or `sprints:` key means v1.0. Suggest `/archflow:migrate` |
+| `current-phase.yaml` | **FAIL** if missing | The cursor. Everything reads `phase`, `mode` and `active_release` from it |
+| `project-settings.yaml` | **FAIL** if missing on a v2.1 project | How the project works: `project_type`, `stack`, `api_contract_path`, `optional_agents`. A project with settings still inside `current-phase.yaml` is pre-2.1 — `--fix` splits it |
+| `schema_version: "2.1"` in `roadmap.yaml` | **FAIL** if v1.0 | A `phases:` or `sprints:` key means v1.0. Suggest `/archflow:migrate` |
 | `roadmap.yaml`, `backlog.yaml` | **WARN** if missing | Expected from Phase 1 onward |
 | `releases/{active_release}.yaml` | **FAIL** if `active_release` is set but the file is absent | The release index points at nothing |
 | `design-system.yaml` | **FAIL** if the project has a UI and it is missing | Every screen becomes an independent guess. Suggest `/archflow:design` |
 | `design-systems/{design_system}.md` | **FAIL** if named but absent | The agents are told to read a file that is not there |
-| `api_contract_path` in `current-phase.yaml` | **WARN** if unset | Phase 3 reads it. Default is `docs/api-contract.md` |
+| `api_contract_path` in `project-settings.yaml` | **WARN** if unset | Phase 3 reads it. Default is `docs/api-contract.md` |
 | `test-accounts.yaml` | **WARN** if absent on a project with a UI | `pm-reviewer` needs credentials. Template is `.archflow/test-accounts.example.yaml` |
-| `stack` in `current-phase.yaml` | **WARN** if absent or empty past Phase 1 | Agents carry no technology of their own. An unset stack means each one stops and asks mid-story. Fix with `/archflow:onboard` detection, or write it by hand from `.archflow/stacks/*.yaml` |
+| `project_type` disagrees between `project-settings.yaml` and `roadmap.yaml` | **WARN** | `project-settings.yaml` is the owner; `roadmap.yaml` mirrors it for readers that only load the index. Report both values and offer to correct the mirror |
+| `stack` in `project-settings.yaml` | **WARN** if absent or empty past Phase 1 | Agents carry no technology of their own. An unset stack means each one stops and asks mid-story. Fix with `/archflow:onboard` detection, or write it by hand from `.archflow/stacks/*.yaml` |
 
 Also report, without judging them: current phase, mode, active release with stories done over total,
 and any story with `status: parked`, since a parked story blocks the ship by default.
@@ -173,6 +175,38 @@ project still works, it is just behind. It detects:
 | Framework files the plugin ships that the project lacks | An agent told to read a missing design system stops rather than guessing |
 | `plugin_version` behind the installed plugin | The only signal a project has fallen behind |
 
+### The one repair `--fix` does itself: splitting settings out of the cursor
+
+The script deliberately does NOT do this one. `current-phase.yaml` is hand-editable and its shape
+varies between projects — extra keys, hand-written comments, a layout someone rearranged. A script
+rewriting it either round-trips the YAML and destroys every comment, or pattern-matches and
+eventually gets a nesting wrong. You can read the file. Do this by hand.
+
+**Only when the detector reports `split-project-settings`.** Otherwise skip this entirely.
+
+1. **Read `.archflow/current-phase.yaml`.** Identify the keys that belong in
+   `.archflow/project-settings.yaml`: `project_type`, `api_contract_path`, `stack`,
+   `optional_agents`. Everything else stays where it is.
+
+2. **If `.archflow/project-settings.yaml` already exists**, compare. A key present in both with the
+   SAME value is fine — drop it from the cursor. A key present in both with DIFFERENT values is a
+   decision, not a merge: show both, say which file each came from, and ask. Never pick one. That
+   field gates agent rosters and phase filtering, and guessing silently converts the project.
+
+3. **Copy both files to `.archflow/backup-upgrade-{timestamp}/`** before writing anything.
+
+4. **Move the keys.** Edit both files rather than regenerating them, so comments, ordering and any
+   hand-written notes survive. Carry a key's own comments with it. Add
+   `schema_version: "2.1"` to the settings file if absent.
+
+5. **Show the diff and get approval** before writing. This is the user's configuration.
+
+6. **Verify**: run the validator on both files, and re-run the detector — it should now report
+   nothing for this item.
+
+If anything in the file is unexpected — a key you do not recognise, a shape that does not match the
+schema, a merge conflict marker — stop and show it. An odd file is a reason to ask, not to improvise.
+
 ### With `--fix`
 
 Show the dry-run plan FIRST and get explicit approval. This writes to the user's project.
@@ -195,9 +229,10 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/upgrade_archflow.py" . \
 Then report what it did, name the backup directory, and repeat anything it flagged as needing a
 human. Suggest committing `.archflow/` afterwards so the change is reviewable.
 
-`--fix` is deliberately narrow. It renames, converts and copies. It never writes project content,
-never picks a stack, and never resolves anything that needs a judgement — those are reported for the
-user to decide.
+`--fix` is deliberately narrow. The script renames, converts and copies — operations where the
+input's shape does not matter. Anything that requires reading and understanding a document, like the
+settings split above, you do yourself, showing a diff first. Neither ever writes project content,
+picks a stack, or resolves a conflict; those are reported for the user to decide.
 
 ## Step 6 — Report
 

@@ -25,8 +25,9 @@ time, and say what you want to install and why.
 
 ## Step 1: Load context
 
-1. Read `.archflow/current-phase.yaml` FIRST — it holds `active_release`, `mode` and `project_type`.
-   This read is unconditional; everything below depends on it.
+1. Read `.archflow/current-phase.yaml` for `active_release` and `mode`, and
+   `.archflow/project-settings.yaml` for `project_type`. Both reads are unconditional —
+   everything below depends on them.
 2. Read `.archflow/releases/{active_release}.yaml` for the story and its acceptance criteria.
    NEVER read acceptance criteria from `roadmap.yaml` — that file is only the release index.
 3. Read `.archflow/test-accounts.yaml` for test credentials and URLs if it exists

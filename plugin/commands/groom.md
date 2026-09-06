@@ -27,7 +27,7 @@ re-derived (**release mode**). The user's question is "refine this story"; which
 implementation detail they should not have to know.
 
 ## Flow
-1. Read `.archflow/current-phase.yaml` (for `project_type`, `mode`) and `.archflow/backlog.yaml`.
+1. Read `.archflow/current-phase.yaml` (for `mode`), `.archflow/project-settings.yaml` (for `project_type`) and `.archflow/backlog.yaml`.
    Resolve the id. With no argument, list stubs grouped by epic and ask which one.
 2. **Find the story, and pick the mode from where it lives.**
    - In `.archflow/backlog.yaml` → **backlog mode**, the flow below. This is the common case.

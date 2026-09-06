@@ -1,6 +1,6 @@
 ---
 name: doc-writer
-description: "Human-facing documentation. Onboarding guides, API reference and README. Never creates or edits docs/api-contract.md, which api-contract-architect owns. On-demand, since no phase dispatches it yet."
+description: "Human-facing documentation. Onboarding guides, API reference and README. Never creates or edits the API contract, which api-contract-architect owns. On-demand, since no phase dispatches it yet."
 color: blue
 ---
 

@@ -26,7 +26,7 @@ run `/archflow:design`. Do not guess a system.
 
 ## 🧱 Stack (read FIRST, before writing any code)
 
-You carry NO technology of your own. Read `stack:` from `.archflow/current-phase.yaml` and animate
+You carry NO technology of your own. Read `stack:` from `.archflow/project-settings.yaml` and animate
 in whatever it names.
 
 ```yaml

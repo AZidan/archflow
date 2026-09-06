@@ -361,9 +361,10 @@ Archflow manages these files in your project:
 | `.archflow/backlog.yaml` | Unscheduled scope: stubs and groomed `ready` stories |
 | `.archflow/releases/{slug}.yaml` | Stories committed to a release, with gates and acceptance criteria |
 | `.archflow/history.yaml` | What shipped, when, and which files it touched |
-| `.archflow/current-phase.yaml` | Phase state tracker (auto-created) |
+| `.archflow/current-phase.yaml` | Where the project is: phase, mode, active release |
+| `.archflow/project-settings.yaml` | How the project works: type, stack, contract path, optional agents |
 | `.archflow/current-feature.yaml` | Active feature scope and task tracking |
-| `docs/api-contract.md` | API specifications (single source of truth) |
+| `docs/api-contract.md` | API specifications (single source of truth). Path is configurable via `api_contract_path` |
 | `design-artifacts/styled-dsl.yaml` | Component specifications with styling |
 | `design-artifacts/theme.yaml` | Design system tokens |
 | `design-artifacts/wireframes/` | Screen layouts |
@@ -429,7 +430,8 @@ archflow/
 ```
 your-project/
 ├── .archflow/                       # Project state (version-controlled)
-│   ├── current-phase.yaml           # Phase state tracker
+│   ├── current-phase.yaml           # Where the project is (cursor)
+│   ├── project-settings.yaml        # How the project works (settings)
 │   ├── design-system.yaml           # The chosen design system (name, platform, library, theme)
 │   ├── design-systems/              # The design-system reference files, copied from the plugin
 │   ├── project-context.md           # Business goals, tech stack, architecture

@@ -12,7 +12,7 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 Nothing yet.
 
-## [2.2.1] — 2026-09-06
+## [2.3.0] — 2026-09-06
 
 ### Security
 
@@ -36,7 +36,29 @@ Nothing yet.
   while an unattended autopilot run is live. In any other repo it exits immediately. A `Stop` hook
   warns when state files have drifted from their schemas. Both fail open.
 
+### Changed — schema v2.1
+
+**`current-phase.yaml` split into a cursor and project settings.** It had accreted into two things
+with change frequencies orders of magnitude apart: `phase` moves at every transition, `stack` moves
+essentially never. Mixing them meant every phase transition dirtied the file holding the stack
+config, so a real settings change was buried in phase churn, and the filename described eight of
+seventeen fields.
+
+`project_type`, `stack`, `api_contract_path` and `optional_agents` now live in
+`.archflow/project-settings.yaml`. `mode` deliberately stayed in the cursor: it is read on nearly
+every operation and is already mirrored in `roadmap.yaml`.
+
+`schema_version` is `2.1`. `/archflow:doctor --fix` walks you through the split, reading the file and moving the keys itself
+rather than running a script over it — `current-phase.yaml` is hand-editable and its shape varies
+per project, so a script would either destroy its comments or eventually mis-parse it. `.archflow/design-system.yaml` was left alone — folding it in touches 88
+references across 35 files, most of them a verbatim-quoted string agents are tested against, and
+bundling that with a schema migration would tangle two risks.
+
 ### Upgrading from 2.2.0
+
+This release changes the schema to 2.1. `/archflow:doctor` reports what needs doing and
+`/archflow:doctor --fix` repairs everything except the settings split, which it walks you through
+because `current-phase.yaml` is hand-editable and its shape varies per project.
 
 You will be told. A `SessionStart` hook compares your project's `plugin_version` against the
 installed plugin and prints what has drifted before your first command, so this does not surface
@@ -110,6 +132,17 @@ touches.
 
 ### Fixed
 
+- **`api_contract_path` was only half a setting.** `ui-engineer` and `qa-engineer` resolved through
+  it, while `api-engineer` and `api-contract-architect` hardcoded `docs/api-contract.md` in seven
+  places between them. On a project with a configured path the architect wrote the contract where it
+  was told and api-engineer read the default and found nothing — silently, on the one artifact the
+  framework calls sacred. All four now resolve, and a test fails on a literal path used as an
+  instruction.
+- **The contract path was write-once.** Set at setup with no way to change it afterwards.
+  `/archflow:contract path <path>` now relocates it, distinguishing pointing at an existing contract
+  from moving one (which uses `git mv` so history follows), and reporting references outside
+  Archflow that it will not touch.
+
 - **Four commands shipped invalid YAML frontmatter** (`groom`, `mode`, `release`, `status`), each
   from an unquoted colon in the description.
 - **The code-reviewer design-system gate was inert**, pasted inside the fenced output template, so it
@@ -173,8 +206,8 @@ touches.
 Pre-v2.0 releases used product phases and sprints. See git history for detail; `/archflow:migrate`
 is the supported path forward from any of them.
 
-[Unreleased]: https://github.com/AZidan/archflow/compare/2.2.1...HEAD
-[2.2.1]: https://github.com/AZidan/archflow/compare/2.2.0...2.2.1
+[Unreleased]: https://github.com/AZidan/archflow/compare/2.3.0...HEAD
+[2.3.0]: https://github.com/AZidan/archflow/compare/2.2.0...2.3.0
 [2.2.0]: https://github.com/AZidan/archflow/compare/2.1.0...2.2.0
 [2.1.0]: https://github.com/AZidan/archflow/compare/2.0.2...2.1.0
 [2.0.2]: https://github.com/AZidan/archflow/compare/2.0.1...2.0.2

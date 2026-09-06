@@ -1,6 +1,6 @@
 ---
 description: The release's API contract architecture, and per-story endpoint specs that clear a story's contract gate
-argument-hint: "[<story-id>]"
+argument-hint: "[<story-id>|path <path>]"
 ---
 
 # /archflow:contract — API contract architecture and per-story endpoints
@@ -14,7 +14,7 @@ it, mirroring the design split. This command owns both.
 2. **Per-story gate** — one story's *endpoints*, specified just-in-time against that architecture,
    one step ahead of its build. Clears that story's `needs_contract` gate.
 
-`docs/api-contract.md` is the SACRED DOCUMENT. `api-engineer` and `ui-engineer` both build against
+The contract is the SACRED DOCUMENT. `api-engineer` and `ui-engineer` both build against
 it with zero tolerance for deviation, and `qa-engineer` verifies implementations against it. This
 command is the only sanctioned way to change it.
 
@@ -23,6 +23,7 @@ command is the only sanctioned way to change it.
 /archflow:contract                → show the contract architecture, or create it if absent
 /archflow:contract <story-id>     → specify one story's endpoints and clear its contract gate
                                     e.g. /archflow:contract S7-20
+/archflow:contract path <path>    → move the contract somewhere else, or point at an existing one
 ```
 
 ---
@@ -37,6 +38,8 @@ Match `$ARGUMENTS` against the story-id pattern from `release-schema.yaml`:
 
 - **Matches** → per-story gate. Go to Step 2.
 - **Empty** → foundation. Continue to Step 1.
+- **`path <new-path>`** → relocate. Resolve the CURRENT path via Step 0b first, then go to
+  Step 3. A bare `path` with no argument is not a relocation: show the current value and stop.
 - **Anything else** → say the argument is not a story id, show the usage block, and stop. Do not
   guess.
 
@@ -44,7 +47,7 @@ Match `$ARGUMENTS` against the story-id pattern from `release-schema.yaml`:
 
 ## Step 0b — Resolve the contract path
 
-Read `api_contract_path` from `.archflow/current-phase.yaml`. Default to `docs/api-contract.md` when
+Read `api_contract_path` from `.archflow/project-settings.yaml`. Default to `docs/api-contract.md` when
 unset. Use the resolved path everywhere below; never hardcode the default.
 
 **`frontend_only` with no backend** → there is no contract to own. Say so and stop.
@@ -93,7 +96,7 @@ api-contract-architect: release {active_release} foundation → {path}
 ```
 
 Present it and **stop for user approval** before anything is built against it. On approval, write
-`api_contract_path` into `.archflow/current-phase.yaml` if it is not already set.
+`api_contract_path` into `.archflow/project-settings.yaml` if it is not already set.
 
 ---
 
@@ -105,7 +108,8 @@ definition.
 
 ### 2a. Resolve the story
 
-1. Read `.archflow/current-phase.yaml` for `active_release`, `mode` and `project_type`.
+1. Read `.archflow/current-phase.yaml` for `active_release` and `mode`, and
+   `.archflow/project-settings.yaml` for `project_type`.
 2. Read `.archflow/releases/{active_release}.yaml` and find the story by id.
 
 If it is not there, look in `.archflow/backlog.yaml`. If it is in the backlog, say so and stop:
@@ -205,6 +209,46 @@ Then report:
 
 Next: {the next gate or "ready to build"}
 ```
+
+---
+
+## Step 3 — `path <path>`: where the contract lives
+
+`api_contract_path` in `.archflow/project-settings.yaml` is written once at setup and every agent
+resolves through it. This is how it changes afterwards — without it the setting is write-once, which
+makes it a decoration rather than a setting.
+
+Two cases, and they are different:
+
+**The file already exists at the new path.** The project has a contract somewhere else and is
+pointing Archflow at it. Confirm the file looks like a contract, update the field, and stop. Move
+nothing.
+
+**The file does not exist at the new path.** The user wants the contract moved. Show what will
+happen and get approval before touching anything:
+
+```
+Move the API contract?
+
+  from  {current path}
+  to    {new path}
+
+  {n} stories reference it. Every agent resolves through api_contract_path, so
+  they will follow — but anything outside Archflow that links to the old path
+  will not.
+
+[Move / Just update the pointer / Cancel]
+```
+
+On **Move**: move the file with `git mv` when the repo is a git checkout and the file is tracked,
+otherwise a plain `mv`. Either way git records a delete and an add; rename detection is done at read
+time by `git log --follow`, so nothing is preserved or lost by the choice of command. Then update the field.
+
+On **Just update the pointer**: change the field only, and say plainly that the contract is now expected at a path where
+no file exists, so the next agent to read it will stop.
+
+Afterwards, grep the repo for the old path and report anything still naming it — READMEs, CI config,
+docs. Do not edit those yourself; they are outside Archflow's state and may be deliberate.
 
 ---
 

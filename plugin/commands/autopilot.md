@@ -37,7 +37,7 @@ the user reviews and merges themselves.
 
 ## Step 1 — Preconditions and queue
 
-1. Read `.archflow/current-phase.yaml` (`project_type`, `mode`, `active_release`, `phase`),
+1. Read `.archflow/current-phase.yaml` (`mode`, `active_release`, `phase`) and `.archflow/project-settings.yaml` (`project_type`),
    `.archflow/roadmap.yaml`, and `.archflow/releases/{active_release}.yaml`.
 2. Verify the prerequisites above. Any failure → HALT with the single blocking reason. Never
    "work around" a failed precondition — an unattended run that starts from a wrong state is worse
@@ -69,7 +69,7 @@ Rules for the interview:
   "How should errors be handled?" is a bad autopilot question. "Retry policy for the sync job?" with
   options `3 retries, exponential backoff` / `fail fast, surface the error` / `queue for manual retry`
   is a good one. ("Other" is offered automatically — do not add it yourself.)
-- **Do not ask what you can read.** Check `docs/api-contract.md`, `design-artifacts/`,
+- **Do not ask what you can read.** Check the contract at `api_contract_path`, `design-artifacts/`,
   `.archflow/project-context.md`, and the codebase FIRST. A question answerable from an artifact is a
   question you should have looked up.
 - **Ask only what is genuinely the user's call**: product behaviour, data-shape trade-offs, naming

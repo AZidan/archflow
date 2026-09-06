@@ -59,7 +59,7 @@ Remember a decline so it doesn't nag every session.
 
 ## Optional agents follow the mode
 
-`optional_agents` in `current-phase.yaml` was pre-selected by the mode at setup: `quick` starts with
+`optional_agents` in `project-settings.yaml` was pre-selected by the mode at setup: `quick` starts with
 nothing automatic, `full` with code review on every story and accessibility review on a project with
 a UI.
 
