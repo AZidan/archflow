@@ -124,7 +124,7 @@ After the ship ritual completes and `active_release` is cleared:
 
 ## 🔌 Optional agents at this hook point
 
-Read `optional_agents` from `.archflow/current-phase.yaml`. Dispatch every agent whose list contains
+Read `optional_agents` from `.archflow/project-settings.yaml`. Dispatch every agent whose list contains
 **`pre_ship`**, with the same payload discipline as any other dispatch.
 
 An agent with an empty list is NOT dispatched here. It is still available on request — if the user

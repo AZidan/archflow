@@ -165,6 +165,27 @@ For existing projects with code already in place, run `codemap stats` after init
 
 ## 📋 Phase Template Creation
 
+Two files, split by lifetime: the cursor is rewritten at every phase transition, the settings
+almost never. Create BOTH — a project with only the cursor is in a state `/archflow:doctor`
+reports as drift.
+
+### Generated project-settings.yaml
+```yaml
+schema_version: "2.1"
+
+# Drives which agents, phases and audit checks apply
+project_type: "{fullstack|frontend_only|backend_only|mobile}"
+
+api_contract_path: "docs/api-contract.md"
+
+# Agents carry no technology of their own — they read this and build in what it names.
+# Leave null for anything inference cannot establish; the agent asks rather than assumes.
+stack: {}
+
+# Which optional agents run automatically. Empty = available on request only.
+optional_agents: {}
+```
+
 ### Generated current-phase.yaml
 ```yaml
 # Auto-generated from inference
@@ -172,10 +193,7 @@ phase: {detected_phase}
 phase_name: "{detected_phase_name}"
 phase_file: ".archflow/phases/phase-{detected_phase}-{name}.md"
 
-# Project type (drives which agents/phases apply)
-project_type: "{fullstack|frontend_only|backend_only|mobile}"
-
-# v2.0 — ceremony mode + active release pointer
+# Ceremony mode + active release pointer
 mode: "{quick|full}"          # quick = /archflow:init default; full = onboard of a substantial repo
 active_release: null          # slug of the ONE in_progress release (cached from roadmap.yaml); null when none building
 

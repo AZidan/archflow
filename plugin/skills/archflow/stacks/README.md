@@ -3,13 +3,13 @@
 A stack profile is a **starting point offered by `/archflow:init`**, never a fallback an agent
 silently inherits.
 
-The agents carry no technology of their own. They read `stack:` from `.archflow/current-phase.yaml`
+The agents carry no technology of their own. They read `stack:` from `.archflow/project-settings.yaml`
 and work in what it names. A `null` field means *not determined*: the agent says what it found,
 names the candidates, and asks. It never assumes and never installs.
 
 These files exist so that starting a project is one choice rather than eleven. Pick one at init,
 adjust any field, or skip them entirely and answer field by field. Nothing reads them again
-afterwards — once `stack:` is written to `current-phase.yaml`, that is the only source of truth.
+afterwards — once `stack:` is written to `project-settings.yaml`, that is the only source of truth.
 
 ## Adding a profile
 

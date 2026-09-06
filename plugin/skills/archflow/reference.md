@@ -63,7 +63,7 @@ file carries its full rules; this is only the map.
 
 **Optional agents.** `code-reviewer`, `a11y-expert`, `ui-animation-designer` and `doc-writer` are
 always available on request. Whether they ALSO run automatically is a per-project setting,
-`optional_agents` in `current-phase.yaml`, which maps each to the hook points it joins: `design`
+`optional_agents` in `project-settings.yaml`, which maps each to the hook points it joins: `design`
 (Phase 2), `story_review` (Phase 3, after qa-engineer and before pm-reviewer), `release_quality`
 (Phase 4), `pre_ship` (Phase 5). An empty list means available but never automatic. Set at
 `/archflow:init` or `/archflow:onboard`, pre-selected by mode, and revisited by `/archflow:mode`.
@@ -122,7 +122,7 @@ guessed, and a parked story blocks the release by default. Nothing else may skip
 
 The contract is SACRED with ZERO tolerance. It binds `api-engineer` and `ui-engineer` equally, and
 `qa-engineer` verifies implementations against it. Resolve its path through `api_contract_path` in
-`current-phase.yaml`, never a hardcoded default.
+`project-settings.yaml`, never a hardcoded default.
 
 For the real app (`frontend/`), `ui-engineer` reads the contract for every endpoint it integrates
 with. TypeScript interfaces must match the response schemas exactly — field names, enum values,
@@ -132,7 +132,7 @@ is correct ONLY in `design-artifacts/` prototypes and test files.
 ### Technology agnosticism
 
 No agent names a framework, database, ORM, styling library, test runner or CI system as *what to
-use*. They read `stack:` from `current-phase.yaml`. Naming candidates to *detect among* is correct;
+use*. They read `stack:` from `project-settings.yaml`. Naming candidates to *detect among* is correct;
 naming one to impose is not.
 
 A null field is a question, never a default: the agent states what it found in the repo, names the
@@ -232,7 +232,7 @@ All namespaced as `/archflow:<name>`. There is no `/archflow <sub>` argument for
 | `/archflow:feature` | Add a story to the backlog or the active release, and start the git workflow |
 | `/archflow:groom [story-id]` | Detail or refine a story: a backlog stub into `ready`, or a story already in a release with its gates re-derived |
 | `/archflow:design [pick\|list\|name\|story-id]` | The project's design system, or one story's screens |
-| `/archflow:contract [story-id]` | The release's contract architecture, or one story's endpoints |
+| `/archflow:contract [story-id\|path <path>]` | The release's contract architecture, one story's endpoints, or where the contract lives |
 | `/archflow:autopilot` | Run queued stories unattended on one branch after a blocker interview |
 | `/archflow:setup-mcp [tool]` | Connect an external tool over MCP (Jira, Notion, Linear, GitHub, SuperDesign) |
 | `/archflow:studio [stop\|status\|port n]` | Archflow Studio, a local web workspace over the same files (beta) |
@@ -240,7 +240,7 @@ All namespaced as `/archflow:<name>`. There is no `/archflow <sub>` argument for
 ## Project types
 
 `fullstack`, `frontend_only`, `backend_only`, `mobile`. Stored as `project_type` in
-`current-phase.yaml`, set by `/archflow:onboard` or by hand. Phases, agents and audit checks are
+`project-settings.yaml`, set by `/archflow:onboard` or by hand. Phases, agents and audit checks are
 filtered by it, and release and backlog story fields are tailored to it — backend stories describe
 endpoints and services, frontend stories describe pages and components.
 

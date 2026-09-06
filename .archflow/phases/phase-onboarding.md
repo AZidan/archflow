@@ -43,7 +43,7 @@ See SECURITY.md for the full convention.
 
 ## Project Type Detection
 
-Detect the project type by scanning for structural indicators. Store the result in `.archflow/current-phase.yaml` as `project_type`.
+Detect the project type by scanning for structural indicators. Store the result in `.archflow/project-settings.yaml` as `project_type`.
 
 ### Detection Rules
 
@@ -131,11 +131,11 @@ When `.archflow/roadmap.yaml` is found, FIRST detect its schema version:
 - **v1.0** (has a `phases:` key, or `schema_version` is absent or `"1.0"`) → do NOT validate v1 here.
   Record it and redirect the user to **`/archflow:migrate`** (which retires sprints and splits the
   files into the v2.0 layout). Do not overwrite.
-- **v2.0** (`schema_version: "2.0"`) → validate the split-file shape against the v2.0 schemas in
+- **v2.x** (`schema_version: "2.0"` or `"2.1"`) → validate the split-file shape against the schemas in
   `.archflow/schemas/`. Collect **all** violations before recording — do not stop at the first failure.
 
 **Index (`roadmap.yaml`, `roadmap-schema.yaml`)**
-- Required keys: `schema_version: "2.0"`, `project`, `project_type`, `mode`, `epics`, `releases`
+- Required keys: `schema_version: "2.1"`, `project`, `project_type`, `mode`, `epics`, `releases`
 - `project_type` ∈ `fullstack | frontend_only | backend_only | mobile`; `mode` ∈ `quick | full`
 - `epics` are LABELS: each has `id` (`^E[0-9]+$`), `name`, `scope` (`backend|frontend|mobile|both|unknown`) — no inline stories
 - `releases[]`: each has `id` (slug), `status` (`planning|ready|in_progress`), `file`. At most ONE `in_progress`
@@ -175,7 +175,7 @@ Each violation entry:
 - Scan for: `docs/api-contract.md`, `swagger.json`, `swagger.yaml`, `openapi.json`, `openapi.yaml`, `docs/openapi.*`, `docs/swagger.*`
 - Applicable to: fullstack, backend_only, mobile
 - **use_existing: true** — if found in any format, USE AS-IS (do not convert)
-- Store found path in `.archflow/current-phase.yaml` as `api_contract_path`
+- Store found path in `.archflow/project-settings.yaml` as `api_contract_path`
 
 ### Phase 3 Indicators (Implementation)
 
@@ -645,7 +645,7 @@ INPUTS:
 - Project context: Read `.archflow/project-context.md`
 
 TASKS:
-1. Convert extracted routes into a proper API contract at `docs/api-contract.md`
+1. Convert extracted routes into a proper API contract at `{api_contract_path}`
 2. For each route:
    - Document method, path, description
    - Document request/response schemas (from extracted types)
@@ -655,7 +655,7 @@ TASKS:
 3. Group endpoints by resource/domain
 4. Add overview section with base URL, auth strategy, error format
 
-OUTPUT: Write `docs/api-contract.md`
+OUTPUT: Write the contract to `{api_contract_path}`
 
 IMPORTANT: This documents the EXISTING API. Do not add endpoints that don't exist in the extraction.
 ```
@@ -698,7 +698,7 @@ unbuilt scope is stubs in the backlog; already-shipped scope becomes a `released
 
 ```yaml
 # .archflow/roadmap.yaml (index)
-schema_version: "2.0"
+schema_version: "2.1"
 project: "{project_name}"
 project_type: {project_type}
 mode: {quick|full}                 # full for a substantial codebase / multiple contributors
@@ -841,7 +841,7 @@ shape, and the split schemas: `roadmap-schema.yaml` (index), `backlog-schema.yam
 
 ```yaml
 # .archflow/roadmap.yaml — INDEX only (no stories under epics)
-schema_version: "2.0"
+schema_version: "2.1"
 project: "{name}"
 project_type: "{fullstack|frontend_only|backend_only|mobile}"
 mode: "{quick|full}"
@@ -957,7 +957,7 @@ Recommended Phase: [N] ([Phase Name])
 Generated Artifacts:
   ✅ project-context.md (by product-strategist — domain research + [source] synthesis)
   ✅ roadmap.yaml ([N] epics, [M] stories: [X] done, [Y] in-progress, [Z] backlog)
-  ✅ API contract: docs/api-contract.md (reverse-engineered from [N] routes)
+  ✅ API contract: {api_contract_path} (reverse-engineered from [N] routes)
   ✅ Design system: design-artifacts/theme.yaml ([N] tokens extracted)
   ✅ Component specs: design-artifacts/styled-dsl.yaml ([N] screens)
   ✅ User flows: design-artifacts/user-flows.md
@@ -1004,7 +1004,7 @@ If "Yes": present each artifact for approval/editing, one at a time.
 | Route Extraction | `.onboard-extracted-routes.yaml` | api-contract-architect |
 | product-strategist | `project-context.md`, `.onboard-roadmap-draft.yaml` | ux-designer, api-contract-architect, feature-planner |
 | ux-designer | `theme.yaml` (refined), `wireframes/` | dsl-generator |
-| api-contract-architect | `docs/api-contract.md` | Phase C |
+| api-contract-architect | `{api_contract_path}` | Phase C |
 | dsl-generator | `design-artifacts/styled-dsl.yaml` | Phase C |
 | feature-planner | `roadmap.yaml` | Phase C (reconciliation) |
 

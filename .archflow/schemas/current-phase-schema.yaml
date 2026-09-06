@@ -1,15 +1,20 @@
-# current-phase.yaml — canonical schema (v2.0)
+# current-phase.yaml — canonical schema (v2.1)
 #
-# PROJECT-SCOPED phase + mode + stack tracker. Created by /archflow:init or
-# /archflow:onboard, read by every command and most agents.
+# WHERE THIS PROJECT IS. A cursor, rewritten at every phase transition.
 #
-# Validate with: /archflow:doctor --validate
-
+# In v2.1 the project SETTINGS moved out to project-settings.yaml — `project_type`,
+# `stack`, `api_contract_path` and `optional_agents`. This file had become two
+# things with change frequencies orders of magnitude apart, so a settings change
+# was buried in phase churn.
+#
+# `mode` stayed. It is consulted on nearly every operation and is already mirrored
+# in roadmap.yaml, so moving it would cost more than it saves.
+#
 # Document root: the object below (no named definitions in this file)
 $root: null
 
 type: object
-required: [phase, phase_file, project_type, mode]
+required: [phase, phase_file, mode]
 
 properties:
 
@@ -27,18 +32,13 @@ properties:
     description: "Path, relative to .archflow/, of the phase instructions to load."
     example: "phases/phase-3-implementation.md"
 
-  project_type:
-    type: [string, "null"]
-    enum: [fullstack, frontend_only, backend_only, mobile, null]
-    description: |
-      Filters which phases, agents and audit checks apply. null only before Phase 1
-      has determined it.
-
   mode:
     type: string
     enum: [quick, full]
     default: quick
-    description: "Ceremony mode. See /archflow:mode."
+    description: |
+      Ceremony mode. A density switch over the same schema, not a fork. Also
+      mirrored in roadmap.yaml. See /archflow:mode.
 
   active_release:
     type: [string, "null"]
@@ -55,133 +55,9 @@ properties:
       The Archflow plugin version that last touched this project. Stamped by
       /archflow:init, /archflow:onboard and /archflow:doctor --fix. Its absence, or a
       value older than the installed plugin, is how an upgrade is detected — the state
-      files themselves carry no other version signal, since schema_version tracks the
-      data model rather than the framework.
+      files carry no other version signal, since schema_version tracks the data model
+      rather than the framework.
     example: "2.2.1"
-
-  api_contract_path:
-    type: [string, "null"]
-    default: "docs/api-contract.md"
-    description: |
-      Where the API contract lives. Written by /archflow:init and /archflow:onboard,
-      updated by /archflow:contract. Every agent that reads the contract resolves it
-      through this field rather than hardcoding the default.
-
-  # ---------------------------------------------------------------------------
-  # stack — the project's technologies.
-  #
-  # THE AGENTS CARRY NO TECHNOLOGY OF THEIR OWN. They read this block and work in
-  # what it names. A null field means "not determined": the agent states what it
-  # found, names the candidates, and ASKS. It never assumes a default and never
-  # installs anything to satisfy one.
-  #
-  # Populated by /archflow:init (asks) or /archflow:onboard (detects). Starting
-  # points live in plugin/skills/archflow/stacks/*.yaml — those are seeds for
-  # init, never fallbacks an agent silently inherits.
-  #
-  # Every field is optional and nullable. Sections that do not apply to the
-  # project_type are omitted entirely (a backend_only project has no `web`).
-  # ---------------------------------------------------------------------------
-  stack:
-    type: object
-    required: false
-    properties:
-
-      language:
-        type: [string, "null"]
-        description: "Primary language, when one dominates."
-        example: "typescript"
-
-      backend:
-        type: object
-        required: false
-        properties:
-          framework: {type: [string, "null"], example: "nestjs"}
-          database:  {type: [string, "null"], example: "postgresql"}
-          orm:       {type: [string, "null"], example: "prisma"}
-          auth:      {type: [string, "null"], example: "jwt"}
-
-      web:
-        type: object
-        required: false
-        properties:
-          framework: {type: [string, "null"], example: "react"}
-          language:  {type: [string, "null"], example: "typescript"}
-          styling:   {type: [string, "null"], example: "tailwind"}
-          state:     {type: [string, "null"], example: "tanstack-query"}
-
-      mobile:
-        type: object
-        required: false
-        properties:
-          framework: {type: [string, "null"], example: "react-native"}
-          ios:       {type: [string, "null"], example: "swiftui"}
-          android:   {type: [string, "null"], example: "jetpack-compose"}
-
-      test:
-        type: object
-        required: false
-        properties:
-          unit:        {type: [string, "null"], example: "jest"}
-          integration: {type: [string, "null"], example: "supertest"}
-          e2e:
-            type: [string, "null"]
-            description: |
-              The end-to-end runner pm-reviewer uses for acceptance. When null,
-              pm-reviewer discovers it from the project and returns BLOCKED with the
-              candidates rather than installing one.
-            example: "playwright"
-
-      ci:      {type: [string, "null"], example: "github-actions"}
-      hosting: {type: [string, "null"], example: "vercel"}
-      package_manager: {type: [string, "null"], example: "pnpm"}
-
-      notes:
-        type: [string, "null"]
-        required: false
-        description: "Anything an agent should know that the fields above cannot express."
-
-  # ---------------------------------------------------------------------------
-  # optional_agents — which non-core agents join automatically, and where.
-  #
-  # Four agents are useful but not on the critical path. Rather than each phase
-  # hardcoding a roster, an agent declares the HOOK POINTS it joins:
-  #
-  #   design           Phase 2, alongside the per-story design gate
-  #   story_review     Phase 3, after qa-engineer passes and before pm-reviewer
-  #   release_quality  Phase 4, the release-wide quality pass
-  #   pre_ship         Phase 5, before the ship ritual
-  #
-  # An EMPTY list means available but never automatic: the agent still exists and
-  # is dispatched on request. That is the difference between discoverable and
-  # mandatory, and it is the default for anything the user did not ask for.
-  #
-  # Defaults are set by /archflow:init and /archflow:onboard, which ASK rather
-  # than assume, pre-selecting by `mode`:
-  #   quick — nothing automatic. A solo developer chose the light path.
-  #   full  — code-reviewer at story_review + release_quality, and a11y-expert at
-  #           story_review on a project with a UI.
-  # /archflow:mode offers to update these when the mode changes.
-  #
-  # An agent absent from this block never runs automatically. Adding a key here
-  # is the only way to put one in a phase's automatic path.
-  # ---------------------------------------------------------------------------
-  optional_agents:
-    type: object
-    required: false
-    description: "Agent name -> the hook points at which it runs automatically."
-    propertyNames:
-      enum: [a11y-expert, code-reviewer, doc-writer, ui-animation-designer]
-    additionalProperties:
-      type: array
-      items:
-        type: string
-        enum: [design, story_review, release_quality, pre_ship]
-    example:
-      code-reviewer: [story_review, release_quality]
-      a11y-expert: [story_review]
-      ui-animation-designer: []
-      doc-writer: []
 
   # Phase tracking
   phases_completed:      {type: array, items: {type: [number, string]}}
@@ -195,22 +71,16 @@ properties:
     items: {type: string}
 
 # -----------------------------------------------------------------------------
-# Example
+# Example — current-phase.yaml
 # -----------------------------------------------------------------------------
 # phase: 3
 # phase_name: "Implementation"
 # phase_file: "phases/phase-3-implementation.md"
-# project_type: fullstack
 # mode: quick
 # active_release: v0.3-checkout
 # onboarded: true
-# api_contract_path: docs/api-contract.md
-# stack:
-#   language: typescript
-#   backend: {framework: fastapi, database: postgresql, orm: sqlalchemy, auth: jwt}
-#   web:     {framework: react, language: typescript, styling: tailwind}
-#   test:    {unit: pytest, integration: httpx, e2e: playwright}
-#   ci: github-actions
-#   hosting: fly.io
-#   package_manager: uv
+# plugin_version: "2.3.0"
 # phases_completed: [1, 2, 2.5]
+#
+# Project settings (project_type, stack, api_contract_path, optional_agents) live
+# in .archflow/project-settings.yaml.

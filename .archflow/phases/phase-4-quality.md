@@ -8,7 +8,7 @@ release's** implemented stories, before it ships in Phase 5.
 
 ## 📋 Required Agents (Project-Type Aware)
 
-Read `.archflow/current-phase.yaml` to determine `project_type` and select appropriate agents:
+Read `.archflow/project-settings.yaml` to determine `project_type` and select appropriate agents:
 
 | Agent | fullstack | frontend_only | backend_only | mobile |
 |-------|-----------|---------------|--------------|--------|
@@ -24,7 +24,7 @@ Read `.archflow/current-phase.yaml` to determine `project_type` and select appro
 
 ## 📚 Prerequisites
 - All stories in the active release (`.archflow/releases/{active_release}.yaml`) are `done` (Phase 3)
-- API contract at `.archflow/current-phase.yaml → api_contract_path` (for contract compliance verification)
+- API contract, at the path in `.archflow/project-settings.yaml` → `api_contract_path` (for contract compliance verification)
 - Individual story tests passing
 - User approval for all individual stories
 
@@ -180,7 +180,7 @@ When all quality gates pass and user approves:
 
 ## 🔌 Optional agents at this hook point
 
-Read `optional_agents` from `.archflow/current-phase.yaml`. Dispatch every agent whose list contains
+Read `optional_agents` from `.archflow/project-settings.yaml`. Dispatch every agent whose list contains
 **`release_quality`**, with the same payload discipline as any other dispatch.
 
 An agent with an empty list is NOT dispatched here. It is still available on request — if the user

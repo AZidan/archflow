@@ -8,7 +8,7 @@ pipeline. Frontend and backend build in parallel within a story via the API cont
 
 ## 📋 Required Agents (Project-Type Aware)
 
-Read `.archflow/current-phase.yaml` to determine `project_type` and select appropriate agents:
+Read `.archflow/project-settings.yaml` to determine `project_type` and select appropriate agents:
 
 | Agent | fullstack | frontend_only | backend_only | mobile |
 |-------|-----------|---------------|--------------|--------|
@@ -59,7 +59,7 @@ A story's `status` IS its readiness state. Phase 3 builds a story only once it i
 
 ## 📚 Prerequisites
 - `active_release` set and its release file present.
-- API contract at `.archflow/current-phase.yaml → api_contract_path` (SACRED DOCUMENT) for stories
+- API contract, at the path in `.archflow/project-settings.yaml` → `api_contract_path` (SACRED DOCUMENT) for stories
   with `needs_contract`. May be `docs/api-contract.md`, `openapi.yaml`, etc. Null → no external APIs.
 - `design-artifacts/` handoff for stories with `needs_design` (per-story `design_artifact`).
 - User approval from the previous phase.
@@ -212,7 +212,7 @@ The two lines that must be reproduced exactly:
 Design system: read .archflow/design-system.yaml, then read and follow
 .archflow/design-systems/{design_system}.md before producing any output.
 
-Stack: read stack: from .archflow/current-phase.yaml and build in what it names. A null field is a
+Stack: read stack: from .archflow/project-settings.yaml and build in what it names. A null field is a
 question to ask, never a default to assume. Install nothing to close a gap.
 ```
 
@@ -235,7 +235,7 @@ ui-engineer: story S2-07
   Design system: read .archflow/design-system.yaml, then read and follow
   .archflow/design-systems/{design_system}.md before producing any output.
 
-  Stack: read stack: from .archflow/current-phase.yaml and build in what it names. A null field is a
+  Stack: read stack: from .archflow/project-settings.yaml and build in what it names. A null field is a
   question to ask, never a default to assume. Install nothing to close a gap.
 
   Contract: {api_contract_path}. This story's operations: {contract_endpoints}.
@@ -272,7 +272,7 @@ consumes it exactly. Zero tolerance for deviation, in either direction.
 
 ## 🔌 Optional agents at this hook point
 
-Read `optional_agents` from `.archflow/current-phase.yaml`. Dispatch every agent whose list contains
+Read `optional_agents` from `.archflow/project-settings.yaml`. Dispatch every agent whose list contains
 **`story_review`**, with the same payload discipline as any other dispatch.
 
 An agent with an empty list is NOT dispatched here. It is still available on request — if the user

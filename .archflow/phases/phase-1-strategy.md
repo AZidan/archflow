@@ -54,7 +54,7 @@ Before updating `current-phase.yaml`, verify:
 
 1. **Artifacts exist**:
    - [ ] `.archflow/project-context.md` exists
-   - [ ] `.archflow/roadmap.yaml` exists (schema_version 2.0, has `mode` + epic labels)
+   - [ ] `.archflow/roadmap.yaml` exists (schema_version 2.1, has `mode` + epic labels)
    - [ ] `.archflow/backlog.yaml` exists (stubs)
 
 2. **Git state**:

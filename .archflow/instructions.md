@@ -9,10 +9,11 @@ navigation rules, the per-phase agent roster, or the long form of any rule below
 ## Where you are
 
 ```
-.archflow/current-phase.yaml  →  phase, phase_file, mode, project_type, active_release, stack
+.archflow/current-phase.yaml     →  phase, phase_file, mode, active_release
+.archflow/project-settings.yaml  →  project_type, stack, api_contract_path, optional_agents
 ```
 
-Read it first. Then read `.archflow/phases/{phase_file}` and follow it — that file, not this one,
+Read both first. Then read `.archflow/phases/{phase_file}` and follow it — that file, not this one,
 says what to do in the current phase.
 
 If `current-phase.yaml` is missing, this project is not set up: load
@@ -23,7 +24,8 @@ If `current-phase.yaml` is missing, this project is not set up: load
 
 | File | Holds |
 |---|---|
-| `current-phase.yaml` | Phase, mode, `project_type`, `active_release`, `stack`, `api_contract_path` |
+| `current-phase.yaml` | Phase, `mode`, `active_release` — a cursor |
+| `project-settings.yaml` | `project_type`, `stack`, `api_contract_path`, `optional_agents` — how the project works |
 | `roadmap.yaml` | INDEX only: epic labels, the `releases[]` pipeline, the `shipped[]` ledger |
 | `releases/{slug}.yaml` | One release's stories. **The source of truth for story status** |
 | `backlog.yaml` | Unscheduled scope, as stubs |
@@ -58,7 +60,7 @@ approve, merge — before the next starts.
 **Use the specialist.** Dispatch the agent the phase names. Never `general-purpose` for work an
 Archflow agent covers.
 
-**Optional agents are a project setting.** `optional_agents` in `current-phase.yaml` says which of
+**Optional agents are a project setting.** `optional_agents` in `project-settings.yaml` says which of
 `code-reviewer`, `a11y-expert`, `ui-animation-designer` and `doc-writer` run automatically and where.
 An empty list means available on request but never automatic. Always honour a direct request for one.
 
@@ -67,12 +69,13 @@ touches UI carries this line verbatim in its own prompt:
 > Design system: read `.archflow/design-system.yaml`, then read and follow
 > `.archflow/design-systems/{design_system}.md` before producing any output.
 
-**Agents carry no technology.** They read `stack:` from `current-phase.yaml` and work in what it
+**Agents carry no technology.** They read `stack:` from `project-settings.yaml` and work in what it
 names. A null field is a question they ask, never a default they assume. Nothing is installed to
 close a gap — it is named and asked about.
 
-**The contract is sacred.** `docs/api-contract.md` binds api-engineer and ui-engineer equally, with
-zero tolerance for deviation. qa-engineer verifies against it.
+**The contract is sacred.** It binds api-engineer and ui-engineer equally, with zero tolerance for
+deviation, and qa-engineer verifies against it. Resolve its location through `api_contract_path` in
+`project-settings.yaml` — never assume the default.
 
 **Handoff is via files.** Agents communicate through artifacts in the repo, not through messages.
 
