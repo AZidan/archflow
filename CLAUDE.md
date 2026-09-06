@@ -27,7 +27,7 @@ Then load the current phase: read `.archflow/current-phase.yaml` → `phase_file
 - `/archflow:migrate` — upgrade a v1.0 project to schema v2.0
 - `/archflow:mode [quick|full]` — show/switch ceremony mode
 - `/archflow:release [new|start|ship]` — manage releases
-- `/archflow:groom [story-id]` — detail a backlog stub into a `ready` story
+- `/archflow:groom [story-id]` — detail or refine a story (a backlog stub, or one already in a release)
 - `/archflow:feature` — add a story to the backlog or active release
 - `/archflow:autopilot` — run queued release stories unattended on one branch (interview, then silent)
 - `/archflow:design [pick|list|name|story-id]` — the project's design system, and per-story screen design

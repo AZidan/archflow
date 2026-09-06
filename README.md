@@ -299,7 +299,7 @@ Twelve commands, all namespaced `/archflow:<name>`. You'll use three of them reg
 |---------|-------------|
 | `/archflow:status` | Current phase, active release, progress, and what to run next |
 | `/archflow:feature` | Add a story: to the backlog, or straight into the active release with a branch |
-| `/archflow:groom` | Turn a backlog stub into a `ready` story (acceptance criteria, subtasks, gates) |
+| `/archflow:groom` | Detail or refine a story: a backlog stub into `ready`, or one already in a release with its gates re-derived |
 | `/archflow:contract` | The API contract architecture, or one story's endpoints |
 | `/archflow:doctor` | Check the environment and project state. `--fix` repairs drift after a plugin upgrade |
 | `/archflow:studio` | Open the visual workspace over the same files (beta) |

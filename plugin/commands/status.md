@@ -42,7 +42,8 @@ Archflow — Phase-Based Development Workflow
   /archflow:setup-mcp     Configure MCP servers for external tools
                           (Jira, Notion, Linear, GitHub, SuperDesign, etc.)
 
-  /archflow:groom         Detail a backlog stub into a `ready` story
+  /archflow:groom         Detail or refine a story — a backlog stub, or one already in a
+                          release (re-derives its gates)
                           (acceptance criteria, subtasks, gates — stays in the backlog)
 
   /archflow:feature       Add a story — to the backlog, or straight into the active release

@@ -222,7 +222,7 @@ All namespaced as `/archflow:<name>`. There is no `/archflow <sub>` argument for
 | `/archflow:mode [quick\|full]` | Show or switch the ceremony mode |
 | `/archflow:release [new\|start\|ship]` | The release pipeline: status, cut, start, ship |
 | `/archflow:feature` | Add a story to the backlog or the active release, and start the git workflow |
-| `/archflow:groom [story-id]` | Detail a backlog stub into a `ready` story. Stays in the backlog |
+| `/archflow:groom [story-id]` | Detail or refine a story: a backlog stub into `ready`, or a story already in a release with its gates re-derived |
 | `/archflow:design [pick\|list\|name\|story-id]` | The project's design system, or one story's screens |
 | `/archflow:contract [story-id]` | The release's contract architecture, or one story's endpoints |
 | `/archflow:autopilot` | Run queued stories unattended on one branch after a blocker interview |

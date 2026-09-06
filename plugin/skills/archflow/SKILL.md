@@ -23,7 +23,7 @@ Every Archflow action is a namespaced slash command — there is no argument-sty
 /archflow:mode [quick|full]         → Show/switch ceremony mode: quick (solo) or full (team)
 /archflow:release [new|start|ship]  → Release pipeline: status, cut, start building, ship
 /archflow:setup-mcp [tool]          → Connect an external tool via MCP (Jira, Notion, Linear, ...)
-/archflow:groom [story-id]          → Turn a backlog stub into a ready story (ACs, subtasks, gates)
+/archflow:groom [story-id]          → Detail or refine a story (backlog stub, or in-release)
 /archflow:feature [name/description|story-id] → Add a story, or pull one into the active release
 /archflow:autopilot [story-id ...]  → Run queued stories unattended on one branch (interview, then silent)
 /archflow:design [pick|list|name]   → Show or change the project's design system (once per project)
