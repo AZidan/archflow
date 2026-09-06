@@ -698,6 +698,15 @@ status: "onboarded"
    - Copy `${CLAUDE_PLUGIN_ROOT}/skills/archflow/test-accounts.example.yaml` → `.archflow/` (skip if present)
    - These files define the git branching strategy, the canonical formats and the design-system references. They MUST be in the project repo so Phase 3+ agents can read them from the repo context regardless of plugin cache state.
 
+2a2. **Ask about optional review steps** and write `optional_agents` into `current-phase.yaml`.
+   Same question and same mode-based pre-selection as `/archflow:init` Step 4a2 — read that file and
+   follow it rather than restating the options here.
+
+   An existing codebase gives you evidence the question does not: if the repo already has a11y
+   tooling in its dev dependencies or a CI accessibility job, say so and pre-select accessibility
+   review. If it has a required-reviewers rule or a CODEOWNERS file, mention that code review is
+   already enforced outside Archflow and let the user decide whether they want it here too.
+
 2b. **Write `.archflow/design-system.yaml`** from what STEP A3 recorded (skip for `backend_only`,
    and skip if the user answered "This project has no UI"):
 ```yaml

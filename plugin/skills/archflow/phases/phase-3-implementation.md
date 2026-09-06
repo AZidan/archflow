@@ -270,6 +270,18 @@ consumes it exactly. Zero tolerance for deviation, in either direction.
   Handle every error scenario the contract defines, and verify auth integration.
 ```
 
+## 🔌 Optional agents at this hook point
+
+Read `optional_agents` from `.archflow/current-phase.yaml`. Dispatch every agent whose list contains
+**`story_review`**, with the same payload discipline as any other dispatch.
+
+An agent with an empty list is NOT dispatched here. It is still available on request — if the user
+asks for it, run it. Absent from the block entirely means the same thing.
+
+This runs AFTER `qa-engineer` passes and BEFORE `pm-reviewer`. A failing optional review sends the
+story back the same way a failing test does — it does not proceed to acceptance. `code-reviewer`
+here reviews THIS STORY's diff, not the whole codebase; that is Phase 4's job.
+
 ### ✅ Step 3C: STORY TESTING
 ```bash
 qa-engineer: test the integrated story → tests/[feature-name]/

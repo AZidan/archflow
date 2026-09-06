@@ -61,7 +61,15 @@ file carries its full rules; this is only the map.
 | 5 · Launch | `devops-engineer` · `post-launch-analyst` |
 | 6 · Enhancement | `i18n-engineer`, and any agent on demand |
 
-On-demand, referenced by no phase: `a11y-expert`, `doc-writer`, `ui-animation-designer`.
+**Optional agents.** `code-reviewer`, `a11y-expert`, `ui-animation-designer` and `doc-writer` are
+always available on request. Whether they ALSO run automatically is a per-project setting,
+`optional_agents` in `current-phase.yaml`, which maps each to the hook points it joins: `design`
+(Phase 2), `story_review` (Phase 3, after qa-engineer and before pm-reviewer), `release_quality`
+(Phase 4), `pre_ship` (Phase 5). An empty list means available but never automatic. Set at
+`/archflow:init` or `/archflow:onboard`, pre-selected by mode, and revisited by `/archflow:mode`.
+
+Note `code-reviewer` appears in both places: it is core to Phase 4 regardless, and optionally joins
+the per-story loop as well.
 
 **Sequencing that matters.** `ui-engineer` and `api-engineer` may run in parallel on the same story
 when both have independent scopes from the contract. `qa-engineer` runs AFTER both complete, never

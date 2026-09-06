@@ -133,3 +133,13 @@ Upon completion and approval:
 
 ---
 **Phase 2 Complete** ✅ → **Phase 2.25: High-Fidelity Design** ➡️
+
+## 🔌 Optional agents at this hook point
+
+Read `optional_agents` from `.archflow/current-phase.yaml`. Dispatch every agent whose list contains
+**`design`**, with the same payload discipline as any other dispatch.
+
+An agent with an empty list is NOT dispatched here. It is still available on request — if the user
+asks for it, run it. Absent from the block entirely means the same thing.
+
+Dispatched alongside the per-story design gate, after `ux-designer` produces the screens.

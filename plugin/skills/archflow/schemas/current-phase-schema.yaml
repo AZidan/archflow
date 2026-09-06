@@ -141,6 +141,48 @@ properties:
         required: false
         description: "Anything an agent should know that the fields above cannot express."
 
+  # ---------------------------------------------------------------------------
+  # optional_agents — which non-core agents join automatically, and where.
+  #
+  # Four agents are useful but not on the critical path. Rather than each phase
+  # hardcoding a roster, an agent declares the HOOK POINTS it joins:
+  #
+  #   design           Phase 2, alongside the per-story design gate
+  #   story_review     Phase 3, after qa-engineer passes and before pm-reviewer
+  #   release_quality  Phase 4, the release-wide quality pass
+  #   pre_ship         Phase 5, before the ship ritual
+  #
+  # An EMPTY list means available but never automatic: the agent still exists and
+  # is dispatched on request. That is the difference between discoverable and
+  # mandatory, and it is the default for anything the user did not ask for.
+  #
+  # Defaults are set by /archflow:init and /archflow:onboard, which ASK rather
+  # than assume, pre-selecting by `mode`:
+  #   quick — nothing automatic. A solo developer chose the light path.
+  #   full  — code-reviewer at story_review + release_quality, and a11y-expert at
+  #           story_review on a project with a UI.
+  # /archflow:mode offers to update these when the mode changes.
+  #
+  # An agent absent from this block never runs automatically. Adding a key here
+  # is the only way to put one in a phase's automatic path.
+  # ---------------------------------------------------------------------------
+  optional_agents:
+    type: object
+    required: false
+    description: "Agent name -> the hook points at which it runs automatically."
+    propertyNames:
+      enum: [a11y-expert, code-reviewer, doc-writer, ui-animation-designer]
+    additionalProperties:
+      type: array
+      items:
+        type: string
+        enum: [design, story_review, release_quality, pre_ship]
+    example:
+      code-reviewer: [story_review, release_quality]
+      a11y-expert: [story_review]
+      ui-animation-designer: []
+      doc-writer: []
+
   # Phase tracking
   phases_completed:      {type: array, items: {type: [number, string]}}
   phases_partial:        {type: array, items: {type: [number, string]}}

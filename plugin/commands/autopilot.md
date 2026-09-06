@@ -135,7 +135,10 @@ Then, for each `pending` story in queue order:
 
    `frontend_only` → `ui-engineer`, `fullstack` → both, scoped per subtask). Every applicable
    universal rule still holds — the API contract is still sacred, agents still hand off via files.
-4. `qa-engineer`, then `pm-reviewer` against the story's acceptance criteria.
+4. `qa-engineer`, then any agent whose `optional_agents` list contains `story_review`, then
+   `pm-reviewer` against the story's acceptance criteria. The optional agents are part of the story
+   loop, not an extra the user has to remember — an unattended run that skips the review the project
+   asked for is not running the project's process.
 5. On ACCEPTED: merge the task branch into the run branch, mark the story `done` in
    `.archflow/releases/{active_release}.yaml` (ACs `met`, subtasks `completed`), append the story
    result to the ledger, delete the task branch.

@@ -58,6 +58,17 @@ touches.
 
 ### Added
 
+- **`optional_agents`, a per-project setting for which non-core agents run automatically.**
+  `code-reviewer`, `a11y-expert`, `ui-animation-designer` and `doc-writer` are always available on
+  request; this says whether they also join automatically, and where, via four hook points:
+  `design`, `story_review`, `release_quality`, `pre_ship`. An empty list means available but never
+  automatic. Asked at `/archflow:init` and `/archflow:onboard`, pre-selected by mode, revisited by
+  `/archflow:mode`, reported by `/archflow:doctor`.
+
+  This closes two gaps. Three agents shipped referenced by no phase file, so nothing could dispatch
+  them and nothing told users they existed. And `code-reviewer` ran only as a Phase 4 whole-codebase
+  pass, so a story could be built, tested, accepted and merged with no code review at all — in
+  autopilot too. Autopilot now runs the `story_review` hook as part of its loop.
 - **`/archflow:contract`** — the release's API contract architecture, and per-story endpoint specs
   that clear a story's `needs_contract` gate. The contract architecture never had a verb.
 - **`/archflow:doctor`** — checks tooling, e2e tooling, project state and repo hygiene, with

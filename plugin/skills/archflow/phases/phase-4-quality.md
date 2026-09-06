@@ -177,3 +177,14 @@ When all quality gates pass and user approves:
 
 ---
 **Phase 4 Complete (active release quality-passed)** → **Phase 5: Ship the Release**
+
+## 🔌 Optional agents at this hook point
+
+Read `optional_agents` from `.archflow/current-phase.yaml`. Dispatch every agent whose list contains
+**`release_quality`**, with the same payload discipline as any other dispatch.
+
+An agent with an empty list is NOT dispatched here. It is still available on request — if the user
+asks for it, run it. Absent from the block entirely means the same thing.
+
+`code-reviewer` and `performance-optimizer` are core to this phase and run regardless. This block
+adds anything else the project opted into.

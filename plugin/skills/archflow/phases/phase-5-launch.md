@@ -121,3 +121,14 @@ After the ship ritual completes and `active_release` is cleared:
 
 ---
 **Release shipped** 🚀 → **Next release (loop)** or **Monitoring / Enhancement** 📊
+
+## 🔌 Optional agents at this hook point
+
+Read `optional_agents` from `.archflow/current-phase.yaml`. Dispatch every agent whose list contains
+**`pre_ship`**, with the same payload discipline as any other dispatch.
+
+An agent with an empty list is NOT dispatched here. It is still available on request — if the user
+asks for it, run it. Absent from the block entirely means the same thing.
+
+Dispatched BEFORE the ship ritual. Anything it produces is part of the release, so it has to land
+before the tag.

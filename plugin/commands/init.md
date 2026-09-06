@@ -122,6 +122,10 @@ api_contract_path: "docs/api-contract.md"
 # ASKS. It never assumes a default. See .archflow/schemas/current-phase-schema.yaml.
 stack: {}            # filled by the step below
 
+# Which optional agents join automatically, and where. Empty list = available on
+# request but never automatic. See .archflow/schemas/current-phase-schema.yaml.
+optional_agents: {}  # filled by the step below
+
 # Phase tracking
 phases_completed: []
 phases_partial: []
@@ -194,6 +198,41 @@ the agent will ask you later, mid-story. Answering here is cheaper.
    undecided, and a bad one for a project that just has not written it down.
 
 Never install anything here. This step writes YAML and nothing else.
+
+### Step 4a2: Optional review steps
+
+Four agents are useful but not on the critical path: `code-reviewer`, `a11y-expert`,
+`ui-animation-designer` and `doc-writer`. They are always available on request. This decides which
+of them join automatically, and where.
+
+Ask once. Pre-select by `mode`, and say that pre-selection out loud so the user knows what they are
+accepting:
+
+```
+Optional review steps. Any of these can still be run on request even if not automatic.
+
+  [{x if full}] Code review on every story         code-reviewer, after tests pass
+  [{x if full and has UI}] Accessibility review on every story   a11y-expert
+  [ ] Motion design during design                  ui-animation-designer
+  [ ] Documentation before shipping                doc-writer
+
+  ({quick mode: nothing is pre-selected — quick keeps the loop short.
+    full mode: code review is pre-selected, and accessibility too if this project has a UI.})
+```
+
+Write the answer as hook points, not booleans:
+
+```yaml
+optional_agents:
+  code-reviewer:         [story_review, release_quality]   # if chosen
+  a11y-expert:           [story_review]                    # if chosen
+  ui-animation-designer: [design]                          # if chosen
+  doc-writer:            [pre_ship]                        # if chosen
+```
+
+Anything not chosen is written as an empty list, so the file records the decision rather than
+leaving it ambiguous. Never omit a key — an absent key and an empty list mean the same thing to the
+framework, but only the empty list tells the next reader that someone was asked.
 
 ### Step 4b: Choose the Design System
 

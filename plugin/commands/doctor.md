@@ -101,6 +101,19 @@ rather than one at a time mid-story:
 ```
 Show `(not set)` for null. Omit whole sections that do not apply to the project type.
 
+**Report the optional agents too**, since a project that never answered the question silently runs
+without the review steps it might expect:
+
+```
+  Optional agents
+    code-reviewer         story_review, release_quality
+    a11y-expert           not automatic (available on request)
+    ui-animation-designer  not automatic
+    doc-writer            not automatic
+```
+If `optional_agents` is absent entirely, say so and note that nothing optional runs automatically —
+that is a valid state, and also what a project set up before the setting existed looks like.
+
 ## Step 4 — Repo hygiene
 
 - `.archflow/test-accounts.yaml` must be gitignored. If `git check-ignore -q .archflow/test-accounts.yaml`

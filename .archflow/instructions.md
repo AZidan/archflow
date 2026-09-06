@@ -58,6 +58,10 @@ approve, merge — before the next starts.
 **Use the specialist.** Dispatch the agent the phase names. Never `general-purpose` for work an
 Archflow agent covers.
 
+**Optional agents are a project setting.** `optional_agents` in `current-phase.yaml` says which of
+`code-reviewer`, `a11y-expert`, `ui-animation-designer` and `doc-writer` run automatically and where.
+An empty list means available on request but never automatic. Always honour a direct request for one.
+
 **Subagents inherit nothing.** A dispatched agent does not see this context. Every dispatch that
 touches UI carries this line verbatim in its own prompt:
 > Design system: read `.archflow/design-system.yaml`, then read and follow
