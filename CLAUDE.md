@@ -9,7 +9,9 @@ framework with a release-driven outer loop (schema v2.0).
 
 **The framework flow is defined in a single agent-neutral base file:**
 
-📖 **`.archflow/instructions.md`** — read it first. It is the source of truth for how Archflow works:
+📖 **`.archflow/instructions.md`** — read it first. It is the always-injected CORE, deliberately
+small. **`.archflow/reference.md`** holds the detail (release model, agent roster, rules in full) and
+is read on demand rather than carried all session. It is the source of truth for how Archflow works:
 core agents per phase, the release model (releases as the outer loop, backlog stubs, the per-story
 readiness pipeline, quick/full modes), the command surface, the universal context files, and the
 critical rules. Other coding-agent instruction files (this `CLAUDE.md`, a Cursor `.cursorrules`, a

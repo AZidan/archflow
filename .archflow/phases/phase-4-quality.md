@@ -1,5 +1,7 @@
 # Phase 4: Quality Assurance
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+
 ## 🎯 Phase Objective
 Comprehensive quality review, performance optimization, and final testing across the **active
 release's** implemented stories, before it ships in Phase 5.

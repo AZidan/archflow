@@ -1,5 +1,7 @@
 # Phase Setup & Inference System
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+
 This file is loaded ONLY when `.archflow/current-phase.yaml` is missing from a project directory. It handles phase detection and initialization.
 
 ## 🔍 Existing Project Detection

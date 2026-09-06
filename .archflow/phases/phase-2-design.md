@@ -1,5 +1,7 @@
 # Phase 2: Design
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+
 ## 🎯 Phase Objective
 Design splits into TWO kinds of work (v2.0 — Pillar 2):
 

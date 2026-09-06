@@ -1,5 +1,7 @@
 # Phase 6: Enhancement (On-Demand)
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+
 ## 🎯 Phase Objective
 Post-launch improvements, internationalization, and feature enhancements based on user feedback and analytics.
 

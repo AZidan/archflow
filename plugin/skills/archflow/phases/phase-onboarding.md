@@ -1,5 +1,7 @@
 # Phase: Onboarding (Existing Codebase)
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+
 This phase is loaded by `/archflow:onboard`. It contains project type detection, audit logic, extraction rules, agent prompt templates, structured output schemas, and gap analysis for onboarding existing codebases into the phase-based framework.
 
 The onboarding wizard runs in three phases:

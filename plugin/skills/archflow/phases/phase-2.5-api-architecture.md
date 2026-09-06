@@ -1,5 +1,7 @@
 # Phase 2.5: API Architecture
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+
 ## 🎯 Phase Objective
 API architecture splits into TWO kinds of work (v2.0 — Pillar 2), mirroring the design split:
 

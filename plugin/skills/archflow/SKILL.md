@@ -5,6 +5,8 @@ description: Phase-based development workflow manager that guides projects throu
 
 # Archflow — Phase-Based Development Workflow
 
+`.archflow/instructions.md` is the always-loaded core. `.archflow/reference.md` holds the detail and is read on demand.
+
 Archflow manages the full software development lifecycle through structured phases, from onboarding
 existing codebases to launching production software. Releases are the outer loop (schema v2.0);
 phases are the inner loop.

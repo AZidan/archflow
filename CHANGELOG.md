@@ -87,6 +87,11 @@ touches.
   rejection. Anything referencing the old agent name needs updating.
 - **All 17 agent descriptions rewritten** to one shape: what it does, when it runs, what it produces,
   what binds it. From 13,535 characters to 3,669, about 2,470 fewer tokens per session.
+- **`instructions.md` split into a core and a reference.** It is injected on every session start,
+  resume and compact, so every line was paid for repeatedly by every user. The always-loaded core is
+  now ~1,100 tokens instead of ~5,700, an 81% cut, with the detail moved to `.archflow/reference.md`
+  and read on demand. A test enforces the budget so the core cannot quietly grow back, and another
+  asserts that every agent, command and rule is still findable in one of the two.
 - **codemap is now optional.** Every invocation is guarded and degrades to ordinary file search, and
   the watcher is opt-in. It was an undeclared hard dependency the README never mentioned.
 - **The design-system path is threaded into every UI dispatch**, including Phase 3, where the rule

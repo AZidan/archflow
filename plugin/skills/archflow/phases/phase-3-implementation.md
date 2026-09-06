@@ -1,5 +1,7 @@
 # Phase 3: Implementation (Build the Active Release)
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+
 ## 🎯 Phase Objective
 Build the stories of the ONE active release, one story at a time, honoring each story's readiness
 pipeline. Frontend and backend build in parallel within a story via the API contract.

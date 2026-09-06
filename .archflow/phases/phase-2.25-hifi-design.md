@@ -1,5 +1,7 @@
 # Phase 2.25: High-Fidelity Design (SuperDesign MCP)
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+
 ## 🎯 Phase Objective
 Generate polished, high-fidelity HTML screens from `styled-dsl.yaml` for visual approval before any code is written. This prevents expensive rework by catching design issues early.
 

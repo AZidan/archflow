@@ -1,5 +1,7 @@
 # Phase 1: Strategy & Planning
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+
 ## 🎯 Phase Objective
 Define business strategy, user personas, and the product **backlog** to establish project foundation.
 (Releases are carved from the backlog just-in-time, later — Phase 1 does NOT plan every release up front.)

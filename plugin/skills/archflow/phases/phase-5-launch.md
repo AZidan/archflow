@@ -1,5 +1,7 @@
 # Phase 5: Ship the Active Release
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+
 ## 🎯 Phase Objective
 Ship the active release: deploy to production with CI/CD + monitoring, then run the **ship ritual**
 that finalizes the release record (mark released, tag, archive, append history), and loop back to the
