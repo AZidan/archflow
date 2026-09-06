@@ -87,8 +87,8 @@ try {
 }
 if (!report.drift || !report.findings?.length) quit();
 
-const fixable = report.findings.filter((f) => f.fixable);
-const manual = report.findings.filter((f) => !f.fixable);
+const repairable = report.findings.filter((f) => f.fix_by !== "user");
+const manual = report.findings.filter((f) => f.fix_by === "user");
 
 const lines = [];
 lines.push("⬆️  This project is behind the installed Archflow plugin.");
@@ -105,12 +105,12 @@ for (const f of report.findings) {
   lines.push(`      - ${f.summary}`);
 }
 lines.push("");
-if (fixable.length) {
-  lines.push(`    Run /archflow:doctor --fix to repair ${fixable.length} of these. It backs up`);
+if (repairable.length) {
+  lines.push(`    Run /archflow:doctor --fix to repair ${repairable.length} of these. It backs up`);
   lines.push("    everything it touches and never writes project content.");
 }
 if (manual.length) {
-  lines.push(`    ${manual.length} item(s) need a decision from the user — /archflow:doctor explains them.`);
+  lines.push(`    ${manual.length} item(s) need a decision only the user can make — /archflow:doctor explains them.`);
 }
 lines.push("");
 lines.push("    Tell the user this before running their command. Do not repair anything unless");

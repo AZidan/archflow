@@ -57,13 +57,25 @@ TECH_STACK_MAP = {
 
 
 class Finding:
-    def __init__(self, key, summary, detail, fixable=True, files=None):
+    """A piece of drift, and WHO repairs it.
+
+    fix_by distinguishes three cases that used to be collapsed into one boolean:
+      "script" — this script repairs it under --apply
+      "agent"  — /archflow:doctor --fix repairs it, but a script must not: it needs
+                 to read and understand a hand-editable document
+      "user"   — needs a decision nobody can make on the user's behalf
+    `fixable` is kept for compatibility and means "the script does it".
+    """
+
+    def __init__(self, key, summary, detail, fixable=True, files=None, fix_by=None):
         self.key, self.summary, self.detail = key, summary, detail
-        self.fixable, self.files = fixable, files or []
+        self.fixable = fixable
+        self.fix_by = fix_by or ("script" if fixable else "user")
+        self.files = files or []
 
     def as_dict(self):
         return {"key": self.key, "summary": self.summary, "detail": self.detail,
-                "fixable": self.fixable, "files": self.files}
+                "fixable": self.fixable, "fix_by": self.fix_by, "files": self.files}
 
 
 def yaml_files(archflow: Path):
@@ -107,26 +119,64 @@ def find_renamed_agents(archflow: Path):
     return findings
 
 
+def _settings_doc(archflow: Path):
+    """Where settings live now, falling back to where they used to.
+
+    A pre-2.1 project still has them in current-phase.yaml; a migrated one has
+    project-settings.yaml. Reading both means the stack detectors keep working
+    either side of the split.
+    """
+    # tech_stack FIRST, wherever it is. A half-migrated project can have stack: in
+    # the settings file and a stranded tech_stack: still in the cursor; preferring
+    # the settings file there hid the leftover from every detector.
+    for name in ("current-phase.yaml", "project-settings.yaml"):
+        path = archflow / name
+        if not path.exists():
+            continue
+        try:
+            doc = yaml.safe_load(path.read_text()) or {}
+        except yaml.YAMLError:
+            continue
+        if isinstance(doc, dict) and "tech_stack" in doc:
+            return path, doc
+    for name in ("project-settings.yaml", "current-phase.yaml"):
+        path = archflow / name
+        if not path.exists():
+            continue
+        try:
+            doc = yaml.safe_load(path.read_text()) or {}
+        except yaml.YAMLError:
+            continue
+        if isinstance(doc, dict) and "stack" in doc:
+            return path, doc
+    # nothing carries a stack; report against the settings file if it exists
+    for name in ("project-settings.yaml", "current-phase.yaml"):
+        path = archflow / name
+        if path.exists():
+            try:
+                doc = yaml.safe_load(path.read_text()) or {}
+            except yaml.YAMLError:
+                doc = {}
+            return path, (doc if isinstance(doc, dict) else {})
+    return None, None
+
+
 def find_tech_stack(archflow: Path):
-    cp = archflow / "current-phase.yaml"
-    if not cp.exists():
-        return []
-    try:
-        doc = yaml.safe_load(cp.read_text()) or {}
-    except yaml.YAMLError:
+    cp, doc = _settings_doc(archflow)
+    if cp is None:
         return []
     if not isinstance(doc, dict) or "tech_stack" not in doc:
         return []
     if doc.get("stack"):
         return [Finding(
             "tech-stack-leftover",
-            "current-phase.yaml has both tech_stack: and stack:",
+            f"{cp.name} has both tech_stack: and stack:",
             "stack: is the one agents read. The tech_stack: block is dead and can be deleted.",
             files=[str(cp.relative_to(archflow.parent))],
         )]
     return [Finding(
         "tech-stack-convert",
-        "current-phase.yaml has tech_stack: but no stack:",
+        f"{cp.name} has tech_stack: but no stack:",
         "Agents read stack:. Without it each one stops and asks on its first dispatch. The old\n"
         "block holds most of the answer and converts cleanly.",
         files=[str(cp.relative_to(archflow.parent))],
@@ -134,18 +184,14 @@ def find_tech_stack(archflow: Path):
 
 
 def find_missing_stack(archflow: Path):
-    cp = archflow / "current-phase.yaml"
-    if not cp.exists():
-        return []
-    try:
-        doc = yaml.safe_load(cp.read_text()) or {}
-    except yaml.YAMLError:
+    cp, doc = _settings_doc(archflow)
+    if cp is None:
         return []
     if not isinstance(doc, dict) or doc.get("tech_stack") or doc.get("stack"):
         return []
     return [Finding(
         "stack-absent",
-        "current-phase.yaml has no stack: block",
+        f"{cp.name} has no stack: block",
         "Agents carry no technology of their own. Each will detect from the repo and ASK on its\n"
         "first dispatch. Populate it with /archflow:onboard detection, or by hand from stacks/.",
         fixable=False,
@@ -182,6 +228,68 @@ def find_missing_framework_files(archflow: Path, plugin_skill: Path):
     )]
 
 
+# Fields that moved out of current-phase.yaml in schema v2.1.
+MOVED_TO_SETTINGS = ["project_type", "api_contract_path", "stack", "optional_agents"]
+
+
+def find_split_project_settings(archflow: Path):
+    """v2.0 kept settings and the phase cursor in one file. v2.1 splits them."""
+    cp = archflow / "current-phase.yaml"
+    if not cp.exists():
+        return []
+    try:
+        doc = yaml.safe_load(cp.read_text()) or {}
+    except yaml.YAMLError:
+        return []
+    if not isinstance(doc, dict):
+        return []
+    stranded = [k for k in MOVED_TO_SETTINGS if k in doc]
+    if not stranded:
+        return []
+    return [Finding(
+        "split-project-settings",
+        f"{len(stranded)} setting(s) still live in current-phase.yaml (schema v2.1 moved them)",
+        "current-phase.yaml is a CURSOR, rewritten at every phase transition. Settings that change\n"
+        "almost never belong in project-settings.yaml, or a real settings change is buried in phase\n"
+        f"churn. Stranded: {', '.join(stranded)}.\n"
+        "Repaired by /archflow:doctor --fix, which reads the file and moves the keys itself — a\n"
+        "script cannot, because this file is hand-editable and its shape varies per project.",
+        fixable=False, fix_by="agent",
+        files=[str(cp.relative_to(archflow.parent))],
+    )]
+
+
+def find_roadmap_schema_version(archflow: Path):
+    """roadmap.yaml carries the framework schema version. v2.1 moved it."""
+    rm = archflow / "roadmap.yaml"
+    if not rm.exists():
+        return []
+    try:
+        doc = yaml.safe_load(rm.read_text()) or {}
+    except yaml.YAMLError:
+        return []
+    if not isinstance(doc, dict):
+        return []
+    found = doc.get("schema_version")
+    if found in (None, "2.1"):
+        return []
+    if str(found).startswith("1."):
+        return [Finding(
+            "schema-v1",
+            f"roadmap.yaml is schema_version {found!r} — a v1.0 project",
+            "This needs /archflow:migrate, not this repair. It restructures the whole roadmap.",
+            fixable=False,
+            files=["`.archflow/roadmap.yaml`"],
+        )]
+    return [Finding(
+        "roadmap-schema-version",
+        f"roadmap.yaml is schema_version {found!r}, the framework is on 2.1",
+        "2.1 split project settings out of current-phase.yaml. The data model is otherwise\n"
+        "unchanged, so this is a one-line bump once the settings have been split.",
+        files=[str(rm.relative_to(archflow.parent))],
+    )]
+
+
 def find_version_stamp(archflow: Path, version):
     cp = archflow / "current-phase.yaml"
     if not cp.exists() or not version:
@@ -206,6 +314,18 @@ def find_version_stamp(archflow: Path, version):
 # --------------------------------------------------------------------------
 
 _BACKED_UP = set()
+
+
+def _atomic_write(path: Path, text: str):
+    """Write via a temp file and rename, so an interrupt cannot leave a half file.
+
+    The split rewrites two documents. Without this, an interrupt between them
+    leaves both holding the settings — the exact duplicated state that the
+    conflict check then refuses to resolve on the next run.
+    """
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(text)
+    tmp.replace(path)
 
 
 def backup(path: Path, archflow: Path, stamp: str):
@@ -235,23 +355,37 @@ def apply_renames(archflow: Path, stamp: str):
             new = re.sub(rf"(?<![\w-]){re.escape(old)}(?![\w-])", repl, new)
         if new != text:
             backup(f, archflow, stamp)
-            f.write_text(new)
+            _atomic_write(f, new)
             changed.append(str(f.relative_to(archflow.parent)))
     return changed
 
 
 def apply_tech_stack(archflow: Path, stamp: str):
-    cp = archflow / "current-phase.yaml"
+    cp, _ = _settings_doc(archflow)
+    if cp is None:
+        return None
     text = cp.read_text()
     doc = yaml.safe_load(text) or {}
     old = doc.get("tech_stack")
     if not isinstance(old, dict):
         return None
 
-    stack = {}
+    # The old tech_stack was FREE TEXT. Real projects wrote things like
+    # "NestJS + PostgreSQL" and "Next.js + React + Tailwind CSS" into a single field.
+    # Mapping those 1:1 into a structured field produces a value that is not null, so
+    # no agent will ask about it, and not a framework name either, so every agent
+    # misreads it. An honest null is better: the agent asks with the repo in front of
+    # it. The original text is preserved in notes: so nothing is lost.
+    def compound(v):
+        return isinstance(v, str) and re.search(r"\s\+\s|,", v)
+
+    stack, unclear = {}, {}
     for src_key, path in TECH_STACK_MAP.items():
         val = old.get(src_key)
         if val in (None, "", "null"):
+            continue
+        if compound(val):
+            unclear[src_key] = val
             continue
         if len(path) == 1:
             stack[path[0]] = val
@@ -261,7 +395,11 @@ def apply_tech_stack(archflow: Path, stamp: str):
     lines = ["stack:",
              "  # Converted from the retired tech_stack: block by /archflow:doctor --fix.",
              "  # Fields the old block could not express are null: agents will ask when they need",
-             "  # them. See .archflow/schemas/current-phase-schema.yaml."]
+             "  # them. See .archflow/schemas/project-settings-schema.yaml."]
+    if unclear:
+        lines += ["  #",
+                  "  # Some old values were compound free text and could not be mapped to a single",
+                  "  # field. They are in notes: below — split them into fields and delete the note."]
     if "language" in stack:
         lines.append(f"  language: {stack['language']}")
     if "backend" in stack:
@@ -274,6 +412,10 @@ def apply_tech_stack(archflow: Path, stamp: str):
                      ", language: null, styling: null, state: null}")
     lines += ["  test: {unit: null, integration: null, e2e: null}",
               "  ci: null", "  hosting: null", "  package_manager: null"]
+
+    if unclear:
+        note = "; ".join(f"{k}: {v}" for k, v in unclear.items())
+        lines.append(f'  notes: "unmapped from the old tech_stack: {note}"')
     block = "\n".join(lines) + "\n"
 
     # Replace the tech_stack block in place, preserving everything around it.
@@ -281,7 +423,7 @@ def apply_tech_stack(archflow: Path, stamp: str):
     if not pattern.search(text):
         return None
     backup(cp, archflow, stamp)
-    cp.write_text(pattern.sub(block, text, count=1))
+    _atomic_write(cp, pattern.sub(block, text, count=1))
     return str(cp.relative_to(archflow.parent))
 
 
@@ -297,6 +439,33 @@ def apply_missing_files(archflow: Path, plugin_skill: Path, missing):
     return copied
 
 
+def apply_roadmap_schema_version(archflow: Path, stamp: str):
+    """Bump roadmap.yaml to 2.1. Only safe once the settings split is done.
+
+    A one-line, one-key edit on a known field, done by text substitution so the rest
+    of the file — comments, ordering, everything — is untouched.
+    """
+    if (archflow / "current-phase.yaml").exists():
+        try:
+            cp = yaml.safe_load((archflow / "current-phase.yaml").read_text()) or {}
+        except yaml.YAMLError:
+            return None
+        if isinstance(cp, dict) and any(k in cp for k in MOVED_TO_SETTINGS):
+            return None  # split first; claiming 2.1 while still v2.0-shaped would lie
+    rm = archflow / "roadmap.yaml"
+    text = rm.read_text()
+    # Column 0 only. `\s*` here would match an INDENTED schema_version inside a
+    # nested block and, with count=1, rewrite that instead of the real top-level
+    # key — corrupting unrelated data while reporting success.
+    new, n = re.subn(r'^(schema_version:\s*)["\']?[0-9.]+["\']?',
+                     r'\1"2.1"', text, count=1, flags=re.M)
+    if not n:
+        return None
+    backup(rm, archflow, stamp)
+    _atomic_write(rm, new)
+    return str(rm.relative_to(archflow.parent))
+
+
 def apply_version_stamp(archflow: Path, version: str, stamp: str):
     cp = archflow / "current-phase.yaml"
     if not cp.exists():
@@ -306,10 +475,13 @@ def apply_version_stamp(archflow: Path, version: str, stamp: str):
     if re.search(r"^plugin_version:.*$", text, re.M):
         text = re.sub(r"^plugin_version:.*$", f'plugin_version: "{version}"', text, count=1, flags=re.M)
     else:
-        text = re.sub(r"^(project_type:.*\n)", rf'\1plugin_version: "{version}"\n', text, count=1, flags=re.M)
-        if "plugin_version" not in text:
+        # Anchor on a field the cursor actually still has. project_type moved out in
+        # v2.1, and the split runs before this, so anchoring there never matched.
+        text, n = re.subn(r"^(phase_file:.*\n)", rf'\1plugin_version: "{version}"\n',
+                          text, count=1, flags=re.M)
+        if not n:
             text = text.rstrip("\n") + f'\nplugin_version: "{version}"\n'
-    cp.write_text(text)
+    _atomic_write(cp, text)
     return str(cp.relative_to(archflow.parent))
 
 
@@ -342,6 +514,8 @@ def main() -> int:
                 version = None
 
     findings = (find_renamed_agents(archflow)
+                + find_split_project_settings(archflow)
+                + find_roadmap_schema_version(archflow)
                 + find_tech_stack(archflow)
                 + find_missing_stack(archflow)
                 + find_missing_framework_files(archflow, plugin_skill)
@@ -354,7 +528,7 @@ def main() -> int:
         elif findings:
             print(f"\n  {len(findings)} item(s) of drift between this project and the plugin\n")
             for f in findings:
-                mark = "fix" if f.fixable else "manual"
+                mark = {"script": "fix", "agent": "fix", "user": "manual"}[f.fix_by]
                 print(f"  [{mark}] {f.summary}")
                 for line in f.detail.splitlines():
                     print(f"        {line}")
@@ -370,12 +544,15 @@ def main() -> int:
 
     # --apply
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    actions = []
+    actions, deferred = [], []
     keys = {f.key.split(":")[0] for f in findings}
 
     if "renamed-agent" in keys:
         for c in apply_renames(archflow, stamp):
             actions.append(f"renamed the retired agent in {c}")
+    # Order matters: convert tech_stack -> stack BEFORE the split, so the resulting
+    # stack: block is moved along with the other settings instead of being stranded
+    # in the cursor by a later pass.
     if any(f.key == "tech-stack-convert" for f in findings):
         r = apply_tech_stack(archflow, stamp)
         if r:
@@ -385,15 +562,25 @@ def main() -> int:
         copied = apply_missing_files(archflow, plugin_skill, missing)
         if copied:
             actions.append(f"copied {len(copied)} missing framework file(s) from the plugin")
+    if "roadmap-schema-version" in keys:
+        r = apply_roadmap_schema_version(archflow, stamp)
+        if r:
+            actions.append(f"bumped schema_version to 2.1 in {r}")
+        else:
+            deferred.append(
+                "roadmap.yaml stays at schema_version 2.0 until the settings split is done — "
+                "bumping first would claim 2.1 on a file that is still v2.0-shaped")
     if "version-stamp" in keys and version:
         r = apply_version_stamp(archflow, version, stamp)
         if r:
             actions.append(f"stamped plugin_version: {version} in {r}")
 
-    manual = [f for f in findings if not f.fixable]
+    manual = [f for f in findings if f.fix_by == "user"]
+    by_agent = [f for f in findings if f.fix_by == "agent"]
 
     if args.as_json:
         print(json.dumps({"applied": actions,
+                          "deferred": deferred,
                           "manual": [f.as_dict() for f in manual],
                           "backup": f".archflow/backup-upgrade-{stamp}" if actions else None}, indent=2))
         return 0
@@ -405,8 +592,16 @@ def main() -> int:
         print(f"\n  Originals backed up to .archflow/backup-upgrade-{stamp}/")
     else:
         print("  nothing to apply")
+    if deferred:
+        print("\n  Deferred until the steps above are done:")
+        for d in deferred:
+            print(f"    - {d}")
+    if by_agent:
+        print("\n  Still to do, following /archflow:doctor --fix:")
+        for f in by_agent:
+            print(f"    - {f.summary}")
     if manual:
-        print("\n  Still needs a human:")
+        print("\n  Needs a decision only you can make:")
         for f in manual:
             print(f"    - {f.summary}")
             for line in f.detail.splitlines():

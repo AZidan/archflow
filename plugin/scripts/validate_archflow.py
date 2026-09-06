@@ -41,9 +41,16 @@ except ImportError:
 #                          or a list of those
 #   required               a list of key names (on an object definition), or
 #                          the boolean false (on a property, meaning optional)
+#
+# An OPTIONAL field written explicitly as null means the same as omitting it. YAML
+# writers emit `key: null` routinely, and rejecting that would make the validator
+# fight a convention it does not own.
 #   properties             map of name -> subschema
 #   items                  subschema for array elements
 #   enum                   list of permitted values
+#   const                  the single permitted value
+#   propertyNames          constrains an object's KEYS (its own subschema)
+#   additionalProperties   subschema applied to every value not named in properties
 #   pattern                regex the string must fully match
 #   $ref                   "#/definition_name"
 #   format                 iso8601 (checked loosely; a date or datetime prefix)
@@ -62,13 +69,14 @@ SCALARS = {
 
 # Files that are validated, and the schema each uses.
 TARGETS = [
-    ("current-phase.yaml", "current-phase-schema.yaml", False),
+    ("current-phase.yaml",    "current-phase-schema.yaml",    False),
+    ("project-settings.yaml", "project-settings-schema.yaml", False),
     ("roadmap.yaml",       "roadmap-schema.yaml",       False),
     ("backlog.yaml",       "backlog-schema.yaml",       False),
     ("history.yaml",       "history-schema.yaml",       False),
     ("releases/*.yaml",    "release-schema.yaml",       True),
     ("releases/archive/*.yaml", "release-schema.yaml",  True),
-    ("autopilot/*.yaml",   "autopilot-schema.yaml",     True),
+    ("autopilot/*.yaml",     "autopilot-schema.yaml",       True),
 ]
 
 
@@ -160,9 +168,9 @@ class Validator:
         out = []
 
         declared = schema.get("type")
-        # A property marked `required: false` may simply be absent; absence is
-        # handled by the parent, so a present null is only an error when the
-        # declared type does not admit null.
+        # An optional field written explicitly as null is the same as omitting it.
+        if value is None and schema.get("required") is False:
+            return out
         if not _matches_type(value, declared):
             want = declared if isinstance(declared, str) else "/".join(str(t) for t in (declared or []))
             out.append(Violation(label, path or "(root)",
@@ -171,6 +179,10 @@ class Validator:
 
         if value is None:
             return out
+
+        if "const" in schema and value != schema["const"]:
+            out.append(Violation(label, path or "(root)",
+                                 f"{value!r} must be {schema['const']!r}"))
 
         enum = schema.get("enum")
         if enum is not None and value not in enum:
@@ -205,7 +217,42 @@ class Validator:
         for key, sub in props.items():
             if key in value:
                 out += self._check(value[key], sub, label, f"{path}.{key}".lstrip("."))
+
+        # Keys themselves can be constrained. Without this, a map keyed by agent name
+        # accepted any name at all — the constraint was documentation.
+        name_rule = schema.get("propertyNames")
+        if isinstance(name_rule, dict) and name_rule.get("enum") is not None:
+            for key in value:
+                if key not in name_rule["enum"]:
+                    shown = ", ".join(repr(e) for e in name_rule["enum"][:8])
+                    out.append(Violation(label, f"{path}.{key}".lstrip("."),
+                                         f"{key!r} is not a permitted key: {shown}"))
+
+        extra = schema.get("additionalProperties")
+        if isinstance(extra, dict):
+            for key, val in value.items():
+                if key in props:
+                    continue
+                out += self._check(val, extra, label, f"{path}.{key}".lstrip("."))
         return out
+
+
+def is_historical_autopilot_run(path: Path, data) -> bool:
+    """A finished or aborted run is a RECORD of what happened, not live state.
+
+    Validating it is close to validating an old log: it was written by whatever
+    version of the framework was current at the time, and no amount of schema
+    change can make the past conform. The guard hook already takes this view — it
+    only reacts to a run that is `running` or `preflight`.
+
+    An ACTIVE run is different. It is state the framework is still acting on, so it
+    must match the schema.
+    """
+    if "autopilot" not in path.parts:
+        return False
+    if not isinstance(data, dict):
+        return False
+    return data.get("status") in ("finished", "aborted")
 
 
 def load_yaml(path: Path):
@@ -263,6 +310,9 @@ def main() -> int:
                 continue
             if data is None:
                 skipped.append((rel, "empty file"))
+                continue
+            if is_historical_autopilot_run(target, data):
+                skipped.append((rel, f"{data.get('status')} run — a historical record, not live state"))
                 continue
             checked.append(rel)
             violations += validator.validate(data, rel)
