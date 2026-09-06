@@ -155,8 +155,8 @@ code is; history answers *why it exists and what it was supposed to do*.
 The orchestrator (main Claude session) MUST NOT write application code directly. For every story:
 
 1. **Read the `assigned` field** from the story in the active release file (e.g. `assigned: ui-engineer`).
-2. **Launch that agent via the Agent tool** with story context (story ID, description, acceptance
-   criteria, subtasks, `design_artifact` path if present, relevant file paths).
+2. **Launch that agent via the Agent tool with the dispatch payload below.** Assemble it from the
+   release file — never from memory, and never from what happens to be in this session's context.
 3. **Orchestrator role = coordination only**: dispatch agents, verify outputs, update the release
    file, manage git workflow.
 
@@ -183,53 +183,91 @@ codemap show src/components/   # or relevant directory
 > UI carries the design-system line verbatim. Never rely on this session's context to carry it into
 > a subagent — a subagent does not inherit it.
 
-**Project-type-aware agent dispatch:**
+## 📦 The dispatch payload
 
-#### fullstack (parallel within the story)
-```bash
-# Frontend (uses the story's design_artifact + contract integration points)
-ui-engineer: {design_artifact} + {api_contract_path} → src/components/[FeatureName]/
-  - Design system: read `.archflow/design-system.yaml`, then read and follow
-    `.archflow/design-systems/{design_system}.md` before producing any output
-  - Build components using the contract for API integration points
-  - Service layers matching contract endpoints exactly
-  - Error handling for all contract-defined error codes
+**Defined once, here.** Every Phase 3 dispatch carries all of it. The per-type section below says
+only which agent and where its output goes — it does NOT restate the payload, because two copies of
+a payload become two different payloads, which is how the design-system line came to be in the rules
+and missing from the dispatch.
 
-# Backend (CONTRACT SACRED!)
-api-engineer: MUST READ + FOLLOW {api_contract_path} EXACTLY → backend/src/[feature-name]/
-  - VERIFY endpoints, response structures, error codes, auth all match the contract
-  - NO DEVIATIONS — ZERO TOLERANCE
+A subagent inherits nothing from this session. Anything it needs must be in its own prompt.
+
+| # | Element | Source |
+|---|---|---|
+| 1 | Story id and title | the story in `.archflow/releases/{active_release}.yaml` |
+| 2 | Intent — what and why | the story's `description` |
+| 3 | Acceptance criteria — the definition of done | the story's `acceptance_criteria[].text` |
+| 4 | Subtasks, when present | the story's `subtasks[].text` |
+| 5 | Design system line, **verbatim**, for any agent touching UI | see below |
+| 6 | Stack line, for any agent writing code | see below |
+| 7 | Contract path and this story's operations | `api_contract_path` + the story's `contract_endpoints` |
+| 8 | Design artifact path, when present | the story's `design_artifact` |
+| 9 | Scope boundary | this story only |
+| 10 | Where output goes | the per-type section below |
+| 11 | What not to do | do not mark the story `done`, do not merge, do not start another story |
+
+The two lines that must be reproduced exactly:
+
+```
+Design system: read .archflow/design-system.yaml, then read and follow
+.archflow/design-systems/{design_system}.md before producing any output.
+
+Stack: read stack: from .archflow/current-phase.yaml and build in what it names. A null field is a
+question to ask, never a default to assume. Install nothing to close a gap.
 ```
 
-#### frontend_only
-```bash
-ui-engineer: {design_artifact} → src/components/[FeatureName]/
-  - Design system: read `.archflow/design-system.yaml`, then read and follow
-    `.archflow/design-systems/{design_system}.md` before producing any output
-  - If consuming external APIs: read {api_contract_path} for integration
+Element 5 applies to `ui-engineer`, `ux-designer`, `dsl-generator` and `ui-animation-designer`.
+Element 6 applies to every agent that writes code. Element 7 is omitted only when the story touches
+no API. **Omitting an element that applies is a defect, not a shortcut.**
+
+### Worked example
+
+```
+ui-engineer: story S2-07
+
+  Story: S2-07 — Saved payment methods
+  Intent: {description}
+  Acceptance criteria:
+    - {each acceptance_criteria[].text}
+  Subtasks:
+    - {each subtasks[].text}
+
+  Design system: read .archflow/design-system.yaml, then read and follow
+  .archflow/design-systems/{design_system}.md before producing any output.
+
+  Stack: read stack: from .archflow/current-phase.yaml and build in what it names. A null field is a
+  question to ask, never a default to assume. Install nothing to close a gap.
+
+  Contract: {api_contract_path}. This story's operations: {contract_endpoints}.
+  Design artifact: {design_artifact}
+  Output: {per-type path below}
+
+  Scope: this story only. Do not mark it done, do not merge, do not start another story.
 ```
 
-#### backend_only
-```bash
-api-engineer: MUST READ + FOLLOW {api_contract_path} EXACTLY → backend/src/[feature-name]/
-  - VERIFY endpoints + response structures match the contract — ZERO TOLERANCE
-```
+## 🎯 Per type: which agent, and where output goes
 
-#### mobile
-```bash
-ui-engineer: {design_artifact} + {api_contract_path} → mobile components
-  - Design system: read `.archflow/design-system.yaml`, then read and follow
-    `.archflow/design-systems/{design_system}.md` before producing any output
-api-engineer: {api_contract_path} → backend/src/[feature-name]/
-```
+Everything else comes from the payload above.
+
+| `project_type` | Agents | Output |
+|---|---|---|
+| `fullstack` | `ui-engineer` + `api-engineer`, in parallel | frontend components + backend feature module |
+| `frontend_only` | `ui-engineer` | frontend components. Include element 7 only if it consumes an API |
+| `backend_only` | `api-engineer` | backend feature module. Omit element 5 — there is no UI |
+| `mobile` | `ui-engineer`, plus `api-engineer` if the project has a backend | mobile components |
+
+Use the paths this repo already uses; read the tree before inventing one.
+
+**The contract is SACRED for both sides.** `api-engineer` implements it exactly; `ui-engineer`
+consumes it exactly. Zero tolerance for deviation, in either direction.
 
 ### 🔗 Step 3B: INTEGRATION (skip for backend_only)
-```bash
-ui-engineer: {api_contract_path} → connect frontend ↔ backend
-  - Design system: read `.archflow/design-system.yaml`, then read and follow
-    `.archflow/design-systems/{design_system}.md` before producing any output
-  - Test API calls against actual endpoints; verify data flow matches the contract
-  - Handle all error scenarios; verify auth integration
+
+`ui-engineer`, with **the full dispatch payload** plus:
+```
+  Task: connect frontend to backend for this story.
+  Test API calls against the real endpoints and verify the data flow matches the contract.
+  Handle every error scenario the contract defines, and verify auth integration.
 ```
 
 ### ✅ Step 3C: STORY TESTING
