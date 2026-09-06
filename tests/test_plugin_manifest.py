@@ -125,3 +125,53 @@ def test_release_workflow_verifies_the_tag_against_the_manifests():
     wf = (REPO / ".github" / "workflows" / "release.yml").read_text()
     assert "plugin.json" in wf and "marketplace.json" in wf, \
         "the release workflow must refuse a tag that disagrees with the manifests"
+
+
+def test_every_agent_ends_with_a_stop_condition():
+    """An agent with no stop keeps going, or hands work to itself.
+
+    Several used to end by praising their own output — "Your comprehensive
+    approach ensures…" — which is not an instruction. The framework's whole model
+    is that an agent produces and a human accepts, so where an agent stops is part
+    of its contract.
+    """
+    stop = re.compile(
+        r"stop (after|for|before|and)|stop condition|Do NOT:|never merge|do not advance",
+        re.I,
+    )
+    missing = [p.stem for p in sorted(AGENTS.glob("*.md")) if not stop.search(p.read_text())]
+    assert not missing, f"no stop condition: {missing}"
+
+
+def test_no_agent_tells_a_subagent_to_ask_the_user():
+    """A dispatched subagent cannot hold a conversation.
+
+    Told to ask, it either stalls the run or answers itself by inventing. Missing
+    context becomes a stated assumption in the output instead.
+    """
+    offenders = []
+    for path in sorted(AGENTS.glob("*.md")):
+        for i, line in enumerate(path.read_text().splitlines(), 1):
+            if re.search(r"proactively ask|ask clarifying questions", line, re.I):
+                offenders.append(f"{path.name}:{i}")
+    assert not offenders, "\n".join(offenders)
+
+
+def test_no_agent_writes_stories_into_the_roadmap_index():
+    """roadmap.yaml is an index. Stories live in a release file or the backlog."""
+    offenders = []
+    for path in sorted(AGENTS.glob("*.md")):
+        for i, line in enumerate(path.read_text().splitlines(), 1):
+            if re.search(r"suggest roadmap updates|update .{0,12}roadmap\.yaml.{0,20}stor", line, re.I):
+                offenders.append(f"{path.name}:{i}: {line.strip()[:70]}")
+    assert not offenders, "\n".join(offenders)
+
+
+def test_no_agent_plans_by_calendar():
+    """Follow-up work becomes backlog stubs. Calendar tiers predate the release model."""
+    offenders = []
+    for path in sorted(AGENTS.glob("*.md")):
+        for i, line in enumerate(path.read_text().splitlines(), 1):
+            if re.search(r"\(\d+-\d+ (days|weeks)\)|\(\d+\+ months\)", line):
+                offenders.append(f"{path.name}:{i}: {line.strip()[:70]}")
+    assert not offenders, "\n".join(offenders)

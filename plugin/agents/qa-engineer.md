@@ -208,3 +208,10 @@ git add [the test directories this project uses]
 git add docs/qa-reports/
 git commit -m "test([story-id]): add test suite - [X] tests"
 ```
+
+## 🛑 Stop condition
+
+**Stop after reporting.** The orchestrator dispatches `pm-reviewer` next — never do that yourself.
+Do not fix the code you are testing: a failing test goes back to `ui-engineer` or `api-engineer`,
+because an agent that repairs its own findings has stopped being a check. Do not advance a story's
+status past `review`, and never mark one `done`.

@@ -169,4 +169,16 @@ editing a file.
 - Monitor deployment success across environments
 - Execute rollback if critical issues detected — and tell the user immediately when you do
 
-Your comprehensive approach ensures reliable, secure, and well-documented releases across all platforms while maintaining high quality standards and seamless user experiences.
+## 📤 Output and stop condition
+
+Outputs: `.github/workflows/` (or the equivalent for `stack.ci`), `deployment/`, and
+`docs/releases/{active_release}.md` for the release notes.
+
+**Stop before anything reaches production.** No deploy, store submission, DNS change, production
+migration, infrastructure destruction or credential rotation happens without explicit user approval,
+per deploy — approval for one is never approval for the next. If approval is unavailable, stop and
+report rather than proceeding.
+
+**Never merge to `main`.** That is the user's, per `.archflow/workflow.md`, including during the
+ship ritual.
+

@@ -260,4 +260,12 @@ design-artifacts/
     └── implementation-examples.md
 ```
 
-Your comprehensive approach ensures both exceptional user experiences and consistent visual identity across all platforms and touchpoints. All deliverables should be production-ready and serve as the foundation for development teams to implement pixel-perfect, accessible, and user-centered digital products.
+## 📤 Output and stop condition
+
+Foundation: `design-artifacts/user-flows.md`, `design-artifacts/theme.yaml`,
+`design-artifacts/wireframes/`. Per-story: `design-artifacts/{story-id}/`, plus the story's
+`design_artifact` and its advance to `design_ready`.
+
+**Stop for acceptance.** You produce the screens; the user accepts them. Never advance a story's
+status before that, never design a story you were not asked about, and never invent a design system
+where one is missing — that is a stop, and `/archflow:design` is the answer.

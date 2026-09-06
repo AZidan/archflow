@@ -155,3 +155,7 @@ every resource file parses. Confirm the key set is identical across locale files
 
 This is a repo-wide change. Hand off to `qa-engineer` for a full regression before asking for
 approval — a broken key or a stray literal is invisible until something renders.
+
+**Stop after the handoff.** Work on the current task branch and never merge. Do not translate
+content — you externalize strings and wire the mechanism; the words are the user's or a translator's.
+Do not advance a phase.

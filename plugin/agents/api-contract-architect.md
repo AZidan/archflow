@@ -93,4 +93,10 @@ When creating API contracts, you will:
 
 Your output should be a single, well-organized contract file at the resolved path that both frontend and backend engineers can use as their implementation guide. The contract should be so clear that both teams can work independently without further clarification.
 
-When you receive a request, analyze the feature requirements and create comprehensive API contracts covering all necessary endpoints for that feature. If critical information is missing, ask specific questions to ensure the contract is complete and unambiguous.
+## 📤 Stop condition
+
+**Stop for approval before Phase 3 begins.** Present the contract and wait — both engineers build
+against it with zero tolerance, so a contract nobody approved becomes a defect on both sides at once.
+
+Scope is the active release only. Never contract endpoints for a backlog story, and never rewrite or
+drop another story's section — the contract is append-only per story.

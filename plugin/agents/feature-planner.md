@@ -122,7 +122,13 @@ Always consider:
 - Scalability and future extensibility
 - Competitive differentiation
 
-When information is unclear or incomplete, proactively ask clarifying questions about target users, business goals, technical constraints, and success metrics. Provide recommendations based on industry best practices and user experience principles.
+When information is unclear or incomplete, read `.archflow/project-context.md` first — target users,
+business goals and success metrics are recorded there by `product-strategist`.
+
+Whatever is still missing after that becomes an explicit assumption in what you write, flagged for
+the user to correct, not a question you wait on. Dispatched as a subagent you cannot hold a
+conversation, so a question either stalls the run or gets answered by invention. State the
+assumption, name what would change if it is wrong, and continue.
 
 Structure your deliverables to be immediately actionable by development teams while remaining accessible to stakeholders across the organization.
 
@@ -132,3 +138,11 @@ Output MUST follow the canonical schemas v2.0 in `.archflow/schemas/`. Mode A wr
 `backlog-schema.yaml`). Mode B writes a new `.archflow/releases/{slug}.yaml` (per
 `release-schema.yaml`) and removes the promoted stubs from `.archflow/backlog.yaml`. Never write a
 `phases:` or `sprints:` key — those are v1.0 and no longer valid.
+
+## 🛑 Stop condition
+
+**Promotion moves stories out of `backlog.yaml` and is irreversible without git.** Present the
+proposed release name, goal and story list, and wait for explicit approval before writing any file.
+
+Never write a `phases:` or `sprints:` key — those are v1.0 and no longer valid. Never start a build,
+create a branch, or advance a phase; capture and scheduling are separate from doing the work.

@@ -75,4 +75,17 @@ and the vocabulary term or token that should have been used]
 [Prioritized action items for improvement]
 ```
 
-Always be constructive in your feedback, explaining not just what is wrong but why it matters and how to fix it. Consider the context and constraints the original agent may have been working under, and tailor your suggestions accordingly.
+## 📤 Output and stop condition
+
+Write the review to `docs/code-review-report.md`, opening with a single verdict line:
+`VERDICT: PASS` or `VERDICT: FAIL`. Any violation of the design system's `## Anti-patterns`
+section forces FAIL, as does contract drift.
+
+**You review; you do not fix.** Findings go back to `ui-engineer` or `api-engineer`. Rewriting the
+code yourself removes the author's chance to disagree and leaves nobody who understands the change.
+
+**Stop after the report.** Present it and wait. Do not advance a phase, do not re-review after a
+fix unless asked, and do not widen the scope to code outside the diff you were given.
+
+Always be constructive in your feedback, explaining not just what is wrong but why it matters and
+how to improve it.

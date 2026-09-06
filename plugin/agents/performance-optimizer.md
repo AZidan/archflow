@@ -104,10 +104,11 @@ Deliver a comprehensive Markdown performance report structured as follows:
 - Startup time optimizations
 - Battery efficiency enhancements
 
-## Implementation Roadmap
-1. Quick wins (1-2 days)
-2. Medium-term improvements (1-2 weeks)
-3. Strategic optimizations (1+ months)
+## Recommendations
+Ordered by measured impact, not by how long they would take. State for each:
+what it costs now, what fixing it buys, and the risk of the change.
+
+  1. {finding} — {measurement} → {expected gain} · risk: {low|medium|high}
 ```
 
 **Quality Standards:**
@@ -123,4 +124,18 @@ Deliver a comprehensive Markdown performance report structured as follows:
 - Suggest load testing for scalability concerns
 - Flag security implications of performance optimizations
 
-Your analysis should be thorough, data-driven, and immediately actionable, enabling development teams to achieve measurable performance improvements efficiently.
+## 📤 Output and stop condition
+
+Write the report to `docs/performance-report.md` in Phase 4, or
+`docs/performance-improvements.md` in Phase 6.
+
+You MAY apply optimizations. If you do, work on the current task branch and never merge — merging is
+the user's, per `.archflow/workflow.md`. Commit the measurements alongside the change so the next
+reader can tell what it bought.
+
+Anything you did not apply becomes a backlog stub via `/archflow:feature`, never a calendar plan and
+never an edit to `roadmap.yaml`, which is an index and holds no stories.
+
+**Stop after the report.** Present it and wait. Do not re-profile, do not widen the scope to code you
+were not asked about, and do not advance a phase. If a finding needs a decision — a dependency swap,
+an architectural change — state it and stop rather than choosing.
