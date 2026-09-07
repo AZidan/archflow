@@ -70,6 +70,9 @@ pm-reviewer: .archflow/releases/{active_release}.yaml → docs/acceptance-report
   - Re-run ALL acceptance tests for THIS release's stories as regression
   - Verify no cross-story regressions within the release
   - Produce a consolidated acceptance regression report for the release
+  - Record every regression against the story that regressed, as an `issues[]` entry on it
+    (`found_by: pm-reviewer`, `severity: blocking`) — a release-level report alone leaves the
+    orchestrator to remember which story each finding belongs to
   - (Cross-release regression against prior shipped releases is a separate, optional full-regression
     suite — run it before a high-risk release, sourced from history.yaml + archived releases.)
 
@@ -81,6 +84,17 @@ performance-optimizer: analyze and optimize → docs/performance-report.md
   - Bundle size optimization (skip for backend_only)
   - Memory usage analysis
 ```
+
+## 🐞 Issues in Phase 4
+
+Phase 4 reviewers write findings the same way Phase 3's do: into the `issues[]` of the story the
+finding belongs to, in the active release file, alongside the report that holds the evidence. The
+same rules apply — sequential dispatch, ids `I-{n}` per story, the implementation agent closes them,
+`blocking` findings are never deferred by an agent, and a `minor` one leaves the release only as a
+backlog stub with `deferred_to` set. See Phase 3's *Issues — review findings as state*.
+
+A finding that belongs to no single story — an architecture concern, a release-wide performance
+regression — stays in its report and becomes a backlog stub. `issues[]` is story-scoped by design.
 
 ## 📤 Expected Outputs
 - `tests/reports/test-results.md` - Comprehensive test results and coverage
@@ -98,6 +112,8 @@ performance-optimizer: analyze and optimize → docs/performance-report.md
 - [ ] API contract compliance verified (if applicable)
 - [ ] Documentation complete and accurate
 - [ ] Acceptance regression suite passes (all stories ACCEPTED)
+- [ ] No story in the active release carries an open blocking issue
+      (`python3 plugin/scripts/validate_archflow.py .` reports clean)
 - [ ] Codebase ready for production deployment
 
 ## 🚨 Critical Requirements
@@ -159,6 +175,7 @@ Before updating `current-phase.yaml`, verify:
 1. **Artifacts exist**:
    - [ ] `docs/acceptance-reports/` contains reports for all stories
    - [ ] All tests passing (qa-engineer report confirms)
+   - [ ] Every issue raised in this phase is `fixed`, or `deferred` with a backlog stub
 
 2. **Git state**:
    - [ ] All artifacts committed (`git status` shows clean tree)

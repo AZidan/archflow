@@ -159,6 +159,27 @@ blocking defects and re-run. On BLOCKED — meaning acceptance could not run at 
 and surface it; that is not a judgement on the code and never permission to skip the gate. Reports go
 to `docs/acceptance-reports/{story-id}-review.md`.
 
+### Review findings — `issues[]`
+
+Every reviewer of a story — `qa-engineer`, `pm-reviewer`, and any `story_review` optional agent —
+writes what it found into the story's `issues[]` in the active release file, alongside its report.
+The report holds the evidence; the issue is a one-line index entry with `found_by`, `severity`
+(`blocking` | `minor`), a location and a pointer to the report. Findings handed back only as a
+message are lost to the next compaction, which is why this is state and not chat.
+
+The implementation agent that lands a fix sets that issue `status: fixed`; a reviewer never closes
+its own finding. A story cannot be `done` while it holds an open `blocking` issue —
+`validate_archflow.py` enforces it. A `minor` finding leaves a story only as a backlog stub, with
+`status: deferred` and `deferred_to` naming it; issues are scoped to one story's build loop, and
+nothing in a release file outlives the story it belongs to.
+
+### Story status ladder
+
+`ready → in_progress → review → done`, walked one step at a time and committed as each step happens
+— including under `/archflow:autopilot`, which used to write `done` onto stories that had never been
+observably in progress. `in_progress → parked` is the undecided-question branch. A story being fixed
+after a REJECTED verdict stays at `review`; it does not flap back.
+
 ### Mechanical safety envelope
 
 Two hooks back the rules that an apology cannot undo. They are a floor under the prompt rules, not a

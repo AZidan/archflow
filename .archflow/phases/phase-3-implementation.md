@@ -120,6 +120,24 @@ Before starting a new story:
 3. Parallelism: ALLOWED — ui-engineer + api-engineer for the SAME story. NOT ALLOWED — agents for
    DIFFERENT stories in parallel.
 
+### 📍 Story status transitions (who writes what, and when)
+
+A story's `status` is the framework's only live record of where the work is. It must be walked, not
+jumped — a story that goes `ready` → `done` in one write was never observably in progress, and a run
+that dies mid-story leaves nothing behind that says so. **The orchestrator owns every one of these
+writes; no agent moves a story's status.**
+
+| When | Write | Committed with |
+|---|---|---|
+| Before dispatching the first implementation agent (3A) | `ready` → `in_progress` | the branch creation, before any code |
+| The moment implementation returns and `qa-engineer` is dispatched (3C) | `in_progress` → `review` | the test run |
+| Blocked on a question only the user can answer | `in_progress` → `parked` + a `parked` block | the wip commit |
+| After ACCEPTED **and** user approval (3F) | `review` → `done` | the merge |
+
+Rejection does not move the status back to `in_progress`. A story being fixed after a REJECTED
+verdict stays at `review` — it is in the review loop until it leaves it, and flapping the status
+loses the fact that it has already been through QA once.
+
 ### 🔁 Pull-forward (scope change mid-build)
 
 If the work needs a story that is NOT in the active release (it's a stub in `backlog.yaml` or lives in
@@ -155,6 +173,7 @@ code is; history answers *why it exists and what it was supposed to do*.
 The orchestrator (main Claude session) MUST NOT write application code directly. For every story:
 
 1. **Read the `assigned` field** from the story in the active release file (e.g. `assigned: ui-engineer`).
+   Set the story `status: in_progress` now, before any code exists — see Story status transitions.
 2. **Launch that agent via the Agent tool with the dispatch payload below.** Assemble it from the
    release file — never from memory, and never from what happens to be in this session's context.
 3. **Orchestrator role = coordination only**: dispatch agents, verify outputs, update the release
@@ -205,6 +224,7 @@ A subagent inherits nothing from this session. Anything it needs must be in its 
 | 9 | Scope boundary | this story only |
 | 10 | Where output goes | the per-type section below |
 | 11 | What not to do | do not mark the story `done`, do not merge, do not start another story |
+| 12 | Open issues, on a RE-dispatch after review | the story's `issues[]` where `status: open` — id, summary, location, report path |
 
 The two lines that must be reproduced exactly:
 
@@ -275,6 +295,10 @@ consumes it exactly. Zero tolerance for deviation, in either direction.
 Read `optional_agents` from `.archflow/project-settings.yaml`. Dispatch every agent whose list contains
 **`story_review`**, with the same payload discipline as any other dispatch.
 
+**One at a time.** These agents write their findings into the active release file (`issues[]`, below),
+and only ONE agent may modify a given file. Dispatching two reviewers in parallel loses whichever
+finding is written second and can collide on issue ids.
+
 An agent with an empty list is NOT dispatched here. It is still available on request — if the user
 asks for it, run it. Absent from the block entirely means the same thing.
 
@@ -283,6 +307,9 @@ story back the same way a failing test does — it does not proceed to acceptanc
 here reviews THIS STORY's diff, not the whole codebase; that is Phase 4's job.
 
 ### ✅ Step 3C: STORY TESTING
+
+Set the story `status: review` before dispatching.
+
 ```bash
 qa-engineer: test the integrated story → tests/[feature-name]/
   - Unit (frontend/backend per project type), integration, e2e, error scenarios
@@ -290,20 +317,45 @@ qa-engineer: test the integrated story → tests/[feature-name]/
 Gate: ALL tests must pass before Step 3D. If tests FAIL → re-dispatch the implementation agent with
 details → re-run qa-engineer. Do NOT proceed.
 
+"With details" is not the handoff. `qa-engineer` writes each failing test group and each
+design-system violation into the story's `issues[]` in the active release file (see `issues` in
+`release-schema.yaml`), and the re-dispatched implementation agent reads them from there. A finding
+that travels only in a return message is gone after the next compaction.
+
 ### 🎯 Step 3D: ACCEPTANCE TESTING (auto-triggered after 3C passes)
 IMMEDIATELY after qa-engineer reports all tests passing:
   → Dispatch pm-reviewer with story ID + acceptance criteria (from the release file)
-  → Output: `docs/acceptance-reports/{story-id}-review.md`
+  → Output: `docs/acceptance-reports/{story-id}-review.md`, plus one `issues[]` entry per blocking
+    defect (P0/P1 → `severity: blocking`, P2/P3 → `minor`)
 
 If REJECTED → re-dispatch implementation agent → re-run 3C → re-run 3D. Do NOT proceed until ACCEPTED.
 Step 3D is NOT optional. No story is "done" without an ACCEPTED verdict.
 
+### 🐞 Issues — review findings as state
+
+Every reviewer in this loop — `qa-engineer`, the `story_review` optional agents, `pm-reviewer` —
+writes what it found into the story's `issues[]` as well as its own report. The report holds the
+evidence; the issue is the one-line index entry plus a pointer to it.
+
+- **Ids** are story-scoped and sequential: `I-1`, `I-2`, next = highest existing + 1.
+- **The implementation agent closes them.** Whoever lands the fix sets that issue `status: fixed` in
+  the same edit. A reviewer never closes its own finding — an agent that can clear what it found has
+  stopped being a check.
+- **`blocking` is not deferrable by an agent.** A `minor` finding may be dropped from the story only
+  by the USER, and only by moving it into `backlog.yaml` as a stub: write the stub, then set the
+  issue `status: deferred` with `deferred_to: {stub-id}`. Never leave a finding sitting open in a
+  shipped release file — that is how a release file turns into a bug tracker.
+- **A story with an open `blocking` issue cannot be `done`.** `validate_archflow.py` enforces this;
+  see the verification step below.
+
 ### Post-Agent Verification
 After an agent returns:
 1. Verify subtasks in the **active release file** are updated (count `completed: true`); if the count
-   doesn't match the agent's claim, correct it.
-2. Mark a story `status: done` only when ALL of: all subtasks `completed: true`; tests pass; acceptance
-   ACCEPTED; user approved.
+   doesn't match the agent's claim, correct it. Do the same for `issues[]`: an agent that says it
+   fixed a defect must have set that issue `status: fixed`.
+2. Mark a story `status: done` only when ALL of: all subtasks `completed: true`; **zero `issues[]`
+   entries with `status: open` and `severity: blocking`**; tests pass; acceptance ACCEPTED; user
+   approved.
 3. NEVER mark a story done by only changing the status field.
 4. If the story carries `started_ungated`, call it out in the acceptance/approval summary so the skipped
    gate is reviewed before done.
@@ -329,6 +381,7 @@ Completed subtasks:
 - [x] Subtask 2
 
 Acceptance: ACCEPTED        Tests: [X/Y passing]
+Issues: [N] found, [N] fixed, [N] deferred, 0 open blocking
 
 Files changed:
 - [list]
@@ -352,13 +405,14 @@ If "Changes needed": re-dispatch agent with feedback → re-run 3C → 3D → ba
 ## 📤 Expected Outputs (per story)
 - Implementation per project type; comprehensive tests
 - `docs/acceptance-reports/{story-id}-review.md`
+- Every review finding recorded in the story's `issues[]`, and closed or deferred
 - Working, integrated story ready for demo
 
 ## ✅ Completion Criteria (per story)
 - [ ] Built by the assigned agent; readiness gates honored (or override recorded)
 - [ ] API contract compliance (100% for endpoints that exist)
 - [ ] Integration working (if applicable); all tests passing
-- [ ] Acceptance ACCEPTED by pm-reviewer
+- [ ] Acceptance ACCEPTED by pm-reviewer; no open blocking issue on the story
 - [ ] Git workflow completed; user approved
 
 ## 🚨 Critical Requirements

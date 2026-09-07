@@ -13,6 +13,10 @@ Read `.archflow/current-phase.yaml` and `.archflow/project-settings.yaml` if the
 - design system: from `.archflow/design-system.yaml` — `{design_system} ({platform} · {library})`, or
   `not set — run /archflow:design` when the project has a UI and the file is missing
 - `active_release` (and, from `.archflow/releases/{active_release}.yaml`, its progress: stories done / total)
+- open blocking issues: any story in the active release with an `issues[]` entry that is
+  `status: open` and `severity: blocking`, as `{story-id} — {n} open blocking`. Omit the line when
+  there are none. These are review findings that stop a story reaching `done`, and nothing else
+  surfaces them.
 - what is sensible to run next (see the command list below)
 
 Edge cases:

@@ -124,7 +124,8 @@ git push -u origin {run-branch} 2>/dev/null || true
 Then, for each `pending` story in queue order:
 
 1. **Re-read the ledger** (`decisions[]` especially) — treat it, not your context, as the truth.
-2. Task branch per `.archflow/workflow.md`: `{feature}/{task-name}` off the run branch.
+2. Task branch per `.archflow/workflow.md`: `{feature}/{task-name}` off the run branch. Set the
+   story `status: in_progress` in the release file and commit it **before** any code exists.
 3. Implement with the agents allowed by `project_type` (`backend_only` → `api-engineer`,
 
 > **DESIGN SYSTEM IN THE PROMPT, NOT THE CONTEXT.** Every dispatch of a UI agent
@@ -135,16 +136,48 @@ Then, for each `pending` story in queue order:
 
    `frontend_only` → `ui-engineer`, `fullstack` → both, scoped per subtask). Every applicable
    universal rule still holds — the API contract is still sacred, agents still hand off via files.
-4. `qa-engineer`, then any agent whose `optional_agents` list contains `story_review`, then
+4. Set the story `status: review`, then run `qa-engineer`, then any agent whose `optional_agents`
+   list contains `story_review` — **one at a time**, since they all write to the release file — then
    `pm-reviewer` against the story's acceptance criteria. The optional agents are part of the story
    loop, not an extra the user has to remember — an unattended run that skips the review the project
    asked for is not running the project's process.
 5. On ACCEPTED: merge the task branch into the run branch, mark the story `done` in
-   `.archflow/releases/{active_release}.yaml` (ACs `met`, subtasks `completed`), append the story
-   result to the ledger, delete the task branch.
-6. On REJECTED: fix and re-run `pm-reviewer`, up to `max_qa_retries` (default 2). Still
-   rejected → **fail** the story (below).
+   `.archflow/releases/{active_release}.yaml` (ACs `met`, subtasks `completed`, every issue `fixed`),
+   append the story result to the ledger, delete the task branch.
+6. On REJECTED: fix and re-run `pm-reviewer`, up to `max_qa_retries` (default 2). The story stays at
+   `review` while it is being fixed — do not flap it back to `in_progress`. Still rejected →
+   **fail** the story (below).
 7. Commit the ledger and the release file with the story's work. Move to the next story.
+
+### Walk the status, never jump it
+
+A story's `status` is the only live record of where an unattended run got to. A run that writes
+`done` without ever having written `in_progress` and `review` leaves a release file that cannot be
+read the morning after, and a run that dies mid-story leaves a story that still looks untouched.
+
+```
+ready → in_progress → review → done          (the normal path)
+        in_progress → parked                 (an undecided question)
+        review      → review → … → failed    (broken; retries exhausted)
+```
+
+Every one of those writes is committed as it happens, not batched at the end of the story. This is
+the same ladder Phase 3 walks (*Story status transitions*); autopilot does not get a shorter one
+because nobody is watching. `done` is the only transition that also requires a merge.
+
+### Issues
+
+`qa-engineer`, the `story_review` agents and `pm-reviewer` write their findings into the story's
+`issues[]` (see `release-schema.yaml`). The run does not copy them into the ledger — a story lives in
+exactly one place and so do its issues. What the run does with them:
+
+- A story cannot be marked `done` while it holds an open `blocking` issue. `validate_archflow.py`
+  fails the release file if one does, which is the check that catches a mis-marked story before the
+  morning.
+- A **failed** story keeps its open issues exactly as the reviewers wrote them. That is the whole
+  reason the morning report can say *what* failed rather than only *that* it failed.
+- Autopilot never defers an issue. Deferring a `minor` finding to the backlog is the user's decision
+  and belongs to a session where the user is present.
 
 ### Parking — the mid-run blocker rule
 
@@ -200,12 +233,21 @@ PARKED (blocking the release)
 
 FAILED
   [S3-09] Webhook retries — QA rejected 3×: signature check fails on replayed events.
+    Open issues:
+      I-2 blocking  signature check fails on replayed events
+                    src/webhooks/verify.ts:88  ·  docs/qa-reports/S3-09-qa.md
+      I-3 blocking  retry backoff never caps
+                    src/webhooks/retry.ts:31   ·  docs/qa-reports/S3-09-qa.md
     WIP on branch: webhooks/retry-signature
 
 REVIEW FIRST: [S3-04] (touches payment auth)
 Ledger: .archflow/autopilot/{run-id}.yaml
 Next: answer the parked questions, then /archflow:autopilot resume
 ```
+
+List every open `blocking` issue under each FAILED story, read from the release file — with its
+file, line and report path. "QA rejected 3×" is a status; the issue list is something the user can
+start from. Read them from `issues[]`, never from what this session remembers.
 
 Order DONE by review risk, riskiest first — this is the only ordering signal the user gets before
 reading a night's worth of diff. Set `status: finished`, `finished_at`, and stop.
@@ -276,7 +318,8 @@ Autopilot runs identically in both modes; `mode` changes only what gets recorded
 Autopilot never switches `mode`. It borrows the semantics for one run and says so.
 
 ## Notes
-- Schemas: `autopilot-schema.yaml` (the ledger), `release-schema.yaml` (`parked` status + block).
+- Schemas: `autopilot-schema.yaml` (the ledger), `release-schema.yaml` (story `status` ladder,
+  `parked` block, `issues[]`).
 - `.archflow/autopilot/` is committed, not ignored — the ledger is the audit trail of what an
   unattended agent decided and why, and it is worth keeping in history.
 - Autopilot is a build-lane command. It deliberately cannot groom, plan, promote, or ship: every one

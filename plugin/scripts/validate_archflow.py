@@ -237,6 +237,65 @@ class Validator:
         return out
 
 
+# --------------------------------------------------------------------------
+# Semantic rules
+#
+# Everything above checks the SHAPE of a field. These check consistency BETWEEN
+# fields, which the schema dialect deliberately cannot express. Keep them few and
+# keep them invariants: a rule here should be something that, when violated, means
+# an agent has already done the wrong thing.
+# --------------------------------------------------------------------------
+
+def check_story_issues(data, rel: str):
+    """The two `issues[]` invariants from ADR 004.
+
+    1. A story may not be `done` while it holds an open blocking issue. This is the
+       whole point of the array: it turns "the orchestrator remembers QA rejected
+       this" into a property of the repository.
+    2. A `deferred` issue must name the backlog stub it moved into, or the finding
+       has been dropped rather than dispositioned.
+    """
+    out = []
+    if not isinstance(data, dict):
+        return out
+    stories = data.get("stories")
+    if not isinstance(stories, list):
+        return out
+
+    for si, story in enumerate(stories):
+        if not isinstance(story, dict):
+            continue
+        issues = story.get("issues")
+        if not isinstance(issues, list):
+            continue
+        sid = story.get("id") or f"index {si}"
+        open_blocking = []
+        for ii, issue in enumerate(issues):
+            if not isinstance(issue, dict):
+                continue
+            field = f"stories[{si}].issues[{ii}]"
+            if issue.get("status") == "deferred" and not issue.get("deferred_to"):
+                out.append(Violation(rel, f"{field}.deferred_to", (
+                    "a deferred issue must name the backlog stub it moved into; "
+                    "without it the finding is dropped, not dispositioned"
+                )))
+            if issue.get("status") == "open" and issue.get("severity") == "blocking":
+                open_blocking.append(issue.get("id") or f"index {ii}")
+
+        if story.get("status") == "done" and open_blocking:
+            out.append(Violation(rel, f"stories[{si}].status", (
+                f"story {sid} is done with {len(open_blocking)} open blocking "
+                f"issue(s): {', '.join(str(i) for i in open_blocking)}. "
+                "Fix them, or defer them to the backlog, before the story is done"
+            )))
+    return out
+
+
+SEMANTIC_RULES = {
+    "release-schema.yaml": [check_story_issues],
+}
+
+
 def is_historical_autopilot_run(path: Path, data) -> bool:
     """A finished or aborted run is a RECORD of what happened, not live state.
 
@@ -316,6 +375,8 @@ def main() -> int:
                 continue
             checked.append(rel)
             violations += validator.validate(data, rel)
+            for rule in SEMANTIC_RULES.get(schema_file, ()):
+                violations += rule(data, rel)
 
     if args.as_json:
         print(json.dumps({
