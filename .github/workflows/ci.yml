@@ -67,6 +67,11 @@ jobs:
           print("all frontmatter valid")
           PY
 
+      # docs/ is the GitHub Pages source. A working doc committed there publishes
+      # to archflowai.dev on the next build — a security backlog nearly did.
+      - name: Nothing internal reaches the site
+        run: python -m pytest tests/test_site_publishing.py -q
+
       - name: Mirrored trees are identical
         run: diff -r -x SKILL.md -x mcp-registry.yaml -x .DS_Store .archflow plugin/skills/archflow
 

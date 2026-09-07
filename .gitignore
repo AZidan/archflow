@@ -63,3 +63,15 @@ videos/
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Internal working docs. NEVER published — docs/ is the Pages source, so anything
+# reachable there can end up on archflowai.dev.
+#
+# Ignored by DEFAULT so a new working doc is safe without anyone remembering a
+# list. The three exceptions below are design records that were already public
+# and are worth keeping in the repo; they are still excluded from the site build
+# by docs/_config.yml.
+docs/internal/*
+!docs/internal/archflow-releases-v2-proposal.md
+!docs/internal/archflow-skill-scaffolding-proposal.md
+!docs/internal/landing-page-plan.md

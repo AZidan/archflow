@@ -22,13 +22,7 @@ exclude:
   - .bundle
   - Gemfile
   - Gemfile.lock
-  # internal working docs
-  - archflow-framework-gap-report.md
-  - archflow-framework-gap-report-v2.md
-  - archflow-releases-v2-proposal.md
-  - archflow-skill-scaffolding-proposal.md
-  - groom-command-pompt.md
-  - landing-page-plan.md
-  - linkedin-launch-post.md
-  - roadmap-format-incompatibility.md
-  - "Breadfast Workflow Initiattive.md"
+  # every internal working doc lives here. ONE entry, not a per-file list:
+  # the old list drifted (it still excluded a file that no longer existed) and a
+  # new doc published by default until someone remembered to add it.
+  - internal
