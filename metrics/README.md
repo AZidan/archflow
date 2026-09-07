@@ -7,7 +7,7 @@ GitHub retains only 14 days of traffic data, so these snapshots are the permanen
 record. Clone counts are the closest available proxy for plugin installs: a
 `/plugin marketplace add` is a `git clone`, and Anthropic publishes no install stats.
 
-Last updated: 2026-09-06 · window shown: 2026-08-16 → 2026-09-05
+Last updated: 2026-09-07 · window shown: 2026-08-16 → 2026-09-05
 
 ## Unique cloners per day
 
