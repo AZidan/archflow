@@ -5919,7 +5919,7 @@ var require_transport = __commonJS({
     var { createRequire } = __require("module");
     var { existsSync: existsSync7 } = __require("node:fs");
     var getCallers = require_caller();
-    var { join: join15, isAbsolute: isAbsolute2, sep: sep3 } = __require("node:path");
+    var { join: join15, isAbsolute: isAbsolute3, sep: sep3 } = __require("node:path");
     var { fileURLToPath: fileURLToPath2 } = __require("node:url");
     var sleep = require_atomic_sleep();
     var onExit = require_on_exit_leak_free();
@@ -5991,7 +5991,7 @@ var require_transport = __commonJS({
           return false;
         }
       }
-      return isAbsolute2(path2) && !existsSync7(path2);
+      return isAbsolute3(path2) && !existsSync7(path2);
     }
     function stripQuotes(value) {
       const first = value[0];
@@ -6109,7 +6109,7 @@ var require_transport = __commonJS({
       return buildStream(fixTarget(target), options, worker, sync, name);
       function fixTarget(origin) {
         origin = bundlerOverrides[origin] || origin;
-        if (isAbsolute2(origin) || origin.indexOf("file://") === 0) {
+        if (isAbsolute3(origin) || origin.indexOf("file://") === 0) {
           return origin;
         }
         if (origin === "pino/file") {
@@ -41881,7 +41881,7 @@ var require_send = __commonJS({
         });
       });
     }
-    function sendError2(statusCode, err) {
+    function sendError3(statusCode, err) {
       const headers = {};
       if (err && err.headers) {
         for (const headerName in err.headers) {
@@ -41907,9 +41907,9 @@ var require_send = __commonJS({
         case "ENAMETOOLONG":
         case "ENOTDIR":
         case "ENOENT":
-          return sendError2(404, err);
+          return sendError3(404, err);
         default:
-          return sendError2(500, err);
+          return sendError3(500, err);
       }
     }
     function sendNotModified(headers, path3, stat7) {
@@ -41968,7 +41968,7 @@ var require_send = __commonJS({
       }
       if (isConditionalGET(request)) {
         if (isPreconditionFailure(request, headers)) {
-          return sendError2(412);
+          return sendError3(412);
         }
         if (isNotModifiedFailure(request, headers)) {
           return sendNotModified(headers, path3, stat7);
@@ -41987,7 +41987,7 @@ var require_send = __commonJS({
             if (ranges.length === 0) {
               debug("range unsatisfiable");
               headers["Content-Range"] = contentRange("bytes", len);
-              return sendError2(416, {
+              return sendError3(416, {
                 headers: { "Content-Range": headers["Content-Range"] }
               });
             } else if (ranges.length === 1) {
@@ -42032,7 +42032,7 @@ var require_send = __commonJS({
     }
     function sendRedirect(path3, options) {
       if (hasTrailingSlash(options.path)) {
-        return sendError2(403);
+        return sendError3(403);
       }
       const loc = encodeURI(collapseLeadingSlashes(options.path + "/"));
       const doc = createHtmlDocument("Redirecting", "Redirecting to " + escapeHtml(loc));
@@ -42067,7 +42067,7 @@ var require_send = __commonJS({
       if (err) {
         return sendStatError(err);
       }
-      return sendError2(404);
+      return sendError3(404);
     }
     async function sendFile(request, path3, options) {
       const { error, stat: stat7 } = await tryStat(path3);
@@ -42090,7 +42090,7 @@ var require_send = __commonJS({
         if (err) {
           return sendStatError(err);
         }
-        return sendError2(404);
+        return sendError3(404);
       }
       if (error) return sendStatError(error);
       if (stat7.isDirectory()) return sendRedirect(path3, options);
@@ -42102,7 +42102,7 @@ var require_send = __commonJS({
       const parsed = normalizePath2(_path, opts.root);
       const { path: path3, parts } = parsed;
       if (parsed.statusCode !== void 0) {
-        return sendError2(parsed.statusCode);
+        return sendError3(parsed.statusCode);
       }
       if ((debug.enabled || // if debugging is enabled, then check for all cases to log allow case
       opts.dotfiles !== 0) && containsDotFile(parts)) {
@@ -42115,12 +42115,12 @@ var require_send = __commonJS({
           /* c8 ignore stop */
           case 2:
             debug('deny dotfile "%s"', path3);
-            return sendError2(403);
+            return sendError3(403);
           case 1:
           // 'ignore'
           default:
             debug('ignore dotfile "%s"', path3);
-            return sendError2(404);
+            return sendError3(404);
         }
       }
       if (opts.index.length && hasTrailingSlash(_path)) {
@@ -53860,7 +53860,7 @@ import { existsSync as existsSync6, statSync as statSync4, createReadStream as c
 // server/services/projectLoader.ts
 import { readFile, stat, readdir, writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
-import { join, resolve, relative, basename } from "path";
+import { join, resolve, relative, basename, isAbsolute } from "path";
 
 // node_modules/js-yaml/dist/js-yaml.mjs
 function isNothing(subject) {
@@ -56486,6 +56486,111 @@ var jsYaml = {
   safeDump
 };
 
+// server/types.ts
+var DEFAULT_API_CONTRACT_PATH = "docs/api-contract.md";
+
+// server/lib/acceptanceReport.ts
+var VERDICT_TOKENS = [
+  ["PARTIALLY ACCEPTED", "partially_accepted"],
+  ["ACCEPTED", "accepted"],
+  ["REJECTED", "rejected"],
+  ["BLOCKED", "blocked"]
+];
+var HEADING_VERDICT = /^#{1,6}\s*verdict\b\s*:?\s*(.*)$/i;
+var INLINE_VERDICT = /^\s*(?:[-*+]\s+)?\*{0,2}verdict\*{0,2}\s*:\s*(.*)$/i;
+var REVIEWER_LINE = /^\s*(?:[-*+]\s+)?\*{0,2}reviewer\*{0,2}\s*:\s*(.+)$/i;
+var ISO_DATE = /\b(\d{4}-\d{2}-\d{2})\b/;
+function unmark(line) {
+  return line.replace(/[*_`]/g, "").trim();
+}
+function trimLead(text) {
+  return text.replace(/^\s*(?:[—–\-:·]+|--)\s*/, "").trim();
+}
+function matchToken(text) {
+  const flat = unmark(text);
+  for (const [token, verdict] of VERDICT_TOKENS) {
+    if (flat.toUpperCase().startsWith(token)) {
+      return { verdict, token, rest: trimLead(flat.slice(token.length)) };
+    }
+  }
+  return null;
+}
+function nextContent(lines, from) {
+  for (let i = from; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line && line !== "---") return { line, index: i };
+  }
+  return null;
+}
+function paragraphAt(lines, from) {
+  const out = [];
+  for (let i = from; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line || line.startsWith("#") || line === "---" || line.startsWith("|")) break;
+    if (i > from && /^[-*+]\s/.test(line)) break;
+    out.push(line);
+  }
+  return unmark(out.join(" ")).trim();
+}
+function findVerdict(lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const heading = HEADING_VERDICT.exec(lines[i]);
+    if (!heading) continue;
+    const inline = matchToken(heading[1] ?? "");
+    if (inline) return inline;
+    const below = nextContent(lines, i + 1);
+    if (!below) continue;
+    const token = matchToken(paragraphAt(lines, below.index));
+    if (token) return token;
+  }
+  for (const raw of lines) {
+    const inline = INLINE_VERDICT.exec(raw);
+    if (!inline) continue;
+    const token = matchToken(inline[1] ?? "");
+    if (token) return token;
+  }
+  return null;
+}
+function findReviewer(lines) {
+  for (const raw of lines.slice(0, 30)) {
+    const match = REVIEWER_LINE.exec(raw);
+    if (match) {
+      const value = unmark(match[1]).replace(/\s*\(.*\)\s*$/, "").trim();
+      if (value) return value;
+    }
+  }
+  return void 0;
+}
+function findDate(lines) {
+  for (const raw of lines.slice(0, 30)) {
+    const match = ISO_DATE.exec(raw);
+    if (match) return match[1];
+  }
+  return void 0;
+}
+function storyIdFromReportName(fileName) {
+  const match = /^(.+)-review\.md$/i.exec(fileName);
+  return match ? match[1] : null;
+}
+function parseAcceptanceReport(markdown, storyId, reportPath) {
+  const lines = markdown.split(/\r?\n/);
+  const found = findVerdict(lines);
+  if (!found) return null;
+  const record = {
+    storyId,
+    verdict: found.verdict,
+    token: found.token,
+    reportPath
+  };
+  const reason = found.rest.trim();
+  if (reason) record.reason = reason;
+  const by = findReviewer(lines);
+  if (by) record.by = by;
+  const at = findDate(lines);
+  if (at) record.at = at;
+  return record;
+}
+
 // server/lib/archflowParser.ts
 var ArchflowParseError = class extends Error {
   constructor(message) {
@@ -56498,27 +56603,30 @@ function detectSchemaVersion(content) {
   return readSchemaVersion(data);
 }
 function readSchemaVersion(data) {
-  return str2(data.schema_version) === "2.0" ? "2.0" : "1.0";
+  const declared = str2(data.schema_version);
+  return declared === "2.0" || declared === "2.1" ? declared : "1.0";
 }
 function parseRoadmap(content) {
   const data = loadYamlObject(content, "roadmap.yaml");
-  if (readSchemaVersion(data) === "2.0") {
-    return { schemaVersion: "2.0", roadmap: buildRoadmapIndex(data) };
+  const version = readSchemaVersion(data);
+  if (version !== "1.0") {
+    return { schemaVersion: version, roadmap: buildRoadmapIndex(data, version) };
   }
   return { schemaVersion: "1.0", roadmap: buildLegacyRoadmap(data) };
 }
 function parseRoadmapIndex(content) {
   const data = loadYamlObject(content, "roadmap.yaml");
-  if (readSchemaVersion(data) !== "2.0") {
+  const version = readSchemaVersion(data);
+  if (version === "1.0") {
     throw new ArchflowParseError(
-      'roadmap.yaml is not schema_version "2.0" \u2014 parse it with parseRoadmap() and handle the v1 branch read-only.'
+      'roadmap.yaml is not schema_version "2.0" or "2.1" \u2014 parse it with parseRoadmap() and handle the v1 branch read-only.'
     );
   }
-  return buildRoadmapIndex(data);
+  return buildRoadmapIndex(data, version);
 }
-function buildRoadmapIndex(data) {
+function buildRoadmapIndex(data, version) {
   const roadmap = {
-    schemaVersion: "2.0",
+    schemaVersion: version,
     project: str2(data.project) ?? "",
     projectType: enumOr(
       data.project_type,
@@ -56575,7 +56683,9 @@ function parseShippedRef(raw) {
 }
 function serializeRoadmapIndex(roadmap) {
   const data = {
-    schema_version: "2.0",
+    // The version the model was PARSED with, never a literal: a 2.1 project
+    // must stay 2.1 across a save (S13-01).
+    schema_version: roadmap.schemaVersion,
     project: roadmap.project,
     project_type: roadmap.projectType,
     mode: roadmap.mode,
@@ -56601,6 +56711,43 @@ function serializeRoadmapIndex(roadmap) {
     }));
   }
   return dump2(data);
+}
+var PROJECT_SETTINGS_KEYS = [
+  "schema_version",
+  "project_type",
+  "api_contract_path",
+  "stack",
+  "optional_agents"
+];
+var PROJECT_TYPES = [
+  "fullstack",
+  "frontend_only",
+  "backend_only",
+  "mobile"
+];
+function parseProjectSettings(content) {
+  const data = loadYamlObject(content, "project-settings.yaml");
+  const settings = {
+    schemaVersion: str2(data.schema_version) ?? null,
+    apiContractPath: str2(data.api_contract_path) ?? null,
+    stack: obj(data.stack),
+    optionalAgents: parseOptionalAgents(data.optional_agents)
+  };
+  if ("project_type" in data) {
+    settings.projectType = enumOrUndefined(data.project_type, PROJECT_TYPES) ?? null;
+  }
+  const extra = collectExtra(data, PROJECT_SETTINGS_KEYS);
+  if (extra) settings.extra = extra;
+  return settings;
+}
+function parseOptionalAgents(value) {
+  const raw = obj(value);
+  if (raw === null) return null;
+  const out = {};
+  for (const [agent, hooks] of Object.entries(raw)) {
+    out[agent] = strList(hooks);
+  }
+  return out;
 }
 function parseRelease(content) {
   const data = loadYamlObject(content, "a release file");
@@ -56684,7 +56831,18 @@ var STORY_KEYS = [
   "acceptance_criteria",
   "subtasks",
   "pulled_from",
-  "started_ungated"
+  "started_ungated",
+  // S12-01: modelled, so it leaves `extra` and joins the typed round trip.
+  "parked"
+];
+var PARKED_KEYS = [
+  "question",
+  "context",
+  "options",
+  "blocks_release",
+  "branch",
+  "at",
+  "by"
 ];
 var CRITERION_KEYS = ["text", "met", "verified_by", "verified_at"];
 var SUBTASK_KEYS = ["text", "completed"];
@@ -56724,12 +56882,17 @@ function parseStory(raw) {
   if (designArtifact) story.designArtifact = designArtifact;
   const pulledFrom = str2(raw.pulled_from);
   if (pulledFrom) story.pulledFrom = pulledFrom;
+  const parked = parseParked(raw.parked);
+  if (parked) story.parked = parked;
   const startedUngated = parseStartedUngated(raw.started_ungated);
   if (startedUngated) story.startedUngated = startedUngated;
   const epicId = epicIdFromStoryId(id);
   if (epicId) story.epicId = epicId;
   const extra = collectExtra(raw, STORY_KEYS);
   if (extra) story.extra = extra;
+  if (story.parked === void 0 && raw.parked !== void 0 && obj(raw.parked) === null) {
+    story.extra = { ...story.extra, parked: raw.parked };
+  }
   return story;
 }
 function parseGates(value) {
@@ -56738,6 +56901,42 @@ function parseGates(value) {
     needsDesign: bool2(raw?.needs_design) ?? false,
     needsContract: bool2(raw?.needs_contract) ?? false
   };
+}
+function parseParked(value) {
+  const raw = obj(value);
+  if (!raw) return null;
+  const question = str2(raw.question);
+  const parked = { question: question ?? "" };
+  const context = str2(raw.context);
+  if (context !== void 0) parked.context = context;
+  if (Array.isArray(raw.options)) parked.options = strList(raw.options);
+  const blocksRelease = bool2(raw.blocks_release);
+  if (blocksRelease !== void 0) parked.blocksRelease = blocksRelease;
+  const branch = str2(raw.branch);
+  if (branch !== void 0) parked.branch = branch;
+  const at = isoDate(raw.at);
+  if (at !== void 0) parked.at = at;
+  const by = str2(raw.by);
+  if (by !== void 0) parked.by = by;
+  const extra = collectExtra(raw, PARKED_KEYS);
+  if (extra) parked.extra = extra;
+  if (question === void 0 && Object.keys(parked).length === 1) return null;
+  return parked;
+}
+function dumpParked(parked) {
+  const out = { question: parked.question };
+  if (parked.context !== void 0) out.context = parked.context;
+  if (parked.options !== void 0) out.options = [...parked.options];
+  if (parked.blocksRelease !== void 0) out.blocks_release = parked.blocksRelease;
+  if (parked.branch !== void 0) out.branch = parked.branch;
+  if (parked.at !== void 0) out.at = parked.at;
+  if (parked.by !== void 0) out.by = parked.by;
+  mergeExtra(out, parked.extra, PARKED_KEYS);
+  return out;
+}
+function legacyParked(story) {
+  const raw = story.extra?.parked;
+  return raw !== void 0 ? raw : null;
 }
 function parseStartedUngated(value) {
   const raw = obj(value);
@@ -56757,7 +56956,7 @@ function parseAcceptanceCriterion(raw) {
     met: bool2(o.met) ?? false
   };
   const verifiedBy = str2(o.verified_by);
-  if (verifiedBy === "pm-maestro-reviewer" || verifiedBy === "qa-engineer" || verifiedBy === "manual") {
+  if (verifiedBy === "pm-reviewer" || verifiedBy === "qa-engineer" || verifiedBy === "manual" || verifiedBy === "pm-maestro-reviewer") {
     criterion.verifiedBy = verifiedBy;
   }
   const verifiedAt = isoDate(o.verified_at);
@@ -56820,6 +57019,12 @@ function dumpStory(story) {
     return dumped;
   });
   if (story.pulledFrom !== void 0) out.pulled_from = story.pulledFrom;
+  if (story.parked !== void 0) {
+    out.parked = dumpParked(story.parked);
+  } else {
+    const legacy = legacyParked(story);
+    if (legacy) out.parked = legacy;
+  }
   if (story.startedUngated !== void 0) {
     out.started_ungated = {
       gate: story.startedUngated.gate,
@@ -56905,6 +57110,246 @@ function dumpBacklogStory(story) {
     });
   }
   return out;
+}
+var RUN_STATUSES = ["preflight", "running", "finished", "aborted"];
+var QUEUE_STATES = [
+  "pending",
+  "in_progress",
+  "done",
+  "parked",
+  "failed",
+  "skipped"
+];
+var REVIEW_RISKS = ["high", "medium", "low"];
+var PARKED_POLICIES = ["blocks_release", "non_blocking"];
+var EVENT_TYPES = [
+  "started",
+  "merged",
+  "parked",
+  "failed",
+  "skipped",
+  "stopped"
+];
+var RUN_KEYS = [
+  "run_id",
+  "started_at",
+  "finished_at",
+  "status",
+  "base_branch",
+  "run_branch",
+  "release",
+  "mode_at_start",
+  "parked_policy",
+  "envelope",
+  "stop_conditions",
+  "decisions",
+  "queue",
+  "events"
+];
+var ENVELOPE_KEYS = [
+  "merge_to_run_branch",
+  "merge_to_main",
+  "open_pr",
+  "run_qa",
+  "run_acceptance"
+];
+var STOP_CONDITION_KEYS = [
+  "max_stories",
+  "deadline",
+  "max_consecutive_parks",
+  "max_qa_retries"
+];
+var DECISION_KEYS = ["id", "question", "answer", "applies_to", "asked_at"];
+var QUEUE_ITEM_KEYS = [
+  "story_id",
+  "title",
+  "order",
+  "state",
+  "branch",
+  "started_at",
+  "finished_at",
+  "commits",
+  "review_risk",
+  "park",
+  "failure"
+];
+var PARK_KEYS = ["question", "context", "options", "at"];
+var FAILURE_KEYS = ["summary", "attempts", "at"];
+var RUN_EVENT_KEYS = ["at", "story", "event", "detail"];
+function parseAutopilotRun(content, runIdFromFile) {
+  const label = runIdFromFile ? `${runIdFromFile}.yaml` : "an autopilot run ledger";
+  const data = loadYamlObject(content, label);
+  const run2 = {
+    runId: str2(data.run_id) ?? runIdFromFile ?? "",
+    startedAt: isoDateTime(data.started_at) ?? "",
+    status: enumOr(data.status, RUN_STATUSES, "preflight"),
+    baseBranch: str2(data.base_branch) ?? "",
+    runBranch: str2(data.run_branch) ?? "",
+    release: str2(data.release) ?? "",
+    modeAtStart: enumOr(data.mode_at_start, ["quick", "full"], "full"),
+    parkedPolicy: enumOr(
+      data.parked_policy,
+      PARKED_POLICIES,
+      "blocks_release"
+    ),
+    envelope: parseAutopilotEnvelope(data.envelope),
+    stopConditions: parseAutopilotStopConditions(data.stop_conditions),
+    decisions: arr(data.decisions).map(parseAutopilotDecision),
+    queue: arr(data.queue).map(parseAutopilotQueueItem),
+    // Absent `events` reads as [], per the contract.
+    events: arr(data.events).map(parseAutopilotEvent),
+    ...optional("finishedAt", isoDateTime(data.finished_at)),
+    ...optional("extra", collectExtra(data, RUN_KEYS))
+  };
+  return run2;
+}
+function parseAutopilotEnvelope(value) {
+  const raw = obj(value) ?? {};
+  const envelope = {
+    mergeToRunBranch: bool2(raw.merge_to_run_branch) ?? true,
+    mergeToMain: false,
+    openPr: false,
+    runQa: bool2(raw.run_qa) ?? true,
+    runAcceptance: bool2(raw.run_acceptance) ?? true
+  };
+  const widened = {};
+  if (raw.merge_to_main === true) widened.merge_to_main = raw.merge_to_main;
+  if (raw.open_pr === true) widened.open_pr = raw.open_pr;
+  const extra = { ...collectExtra(raw, ENVELOPE_KEYS), ...widened };
+  if (Object.keys(extra).length > 0) envelope.extra = extra;
+  return envelope;
+}
+function parseAutopilotStopConditions(value) {
+  const raw = obj(value) ?? {};
+  return {
+    // Schema defaults, not zeroes: 0 retries is a different policy from
+    // "unspecified", and the plugin's default is 2.
+    maxConsecutiveParks: count(raw.max_consecutive_parks) ?? 2,
+    maxQaRetries: count(raw.max_qa_retries) ?? 2,
+    // Absent stays absent: no cap and no deadline is the "run the whole queue"
+    // answer, which a defaulted number would misreport as a limit.
+    ...optional("maxStories", count(raw.max_stories)),
+    ...optional("deadline", isoDateTime(raw.deadline)),
+    ...optional("extra", collectExtra(raw, STOP_CONDITION_KEYS))
+  };
+}
+function parseAutopilotDecision(raw) {
+  return {
+    id: str2(raw.id) ?? "",
+    question: str2(raw.question) ?? "",
+    answer: str2(raw.answer) ?? "",
+    appliesTo: strList(raw.applies_to),
+    ...optional("askedAt", isoDateTime(raw.asked_at)),
+    ...optional("extra", collectExtra(raw, DECISION_KEYS))
+  };
+}
+function parseAutopilotQueueItem(raw) {
+  const item = {
+    storyId: str2(raw.story_id) ?? "",
+    title: str2(raw.title) ?? "",
+    // `order` is 1-based in the schema, but the real 2026-08-31-1 ledger carries
+    // an `order: 0` bookkeeping row. Read what the file says; ordering is the
+    // consumer's business, not the parser's, and clamping would silently move a
+    // row the author put there on purpose.
+    order: count(raw.order) ?? 0,
+    state: enumOr(raw.state, QUEUE_STATES, "pending"),
+    ...optional("branch", str2(raw.branch)),
+    ...optional("startedAt", isoDateTime(raw.started_at)),
+    ...optional("finishedAt", isoDateTime(raw.finished_at)),
+    ...optional("reviewRisk", enumOrUndefined(raw.review_risk, REVIEW_RISKS))
+  };
+  const unmodellable = {};
+  if (Array.isArray(raw.commits)) {
+    item.commits = strList(raw.commits);
+  } else if (raw.commits !== void 0) {
+    unmodellable.commits = raw.commits;
+  }
+  const park = parseAutopilotPark(raw.park);
+  if (park) item.park = park;
+  else if (raw.park !== void 0 && obj(raw.park) === null) unmodellable.park = raw.park;
+  const failure = parseAutopilotFailure(raw.failure);
+  if (failure) item.failure = failure;
+  else if (raw.failure !== void 0 && obj(raw.failure) === null) {
+    unmodellable.failure = raw.failure;
+  }
+  const extra = { ...collectExtra(raw, QUEUE_ITEM_KEYS), ...unmodellable };
+  if (Object.keys(extra).length > 0) item.extra = extra;
+  return item;
+}
+function parseAutopilotPark(value) {
+  const raw = obj(value);
+  if (!raw) return null;
+  const park = {
+    question: str2(raw.question) ?? "",
+    context: str2(raw.context) ?? "",
+    options: strList(raw.options),
+    at: isoDateTime(raw.at) ?? ""
+  };
+  const extra = collectExtra(raw, PARK_KEYS);
+  if (extra) park.extra = extra;
+  if (!park.question && !park.context && park.options.length === 0 && !park.at && !extra) {
+    return null;
+  }
+  return park;
+}
+function parseAutopilotFailure(value) {
+  const raw = obj(value);
+  if (!raw) return null;
+  const failure = {
+    summary: str2(raw.summary) ?? "",
+    attempts: count(raw.attempts) ?? 0,
+    at: isoDateTime(raw.at) ?? ""
+  };
+  const extra = collectExtra(raw, FAILURE_KEYS);
+  if (extra) failure.extra = extra;
+  if (!failure.summary && failure.attempts === 0 && !failure.at && !extra) return null;
+  return failure;
+}
+function parseAutopilotEvent(raw) {
+  const event = {
+    at: isoDateTime(raw.at) ?? "",
+    event: enumOr(raw.event, EVENT_TYPES, "stopped"),
+    ...optional("story", str2(raw.story)),
+    ...optional("detail", str2(raw.detail))
+  };
+  const unknownEvent = {};
+  const rawEvent = str2(raw.event);
+  if (rawEvent !== void 0 && !EVENT_TYPES.includes(rawEvent)) {
+    unknownEvent.event = raw.event;
+  }
+  const extra = { ...collectExtra(raw, RUN_EVENT_KEYS), ...unknownEvent };
+  if (Object.keys(extra).length > 0) event.extra = extra;
+  return event;
+}
+function toAutopilotRunSummary(run2) {
+  return {
+    runId: run2.runId,
+    startedAt: run2.startedAt,
+    status: run2.status,
+    baseBranch: run2.baseBranch,
+    runBranch: run2.runBranch,
+    release: run2.release,
+    modeAtStart: run2.modeAtStart,
+    parkedPolicy: run2.parkedPolicy,
+    queue: run2.queue,
+    ...optional("finishedAt", run2.finishedAt),
+    ...optional("extra", run2.extra)
+  };
+}
+function resolveLiveRun(runs) {
+  let live = null;
+  for (const run2 of runs) {
+    if (run2.status !== "running") continue;
+    if (live === null || compareRunRecency(run2, live) < 0) live = run2;
+  }
+  return live;
+}
+function sortRunsNewestFirst(runs) {
+  return [...runs].sort(compareRunRecency);
+}
+function compareRunRecency(a, b) {
+  if (a.startedAt !== b.startedAt) return a.startedAt < b.startedAt ? 1 : -1;
+  return b.runId.localeCompare(a.runId, void 0, { numeric: true });
 }
 function parseHistory(content) {
   const loaded = loadYaml(content, "history.yaml");
@@ -57018,6 +57463,7 @@ var STORY_STATUSES = [
   "ready",
   "in_progress",
   "review",
+  "parked",
   "done"
 ];
 function loadYaml(content, label) {
@@ -57075,6 +57521,14 @@ function strList(value) {
   if (!Array.isArray(value)) return [];
   return value.map(str2).filter((s) => s !== void 0);
 }
+function isoDateTime(value) {
+  if (value instanceof Date) return value.toISOString();
+  return str2(value);
+}
+function enumOrUndefined(value, allowed) {
+  const s = str2(value);
+  return s !== void 0 && allowed.includes(s) ? s : void 0;
+}
 function enumOr(value, allowed, fallback) {
   const s = str2(value);
   return s !== void 0 && allowed.includes(s) ? s : fallback;
@@ -57084,6 +57538,9 @@ function optional(key, value) {
 }
 
 // server/services/projectLoader.ts
+function readProjectType(value) {
+  return typeof value === "string" && PROJECT_TYPES.includes(value) ? value : "unknown";
+}
 var PHASE_NAMES = {
   "1": "Strategy & Planning",
   "2": "Design",
@@ -57094,28 +57551,44 @@ var PHASE_NAMES = {
   "5": "Launch & Operations",
   "6": "Enhancement"
 };
-var KNOWN_ARTIFACTS = [
-  ".archflow/project-context.md",
-  ".archflow/roadmap.yaml",
-  // S11-02: the rail's Files popover draws the .archflow tree from this list,
-  // so a v2 state file missing from it reads as MISSING and its row is inert.
-  // `backlog.yaml` was exactly that — the sidebar's Backlog quick link was a
-  // dead, disabled row on every project that had one, because the server was
-  // never asked about it. The response SHAPE is unchanged; the contract calls
-  // this "a known set of expected artifact paths", and these are expected.
-  ".archflow/backlog.yaml",
-  ".archflow/releases",
-  ".archflow/history.yaml",
-  ".archflow/current-phase.yaml",
-  ".archflow/current-feature.yaml",
-  ".archflow/workflow.md",
-  "design-artifacts/styled-dsl.yaml",
-  "design-artifacts/theme.yaml",
-  "design-artifacts/user-flows.md",
-  "design-artifacts/wireframes",
-  "docs/api-contract.md",
-  "superdesign/design_iterations"
-];
+function knownArtifacts(apiContractPath) {
+  return [
+    ".archflow/project-context.md",
+    ".archflow/roadmap.yaml",
+    // S11-02: the rail's Files popover draws the .archflow tree from this list,
+    // so a v2 state file missing from it reads as MISSING and its row is inert.
+    // `backlog.yaml` was exactly that — the sidebar's Backlog quick link was a
+    // dead, disabled row on every project that had one, because the server was
+    // never asked about it. The response SHAPE is unchanged; the contract calls
+    // this "a known set of expected artifact paths", and these are expected.
+    ".archflow/backlog.yaml",
+    ".archflow/releases",
+    ".archflow/history.yaml",
+    ".archflow/current-phase.yaml",
+    // S13-04: the four files archflow 2.3.0/schema v2.1 added. Same reasoning as
+    // `backlog.yaml` above — a path the popover draws but this list never names
+    // reads as MISSING however real it is, and its row is inert.
+    //
+    // SECURITY: `.archflow/test-accounts.yaml` holds real credentials and is
+    // gitignored. Only the committed `.example` template belongs here. This is an
+    // ALLOWLIST, not a walk of `.archflow/`, so the secret file cannot appear by
+    // construction — and that is the property to preserve, not a filter to add.
+    ".archflow/project-settings.yaml",
+    ".archflow/current-feature.yaml",
+    ".archflow/workflow.md",
+    ".archflow/reference.md",
+    ".archflow/design-system.yaml",
+    ".archflow/test-accounts.example.yaml",
+    "design-artifacts/styled-dsl.yaml",
+    "design-artifacts/theme.yaml",
+    "design-artifacts/user-flows.md",
+    "design-artifacts/wireframes",
+    apiContractPath,
+    "superdesign/design_iterations"
+  ];
+}
+var AUTOPILOT_DIR = join(".archflow", "autopilot");
+var AUTOPILOT_RUN_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 function isRoadmapSystemFile(relativePath) {
   const normalized = relativePath.replace(/\\/g, "/").replace(/^\.\//, "");
   return normalized === ".archflow/roadmap.yaml" || normalized === ".archflow/backlog.yaml" || normalized === ".archflow/history.yaml" || normalized.startsWith(".archflow/releases/");
@@ -57190,9 +57663,28 @@ var ProjectLoader = class {
     return await this.getSchemaVersion() === "1.0";
   }
   /** Throw if the loaded project is v1 — the single choke point for the read-only rule. */
-  async assertWritable(what) {
+  async assertWritable(what, targetRelease) {
     if (await this.isReadOnly()) {
       throw new ReadOnlyProjectError(what);
+    }
+    const live = await this.getLiveAutopilotRun();
+    if (live && (targetRelease === void 0 || targetRelease === live.release)) {
+      throw new AutopilotRunningError(what, live.runId, live.runBranch);
+    }
+  }
+  /**
+   * The live run, or null — read fresh on every write rather than cached.
+   *
+   * A cache here would be the bug: the whole point is to catch a run that
+   * started after the caller last looked.
+   */
+  async getLiveAutopilotRun() {
+    try {
+      const { runs } = await this.getAutopilotRuns();
+      const live = resolveLiveRun(runs);
+      return live ? { runId: live.runId, runBranch: live.runBranch, release: live.release } : null;
+    } catch {
+      return null;
     }
   }
   ensureLoaded() {
@@ -57223,21 +57715,198 @@ var ProjectLoader = class {
     const name = basename(projectRoot);
     const archflowDir = join(projectRoot, ".archflow");
     const onboarded = existsSync(archflowDir);
-    let projectType = "fullstack";
-    try {
-      const phaseState = await this.getPhaseState();
-      projectType = phaseState.projectType;
-    } catch {
-    }
+    const resolved2 = await this.resolveProjectType();
     const schemaVersion = await this.getSchemaVersion();
     return {
       name,
       path: projectRoot,
-      type: projectType,
+      type: resolved2.projectType,
+      typeSource: resolved2.source,
+      ...resolved2.drift ? { typeDrift: resolved2.drift } : {},
       onboarded,
       schemaVersion,
-      readOnly: schemaVersion === "1.0"
+      readOnly: schemaVersion === "1.0",
+      hasAutopilotRuns: await this.hasAutopilotRuns(),
+      apiContractPath: await this.resolveApiContractPath()
     };
+  }
+  /**
+   * Where this project's API contract lives — `api_contract_path` from
+   * `.archflow/project-settings.yaml`, or {@link DEFAULT_API_CONTRACT_PATH}.
+   *
+   * THE single resolution point. S13-02 read the setting and deliberately
+   * consumed it nowhere; every consumer now comes through here, so the studio
+   * cannot repeat archflow 2.3.0's own bug, where the architect wrote the
+   * contract where it was told and the reader looked at the default.
+   *
+   * Unset, null, empty and whitespace all mean "nobody said", and all resolve to
+   * the default: `api_contract_path: null` is the settings schema's own
+   * pre-Phase-2.5 state, not an instruction to have no contract.
+   *
+   * A path that ESCAPES the project — absolute, or climbing through `..` — also
+   * falls back to the default rather than being handed to the file routes.
+   * `validatePath` would refuse it anyway; falling back here means the refusal
+   * shows up as a normal missing-artifact row instead of an error toast on a
+   * navigation click.
+   */
+  async resolveApiContractPath() {
+    const settings = await this.getProjectSettings();
+    const configured = settings?.apiContractPath?.trim();
+    if (!configured) return DEFAULT_API_CONTRACT_PATH;
+    const normalized = configured.replace(/\\/g, "/").replace(/^\.\//, "");
+    if (isAbsolute(configured) || normalized.startsWith("/")) return DEFAULT_API_CONTRACT_PATH;
+    if (normalized.split("/").includes("..")) return DEFAULT_API_CONTRACT_PATH;
+    return normalized;
+  }
+  /**
+   * `.archflow/project-settings.yaml`, or null when the project has not been
+   * migrated to schema v2.1 (S13-02).
+   *
+   * Null is the normal state for a v2.0 project, not an error — the caller falls
+   * back to `current-phase.yaml`. An unreadable or malformed file is also null:
+   * the settings file must never be able to brick project loading.
+   */
+  async getProjectSettings() {
+    const projectRoot = this.ensureLoaded();
+    const settingsPath = join(projectRoot, ".archflow", "project-settings.yaml");
+    if (!existsSync(settingsPath)) return null;
+    try {
+      return parseProjectSettings(await readFile(settingsPath, "utf-8"));
+    } catch {
+      return null;
+    }
+  }
+  /**
+   * Where `project_type` came from, and whether the roadmap mirror agrees.
+   *
+   * Schema v2.1 split `current-phase.yaml` into a CURSOR (phase, mode,
+   * active_release) and SETTINGS (`project-settings.yaml`: project_type, stack,
+   * api_contract_path, optional_agents). This resolves across the split:
+   *
+   *   1. `project-settings.yaml` — the OWNER when the file states the key.
+   *   2. `current-phase.yaml` — an unmigrated project, unchanged behaviour.
+   *   3. `unknown` — nobody said.
+   *
+   * There is deliberately NO `fullstack` fallback. The old default is what made
+   * the v2.1 split silent: after the key moved out of the cursor, every v2.1
+   * project reported `fullstack` with total confidence, and combined with a
+   * roadmap write that wrong value gets persisted. `unknown` is a real state the
+   * settings schema itself allows (`project_type: null` before Phase 1 decides).
+   *
+   * An explicit `project_type: null` in the settings file resolves to `unknown`
+   * WITHOUT consulting the cursor — the owner has spoken. A settings file that
+   * omits the key entirely is a half-written file, and falls through to the
+   * cursor.
+   */
+  async resolveProjectType() {
+    let projectType = "unknown";
+    let source = "none";
+    const settings = await this.getProjectSettings();
+    if (settings && "projectType" in settings) {
+      projectType = settings.projectType ?? "unknown";
+      source = "project-settings.yaml";
+    } else {
+      try {
+        const phaseState = await this.getPhaseState();
+        if (phaseState.projectType !== "unknown") {
+          projectType = phaseState.projectType;
+          source = "current-phase.yaml";
+        }
+      } catch {
+      }
+    }
+    return { projectType, source, drift: await this.readProjectTypeDrift(projectType, source) };
+  }
+  /**
+   * `roadmap.yaml` carries a `project_type` MIRROR. The settings file (or, on an
+   * unmigrated project, the cursor) is the OWNER: on divergence the owner wins
+   * and the divergence is reported rather than reconciled, because the studio
+   * cannot know which of the two the user meant to change.
+   *
+   * Read from the raw mapping rather than through `parseRoadmapIndex`, whose
+   * model defaults an absent `project_type` to `fullstack`. Going through the
+   * model would manufacture a mirror on a roadmap that has none and report drift
+   * against a value no file contains.
+   */
+  async readProjectTypeDrift(ownerValue, source) {
+    if (source === "none") return null;
+    const roadmapPath = join(this.ensureLoaded(), ".archflow", "roadmap.yaml");
+    if (!existsSync(roadmapPath)) return null;
+    let mirrorValue;
+    try {
+      const data = jsYaml.load(await readFile(roadmapPath, "utf-8"));
+      const raw = data?.project_type;
+      mirrorValue = typeof raw === "string" ? raw : void 0;
+    } catch {
+      return null;
+    }
+    if (mirrorValue === void 0) return null;
+    if (!PROJECT_TYPES.includes(mirrorValue)) return null;
+    if (mirrorValue === ownerValue) return null;
+    return {
+      owner: source,
+      ownerValue,
+      mirror: "roadmap.yaml",
+      mirrorValue
+    };
+  }
+  /**
+   * Does this project have any autopilot ledgers at all? — S12-04's rail reveal.
+   *
+   * Deliberately the CHEAPEST question that answers it: one `readdir` and a
+   * filename filter. No ledger is parsed and nothing is cached, so it cannot
+   * drift from the directory it reports on. A missing directory is the normal
+   * state for a project that has never run autopilot and answers `false` rather
+   * than throwing — `.archflow/autopilot/` is committed, but only once a run has
+   * written into it.
+   */
+  async hasAutopilotRuns() {
+    if (!this.currentPath) return false;
+    try {
+      const entries = await readdir(join(this.currentPath, ".archflow", "autopilot"));
+      return entries.some((e) => e.endsWith(".yaml"));
+    } catch {
+      return false;
+    }
+  }
+  /**
+   * Every acceptance verdict this project has on disk, keyed by story id —
+   * S13-05, design-artifacts/blocked-verdict/ §39.1.
+   *
+   * Reads `docs/acceptance-reports/*-review.md`, which is where `pm-reviewer`
+   * writes a verdict and the ONLY place it writes one: archflow 2.3.0 models no
+   * story-level verdict field, so there is nothing in `.archflow/` to read
+   * instead. The path is the framework's own documented convention and is not
+   * configurable today; when the upstream request for a recorded report path
+   * lands, this is the one function that changes.
+   *
+   * A missing directory is a project that has never been through acceptance and
+   * answers with an empty map, not an error. So does an unreadable or
+   * verdict-less report: a report the parser cannot read renders NO verdict,
+   * which is the same story a user sees today, rather than a fabricated one.
+   */
+  async getAcceptanceVerdicts() {
+    if (!this.currentPath) return [];
+    const directory = join("docs", "acceptance-reports");
+    let entries;
+    try {
+      entries = await readdir(join(this.currentPath, directory));
+    } catch {
+      return [];
+    }
+    const verdicts = [];
+    for (const entry of entries.sort()) {
+      const storyId = storyIdFromReportName(entry);
+      if (!storyId) continue;
+      const relativePath = join(directory, entry);
+      try {
+        const markdown = await readFile(join(this.currentPath, relativePath), "utf-8");
+        const record = parseAcceptanceReport(markdown, storyId, relativePath);
+        if (record) verdicts.push(record);
+      } catch {
+      }
+    }
+    return verdicts;
   }
   async getPhaseState() {
     const projectRoot = this.ensureLoaded();
@@ -57256,7 +57925,11 @@ var ProjectLoader = class {
         phase,
         phaseName,
         phaseFile,
-        projectType: data.project_type ?? "fullstack",
+        // No `fullstack` fallback (S13-02). Schema v2.1 moved this key out of
+        // the cursor and into project-settings.yaml, so on a migrated project
+        // it is legitimately absent here — defaulting made every v2.1 project
+        // report `fullstack`. `unknown` says what the file actually says.
+        projectType: readProjectType(data.project_type),
         onboarded: data.onboarded ?? false,
         phasesCompleted: data.phases_completed ?? [],
         phasesPartial: data.phases_partial ?? [],
@@ -57335,7 +58008,9 @@ var ProjectLoader = class {
     const index = parsed.roadmap;
     const releases = await this.resolveReleases(index);
     return {
-      schemaVersion: "2.0",
+      // Carried through from the file, not asserted — the model is what the
+      // serializer writes back (S13-01).
+      schemaVersion: parsed.schemaVersion,
       index,
       releases,
       backlog: await this.getBacklog(),
@@ -57437,6 +58112,103 @@ var ProjectLoader = class {
   async getHistoryCount() {
     return (await this.getHistory()).length;
   }
+  // -------------------------------------------------------------------------
+  // Autopilot run ledgers (S12-02) — `.archflow/autopilot/{run-id}.yaml`
+  //
+  // READ-ONLY. There is no `saveAutopilotRun` and none is planned: the plugin
+  // is the ledger's only writer, and the studio adding a write path here is the
+  // exact exception the story forbids. S12-05 forwards answers as chat text so
+  // `/archflow:autopilot resume` writes `decisions[]` itself.
+  // -------------------------------------------------------------------------
+  /**
+   * Every run ledger, newest first, plus the derived LIVE run.
+   *
+   * THREE absences are normal rather than errors, and each is a state a real
+   * project sits in:
+   *   - no `.archflow/autopilot/` directory  -> `{ runs: [], live: null }`.
+   *     Every project is in this state until its first run.
+   *   - a ledger that fails to parse         -> skipped from `runs`, reported
+   *     in `errors`. The plugin rewrites the ledger after every story, so a
+   *     half-written file mid-write is a normal transient state; failing the
+   *     whole request would blank the run view at exactly the moment a live run
+   *     is most interesting.
+   *   - an unreadable file (permissions, a
+   *     dangling symlink)                    -> reported the same way.
+   */
+  async getAutopilotRuns() {
+    const dir = this.autopilotDir();
+    if (!existsSync(dir)) return { runs: [], live: null };
+    let names;
+    try {
+      names = (await readdir(dir)).filter((name) => name.endsWith(".yaml")).sort();
+    } catch {
+      return { runs: [], live: null };
+    }
+    const summaries = [];
+    const errors = [];
+    for (const name of names) {
+      try {
+        const content = await readFile(join(dir, name), "utf-8");
+        summaries.push(toAutopilotRunSummary(parseAutopilotRun(content, basename(name, ".yaml"))));
+      } catch (err) {
+        errors.push({ file: name, message: `Failed to parse ${name}: ${err.message}` });
+      }
+    }
+    const runs = sortRunsNewestFirst(summaries);
+    return {
+      runs,
+      // ONE owner (AC6). No other method, route or watcher branch derives this.
+      live: resolveLiveRun(runs),
+      // Omitted, never an empty array, when every ledger parsed.
+      ...errors.length > 0 ? { errors } : {}
+    };
+  }
+  /**
+   * One full run by id.
+   *
+   * The `:id` arrives in a URL and becomes a FILENAME, so it is hostile input
+   * and gets the discipline the Session Id / Attachment Id path-safety
+   * appendices describe rather than being concatenated into a read:
+   * shape-check, then resolve through {@link validatePath}, then assert
+   * containment in `.archflow/autopilot/`.
+   */
+  async getAutopilotRun(id) {
+    const projectRoot = this.ensureLoaded();
+    const relativePath = this.autopilotLedgerPath(id);
+    const absolute = this.validatePath(relativePath);
+    const dir = join(projectRoot, AUTOPILOT_DIR);
+    if (!absolute.startsWith(dir + "/")) throw new InvalidPathError(id);
+    if (!existsSync(absolute)) {
+      throw new FileNotFoundError(`Autopilot run '${id}' not found.`);
+    }
+    let content;
+    try {
+      content = await readFile(absolute, "utf-8");
+    } catch (err) {
+      throw new ParseError(`Failed to read ${id}.yaml: ${err.message}`);
+    }
+    try {
+      return parseAutopilotRun(content, id);
+    } catch (err) {
+      throw new ParseError(err.message);
+    }
+  }
+  autopilotDir() {
+    return join(this.ensureLoaded(), AUTOPILOT_DIR);
+  }
+  /**
+   * `.archflow/autopilot/{id}.yaml` for a shape-checked id.
+   *
+   * The pattern is the one the Session Id Path Safety appendix pins, and it is
+   * what the containment check is defence-in-depth for rather than a substitute
+   * for: it admits no `/`, no `\`, no `.` and no NUL, so `..`,
+   * `../../etc/passwd` and `/etc/passwd` are all unrepresentable BEFORE any
+   * path join happens. A run id is `{YYYY-MM-DD}-{n}`, which it admits.
+   */
+  autopilotLedgerPath(id) {
+    if (!AUTOPILOT_RUN_ID.test(id)) throw new InvalidPathError(id);
+    return join(AUTOPILOT_DIR, `${id}.yaml`);
+  }
   /**
    * Load history for a QUERY surface — same file, same laziness, but absence and
    * corruption come back as states instead of exceptions.
@@ -57492,7 +58264,7 @@ var ProjectLoader = class {
    */
   async saveRoadmapIndex(index) {
     const projectRoot = this.ensureLoaded();
-    await this.assertWritable("The roadmap index");
+    await this.assertWritable("The roadmap index", BACKLOG_NOT_A_RELEASE);
     const relativePath = ".archflow/roadmap.yaml";
     await this.writeArchflowFile(
       join(projectRoot, relativePath),
@@ -57512,7 +58284,7 @@ var ProjectLoader = class {
    */
   async saveRelease(release) {
     const projectRoot = this.ensureLoaded();
-    await this.assertWritable(`Release '${release.id}'`);
+    await this.assertWritable(`Release '${release.id}'`, release.id);
     if (!release.id) {
       throw new WriteError("Cannot write a release with no id.");
     }
@@ -57527,7 +58299,7 @@ var ProjectLoader = class {
   /** Write `.archflow/backlog.yaml`. */
   async saveBacklog(backlog) {
     const projectRoot = this.ensureLoaded();
-    await this.assertWritable("The backlog");
+    await this.assertWritable("The backlog", BACKLOG_NOT_A_RELEASE);
     const relativePath = ".archflow/backlog.yaml";
     await this.writeArchflowFile(
       join(projectRoot, relativePath),
@@ -57686,7 +58458,7 @@ var ProjectLoader = class {
       phaseStartTime = phaseStat.mtime;
     } catch {
     }
-    for (const artifactPath of KNOWN_ARTIFACTS) {
+    for (const artifactPath of knownArtifacts(await this.resolveApiContractPath())) {
       const fullPath = join(projectRoot, artifactPath);
       try {
         const fileStat = await stat(fullPath);
@@ -57902,6 +58674,16 @@ var ParseError = class extends Error {
     super(message);
   }
 };
+var BACKLOG_NOT_A_RELEASE = "\0not-a-release";
+var AutopilotRunningError = class extends Error {
+  code = "AUTOPILOT_RUNNING";
+  statusCode = 409;
+  constructor(what, runId, runBranch) {
+    super(
+      `${what} is read-only while autopilot run ${runId} is live on ${runBranch}. The run writes this release as each story lands, so a write now would overwrite its work \u2014 and an unexpected change in the tree is a stop condition that can end the run. Wait for it, watch the ledger, or abort it.`
+    );
+  }
+};
 var ReadOnlyProjectError = class extends Error {
   code = "READ_ONLY_PROJECT";
   statusCode = 409;
@@ -58100,6 +58882,14 @@ async function projectRoutes(fastify, opts) {
     try {
       const result = await projectLoader.savePhaseActiveRelease(present ? raw : null);
       return reply.send(result);
+    } catch (err) {
+      const error = err;
+      return reply.status(error.statusCode ?? 500).send({ error: error.message, code: error.code ?? "INTERNAL_ERROR" });
+    }
+  });
+  fastify.get("/acceptance", async (_request, reply) => {
+    try {
+      return reply.send({ verdicts: await projectLoader.getAcceptanceVerdicts() });
     } catch (err) {
       const error = err;
       return reply.status(error.statusCode ?? 500).send({ error: error.message, code: error.code ?? "INTERNAL_ERROR" });
@@ -58549,6 +59339,29 @@ function clampInt(raw, fallback, min, max) {
   return Math.min(Math.max(Math.trunc(n), min), max);
 }
 
+// server/routes/autopilot.ts
+function sendError2(reply, err) {
+  const error = err;
+  return reply.status(error.statusCode ?? 500).send({ error: error.message, code: error.code ?? "INTERNAL_ERROR" });
+}
+async function autopilotRoutes(fastify, opts) {
+  const { projectLoader } = opts;
+  fastify.get("/autopilot/runs", async (_request, reply) => {
+    try {
+      return reply.send(await projectLoader.getAutopilotRuns());
+    } catch (err) {
+      return sendError2(reply, err);
+    }
+  });
+  fastify.get("/autopilot/runs/:id", async (request, reply) => {
+    try {
+      return reply.send(await projectLoader.getAutopilotRun(request.params.id));
+    } catch (err) {
+      return sendError2(reply, err);
+    }
+  });
+}
+
 // server/routes/files.ts
 async function fileRoutes(fastify, opts) {
   const { projectLoader } = opts;
@@ -58828,10 +59641,10 @@ async function previewRoutes(fastify, opts) {
 // server/routes/chat.ts
 import { readdir as readdir3, readFile as readFile3 } from "node:fs/promises";
 import { join as join10 } from "node:path";
-import { homedir as homedir7 } from "node:os";
+import { homedir as homedir9 } from "node:os";
 
 // server/services/claudeManager.ts
-import { spawn as spawn3, execSync } from "child_process";
+import { spawn as spawn3, execSync as execSync2 } from "child_process";
 import { EventEmitter as EventEmitter2 } from "events";
 import { createInterface } from "readline";
 
@@ -58909,6 +59722,154 @@ if (capturing) {
 
 // server/services/claudeManager.ts
 import { join as join6 } from "path";
+import { homedir as homedir6 } from "node:os";
+
+// server/services/platformLaunch.ts
+import { execSync } from "child_process";
+import { homedir } from "node:os";
+import { posix as posixPath } from "node:path";
+function currentHost() {
+  return { home: homedir(), env: process.env };
+}
+function winJoin(...parts) {
+  return parts.join("\\").replace(/\\+/g, "\\");
+}
+function searchCommand(platform) {
+  return platform === "win32" ? "where.exe claude" : "which -a claude";
+}
+function fallbackCandidates(platform, host) {
+  if (platform === "win32") {
+    const dirs = [host.env.LOCALAPPDATA, host.env.APPDATA].filter((d) => Boolean(d)).map((d) => winJoin(d, "npm"));
+    const out = [];
+    for (const dir of dirs) {
+      out.push(winJoin(dir, "claude.cmd"), winJoin(dir, "claude.exe"));
+    }
+    return out;
+  }
+  const local = posixPath.join(host.home, ".local", "bin", "claude");
+  if (platform === "linux") {
+    return [local];
+  }
+  return [
+    local,
+    "/opt/homebrew/bin/claude",
+    // Homebrew on Apple Silicon
+    "/usr/local/bin/claude"
+    // Homebrew on Intel — and Rosetta brew on Apple Silicon
+  ];
+}
+function versionProbeCommand(_platform, candidate) {
+  return `"${candidate}" --version`;
+}
+function needsShell(binary2) {
+  return /\.(cmd|bat)$/i.test(binary2);
+}
+function sessionSpawnOptions(binary2, base) {
+  return needsShell(binary2) ? { ...base, shell: true } : { ...base };
+}
+function resolveClaudeBinary(deps) {
+  const candidates = [];
+  try {
+    const found = deps.search(searchCommand(deps.platform)).split("\n").map((line) => line.trim()).filter(Boolean);
+    candidates.push(...found);
+  } catch {
+  }
+  for (const fallback of fallbackCandidates(deps.platform, deps.host)) {
+    if (fallback && !candidates.includes(fallback)) candidates.push(fallback);
+  }
+  const rejected = [];
+  for (const candidate of candidates) {
+    try {
+      deps.probe(versionProbeCommand(deps.platform, candidate));
+      return { binary: candidate, found: true, rejected, candidates };
+    } catch {
+      rejected.push(candidate);
+    }
+  }
+  return { binary: "claude", found: false, rejected, candidates };
+}
+function readMacHardware(platform = process.platform, run2 = (cmd) => execSync(cmd, { encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"], timeout: 2e3 })) {
+  if (platform !== "darwin") return null;
+  const read = (key) => {
+    try {
+      return run2(`sysctl -in ${key}`).trim() === "1";
+    } catch {
+      return false;
+    }
+  };
+  return { translated: read("sysctl.proc_translated"), arm64: read("hw.optional.arm64") };
+}
+function noBinaryMessage(facts) {
+  const where = facts.candidates.length > 0 ? `Looked in: ${facts.candidates.join(", ")}. ` : "";
+  const skipped = facts.rejected.length > 0 ? `Found but could not run: ${facts.rejected.join(", ")}. ` : "";
+  if (facts.platform === "win32") {
+    return 'no working "claude" binary found. ' + where + skipped + 'A global npm install writes claude.cmd into %APPDATA%\\npm or %LOCALAPPDATA%\\npm; the extensionless "claude" next to it is a shell script and cannot be run by Windows. Install it with: npm install -g @anthropic-ai/claude-code';
+  }
+  if (facts.platform === "linux") {
+    return 'no working "claude" binary found. ' + where + skipped + "It is normally on PATH or in ~/.local/bin. Install it with: npm install -g @anthropic-ai/claude-code";
+  }
+  return 'no working "claude" binary found. ' + where + skipped + macArchAdvice(facts) + "Install it globally with: npm install -g @anthropic-ai/claude-code";
+}
+function macArchAdvice(facts) {
+  const hw = facts.hardware;
+  const shadow = facts.rejected.length > 0 ? "A local node_modules copy can shadow your global install. " : "";
+  if (hw?.translated || hw?.arm64 && facts.arch === "x64") {
+    return shadow + `This is an Apple Silicon Mac running an ${facts.arch} Node under Rosetta \u2014 so npm may have installed the x64 platform package while the CLI you have is arm64, or the other way round. Reinstall the CLI with the SAME node you start the studio with, or start the studio with an arm64 node. `;
+  }
+  if (hw && !hw.arm64) {
+    return shadow + `This is a genuine Intel Mac (node ${facts.platform}/${facts.arch}), not Rosetta \u2014 the x64 platform package is the right one, so the CLI is most likely just not installed. `;
+  }
+  return shadow + `Check that npm installed the platform package matching this Node (${facts.platform}/${facts.arch}). `;
+}
+function argvCommand(platform, pid) {
+  if (platform === "win32") {
+    return powershell(
+      `Get-CimInstance Win32_Process -Filter "ProcessId=${pid}" | Select-Object -ExpandProperty CommandLine`
+    );
+  }
+  if (platform === "linux") {
+    return { file: "ps", args: ["-ww", "-o", "args=", "-p", String(pid)] };
+  }
+  return { file: "ps", args: ["-ww", "-o", "command=", "-p", String(pid)] };
+}
+function statCommand(platform, pid) {
+  if (platform === "win32") return null;
+  return { file: "ps", args: ["-o", "stat=", "-p", String(pid)] };
+}
+function listCommand(platform) {
+  if (platform === "win32") {
+    return powershell(
+      'Get-CimInstance Win32_Process | ForEach-Object { "$($_.ProcessId) $($_.CommandLine)" }'
+    );
+  }
+  if (platform === "linux") {
+    return { file: "ps", args: ["-eww", "-o", "pid=,args="] };
+  }
+  return { file: "ps", args: ["-axww", "-o", "pid=,command="] };
+}
+function powershell(script) {
+  return { file: "powershell.exe", args: ["-NoProfile", "-NonInteractive", "-Command", script] };
+}
+function parseProcessListing(out, selfPid) {
+  const rows = [];
+  for (const line of out.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const pid = Number.parseInt(trimmed.split(/\s+/)[0] ?? "", 10);
+    if (!Number.isInteger(pid) || pid <= 0 || pid === selfPid) continue;
+    rows.push({ pid, line });
+  }
+  return rows;
+}
+function survivalNotice(platform, fifoAvailable) {
+  if (!fifoAvailable) {
+    return `[platform] ${platform}: detached session survival is UNAVAILABLE \u2014 no FIFO transport on this host, so chat works but a session will not outlive a studio restart.`;
+  }
+  return null;
+}
+function isAvxNoise(line) {
+  return line.includes("AVX support");
+}
 
 // server/services/adoptedProcess.ts
 import { EventEmitter } from "events";
@@ -58926,17 +59887,17 @@ import {
   unlinkSync as unlinkSync2,
   writeFileSync as writeFileSync3
 } from "node:fs";
-import { homedir as homedir2 } from "node:os";
+import { homedir as homedir3 } from "node:os";
 import { join as join4 } from "node:path";
 
 // server/services/studioIdentity.ts
 import { mkdirSync as mkdirSync2, readdirSync, renameSync, unlinkSync, writeFileSync as writeFileSync2 } from "node:fs";
-import { homedir } from "node:os";
+import { homedir as homedir2 } from "node:os";
 import { basename as basename2, dirname as dirname3, join as join3 } from "node:path";
-function instancesDir(home = homedir()) {
+function instancesDir(home = homedir2()) {
   return join3(home, ".archflow", "studio", "instances");
 }
-function defaultInstancePath(pid = process.pid, home = homedir()) {
+function defaultInstancePath(pid = process.pid, home = homedir2()) {
   return join3(instancesDir(home), `${pid}.json`);
 }
 function writeAtomic(path2, text) {
@@ -59022,7 +59983,7 @@ function writeRunIdentity(identity, runDir) {
 // server/services/sessionHandoff.ts
 var RECORD_EXPIRY_MS = 24 * 60 * 60 * 1e3;
 var INCOMPLETE_RUN_GRACE_MS = 5 * 60 * 1e3;
-function sessionsDir(home = homedir2()) {
+function sessionsDir(home = homedir3()) {
   return join4(home, ".archflow", "studio", "sessions");
 }
 function newRunId(now = Date.now()) {
@@ -59031,13 +59992,13 @@ function newRunId(now = Date.now()) {
 function cookieFor(runId) {
   return `af-${runId}`;
 }
-function runDirFor(cookie, home = homedir2()) {
+function runDirFor(cookie, home = homedir3()) {
   return join4(sessionsDir(home), cookie);
 }
 function recordPathFor(runDir) {
   return join4(runDir, "record.json");
 }
-function writeRecord(record, home = homedir2()) {
+function writeRecord(record, home = homedir3()) {
   const runDir = runDirFor(record.cookie, home);
   const path2 = recordPathFor(runDir);
   const tmp = `${path2}.${process.pid}.tmp`;
@@ -59108,22 +60069,29 @@ function isPidAlive(pid) {
     return err.code === "EPERM";
   }
 }
-function processArgvContains(pid, needle) {
-  if (!needle) return false;
+function processArgvCheck(pid, needle, platform = process.platform) {
+  if (!needle) return "no";
+  const cmd = argvCommand(platform, pid);
+  let out;
   try {
-    const out = execFileSync("ps", ["-ww", "-o", "command=", "-p", String(pid)], {
+    out = execFileSync(cmd.file, cmd.args, {
       encoding: "utf-8",
-      timeout: 2e3,
+      timeout: 5e3,
       stdio: ["ignore", "pipe", "ignore"]
     });
-    return out.includes(needle);
-  } catch {
-    return false;
+  } catch (err) {
+    const code = err.code;
+    if (code === "ENOENT" || code === "EACCES" || code === "ETIMEDOUT") return "unknown";
+    if (typeof code === "string") return "unknown";
+    return "no";
   }
+  return out.includes(needle) ? "yes" : "no";
 }
-function isZombie(pid) {
+function isZombie(pid, platform = process.platform) {
+  const cmd = statCommand(platform, pid);
+  if (!cmd) return false;
   try {
-    const out = execFileSync("ps", ["-o", "stat=", "-p", String(pid)], {
+    const out = execFileSync(cmd.file, cmd.args, {
       encoding: "utf-8",
       timeout: 2e3,
       stdio: ["ignore", "pipe", "ignore"]
@@ -59186,34 +60154,39 @@ function signalAndClear(record, runDir, waits = {}) {
   }
   return removeRunIfDead(record, runDir);
 }
-function studioIsAlive(studioPid, home = homedir2(), selfPid = process.pid) {
+function studioIsAlive(studioPid, home = homedir3(), selfPid = process.pid) {
   if (studioPid === null || studioPid === selfPid) return false;
   if (!isPidRunning(studioPid)) return false;
   return existsSync5(join4(instancesDir(home), `${studioPid}.json`));
 }
-function findPidsWithCookie(cookie, selfPid = process.pid) {
-  if (!cookie) return [];
+function findPidsWithCookie(cookie, selfPid = process.pid, platform = process.platform) {
+  if (!cookie) return { known: true, pids: [] };
+  const cmd = listCommand(platform);
   let out;
   try {
-    out = execFileSync("ps", ["-axww", "-o", "pid=,command="], {
+    out = execFileSync(cmd.file, cmd.args, {
       encoding: "utf-8",
-      timeout: 4e3,
+      timeout: 1e4,
       stdio: ["ignore", "pipe", "ignore"]
     });
   } catch {
-    return [];
+    return { known: false, pids: [] };
   }
   const pids = [];
-  for (const line of out.split("\n")) {
-    if (!line.includes(cookie)) continue;
-    const pid = Number.parseInt(line.trim().split(/\s+/)[0] ?? "", 10);
-    if (Number.isInteger(pid) && pid > 0 && pid !== selfPid) pids.push(pid);
+  for (const { pid, line } of parseProcessListing(out, selfPid)) {
+    if (line.includes(cookie)) pids.push(pid);
   }
-  return pids;
+  return { known: true, pids };
 }
 function endIncompleteRun(runDir, cookie) {
-  const pids = findPidsWithCookie(cookie);
-  for (const pid of pids) {
+  const search = findPidsWithCookie(cookie);
+  if (!search.known) {
+    console.warn(
+      `[session-handoff] ${cookie} has no readable record and this host could not be asked what is running \u2014 KEEPING the directory rather than deleting a live session's FIFO.`
+    );
+    return;
+  }
+  for (const pid of search.pids) {
     console.warn(
       `[session-handoff] ${cookie} has no readable record but pid ${pid} still carries it \u2014 ending it`
     );
@@ -59232,7 +60205,7 @@ function endIncompleteRun(runDir, cookie) {
   removeRun(runDir);
 }
 function findAdoptableRecord(opts) {
-  const home = opts.home ?? homedir2();
+  const home = opts.home ?? homedir3();
   const now = opts.now ?? Date.now();
   const expiryMs = opts.expiryMs ?? RECORD_EXPIRY_MS;
   const root = sessionsDir(home);
@@ -59258,7 +60231,14 @@ function findAdoptableRecord(opts) {
       removeRun(runDir);
       continue;
     }
-    if (!processArgvContains(record.pid, record.cookie)) {
+    const owns = processArgvCheck(record.pid, record.cookie);
+    if (owns === "unknown") {
+      console.warn(
+        `[session-handoff] pid ${record.pid} is alive but its argv could not be read \u2014 neither adopting nor reaping ${record.cookie}. Unknown is not dead.`
+      );
+      continue;
+    }
+    if (owns === "no") {
       console.warn(
         `[session-handoff] pid ${record.pid} is alive but its argv does not carry ${record.cookie} \u2014 reused pid, not adopting`
       );
@@ -59330,7 +60310,7 @@ var AdoptedProcess = class extends EventEmitter {
    */
   stillOurs() {
     if (this.cookie === null) return true;
-    return processArgvContains(this.pid, this.cookie);
+    return processArgvCheck(this.pid, this.cookie) !== "no";
   }
   /** Begin watching for the process to disappear. */
   start() {
@@ -59468,7 +60448,7 @@ var FileTailer = class {
 // server/services/sessionTransport.ts
 import { execFileSync as execFileSync2 } from "child_process";
 import { closeSync as closeSync2, constants as FS, mkdirSync as mkdirSync4, openSync as openSync2, statSync as statSync2, writeSync } from "node:fs";
-import { homedir as homedir3 } from "node:os";
+import { homedir as homedir4 } from "node:os";
 function fifoTransportAvailable() {
   if (process.platform === "win32") return false;
   return typeof execFileSync2 === "function";
@@ -59561,7 +60541,7 @@ var FifoTransport = class _FifoTransport {
   static openWriteSide(fifoPath) {
     return openSync2(fifoPath, FS.O_WRONLY | FS.O_NONBLOCK);
   }
-  static pathsFor(cookie, home = homedir3()) {
+  static pathsFor(cookie, home = homedir4()) {
     const runDir = runDirFor(cookie, home);
     return {
       runDir,
@@ -59571,7 +60551,7 @@ var FifoTransport = class _FifoTransport {
     };
   }
   /** A fresh run: make the directory, the FIFO, and the two log files. */
-  static create(home = homedir3(), limits) {
+  static create(home = homedir4(), limits) {
     const runId = newRunId();
     const cookie = cookieFor(runId);
     const paths = _FifoTransport.pathsFor(cookie, home);
@@ -59820,7 +60800,7 @@ function createFifoTransport(home) {
 // server/services/attachmentStore.ts
 import { createHash } from "node:crypto";
 import { mkdir as mkdir2, readFile as readFile2, rename, rm, stat as stat2, writeFile as writeFile2 } from "node:fs/promises";
-import { homedir as homedir4 } from "node:os";
+import { homedir as homedir5 } from "node:os";
 import { join as join5, resolve as resolve2, sep } from "node:path";
 var writeSeq = 0;
 var MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
@@ -59861,14 +60841,14 @@ var AttachmentNotFoundError = class extends Error {
 function isAttachmentNotFoundError(err) {
   return err instanceof AttachmentNotFoundError || err instanceof Error && err.code === "ATTACHMENT_NOT_FOUND";
 }
-function attachmentsDir(home = homedir4()) {
+function attachmentsDir(home = homedir5()) {
   return join5(home, ".archflow", "studio", "attachments");
 }
 var ATTACHMENT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 function isValidAttachmentId(id) {
   return typeof id === "string" && ATTACHMENT_ID_PATTERN.test(id);
 }
-function resolveAttachmentPath(id, home = homedir4()) {
+function resolveAttachmentPath(id, home = homedir5()) {
   if (!isValidAttachmentId(id)) throw new InvalidAttachmentIdError();
   const root = resolve2(attachmentsDir(home));
   const full = resolve2(join5(root, id));
@@ -59961,7 +60941,7 @@ function sniffImage(bytes) {
 function urlFor(id) {
   return `/api/chat/attachments/${id}`;
 }
-async function writeAttachment(bytes, filename, home = homedir4()) {
+async function writeAttachment(bytes, filename, home = homedir5()) {
   if (bytes.byteLength > MAX_ATTACHMENT_BYTES) throw new AttachmentTooLargeError();
   const sniffed = sniffImage(bytes);
   if (!sniffed) throw new UnsupportedAttachmentTypeError();
@@ -59994,7 +60974,7 @@ function sniffedRest(meta) {
   const { width, height, byteSize, filename } = meta;
   return { width, height, byteSize, filename };
 }
-async function readAttachmentMeta(id, home = homedir4()) {
+async function readAttachmentMeta(id, home = homedir5()) {
   const path2 = resolveAttachmentPath(id, home);
   try {
     await stat2(path2);
@@ -60015,12 +60995,12 @@ async function readAttachmentMeta(id, home = homedir4()) {
   }
   return { id, url: urlFor(id), mediaType: meta.mediaType, ...sniffedRest(meta) };
 }
-async function readAttachment(id, home = homedir4()) {
+async function readAttachment(id, home = homedir5()) {
   const meta = await readAttachmentMeta(id, home);
   const bytes = await readFile2(resolveAttachmentPath(id, home));
   return { bytes, meta };
 }
-async function loadAttachmentsForSend(ids, home = homedir4()) {
+async function loadAttachmentsForSend(ids, home = homedir5()) {
   const blocks = [];
   for (const id of ids) {
     let loaded;
@@ -60243,40 +61223,35 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
     if (_ClaudeManager.claudeBinary !== null) {
       return _ClaudeManager.claudeBinary;
     }
-    const candidates = [];
-    try {
-      const found = execSync("which -a claude", { encoding: "utf-8" }).split("\n").map((line) => line.trim()).filter(Boolean);
-      candidates.push(...found);
-    } catch {
-    }
-    for (const fallback of [
-      join6(process.env.HOME || "", ".local", "bin", "claude"),
-      "/opt/homebrew/bin/claude",
-      "/usr/local/bin/claude"
-    ]) {
-      if (fallback && !candidates.includes(fallback)) candidates.push(fallback);
-    }
-    const rejected = [];
-    for (const candidate of candidates) {
-      try {
-        execSync(`"${candidate}" --version`, { encoding: "utf-8", stdio: "pipe", timeout: 1e4 });
-        _ClaudeManager.claudeBinary = candidate;
-        if (rejected.length > 0) {
-          console.warn(
-            `[claude-manager] Skipped ${rejected.length} unusable claude binary/binaries earlier on PATH: ${rejected.join(", ")}`
-          );
-        }
-        console.log(`[claude-manager] Found claude binary at: ${candidate}`);
-        return candidate;
-      } catch {
-        rejected.push(candidate);
+    const result = resolveClaudeBinary({
+      platform: process.platform,
+      host: currentHost(),
+      search: (cmd) => execSync2(cmd, { encoding: "utf-8" }),
+      probe: (cmd) => {
+        execSync2(cmd, { encoding: "utf-8", stdio: "pipe", timeout: 1e4 });
       }
+    });
+    if (result.rejected.length > 0) {
+      console.warn(
+        `[claude-manager] Skipped ${result.rejected.length} unusable claude binary/binaries earlier on PATH: ${result.rejected.join(", ")}`
+      );
     }
-    console.warn(
-      '[claude-manager] WARNING: no working "claude" binary found. ' + (rejected.length > 0 ? `Tried and rejected: ${rejected.join(", ")}. A local node_modules copy can shadow your global install \u2014 check that npm installed the platform package matching this Node (${process.platform}/${process.arch}). ` : "") + "Install it globally with: npm install -g @anthropic-ai/claude-code"
-    );
-    _ClaudeManager.claudeBinary = "claude";
-    return "claude";
+    if (result.found) {
+      console.log(`[claude-manager] Found claude binary at: ${result.binary}`);
+    } else {
+      console.warn(
+        "[claude-manager] WARNING: " + noBinaryMessage({
+          platform: process.platform,
+          arch: process.arch,
+          rejected: result.rejected,
+          candidates: result.candidates,
+          // The MACHINE, not the Node: `process.arch` says x64 under Rosetta.
+          hardware: readMacHardware(process.platform)
+        })
+      );
+    }
+    _ClaudeManager.claudeBinary = result.binary;
+    return result.binary;
   }
   /**
    * Start or restart the persistent Claude session.
@@ -60286,7 +61261,7 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
   async startSession() {
     if (this.process) return;
     const binary2 = _ClaudeManager.resolveBinary();
-    const homeClaude = join6(process.env.HOME || "", ".claude");
+    const homeClaude = join6(homedir6(), ".claude");
     const args = [
       "--input-format",
       "stream-json",
@@ -60342,12 +61317,16 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
       `[claude-manager] Starting session (resume=${!!this.sessionId}, fork=${this.forkSession})`
     );
     this.forkSession = false;
-    const child = spawn3(binary2, args, {
-      cwd: this.projectPath,
-      stdio: transport ? transport.stdio() : ["pipe", "pipe", "pipe"],
-      detached: transport !== null,
-      env: { ...process.env }
-    });
+    const child = spawn3(
+      binary2,
+      args,
+      sessionSpawnOptions(binary2, {
+        cwd: this.projectPath,
+        stdio: transport ? transport.stdio() : ["pipe", "pipe", "pipe"],
+        detached: transport !== null,
+        env: { ...process.env }
+      })
+    );
     this.process = child;
     this.transport = transport;
     if (transport) child.unref();
@@ -60385,7 +61364,7 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
       });
       const stderrRl = createInterface({ input: child.stderr });
       stderrRl.on("line", (line) => {
-        if (!line.includes("AVX support")) {
+        if (!isAvxNoise(line)) {
           console.error("[claude stderr]", line);
         }
       });
@@ -60489,7 +61468,7 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
       start: offset,
       onLines: (lines) => {
         for (const line of lines) {
-          if (line.trim() && !line.includes("AVX support")) {
+          if (line.trim() && !isAvxNoise(line)) {
             console.error("[claude stderr]", line);
           }
         }
@@ -61837,10 +62816,10 @@ function destroyClaudeManager() {
 
 // server/mode/sessionContext.ts
 import { readFileSync as readFileSync4, statSync as statSync3 } from "fs";
-import { homedir as homedir5 } from "os";
+import { homedir as homedir7 } from "os";
 import { join as join7 } from "path";
 var SESSION_CONTEXT_MAX_AGE_MS = 12 * 60 * 60 * 1e3;
-function defaultSessionContextPath(home = homedir5()) {
+function defaultSessionContextPath(home = homedir7()) {
   return join7(home, ".archflow", "studio", "session-context.json");
 }
 function readSessionContext(path2, opts = {}) {
@@ -62934,13 +63913,13 @@ function getModeBootstrapData() {
 }
 
 // server/lib/transcript/paths.ts
-import { homedir as homedir6 } from "node:os";
+import { homedir as homedir8 } from "node:os";
 import { join as join8, resolve as resolve3, sep as sep2 } from "node:path";
 function projectSlug(projectPath2) {
   const trimmed = projectPath2.length > 1 ? projectPath2.replace(/[/\\]+$/, "") : projectPath2;
   return trimmed.replace(/[^a-zA-Z0-9]/g, "-");
 }
-function transcriptDirFor(projectPath2, home = homedir6()) {
+function transcriptDirFor(projectPath2, home = homedir8()) {
   return join8(home, ".claude", "projects", projectSlug(projectPath2));
 }
 var SESSION_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
@@ -63495,7 +64474,7 @@ function parseFrontmatter(content) {
   const userInvocable = uiRaw === void 0 ? true : uiRaw !== "false";
   return { name, description, argumentHint, userInvocable };
 }
-async function getSlashCommandsFromCache(cacheRoot = join10(homedir7(), ".claude", "plugins", "cache")) {
+async function getSlashCommandsFromCache(cacheRoot = join10(homedir9(), ".claude", "plugins", "cache")) {
   const commands = [];
   const seen = /* @__PURE__ */ new Set();
   const add = (plugin, bareName, fm) => {
@@ -65532,6 +66511,7 @@ async function bootstrapClient(client, projectLoader) {
   }
 }
 var RELEASE_PATH = /^\.archflow\/releases\/(archive\/)?([^/]+)\.yaml$/;
+var AUTOPILOT_PATH = /^\.archflow\/autopilot\/([^/]+)\.yaml$/;
 function classifyArchflowPath(relativePath) {
   const path2 = relativePath.replace(/\\/g, "/").replace(/^\.\//, "");
   if (path2 === ".archflow/current-phase.yaml") return { kind: "phase" };
@@ -65543,6 +66523,8 @@ function classifyArchflowPath(relativePath) {
   if (release) {
     return { kind: "release", releaseId: release[2], archived: release[1] !== void 0 };
   }
+  const autopilot = AUTOPILOT_PATH.exec(path2);
+  if (autopilot) return { kind: "autopilot", runId: autopilot[1] };
   return { kind: "artifact" };
 }
 function setupFileWatcher(projectPath2, projectLoader) {
@@ -65580,6 +66562,14 @@ function setupFileWatcher(projectPath2, projectLoader) {
             }
           }, projectPath2);
         }
+        try {
+          const info = await projectLoader.getProjectInfo();
+          broadcast({ type: "project-info-changed", data: info }, projectPath2);
+        } catch {
+        }
+        return;
+      }
+      if (relativePath === ".archflow/project-settings.yaml") {
         try {
           const info = await projectLoader.getProjectInfo();
           broadcast({ type: "project-info-changed", data: info }, projectPath2);
@@ -65635,6 +66625,35 @@ function setupFileWatcher(projectPath2, projectLoader) {
             projectPath2
           );
         } catch {
+        }
+        return;
+      }
+      if (classified.kind === "autopilot") {
+        const { runId } = classified;
+        let live = null;
+        try {
+          live = (await projectLoader.getAutopilotRuns()).live;
+        } catch {
+        }
+        if (eventType === "unlink") {
+          broadcast(
+            { type: "autopilot-changed", data: { runId, run: null, removed: true, live } },
+            projectPath2
+          );
+          return;
+        }
+        try {
+          const run2 = await projectLoader.getAutopilotRun(runId);
+          broadcast(
+            { type: "autopilot-changed", data: { runId, run: run2, removed: false, live } },
+            projectPath2
+          );
+        } catch (err) {
+          void err;
+          broadcast(
+            { type: "autopilot-changed", data: { runId, run: null, removed: false, live } },
+            projectPath2
+          );
         }
         return;
       }
@@ -66317,6 +67336,7 @@ async function startServer(options) {
     async (instance) => {
       await instance.register(projectRoutes, { projectLoader });
       await instance.register(roadmapRoutes, { projectLoader });
+      await instance.register(autopilotRoutes, { projectLoader });
       await instance.register(fileRoutes, { projectLoader });
       await instance.register(designRoutes, { projectLoader });
       await instance.register(previewRoutes, { projectLoader, studioPort: port2 });
@@ -66352,6 +67372,8 @@ async function startServer(options) {
     });
   }
   await fastify.listen({ port: port2, host: LOOPBACK_HOST });
+  const survival = survivalNotice(process.platform, fifoTransportAvailable());
+  if (survival) console.warn(survival);
   const identity = buildIdentity({ port: port2, projectPath: projectLoader.currentPath ?? "" });
   publishStudioIdentity(identity);
   setStudioIdentity(identity);

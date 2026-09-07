@@ -129,6 +129,12 @@ GitHub release from the changelog section.
 [archflow-studio](https://github.com/AZidan/archflow-studio) repo via its `npm run sync:plugin`.
 Edits made here are overwritten on the next sync.
 
+`.gitattributes` marks `plugin/dist/**` and `plugin/server/*.mjs` as
+`linguist-generated -diff`, so GitHub keeps them out of the repo's language statistics and collapses
+them in pull requests. Without it the repo reads as a JavaScript project — roughly 6 MB of bundled
+output against under 1 MB of framework content — and a Studio rebuild buries a real change under
+fifty files of hashed churn.
+
 ## Reporting a vulnerability
 
 See [SECURITY.md](SECURITY.md). Please do not open a public issue for anything exploitable.

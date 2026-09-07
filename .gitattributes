@@ -1,0 +1,16 @@
+# Archflow Studio's build output. Generated in the archflow-studio repo and
+# copied here by its `npm run sync:plugin` — never edited by hand in this repo.
+#
+# linguist-generated keeps it out of GitHub's language statistics (it is ~6 MB of
+# bundled JS against under 1 MB of actual framework content, so without this the
+# repo reads as a JavaScript project rather than a prompt framework) and collapses
+# it in pull requests.
+#
+# -diff stops git rendering a textual diff for files no human reads.
+plugin/dist/**        linguist-generated=true -diff
+plugin/server/*.mjs   linguist-generated=true -diff
+
+# Reference material the framework ships and agents read. It is authored, not
+# generated, but it is documentation rather than source.
+plugin/skills/**      linguist-documentation
+.archflow/**          linguist-documentation
