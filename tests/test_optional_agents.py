@@ -93,12 +93,23 @@ def test_story_review_runs_between_qa_and_acceptance():
 
 
 def test_init_and_onboard_ask_rather_than_assume():
+    """Checks the onboarding SURFACE, not one file.
+
+    onboard.md's stage detail lives in .archflow/phases/onboarding/; the
+    optional-agents question sits in finalize.md because that is when the files
+    are written. Asserting against onboard.md alone made this test fail on a
+    reorganisation that changed nothing about the behaviour.
+    """
     init = (COMMANDS / "init.md").read_text()
-    onboard = (COMMANDS / "onboard.md").read_text()
-    assert "optional_agents" in init and "optional_agents" in onboard
-    assert "Ask once" in init
-    # onboard defers to init rather than restating the options
-    assert "Step 4a2" in onboard
+    onboard_surface = (COMMANDS / "onboard.md").read_text()
+    for part in (REPO / ".archflow" / "phases" / "onboarding").glob("*.md"):
+        onboard_surface += part.read_text()
+
+    assert "optional_agents" in init
+    assert "Ask once" in init, "init must ask, not assume"
+    assert "optional_agents" in onboard_surface, "onboarding never sets optional_agents"
+    # onboard defers to init's question rather than restating the options
+    assert "Step 4a2" in onboard_surface
 
 
 def test_mode_switch_does_not_silently_rewrite_the_setting():

@@ -120,6 +120,14 @@ touches.
   rejection. Anything referencing the old agent name needs updating.
 - **All 17 agent descriptions rewritten** to one shape: what it does, when it runs, what it produces,
   what binds it. From 13,535 characters to 3,669, about 2,470 fewer tokens per session.
+- **Onboarding split into a router and per-stage sections.** `/archflow:onboard` is the recommended
+  entry for an existing codebase, so it is the first thing a new user loads, and it escaped the
+  `instructions.md` split. It was 1,889 lines across two files before any agent ran. The always-loaded
+  part is now 948, a 50% cut, with the audit checklist, the six agent prompt templates, the synthesis
+  rules and the finalization shapes moved to `.archflow/phases/onboarding/` and read per stage. The
+  untrusted-content security rule was also duplicated in full across both files; the phase file is now
+  its single definition and the command carries the operative summary, so nobody has to fetch a
+  security rule before obeying it.
 - **`instructions.md` split into a core and a reference.** It is injected on every session start,
   resume and compact, so every line was paid for repeatedly by every user. The always-loaded core is
   now ~1,100 tokens instead of ~5,700, an 81% cut, with the detail moved to `.archflow/reference.md`

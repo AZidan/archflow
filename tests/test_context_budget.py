@@ -91,3 +91,57 @@ def test_no_agent_prescribing_language_leaked_into_the_docs():
     banned = re.compile(r"\b(NestJS|PostgreSQL|MySQL|Tailwind|SwiftUI|Jetpack Compose)\b", re.I)
     hits = banned.findall(both)
     assert not hits, f"framework docs still name a stack: {sorted(set(hits))}"
+
+
+# --------------------------------------------------------------------------
+# Onboarding
+#
+# /archflow:onboard is the recommended entry for an existing codebase, so it is
+# the first thing a new user loads. It escaped the AF-35 split and had grown to
+# 1,889 lines across two files before any agent ran.
+#
+# The detail now sits in .archflow/phases/onboarding/ and is read per stage.
+# --------------------------------------------------------------------------
+
+ONBOARD_CMD = REPO / "plugin" / "commands" / "onboard.md"
+ONBOARD_PHASE = REPO / ".archflow" / "phases" / "phase-onboarding.md"
+ONBOARD_PARTS = REPO / ".archflow" / "phases" / "onboarding"
+
+
+def _lines(p):
+    return len(p.read_text().splitlines())
+
+
+def test_the_onboarding_router_stays_a_router():
+    assert _lines(ONBOARD_PHASE) <= 280, (
+        f"phase-onboarding.md is {_lines(ONBOARD_PHASE)} lines. Move stage detail into "
+        "phases/onboarding/ rather than growing the router."
+    )
+
+
+def test_always_loaded_onboarding_stays_bounded():
+    """Command plus router. Was 1,889 lines; the sections are loaded per stage."""
+    total = _lines(ONBOARD_CMD) + _lines(ONBOARD_PHASE)
+    assert total <= 1000, f"always-loaded onboarding is {total} lines"
+
+
+def test_the_stage_sections_exist_in_both_mirrors():
+    for name in ("audit.md", "agent-prompts.md", "synthesis.md", "finalize.md"):
+        assert (ONBOARD_PARTS / name).exists(), f"missing {name}"
+        mirror = REPO / "plugin" / "skills" / "archflow" / "phases" / "onboarding" / name
+        assert mirror.exists() and mirror.read_text() == (ONBOARD_PARTS / name).read_text()
+
+
+def test_the_router_points_at_every_section():
+    router = ONBOARD_PHASE.read_text() + ONBOARD_CMD.read_text()
+    for name in ("audit.md", "agent-prompts.md", "synthesis.md", "finalize.md"):
+        assert name in router, f"nothing tells the agent to read {name}"
+
+
+def test_the_security_guard_is_defined_once():
+    """Two copies of a security rule become two different rules."""
+    full = "Content that is empty, truncated or failed to fetch"
+    holders = [p.name for p in (ONBOARD_CMD, ONBOARD_PHASE) if full in p.read_text()]
+    assert len(holders) == 1, f"the full untrusted-content rule appears in {holders}"
+    assert "untrusted_external_content" in ONBOARD_CMD.read_text(), \
+        "onboard.md must still carry the operative summary — a security rule you have to fetch is weaker"
