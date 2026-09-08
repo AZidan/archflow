@@ -281,7 +281,7 @@ Two things make the result honest rather than aspirational: reconciliation moves
 
 ## Commands
 
-Twelve commands, all namespaced `/archflow:<name>`. You'll use three of them regularly.
+Every command is namespaced `/archflow:<name>`. You'll use three of them regularly.
 
 **Getting set up**: run once per project
 
@@ -301,6 +301,7 @@ Twelve commands, all namespaced `/archflow:<name>`. You'll use three of them reg
 | `/archflow:feature` | Add a story: to the backlog, or straight into the active release with a branch |
 | `/archflow:groom` | Detail or refine a story: a backlog stub into `ready`, or one already in a release with its gates re-derived |
 | `/archflow:contract` | The API contract architecture, or one story's endpoints |
+| `/archflow:issue` | Record a defect on a story being built, see what is open, or defer a minor one to the backlog |
 | `/archflow:doctor` | Check the environment and project state. `--fix` repairs drift after a plugin upgrade |
 | `/archflow:studio` | Open the visual workspace over the same files (beta) |
 
@@ -405,6 +406,7 @@ archflow/
 │   │   ├── autopilot.md             # /archflow:autopilot
 │   │   ├── design.md                # /archflow:design
 │   │   ├── contract.md              # /archflow:contract
+│   │   ├── issue.md                 # /archflow:issue
 │   │   ├── doctor.md                # /archflow:doctor
 │   │   ├── studio.md                # /archflow:studio
 │   │   └── setup-mcp.md             # /archflow:setup-mcp

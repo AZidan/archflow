@@ -254,6 +254,7 @@ All namespaced as `/archflow:<name>`. There is no `/archflow <sub>` argument for
 | `/archflow:groom [story-id]` | Detail or refine a story: a backlog stub into `ready`, or a story already in a release with its gates re-derived |
 | `/archflow:design [pick\|list\|name\|story-id]` | The project's design system, or one story's screens |
 | `/archflow:contract [story-id\|path <path>]` | The release's contract architecture, one story's endpoints, or where the contract lives |
+| `/archflow:issue [story-id \| defer ...]` | Record a defect on a story in the active release, list what is open, or defer a minor finding to the backlog. The only verb for deferral |
 | `/archflow:autopilot` | Run queued stories unattended on one branch after a blocker interview |
 | `/archflow:setup-mcp [tool]` | Connect an external tool over MCP (Jira, Notion, Linear, GitHub, SuperDesign) |
 | `/archflow:studio [stop\|status\|port n]` | Archflow Studio, a local web workspace over the same files (beta) |

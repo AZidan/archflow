@@ -63,6 +63,10 @@ Archflow — Phase-Based Development Workflow
   /archflow:contract      The API contract architecture, or one story's endpoints
                           (/archflow:contract S7-20 clears that story's contract gate)
 
+  /archflow:issue         Record a defect on a story being built, list what is open, or
+                          defer a minor one to the backlog
+                          (the only sanctioned way to defer — no agent may)
+
   /archflow:doctor        Check the environment and project state — what is missing and
                           how to fix it (--validate checks state files against schemas,
                           --fix repairs drift after a plugin upgrade)

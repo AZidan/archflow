@@ -18,7 +18,10 @@ Requires `pyyaml` and `pytest`. CI runs the same suite plus a mirror diff and a 
 | `test_migrate.py` | The v1.0 to v2.0 migration, both roadmap variants. Its real contract is that its output validates against the v2.0 schemas, not merely that it produced something |
 | `test_mirrors.py` | `.archflow/` and `plugin/skills/archflow/` stay byte-identical, and no second agents tree reappears |
 | `test_story_issues.py` | `issues[]` (ADR 004): the schema shape, the two semantic invariants — a `done` story with an open blocking issue, a `deferred` issue naming no backlog stub — and the story status ladder autopilot used to jump |
+| `test_command_registration.py` | Every shipped command is listed on all six surfaces that advertise the command set, and no surface names a command that no longer exists |
+| `test_issue_command.py` | `/archflow:issue` routes before it writes, and refuses the three things that would corrupt a release file: a defect on a story never built, a blocking issue deferred, a `done` story reopened silently |
 | `test_shared_agent_blocks.py` | Blocks duplicated across agent files on purpose — the design-system review gate and the issues protocol — stay byte-identical. Agent files are prompts, so rules are inlined rather than referenced; these tests are what that choice costs |
+| `test_site_publishing.py` | What reaches archflowai.dev, plus the command inventory: README and the site must list every shipped command, and neither may state a total (README said "Twelve" while shipping 14; the site listed 8 of a claimed 11) |
 | `test_plugin_manifest.py` | Frontmatter parses, descriptions stay short, no agent prescribes a technology (AF-32), no author paths or credentials ship, external installs stay pinned |
 
 ## Fixtures

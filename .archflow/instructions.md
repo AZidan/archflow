@@ -40,7 +40,7 @@ A story lives in exactly ONE place. Move it, never copy it. Schemas are in `.arc
 ## Commands
 
 `status` · `init` · `onboard` · `migrate` · `doctor` · `mode` · `release` · `feature` · `groom` ·
-`design` · `contract` · `autopilot` · `setup-mcp` · `studio`
+`design` · `contract` · `issue` · `autopilot` · `setup-mcp` · `studio`
 
 All namespaced as `/archflow:<name>`. Run `/archflow:status` for what to do next, or
 `/archflow:doctor` when something looks wrong. There is no `/archflow <sub>` argument form.
