@@ -1,0 +1,21 @@
+phase: 9
+phase_name: "Implementation"
+phase_file: "phases/phase-3-implementation.md"
+project_type: fullstack
+mode: turbo
+active_release: checkout-redesign
+onboarded: true
+api_contract_path: "docs/api-contract.md"
+stack:
+  language: typescript
+  backend: {framework: fastapi, database: postgresql, orm: sqlalchemy, auth: jwt}
+  web: {framework: react, language: typescript, styling: tailwind, state: null}
+  test: {unit: pytest, integration: httpx, e2e: playwright}
+  ci: github-actions
+  hosting: null
+  package_manager: uv
+phases_completed: [1, 2, 2.5]
+phases_partial: []
+phases_skipped: []
+phases_not_applicable: []
+gaps: []

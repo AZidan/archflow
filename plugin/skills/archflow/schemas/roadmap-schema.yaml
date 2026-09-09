@@ -17,18 +17,26 @@
 # is now a readiness pipeline, and `mode` (quick|full) was added.
 # =============================================================================
 
-schema_version: "2.0"
+# AUTHORITY on divergence: for `project_type`, `.archflow/project-settings.yaml` wins.
+# For `mode`, `.archflow/current-phase.yaml` wins. roadmap.yaml mirrors both for
+# readers that only load the index; when they disagree, the owning file is right and
+# /archflow:doctor reports the drift.
+#
+# Document root: `roadmap`
+$root: roadmap
+
+schema_version: "2.1"
 
 # -----------------------------------------------------------------------------
 # roadmap.yaml  (the INDEX; stays small forever)
 # -----------------------------------------------------------------------------
 roadmap:
   type: object
-  required: [schema_version, project, project_type, mode, epics, releases]
+  required: [schema_version, project, mode, epics, releases]
   properties:
     schema_version:
       type: string
-      const: "2.0"
+      const: "2.1"
 
     project:
       type: string
@@ -36,8 +44,9 @@ roadmap:
       example: "my-app"
 
     project_type:
-      type: string
-      enum: [fullstack, frontend_only, backend_only, mobile]
+      type: [string, "null"]
+      enum: [fullstack, frontend_only, backend_only, mobile, null]
+      required: false
       description: "Project type — determines which agents and phases apply"
 
     mode:
@@ -146,7 +155,7 @@ shipped_ref:
 # =============================================================================
 # Example — roadmap.yaml
 # =============================================================================
-# schema_version: "2.0"
+# schema_version: "2.1"
 # project: my-app
 # project_type: fullstack
 # mode: full

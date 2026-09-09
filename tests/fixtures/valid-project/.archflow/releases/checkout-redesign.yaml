@@ -1,0 +1,32 @@
+id: checkout-redesign
+name: "Checkout redesign"
+goal: "Cut checkout abandonment"
+status: in_progress
+stories:
+  - id: S2-07
+    title: "Saved payment methods"
+    priority: High
+    status: design_ready
+    gates: {needs_design: true, needs_contract: true}
+    design_artifact: "design-artifacts/S2-07/"
+    contract_endpoints: [listCards, addCard]
+    assigned: ui-engineer
+    description: "Store and reuse cards during checkout."
+    acceptance_criteria:
+      - {text: "User can pay with a saved card", met: false}
+    subtasks:
+      - {text: "Build saved-card selector", completed: false}
+    issues:
+      - id: I-1
+        summary: "Saved-card selector renders empty on a 204 response"
+        found_by: qa-engineer
+        severity: blocking
+        location: "frontend/src/checkout/SavedCards.tsx:42"
+        report: "docs/qa-reports/S2-07-qa.md"
+        status: open
+      - id: I-2
+        summary: "Card brand icon is 1px off the baseline"
+        found_by: a11y-expert
+        severity: minor
+        status: deferred
+        deferred_to: S2-19

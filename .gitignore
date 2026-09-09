@@ -24,19 +24,53 @@ docs/landing-page-cro-review.md
 .claude/skills/linkedin-post-creator/
 .claude/skills/reddit-post-creator/
 
-# Credentials. Never commit these — the ignore rule for docs/internal/ lives on
-# another branch, so secrets must be matched by pattern regardless of location.
+# Credentials. Matched by PATTERN, not by path: docs/internal/ is ignored below,
+# but a secret dropped anywhere else must be caught too.
 *.env
 !*.example.env
 ph.env
 
-# Internal working docs. The repo is public and this material carries unannounced
-# pricing, competitive analysis and marketing strategy. Block matches the one on
-# refactor/split-project-settings verbatim so the two merge without a conflict.
+# Internal marketing workspace — same reasoning.
+.claude/skills/archflow-marketing/
+.claude/product-marketing-context.md
+
+# HyperFrames video skills (local tooling, installed via `npx skills add heygen-com/hyperframes`)
+.agents/
+.claude/skills/*
+!.claude/skills/codemap/
+skills-lock.json
+
+# HyperFrames video projects (local renders)
+videos/
+
+# Acceptance test credentials (template is .example.yaml)
+.archflow/test-accounts.yaml
+
+# Agent scratch output
+Claude outputs/
+
+# Stray duplicate of docs/logo.png, which is the tracked one
+/logo.png
+
+# macOS
+.DS_Store
+
+# codemap index cache
+.codemap/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Internal working docs. NEVER published — docs/ is the Pages source, so anything
+# reachable there can end up on archflowai.dev.
+#
+# Ignored by DEFAULT so a new working doc is safe without anyone remembering a
+# list. The three exceptions below are design records that were already public
+# and are worth keeping in the repo; they are still excluded from the site build
+# by docs/_config.yml.
 docs/internal/*
 !docs/internal/archflow-releases-v2-proposal.md
 !docs/internal/archflow-skill-scaffolding-proposal.md
 !docs/internal/landing-page-plan.md
-
-# Internal marketing workspace — same reasoning.
-.claude/skills/archflow-marketing/

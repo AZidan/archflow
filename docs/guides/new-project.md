@@ -68,7 +68,7 @@ backend from quietly disagreeing for two weeks.
 ### Phase 3: Implementation
 
 `ui-engineer` and `api-engineer` run in parallel against the contract. Then `qa-engineer`, then
-`pm-maestro-reviewer` checks the work against the story's acceptance criteria and returns a verdict.
+`pm-reviewer` checks the work against the story's acceptance criteria and returns a verdict.
 A story isn't done until that verdict is ACCEPTED.
 
 ### Phases 4–6: Quality, Launch, Enhancement

@@ -1,5 +1,7 @@
 # Phase 1: Strategy & Planning
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+
 ## 🎯 Phase Objective
 Define business strategy, user personas, and the product **backlog** to establish project foundation.
 (Releases are carved from the backlog just-in-time, later — Phase 1 does NOT plan every release up front.)
@@ -52,7 +54,7 @@ Before updating `current-phase.yaml`, verify:
 
 1. **Artifacts exist**:
    - [ ] `.archflow/project-context.md` exists
-   - [ ] `.archflow/roadmap.yaml` exists (schema_version 2.0, has `mode` + epic labels)
+   - [ ] `.archflow/roadmap.yaml` exists (schema_version 2.1, has `mode` + epic labels)
    - [ ] `.archflow/backlog.yaml` exists (stubs)
 
 2. **Git state**:

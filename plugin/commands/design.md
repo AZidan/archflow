@@ -1,0 +1,315 @@
+---
+description: The project's design system, and per-story screen design that clears a story's design gate
+argument-hint: "[pick|list|<system-name>|<story-id>]"
+---
+
+# /archflow:design — Design system and per-story design
+
+Design splits into two kinds of work, exactly as `phase-2-design.md` defines it. This command owns
+both.
+
+1. **Foundation** — the design *system*, chosen once per project. Every agent that produces or
+   reviews UI builds against it for the rest of the project's life. Not a per-feature decision.
+2. **Per-story gate** — one story's *screens*, produced just-in-time one step ahead of its build.
+   Clears that story's `needs_design` gate.
+
+## Usage
+```
+/archflow:design                → show the current design system
+/archflow:design pick           → re-run the picker
+/archflow:design <name>         → switch straight to that system (still confirms)
+/archflow:design list           → list the available systems and the platforms each supports
+
+/archflow:design <story-id>     → design one story's screens and clear its design gate
+                                  e.g. /archflow:design S7-20
+```
+
+---
+
+## Step 0 — Which mode
+
+Match `$ARGUMENTS` against the story-id pattern from `release-schema.yaml`:
+
+```
+^S[0-9]+-[0-9]+[a-z]?$
+```
+
+- **Matches** → per-story gate. Go to Step 5.
+- **Anything else** (including empty, `pick`, `list`, a system name) → foundation. Continue below.
+
+Match on the pattern, never on a guess. A design system name can never collide: `CONTRIBUTING.md`
+governs system naming and no valid name begins with a capital `S` followed by digits.
+
+**State the mode in your first line of output**, so a mistyped story id surfaces immediately instead
+of silently re-running the picker.
+
+---
+
+## Step 1 — No arguments: show the current choice
+
+Read `.archflow/design-system.yaml`.
+
+**If it exists:**
+```
+Design system: {label}          ({design_system})
+Platform:      {platform}
+Library:       {library}
+Themes:        {theme.mode joined}
+Brand tokens:  {theme.brand_tokens or "none"}
+
+Reference: .archflow/design-systems/{design_system}.md
+
+Change it with /archflow:design pick.
+```
+
+**If it does not exist:**
+```
+No design system chosen for this project.
+
+Every UI agent needs one before it can produce wireframes, screens or UI code.
+Run /archflow:design pick to choose one.
+```
+Then stop.
+
+---
+
+## Step 2 — `list`
+
+Glob `.archflow/design-systems/*.md` (exclude `CONTRIBUTING.md`). For each, read the YAML
+frontmatter only and print `label`, `name`, and the platform ids in its `platforms` map. Then stop.
+
+---
+
+## Step 3 — `pick` / `<name>`: run the picker
+
+### 3a. Establish the platform
+
+If `.archflow/design-system.yaml` exists, offer its `platform` as the default. Otherwise ask:
+```
+What platform is the UI?
+```
+Options — use these exact ids:
+
+| id | what it means |
+|---|---|
+| `flutter` | Flutter app (any target) |
+| `android_compose` | Android native, Jetpack Compose |
+| `ios_swiftui` | iOS / iPadOS, SwiftUI |
+| `ipados_swiftui` | iPadOS, SwiftUI |
+| `macos_swiftui` | macOS, SwiftUI |
+| `ios_uikit` | iOS, UIKit |
+| `macos_appkit` | macOS, AppKit |
+| `react_native` | React Native (iOS + Android) |
+| `web_react` | Web, React |
+| `web_next` | Web, Next.js |
+| `web_vue` | Web, Vue |
+| `web_components` | Web, framework-free / web components |
+| `windows_winui` | Windows desktop, WinUI 3 |
+
+If the project has more than one UI surface (say a web console and a native app), ask which one
+this project's `.archflow/` covers. One project, one design system — a second surface with a
+genuinely different system belongs in its own Archflow project.
+
+### 3b. Filter the catalogue
+
+Glob `.archflow/design-systems/*.md`, excluding `CONTRIBUTING.md`. Read **only the frontmatter**
+of each file. Keep a system if its `platforms` map contains the chosen platform id as a key.
+
+This filter is a hard gate, not a preference. A system that does not list the platform is not
+offered and must not be selected — Liquid Glass has no `web_*` key precisely so that it can never
+be chosen for a web target. If the user names an incompatible system explicitly, refuse and say
+which platforms it does support.
+
+If no system survives the filter, offer `custom-tokens` (which lists every platform) and say so.
+
+### 3c. Present the options
+
+For each surviving file, show its `label` and **section 1** — the `# <Name>` heading and the
+single paragraph beneath it. Nothing else: not the traits, not the rules. That paragraph is
+written to be enough to choose on.
+
+Always append, whatever the platform:
+```
+Custom / match my brand — define your own tokens.json on a headless base.
+                          Choose this to match an existing brand exactly, or to
+                          white-label per customer.
+```
+which selects `custom-tokens`.
+
+### 3d. If `custom-tokens` was chosen
+
+Ask:
+```
+Where are your design tokens?
+  [Path]      — point me at an existing tokens.json / Style Dictionary / Figma variables export
+  [Generate]  — I'll write a starter design-artifacts/tokens.json for you to fill in
+  [Later]     — decide during Phase 2 (Design)
+```
+
+- **Path** — record it as `theme.brand_tokens`. Read it and confirm it can be normalised into the
+  three-tier shape described in `custom-tokens.md`; report anything that does not map.
+- **Generate** — ask for one brand colour, then write the starter template from the `## Setup`
+  section of `.archflow/design-systems/custom-tokens.md` to `design-artifacts/tokens.json`, with
+  the brand ramp seeded from that colour and the rest left blank. Record the path.
+- **Later** — `theme.brand_tokens: null`.
+
+### 3e. Confirm and write
+
+Show what will be written and get an explicit yes. Then write `.archflow/design-system.yaml`:
+
+```yaml
+design_system: material3          # matches the filename in .archflow/design-systems/
+platform: flutter                 # the project's UI platform
+library: flutter_material         # concrete package/library to import from
+theme:
+  mode: [light, dark]
+  brand_tokens: null              # optional path to a tokens.json override
+```
+
+- `design_system` — the chosen file's `name`.
+- `library` — the value at `platforms[platform]` in that file's frontmatter. Never invent one.
+- `theme.mode` — `[light, dark]` unless the user explicitly wants a single theme.
+
+### 3f. When this is a *change*, not a first choice
+
+If `.archflow/design-system.yaml` already existed and the system is changing, warn before writing:
+
+```
+Changing the design system does not retrofit anything already built.
+
+Existing screens, wireframes and design-artifacts/ were produced against {old label}
+and will keep its component names and tokens until they are rebuilt.
+
+  Affected: design-artifacts/, {frontend paths from project-context.md}
+
+Continue? [Yes / Cancel]
+```
+
+On yes: write the file, and append a line to `.archflow/history.yaml` recording the change,
+the date, and the reason the user gave.
+
+---
+
+## Step 4 — Report
+
+```
+Design system set: {label} ({name})
+Platform: {platform} · Library: {library}
+Written to .archflow/design-system.yaml
+
+Every UI agent will now read .archflow/design-systems/{name}.md before producing output.
+Component names in wireframes and handoffs come from that file's vocabulary table.
+```
+
+---
+
+## Step 5 — Per-story design gate
+
+`phase-2-design.md` § "Per-story design gate (readiness pipeline)" defines this transition. **Follow
+it; do not restate it here.** This command is the entry point, not a second definition.
+
+### 5a. Resolve the story
+
+1. Read `.archflow/current-phase.yaml` for `active_release` and `mode`, and
+   `.archflow/project-settings.yaml` for `project_type`.
+2. Read `.archflow/releases/{active_release}.yaml` and find the story by id.
+
+If it is not there, look in `.archflow/backlog.yaml`. If it is in the backlog, say so plainly and
+stop:
+```
+{story-id} is in the backlog, not the active release ({active_release}).
+
+Design runs one step ahead of a story's build, not ahead of its scheduling.
+Pull it into the release first with /archflow:feature, then design it.
+```
+Never design an unscheduled story silently.
+
+If it is in neither, say which release you searched and stop.
+
+**`backend_only`** → this command does not apply. Say so and stop.
+
+### 5b. Check the gate
+
+| State | Response |
+|---|---|
+| `gates.needs_design: false` | `{story-id} has no design gate — gates.needs_design is false. Nothing to do.` Stop. |
+| `status` already `design_ready`, `contract_ready`, `ready`, `in_progress`, `review` or `done` | Report the current status and the existing `design_artifact`. Offer to re-open the design only if the user asks explicitly. Stop. |
+| `status: parked` | Report the parked question. A parked story needs an answer, not screens. Stop. |
+| `status: spec_ready` and `needs_design: true` | Proceed. |
+
+Re-running is a no-op with an explanation, never a second artifact.
+
+### 5c. Mode
+
+In `quick` mode this gate auto-satisfies. Say so and offer the override rather than refusing
+outright — a solo developer may still want screens:
+```
+Mode is quick, so design gates auto-satisfy and {story-id} does not need this step.
+
+Run it anyway? [Design the screens / Skip]
+```
+In `full` mode, proceed without asking.
+
+### 5d. Design system first
+
+Read `.archflow/design-system.yaml`. If it is missing and the project has a UI, **STOP** and run
+Step 3 (`pick`) inline first. Do not guess a system and do not invent one for a single story.
+
+### 5e. Dispatch
+
+One `ux-designer`, scoped to this one story. The dispatch prompt carries the design-system line
+verbatim — a subagent never inherits this session's context:
+
+```
+ux-designer: story {story-id} → design-artifacts/{story-id}/
+
+  Design system: read .archflow/design-system.yaml, then read and follow
+  .archflow/design-systems/{design_system}.md before producing any output.
+
+  Story: {title}
+  Description: {description}
+  Acceptance criteria: {acceptance_criteria[].text}
+  Scope: this story only. Do not design screens for other stories.
+```
+
+### 5f. Present and wait
+
+Show what was produced and **stop for acceptance**. The agent produces the artifact; the human
+accepts it. Do not advance the status before that.
+
+```
+Design ready for review — {story-id}: {title}
+
+  {file list under design-artifacts/{story-id}/}
+
+  Design system: {label} ({design_system})
+
+Accept and advance {story-id} to design_ready? [Accept / Request changes]
+```
+
+On "request changes", re-dispatch with the feedback. Do not write the status.
+
+### 5g. On acceptance
+
+Apply the transition exactly as `phase-2-design.md` defines it: write `design_artifact` and advance
+`status`. Then report:
+
+```
+{story-id} → {new status}
+  design_artifact: design-artifacts/{story-id}/
+
+Next: {the next gate or "ready to build"}
+```
+
+---
+
+## Notes
+
+- Design-system files live in `.archflow/design-systems/`, copied there by `/archflow:init` and
+  `/archflow:onboard` from `${CLAUDE_PLUGIN_ROOT}/skills/archflow/design-systems/`. If the
+  directory is missing in a project, copy it from the plugin before running the picker.
+- These files are plain markdown reference documents — not skills, not commands. They are loaded
+  by explicit path, never by description matching.
+- To add a new system, follow `.archflow/design-systems/CONTRIBUTING.md`.
+- `backend_only` projects have no UI: skip this command entirely and write no
+  `design-system.yaml`.

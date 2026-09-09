@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags: ["[0-9]+.[0-9]+.[0-9]+"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish GitHub release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install --quiet pyyaml pytest
+
+      # A tag that does not match the manifests produces a release nobody can
+      # trust. Check before publishing, not after.
+      - name: Tag matches the manifests
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          python - "$TAG" <<'PY'
+          import json, sys
+          tag = sys.argv[1]
+          plugin = json.load(open("plugin/.claude-plugin/plugin.json"))["version"]
+          market = json.load(open(".claude-plugin/marketplace.json"))
+          entry = next(p for p in market["plugins"] if p["name"] == "archflow")["version"]
+          problems = []
+          if plugin != tag:
+              problems.append(f"plugin.json says {plugin}, tag is {tag}")
+          if entry != tag:
+              problems.append(f"marketplace.json says {entry}, tag is {tag}")
+          if problems:
+              print("\n".join(problems)); sys.exit(1)
+          print(f"manifests agree on {tag}")
+          PY
+
+      - name: Tests
+        run: python -m pytest tests/ -q
+
+      # The changelog section IS the release notes. If the tag has no section,
+      # the release would ship empty, so fail instead.
+      - name: Extract release notes
+        id: notes
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          python - "$TAG" <<'PY' > release-notes.md
+          import re, sys
+          tag = sys.argv[1]
+          text = open("CHANGELOG.md").read()
+          m = re.search(
+              rf"^## \[{re.escape(tag)}\][^\n]*\n(.*?)(?=^## \[|\Z)",
+              text, re.S | re.M,
+          )
+          if not m or not m.group(1).strip():
+              sys.stderr.write(f"CHANGELOG.md has no section for {tag}\n")
+              sys.exit(1)
+          print(m.group(1).strip())
+          PY
+          echo "--- notes ---"; cat release-notes.md
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "Archflow ${GITHUB_REF_NAME}" \
+            --notes-file release-notes.md \
+            --verify-tag

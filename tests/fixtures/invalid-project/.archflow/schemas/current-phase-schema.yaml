@@ -1,0 +1,163 @@
+# current-phase.yaml — canonical schema (v2.0)
+#
+# PROJECT-SCOPED phase + mode + stack tracker. Created by /archflow:init or
+# /archflow:onboard, read by every command and most agents.
+#
+# Validate with: /archflow:doctor --validate
+
+# Document root: the object below (no named definitions in this file)
+$root: null
+
+type: object
+required: [phase, phase_file, project_type, mode]
+
+properties:
+
+  phase:
+    type: [number, string]
+    description: "Current lifecycle phase. 2.25 and 2.5 are valid sub-phases."
+    enum: [1, 2, 2.25, 2.5, 3, 4, 5, 6]
+
+  phase_name:
+    type: string
+    example: "Implementation"
+
+  phase_file:
+    type: string
+    description: "Path, relative to .archflow/, of the phase instructions to load."
+    example: "phases/phase-3-implementation.md"
+
+  project_type:
+    type: [string, "null"]
+    enum: [fullstack, frontend_only, backend_only, mobile, null]
+    description: |
+      Filters which phases, agents and audit checks apply. null only before Phase 1
+      has determined it.
+
+  mode:
+    type: string
+    enum: [quick, full]
+    default: quick
+    description: "Ceremony mode. See /archflow:mode."
+
+  active_release:
+    type: [string, "null"]
+    description: "Slug of the one in_progress release; null when none is being built."
+    example: "v0.3-checkout"
+
+  onboarded:      {type: boolean, default: false}
+  onboarded_at:   {type: string, format: iso8601, required: false}
+
+  api_contract_path:
+    type: [string, "null"]
+    default: "docs/api-contract.md"
+    description: |
+      Where the API contract lives. Written by /archflow:init and /archflow:onboard,
+      updated by /archflow:contract. Every agent that reads the contract resolves it
+      through this field rather than hardcoding the default.
+
+  # ---------------------------------------------------------------------------
+  # stack — the project's technologies.
+  #
+  # THE AGENTS CARRY NO TECHNOLOGY OF THEIR OWN. They read this block and work in
+  # what it names. A null field means "not determined": the agent states what it
+  # found, names the candidates, and ASKS. It never assumes a default and never
+  # installs anything to satisfy one.
+  #
+  # Populated by /archflow:init (asks) or /archflow:onboard (detects). Starting
+  # points live in plugin/skills/archflow/stacks/*.yaml — those are seeds for
+  # init, never fallbacks an agent silently inherits.
+  #
+  # Every field is optional and nullable. Sections that do not apply to the
+  # project_type are omitted entirely (a backend_only project has no `web`).
+  # ---------------------------------------------------------------------------
+  stack:
+    type: object
+    required: false
+    properties:
+
+      language:
+        type: [string, "null"]
+        description: "Primary language, when one dominates."
+        example: "typescript"
+
+      backend:
+        type: object
+        required: false
+        properties:
+          framework: {type: [string, "null"], example: "nestjs"}
+          database:  {type: [string, "null"], example: "postgresql"}
+          orm:       {type: [string, "null"], example: "prisma"}
+          auth:      {type: [string, "null"], example: "jwt"}
+
+      web:
+        type: object
+        required: false
+        properties:
+          framework: {type: [string, "null"], example: "react"}
+          language:  {type: [string, "null"], example: "typescript"}
+          styling:   {type: [string, "null"], example: "tailwind"}
+          state:     {type: [string, "null"], example: "tanstack-query"}
+
+      mobile:
+        type: object
+        required: false
+        properties:
+          framework: {type: [string, "null"], example: "react-native"}
+          ios:       {type: [string, "null"], example: "swiftui"}
+          android:   {type: [string, "null"], example: "jetpack-compose"}
+
+      test:
+        type: object
+        required: false
+        properties:
+          unit:        {type: [string, "null"], example: "jest"}
+          integration: {type: [string, "null"], example: "supertest"}
+          e2e:
+            type: [string, "null"]
+            description: |
+              The end-to-end runner pm-reviewer uses for acceptance. When null,
+              pm-reviewer discovers it from the project and returns BLOCKED with the
+              candidates rather than installing one.
+            example: "playwright"
+
+      ci:      {type: [string, "null"], example: "github-actions"}
+      hosting: {type: [string, "null"], example: "vercel"}
+      package_manager: {type: [string, "null"], example: "pnpm"}
+
+      notes:
+        type: [string, "null"]
+        required: false
+        description: "Anything an agent should know that the fields above cannot express."
+
+  # Phase tracking
+  phases_completed:      {type: array, items: {type: [number, string]}}
+  phases_partial:        {type: array, items: {type: [number, string]}}
+  phases_skipped:        {type: array, items: {type: [number, string]}}
+  phases_not_applicable: {type: array, items: {type: [number, string]}}
+
+  gaps:
+    type: array
+    description: "Known gaps recorded at onboarding."
+    items: {type: string}
+
+# -----------------------------------------------------------------------------
+# Example
+# -----------------------------------------------------------------------------
+# phase: 3
+# phase_name: "Implementation"
+# phase_file: "phases/phase-3-implementation.md"
+# project_type: fullstack
+# mode: quick
+# active_release: v0.3-checkout
+# onboarded: true
+# api_contract_path: docs/api-contract.md
+# stack:
+#   language: typescript
+#   backend: {framework: fastapi, database: postgresql, orm: sqlalchemy, auth: jwt}
+#   web:     {framework: react, language: typescript, styling: tailwind}
+#   test:    {unit: pytest, integration: httpx, e2e: playwright}
+#   ci: github-actions
+#   hosting: fly.io
+#   package_manager: uv
+# phases_completed: [1, 2, 2.5]

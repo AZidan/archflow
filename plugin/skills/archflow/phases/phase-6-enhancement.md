@@ -1,5 +1,7 @@
 # Phase 6: Enhancement (On-Demand)
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+
 ## 🎯 Phase Objective
 Post-launch improvements, internationalization, and feature enhancements based on user feedback and analytics.
 
@@ -50,6 +52,13 @@ codemap show backend/src/              # Map backend modules
 
 # Then return to appropriate phase for new features:
 # Phase 2.5: api-contract-architect (if API changes needed)
+
+> **DESIGN SYSTEM IN THE PROMPT, NOT THE CONTEXT.** Every dispatch of a UI agent
+> (`ui-engineer`, `ux-designer`, `dsl-generator`, `ui-animation-designer`) must carry this line
+> verbatim in its prompt: *Design system: read `.archflow/design-system.yaml`, then read and follow
+> `.archflow/design-systems/{design_system}.md` before producing any output.* A subagent does not
+> inherit this session's context.
+
 # Phase 3: ui-engineer + api-engineer (for implementation)
 # Phase 4: qa-engineer + code-reviewer (for quality assurance)
 ```

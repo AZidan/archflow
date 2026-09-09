@@ -1,0 +1,32 @@
+# Deliberately permissive. These files are prompts, not prose for a linter:
+# long lines carry paths, and duplicate headings recur across phase files.
+config:
+  MD013: false   # line length
+  MD024: false   # duplicate headings
+  MD029: false   # ordered-list numbering
+  MD033: false   # inline HTML (the untrusted-content delimiters)
+  MD041: false   # first line need not be a heading (frontmatter)
+  MD036: false   # bold used as a pseudo-heading
+
+  # Blank-line padding. These four are the linter's biggest objection to this
+  # repo — 1,190 of 1,225 findings — and every one of them asks for a blank line
+  # in a file that is injected into an agent's context.
+  #
+  # That is a real cost, not a stylistic preference. Auto-fixing them added 793
+  # blank lines across 69 files and pushed the always-loaded onboarding path from
+  # 987 to 1,013 lines, failing test_always_loaded_onboarding_stays_bounded. The
+  # budget those tests defend is the whole reason phase files were split at all.
+  #
+  # A blank line before a list buys a human reader nothing an agent can use, and
+  # costs tokens in every session that loads the file. So: off.
+  MD022: false   # blanks around headings
+  MD031: false   # blanks around fences
+  MD032: false   # blanks around lists
+  MD040: false   # language on fences — most fences here are output, not code
+globs:
+  - "plugin/**/*.md"
+  - ".archflow/**/*.md"
+  - "*.md"
+ignores:
+  - "node_modules/**"
+  - "plugin/dist/**"

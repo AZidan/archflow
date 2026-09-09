@@ -54,7 +54,7 @@ Ask the remaining questions (one at a time):
 3. **"Acceptance criteria (what defines done)?"** — Ask for a list
 4. **"Priority?"** — High / Medium / Low
 5. **"Which part of the codebase?"** — Frontend / Backend / Both
-   - Only ask this if `project_type` is `fullstack` (read from `.archflow/current-phase.yaml`)
+   - Only ask this if `project_type` is `fullstack` (read from `.archflow/project-settings.yaml`)
    - For `backend_only`: assume Backend
    - For `frontend_only`: assume Frontend
 
@@ -102,7 +102,7 @@ In v2.0 stories are NOT in `roadmap.yaml` (that's the story-less index). Existin
 **backlog stub** (`backlog.yaml`) or an **`in_progress`/ready story in the active release**
 (`releases/{active_release}.yaml`).
 
-1. Read `.archflow/current-phase.yaml` (for `project_type`, `mode`, `active_release`),
+1. Read `.archflow/current-phase.yaml` (for `mode`, `active_release`) and `.archflow/project-settings.yaml` (for `project_type`),
    `.archflow/backlog.yaml`, and the active release file (if `active_release` is set). Use
    `roadmap.yaml` only for epic labels (to show epic names/scope).
 2. **Filter by project_type compatibility** (using the parent epic's `scope`, resolved via the story's
@@ -138,7 +138,7 @@ In v2.0 stories are NOT in `roadmap.yaml` (that's the story-less index). Existin
 
 ### Step 2: Add the story (v2.0 — backlog or active release)
 
-Read `.archflow/current-phase.yaml` to get `project_type`, `mode`, and `active_release`. Read
+Read `.archflow/current-phase.yaml` for `mode` and `active_release`, and `.archflow/project-settings.yaml` for `project_type`. Read
 `.archflow/roadmap.yaml` (index) for epic labels, `.archflow/backlog.yaml` for existing stubs, and the
 active release file (if any).
 
@@ -304,10 +304,17 @@ For each task in `.archflow/current-feature.yaml`:
 2. **Update `.archflow/current-feature.yaml`:** Set task status to `in_progress`, record branch name.
 
 3. **Implement** using appropriate agents:
-   - Check `project_type` from `.archflow/current-phase.yaml`
+   - Check `project_type` from `.archflow/project-settings.yaml`
    - `backend_only`: only use `api-engineer`
-   - `frontend_only`: only use `ui-engineer`
-   - `fullstack`: use both based on task `type` field
+
+> **DESIGN SYSTEM IN THE PROMPT, NOT THE CONTEXT.** Every dispatch of a UI agent
+> (`ui-engineer`, `ux-designer`, `dsl-generator`, `ui-animation-designer`) must carry this line
+> verbatim in its prompt: *Design system: read `.archflow/design-system.yaml`, then read and follow
+> `.archflow/design-systems/{design_system}.md` before producing any output.* A subagent does not
+> inherit this session's context.
+
+- `frontend_only`: only use `ui-engineer`
+- `fullstack`: use both based on task `type` field
 
 4. **Build and test locally** (per workflow.md testing checklist)
 

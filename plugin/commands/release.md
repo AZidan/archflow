@@ -1,5 +1,5 @@
 ---
-description: Release pipeline: see status, cut a new release, start building it, or ship it
+description: "Release pipeline: see status, cut a new release, start building it, or ship it"
 argument-hint: "[new <name> | start <slug> | ship]"
 ---
 

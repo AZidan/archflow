@@ -1,0 +1,37 @@
+id: broken
+name: "Broken release"
+goal: "Exercise the validator"
+status: in_progress
+stories:
+  - id: NOT-A-STORY-ID
+    title: "Bad id pattern"
+    priority: Critical
+    status: teleported
+    gates: {needs_design: true}
+    assigned: ui-engineer
+    description: "status is not on the ladder, id fails the pattern, gates is missing a required key."
+    acceptance_criteria:
+      - {text: "something", met: "yes"}
+  # Semantic violations (ADR 004): the shapes are all fine, the CONSISTENCY is not.
+  - id: S9-01
+    title: "Done with an open blocking issue, and a deferral that names nothing"
+    priority: Low
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: ui-engineer
+    description: "Every field here validates in isolation. The story is still wrong."
+    acceptance_criteria:
+      - {text: "something", met: true}
+    subtasks:
+      - {text: "something", completed: true}
+    issues:
+      - id: I-1
+        summary: "Still broken"
+        found_by: qa-engineer
+        severity: blocking
+        status: open
+      - id: I-2
+        summary: "Dropped rather than dispositioned"
+        found_by: code-reviewer
+        severity: minor
+        status: deferred

@@ -18,6 +18,9 @@
 # -----------------------------------------------------------------------------
 # Release  (releases/{slug}.yaml and releases/archive/{slug}.yaml)
 # -----------------------------------------------------------------------------
+# Document root: `release`
+$root: release
+
 release:
   type: object
   required: [id, name, goal, status, stories]
@@ -109,6 +112,17 @@ story:
       required: false
       description: "Path to the designer's handoff for this story; present once design_ready."
       example: "design-artifacts/S2-07/"
+    contract_endpoints:
+      type: array
+      required: false
+      description: |
+        Operation identifiers this story added to the API contract; present once contract_ready.
+        The counterpart to design_artifact — a POINTER into docs/api-contract.md, never a copy of
+        the endpoint definitions, which live in the contract and nowhere else. Written by
+        /archflow:contract {story-id}. Lets a consumer draw the reverse edge from an endpoint back
+        to the story that needed it.
+      items: {type: string}
+      example: ["listCartItems", "addCartItem"]
     assigned:
       type: string
       description: "Agent or role responsible for the current lane."
@@ -125,6 +139,15 @@ story:
       type: array
       items:
         $ref: "#/subtask"
+    issues:
+      type: array
+      required: false
+      description: |
+        Review findings against THIS story, written by the agent that found them —
+        qa-engineer, pm-reviewer, and any story_review optional agent. Absent or empty
+        means none found. See "#/issue" for the lifecycle and the two invariants.
+      items:
+        $ref: "#/issue"
     pulled_from:
       type: string
       required: false
@@ -211,8 +234,81 @@ acceptance_criterion:
     verified_by:
       type: string
       required: false
-      enum: [pm-maestro-reviewer, qa-engineer, manual]
+      enum: [pm-reviewer, qa-engineer, manual]
     verified_at:
+      type: string
+      format: iso8601
+      required: false
+
+# -----------------------------------------------------------------------------
+# Issue  (story.issues[])
+# -----------------------------------------------------------------------------
+# A defect found while REVIEWING a story, born inside that story's build loop and
+# resolved before the story is done. It is not a bug tracker: no assignee, no
+# comments, no age, three states.
+#
+# Two invariants, checked by validate_archflow.py because the schema dialect
+# cannot express either:
+#   1. A story may not be `status: done` while it holds an open blocking issue.
+#   2. `status: deferred` requires `deferred_to`.
+#
+# Distinctions that keep this from duplicating fields the story already has:
+#   acceptance_criterion — a condition that must hold, authored by the PM BEFORE
+#                          the build. A failing one is `met: false`.
+#   subtask              — planned scope. An issue is what the plan got wrong.
+#   parked               — an UNDECIDED question for the human. An issue is
+#                          BROKEN work for an agent.
+# -----------------------------------------------------------------------------
+issue:
+  type: object
+  required: [id, summary, found_by, severity, status]
+  properties:
+    id:
+      type: string
+      pattern: "^I-[0-9]+$"
+      description: "Story-scoped and sequential; next = highest existing + 1."
+      example: "I-1"
+    summary:
+      type: string
+      description: "One line that identifies the defect. The evidence lives in `report`."
+      example: "Saved-card selector renders empty on a 204 response"
+    found_by:
+      type: string
+      enum: [qa-engineer, pm-reviewer, code-reviewer, a11y-expert, performance-optimizer, human]
+      description: "The reviewer that found it. A reviewer never closes its own finding."
+    severity:
+      type: string
+      enum: [blocking, minor]
+      description: >
+        blocking — the story cannot be done until it is fixed.
+        minor    — may be deferred to the backlog, by the USER only. An agent may
+                   never downgrade or defer its own finding.
+    location:
+      type: string
+      required: false
+      description: "file:line, or the endpoint / screen the defect is in."
+      example: "frontend/src/checkout/SavedCards.tsx:42"
+    report:
+      type: string
+      required: false
+      description: |
+        POINTER to the report that already carries the repro, the expected-vs-actual and
+        the evidence — never a copy of it. Same discipline as `contract_endpoints`.
+      example: "docs/qa-reports/S2-07-qa.md"
+    status:
+      type: string
+      enum: [open, fixed, deferred]
+      description: >
+        open     — found, not yet fixed
+        fixed    — set by the implementation agent in the same edit that lands the fix
+        deferred — moved to the backlog; requires `deferred_to`. Kept as a tombstone so a
+                   reviewer can see the finding was dispositioned rather than missed
+    deferred_to:
+      type: [string, "null"]
+      required: false
+      description: "Backlog stub id this finding moved into. REQUIRED when status is deferred."
+      example: "S2-19"
+    at:
       type: string
       format: iso8601
       required: false
@@ -244,6 +340,7 @@ subtask:
 #     status: design_ready
 #     gates: {needs_design: true, needs_contract: true}
 #     design_artifact: design-artifacts/S2-07/
+#     contract_endpoints: [listCartItems, addCartItem]
 #     assigned: ui-engineer
 #     description: >
 #       Let users store and reuse cards during checkout.
@@ -251,4 +348,12 @@ subtask:
 #       - {text: "User can pay with a saved card", met: false}
 #     subtasks:
 #       - {text: "Build saved-card selector", completed: false}
+#     issues:
+#       - id: I-1
+#         summary: "Saved-card selector renders empty on a 204 response"
+#         found_by: qa-engineer
+#         severity: blocking
+#         location: "frontend/src/checkout/SavedCards.tsx:42"
+#         report: "docs/qa-reports/S2-07-qa.md"
+#         status: open
 #     pulled_from: backlog

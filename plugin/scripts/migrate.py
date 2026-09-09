@@ -285,8 +285,8 @@ def main():
         sys.exit(f"ERROR: {af}/roadmap.yaml not found")
 
     v1, variant, stories, sprints, sprint_of = load_v1(af)
-    if str(v1.get("schema_version")) == "2.0":
-        sys.exit("Already schema v2.0 — nothing to migrate.")
+    if str(v1.get("schema_version")) in ("2.0", "2.1"):
+        sys.exit("Already schema v2.x — nothing to migrate.")
 
     # active sprint selection (one in_progress -> active release)
     inprog = [s for s in sprints if sprint_status(s) == "in_progress"]
@@ -432,7 +432,7 @@ def main():
     epic_key_order = sorted(epic_names, key=lambda x: (0, int(x[1:])) if x[1:].isdigit() else (1, 0))
     epics = [{"id": k, "name": epic_names[k], "scope": "both"} for k in epic_key_order]
 
-    index = {"schema_version": "2.0", "project": txt(v1.get("project")) or "project",
+    index = {"schema_version": "2.1", "project": txt(v1.get("project")) or "project",
              "project_type": v1.get("project_type", "fullstack"), "mode": "full",
              "epics": epics}
     if active_slug:                     # omit the key entirely when nothing is in progress

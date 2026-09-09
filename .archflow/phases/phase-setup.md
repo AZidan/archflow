@@ -1,5 +1,7 @@
 # Phase Setup & Inference System
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+
 This file is loaded ONLY when `.archflow/current-phase.yaml` is missing from a project directory. It handles phase detection and initialization.
 
 ## 🔍 Existing Project Detection
@@ -138,24 +140,51 @@ echo "6. Enhancement"
 
 ## 🗺️ Codemap Initialization
 
-When setting up any project, initialize Codemap for token-efficient navigation:
+Codemap is an OPTIONAL token optimization. Agents use `codemap find` and `codemap show` instead of
+scanning whole files, which cuts navigation token consumption by roughly 60-80%. Archflow works
+without it — every agent falls back to Glob/Grep/Read.
 
 ```bash
-# Install codemap (if not available)
-pip install git+https://github.com/AZidan/codemap.git
-
-# Initialize index for the project
-codemap init .
-
-# Start watch mode for live index updates
-codemap watch . -q &
+# Is it already here?
+command -v codemap >/dev/null 2>&1 && codemap init . || echo "codemap not installed — skipping"
 ```
 
-This enables all agents to use `codemap find` and `codemap show` instead of scanning full files, reducing token consumption by 60-80%.
+If it is NOT installed, do not install it silently. Tell the user what it is, what it costs them not
+to have it, and the exact command, then let them decide:
+
+```bash
+# Pinned to the v1.3.1 release on purpose — see SECURITY.md, which records the commit
+# this tag must resolve to. Never replace it with a branch name.
+pip install "git+https://github.com/AZidan/codemap.git@v1.3.1"
+```
+
+`codemap watch . -q &` keeps the index live, but it is a long-lived background process. Start it
+only if the user agrees, and tell them `pkill -f "codemap watch"` stops it.
 
 For existing projects with code already in place, run `codemap stats` after init to verify the index covers the codebase.
 
 ## 📋 Phase Template Creation
+
+Two files, split by lifetime: the cursor is rewritten at every phase transition, the settings
+almost never. Create BOTH — a project with only the cursor is in a state `/archflow:doctor`
+reports as drift.
+
+### Generated project-settings.yaml
+```yaml
+schema_version: "2.1"
+
+# Drives which agents, phases and audit checks apply
+project_type: "{fullstack|frontend_only|backend_only|mobile}"
+
+api_contract_path: "docs/api-contract.md"
+
+# Agents carry no technology of their own — they read this and build in what it names.
+# Leave null for anything inference cannot establish; the agent asks rather than assumes.
+stack: {}
+
+# Which optional agents run automatically. Empty = available on request only.
+optional_agents: {}
+```
 
 ### Generated current-phase.yaml
 ```yaml
@@ -164,10 +193,7 @@ phase: {detected_phase}
 phase_name: "{detected_phase_name}"
 phase_file: ".archflow/phases/phase-{detected_phase}-{name}.md"
 
-# Project type (drives which agents/phases apply)
-project_type: "{fullstack|frontend_only|backend_only|mobile}"
-
-# v2.0 — ceremony mode + active release pointer
+# Ceremony mode + active release pointer
 mode: "{quick|full}"          # quick = /archflow:init default; full = onboard of a substantial repo
 active_release: null          # slug of the ONE in_progress release (cached from roadmap.yaml); null when none building
 

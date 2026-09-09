@@ -228,13 +228,18 @@ Phase 1    Strategy & Planning         product-strategist, feature-planner
 Phase 2    Design                      ux-designer, dsl-generator
 Phase 2.25 High-Fidelity Screens       SuperDesign MCP (optional)
 Phase 2.5  API Architecture            api-contract-architect
-Phase 3    Implementation (Parallel)   ui-engineer + api-engineer, qa-engineer, pm-maestro-reviewer
-Phase 4    Quality & Optimization      code-reviewer, performance-optimizer, pm-maestro-reviewer
+Phase 3    Implementation (Parallel)   ui-engineer + api-engineer, qa-engineer, pm-reviewer
+Phase 4    Quality & Optimization      code-reviewer, performance-optimizer, pm-reviewer
 Phase 5    Launch & Operations         devops-engineer, post-launch-analyst
 Phase 6    Enhancement (On-Demand)     i18n-engineer, post-launch-analyst, any agent as needed
 ```
 
-Each phase has explicit completion criteria, expected output artifacts, and requires user approval before advancing.
+Six numbered phases, plus two optional sub-phases: 2.25 needs the SuperDesign MCP server and can
+be skipped entirely, and 2.5 is skipped for projects with no API. That is why you will see both
+"6 phases" and eight phase files.
+
+Each phase has explicit completion criteria, expected output artifacts, and requires user approval
+before advancing.
 
 ---
 
@@ -267,8 +272,8 @@ Two things make the result honest rather than aspirational: reconciliation moves
 | 2. Design | `ux-designer`, `dsl-generator` |
 | 2.25 High-Fidelity (optional) | SuperDesign MCP |
 | 2.5 API Architecture | `api-contract-architect` |
-| 3. Implementation | `ui-engineer`, `api-engineer`, `qa-engineer`, `pm-maestro-reviewer` |
-| 4. Quality & Optimization | `code-reviewer`, `performance-optimizer`, `pm-maestro-reviewer` |
+| 3. Implementation | `ui-engineer`, `api-engineer`, `qa-engineer`, `pm-reviewer` |
+| 4. Quality & Optimization | `code-reviewer`, `performance-optimizer`, `pm-reviewer` |
 | 5. Launch & Operations | `devops-engineer`, `post-launch-analyst` |
 | 6. Enhancement | `i18n-engineer`, any agent as needed |
 
@@ -276,7 +281,7 @@ Two things make the result honest rather than aspirational: reconciliation moves
 
 ## Commands
 
-Eleven commands, all namespaced `/archflow:<name>`. You'll use three of them regularly.
+Every command is namespaced `/archflow:<name>`. You'll use three of them regularly.
 
 **Getting set up**: run once per project
 
@@ -284,6 +289,7 @@ Eleven commands, all namespaced `/archflow:<name>`. You'll use three of them reg
 |---------|-------------|
 | `/archflow:init` | Initialize a new project at Phase 1 |
 | `/archflow:onboard` | Analyze an existing codebase and generate all artifacts |
+| `/archflow:design` | The design system every UI agent builds against (set once), or one story's screens (`/archflow:design S7-20`). Shows the current choice with no args) |
 | `/archflow:setup-mcp` | Connect external tools (Jira, Notion, Linear, GitHub, etc.) |
 | `/archflow:migrate` | Upgrade a v1.0 project to schema v2.0 (releases replace phases) |
 
@@ -293,7 +299,10 @@ Eleven commands, all namespaced `/archflow:<name>`. You'll use three of them reg
 |---------|-------------|
 | `/archflow:status` | Current phase, active release, progress, and what to run next |
 | `/archflow:feature` | Add a story: to the backlog, or straight into the active release with a branch |
-| `/archflow:groom` | Turn a backlog stub into a `ready` story (acceptance criteria, subtasks, gates) |
+| `/archflow:groom` | Detail or refine a story: a backlog stub into `ready`, or one already in a release with its gates re-derived |
+| `/archflow:contract` | The API contract architecture, or one story's endpoints |
+| `/archflow:issue` | Record a defect on a story being built, see what is open, or defer a minor one to the backlog |
+| `/archflow:doctor` | Check the environment and project state. `--fix` repairs drift after a plugin upgrade |
 | `/archflow:studio` | Open the visual workspace over the same files (beta) |
 
 **Planning and pace**: when the project grows
@@ -353,13 +362,14 @@ Archflow manages these files in your project:
 | `.archflow/backlog.yaml` | Unscheduled scope: stubs and groomed `ready` stories |
 | `.archflow/releases/{slug}.yaml` | Stories committed to a release, with gates and acceptance criteria |
 | `.archflow/history.yaml` | What shipped, when, and which files it touched |
-| `.archflow/current-phase.yaml` | Phase state tracker (auto-created) |
+| `.archflow/current-phase.yaml` | Where the project is: phase, mode, active release |
+| `.archflow/project-settings.yaml` | How the project works: type, stack, contract path, optional agents |
 | `.archflow/current-feature.yaml` | Active feature scope and task tracking |
-| `docs/api-contract.md` | API specifications (single source of truth) |
+| `docs/api-contract.md` | API specifications (single source of truth). Path is configurable via `api_contract_path` |
 | `design-artifacts/styled-dsl.yaml` | Component specifications with styling |
 | `design-artifacts/theme.yaml` | Design system tokens |
 | `design-artifacts/wireframes/` | Screen layouts |
-| `docs/acceptance-reports/` | Maestro acceptance test results |
+| `docs/acceptance-reports/` | End-to-end acceptance results and verdicts |
 
 ---
 
@@ -373,12 +383,17 @@ Archflow is distributed as a Claude Code plugin marketplace. The plugin contains
 ```
 archflow/
 ├── .claude-plugin/marketplace.json  # Marketplace registry
+├── CHANGELOG.md                     # Release history
+├── CONTRIBUTING.md                  # How to add an agent, command or schema
+├── SECURITY.md                      # Pinning policy, untrusted content, shell surface
+├── .github/workflows/ci.yml         # Mirror check, schema validation, tests
+├── tests/                           # Framework tests + fixture projects
 ├── plugin/                          # Installable plugin
 │   ├── .claude-plugin/plugin.json   # Plugin manifest
-│   ├── hooks/                       # Two SessionStart hooks
+│   ├── hooks/                       # SessionStart, PreToolUse guard, Stop check
 │   │   ├── hooks.json               #   registration for both
 │   │   └── studio-session-context.mjs #  publishes session id/cwd for Studio companion mode
-│   ├── agents/                      # 17 specialized agent definitions
+│   ├── agents/                      # 17 specialized agent definitions (the ONLY agents tree)
 │   ├── commands/                    # Slash commands (namespaced /archflow:<name>)
 │   │   ├── status.md                # /archflow:status
 │   │   ├── init.md                  # /archflow:init
@@ -389,6 +404,10 @@ archflow/
 │   │   ├── groom.md                 # /archflow:groom
 │   │   ├── feature.md               # /archflow:feature
 │   │   ├── autopilot.md             # /archflow:autopilot
+│   │   ├── design.md                # /archflow:design
+│   │   ├── contract.md              # /archflow:contract
+│   │   ├── issue.md                 # /archflow:issue
+│   │   ├── doctor.md                # /archflow:doctor
 │   │   ├── studio.md                # /archflow:studio
 │   │   └── setup-mcp.md             # /archflow:setup-mcp
 │   ├── scripts/migrate.py           # v1.0 → v2.0 migration engine (used by /archflow:migrate)
@@ -400,6 +419,8 @@ archflow/
 │       ├── workflow.md              # Git branching strategy
 │       ├── phases/                  # Phase-specific instruction files (10 files)
 │       ├── schemas/                 # roadmap / release / backlog / history / autopilot schemas
+│       ├── design-systems/          # One markdown file per design system + examples/ screenshots
+│       │                            #   material3 · liquid-glass · shadcn · fluent2 · custom-tokens
 │       ├── base-dsl-structure.yaml  # DSL template for design artifacts
 │       └── mcp-registry.yaml        # Curated MCP server registry
 ├── README.md
@@ -411,7 +432,10 @@ archflow/
 ```
 your-project/
 ├── .archflow/                       # Project state (version-controlled)
-│   ├── current-phase.yaml           # Phase state tracker
+│   ├── current-phase.yaml           # Where the project is (cursor)
+│   ├── project-settings.yaml        # How the project works (settings)
+│   ├── design-system.yaml           # The chosen design system (name, platform, library, theme)
+│   ├── design-systems/              # The design-system reference files, copied from the plugin
 │   ├── project-context.md           # Business goals, tech stack, architecture
 │   ├── roadmap.yaml                 # Index: epics, release pipeline, mode
 │   ├── backlog.yaml                 # Unscheduled scope (stubs + groomed stories)
@@ -448,10 +472,92 @@ These integrations are primarily used during `/archflow:onboard` to pull existin
 
 ## Requirements
 
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (latest version)
-- Git
-- Node.js 18+ (required: Archflow Studio runs on it, as does the `SessionStart` hook that ships with
-  the plugin. Some MCP servers need it too.)
+### Required
+
+| Tool | Why | Used by |
+|---|---|---|
+| [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) | Archflow is a Claude Code plugin | Everything |
+| Git | Branch-per-story workflow, release tags, the ship ritual | All phases |
+| Node.js 18+ | Archflow Studio and the `SessionStart` hook that ships with the plugin; some MCP servers too | Studio, hooks |
+
+### Recommended
+
+**[codemap](https://github.com/AZidan/codemap) — token optimization.** Archflow's agents navigate
+your codebase through a structural index instead of reading whole files: `codemap find` locates a
+symbol, `codemap show` gives a file's shape, and the agent then reads only the line ranges it needs.
+On a real codebase that cuts token consumption on navigation by roughly 60-80%, which is the
+difference between a story that fits in one context window and one that does not.
+
+```bash
+pip install "git+https://github.com/AZidan/codemap.git@v1.3.1"
+```
+
+Archflow works without it. Every agent falls back to ordinary file search, and you will simply pay
+more tokens per story. Run `/archflow:doctor` to see what is installed.
+
+### Per project type
+
+| Tool | Why | Needed for |
+|---|---|---|
+| Python 3 + PyYAML | Runs the v1.0 to v2.0 migration script | `/archflow:migrate` only |
+| An end-to-end test runner | `pm-reviewer` verifies acceptance criteria against the running app | `fullstack`, `frontend_only`, `mobile` |
+
+Archflow does not pick your e2e tool and never installs one. `pm-reviewer` uses whatever the project
+already has — Playwright, Cypress, Detox, XCUITest, Espresso, Maestro, or a backend HTTP test stack.
+If a project has none, it stops and asks you to choose rather than deciding for you.
+
+### Supply chain
+
+Everything Archflow can install from outside your machine is listed here, pinned to an immutable
+ref. Nothing installs without asking you first.
+
+| Artifact | Source | Pin | Used by |
+|---|---|---|---|
+| codemap | `github.com/AZidan/codemap` | `v1.3.1` (`7e24f23ecbc7`) | Optional token optimization, all phases |
+| superdesign-mcp-claude-code | `github.com/AZidan/superdesign-mcp-claude-code` | `1bd2d1766b1e` | Phase 2.25 hi-fi screens (optional phase) |
+
+A `git+https://` or `npx github:` reference without a `@<ref>` or `#<ref>` tracks a moving branch,
+which means a compromise upstream reaches every user on their next install. If you edit one of those
+lines, keep the pin.
+
+codemap is pinned to a **release tag** because it publishes releases. A tag is readable but mutable,
+so the commit it must resolve to is recorded beside it. Verify with:
+
+```bash
+git ls-remote https://github.com/AZidan/codemap.git 'refs/tags/v1.3.1^{}'
+# expect 7e24f23ecbc74165d5d980b020fb69aa23d6cd95
+```
+
+superdesign-mcp-claude-code publishes no releases, so it stays pinned to a raw commit. To move
+either to a newer version, update the ref here, at the install site and in `SECURITY.md`, and note
+it in the changelog.
+
+Archflow never auto-updates either of these.
+
+### What Archflow runs on your machine
+
+Archflow drives Claude Code, so everything runs as ordinary tool calls you can see and approve:
+
+- **Git** — branch, commit, tag, and read history. It never merges to `main`; that stays yours.
+- **File writes** — inside `.archflow/`, `docs/`, `design-artifacts/`, and your source tree.
+- **Project commands** — your own test, build and lint scripts.
+- **One optional background process** — `codemap watch`, which keeps the index current. It is
+  opt-in, it starts only if codemap is installed, and `pkill -f "codemap watch"` stops it.
+- **An upgrade notice.** When the plugin updates ahead of your project's `.archflow/`, a
+  `SessionStart` hook says so before your first command, names what drifted, and points at
+  `/archflow:doctor --fix`. It goes quiet once the project is repaired.
+- **Two guard hooks, scoped to Archflow projects.** In a directory with an `.archflow/`, a
+  `PreToolUse` hook blocks a force-push to `main`, and any push, checkout or merge touching `main`
+  while an unattended `/archflow:autopilot` run is live. In any other repo it exits immediately and
+  changes nothing. A `Stop` hook warns when state files have drifted from their schemas. Both fail
+  open, so a bug in a guard can never break your session.
+
+External code it can install is listed under [Supply chain](#supply-chain), and nothing there
+installs without asking you first.
+
+Archflow Studio additionally needs the `claude` binary on your `PATH`, which you already have if
+Claude Code works, and a project on schema v2.0. A v1.0 project opens read-only until you take the
+one-button migration Studio offers.
 
 Archflow Studio additionally needs the `claude` binary on your `PATH`, which you already have if
 Claude Code works, and a project on schema v2.0. A v1.0 project opens read-only until you take the
@@ -461,6 +567,11 @@ one-button migration Studio offers.
 
 ## Contributing
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, the mirrored-tree rule, how to add an agent or a
+command, and what an agent must never contain. Participation is covered by our
+[Code of Conduct](CODE_OF_CONDUCT.md), and security reports go through [SECURITY.md](SECURITY.md).
+Release history is in [CHANGELOG.md](CHANGELOG.md).
+
 **Archflow Studio's files are generated, not authored here.** `plugin/server/`, `plugin/dist/`,
 `plugin/commands/studio.md` and `plugin/hooks/studio-session-context.mjs` are built in the
 [archflow-studio](https://github.com/AZidan/archflow-studio) repo and copied in by its
@@ -469,10 +580,10 @@ one-button migration Studio offers.
 everyone, including people who never open Studio, which is a deliberate tradeoff for one namespace
 and one install.
 
-
 Contributions are welcome. Areas of interest:
 
-- **New agents**: Add specialized agents in `agents/` following the existing format
+- **New agents**: Add specialized agents in `plugin/agents/` following the existing format, and
+  wire them into a phase file — an agent that no phase references can never be dispatched
 - **Phase improvements**: Refine phase instructions in `.archflow/phases/`
 - **MCP registry**: Add tool integrations in `skills/archflow/mcp-registry.yaml`
 - **Bug fixes**: Open an issue or submit a PR

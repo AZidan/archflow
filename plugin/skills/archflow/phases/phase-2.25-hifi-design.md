@@ -1,5 +1,7 @@
 # Phase 2.25: High-Fidelity Design (SuperDesign MCP)
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+
 ## 🎯 Phase Objective
 Generate polished, high-fidelity HTML screens from `styled-dsl.yaml` for visual approval before any code is written. This prevents expensive rework by catching design issues early.
 
@@ -8,6 +10,12 @@ Generate polished, high-fidelity HTML screens from `styled-dsl.yaml` for visual 
 - `superdesign_iterate` - Refine screens based on user feedback
 - `superdesign_gallery` - Create browsable gallery of all generated screens
 - `dsl-generator` agent - Sync approved design changes back to `styled-dsl.yaml`
+
+> **DESIGN SYSTEM IN THE PROMPT, NOT THE CONTEXT.** Every dispatch of a UI agent
+> (`ui-engineer`, `ux-designer`, `dsl-generator`, `ui-animation-designer`) must carry this line
+> verbatim in its prompt: *Design system: read `.archflow/design-system.yaml`, then read and follow
+> `.archflow/design-systems/{design_system}.md` before producing any output.* A subagent does not
+> inherit this session's context.
 
 ## 📚 Prerequisites
 - Phase 2 outputs: `design-artifacts/styled-dsl.yaml`, `design-artifacts/theme.yaml`
@@ -20,13 +28,13 @@ Before starting, verify SuperDesign MCP tools are available:
 ```bash
 # Test tool availability by checking for superdesign_generate
 # If tools are NOT available, provide setup instructions:
-#   Add to MCP settings: npx -y github:AZidan/superdesign-mcp-claude-code
+#   Add to MCP settings: npx -y github:AZidan/superdesign-mcp-claude-code#1bd2d1766b1e4d9a5828cd553da0f4e67e5a3ffe
 # Or offer to skip directly to Phase 2.5
 ```
 
 If SuperDesign MCP is unavailable:
 1. Inform the user that hi-fi screen generation requires the SuperDesign MCP server
-2. Provide setup instructions: add `npx -y github:AZidan/superdesign-mcp-claude-code` to MCP config
+2. Provide setup instructions: add `npx -y github:AZidan/superdesign-mcp-claude-code#1bd2d1766b1e4d9a5828cd553da0f4e67e5a3ffe` to MCP config
 3. Offer to skip Phase 2.25 and proceed directly to Phase 2.5 (API Architecture)
 
 ## 🚀 Execution Steps

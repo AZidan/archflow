@@ -1,0 +1,159 @@
+# project-settings.yaml — canonical schema (v2.1)
+#
+# HOW THIS PROJECT WORKS. Set at /archflow:init or /archflow:onboard, then changed
+# rarely and deliberately.
+#
+# Split from current-phase.yaml in schema v2.1. That file had accreted into two
+# things: a CURSOR saying where you are, rewritten at every phase transition, and
+# SETTINGS describing the project, which change almost never. Mixing them meant
+# every phase transition dirtied the file holding your stack config, so a real
+# settings change was buried in phase churn.
+#
+# `mode` deliberately stayed in current-phase.yaml: it is consulted on nearly
+# every operation and is already mirrored in roadmap.yaml.
+#
+# Document root: the object below (no named definitions in this file)
+$root: null
+
+type: object
+required: [schema_version]
+
+properties:
+
+  schema_version:
+    type: string
+    const: "2.1"
+    description: "Schema generation. 2.1 introduced this file. Same rule shape as roadmap.yaml."
+
+  project_type:
+    type: [string, "null"]
+    enum: [fullstack, frontend_only, backend_only, mobile, null]
+    description: |
+      Filters which phases, agents and audit checks apply, and shapes story fields —
+      backend stories describe endpoints and services, frontend stories describe pages
+      and components.
+
+      null ONLY before Phase 1 has determined it. /archflow:init writes null and
+      Phase 1 sets it; /archflow:onboard detects it up front. A project past Phase 1
+      with null here is a gap /archflow:doctor reports.
+
+  api_contract_path:
+    type: [string, "null"]
+    default: "docs/api-contract.md"
+    description: |
+      Where the API contract lives. Every agent that reads the contract resolves it
+      through this field rather than hardcoding the default. Updated by
+      /archflow:contract.
+
+  # ---------------------------------------------------------------------------
+  # stack — the project's technologies.
+  #
+  # THE AGENTS CARRY NO TECHNOLOGY OF THEIR OWN. They read this block and work in
+  # what it names. A null field means "not determined": the agent states what it
+  # found, names the candidates, and ASKS. It never assumes a default and never
+  # installs anything to satisfy one.
+  #
+  # Populated by /archflow:init (asks) or /archflow:onboard (detects). Starting
+  # points live in .archflow/stacks/*.yaml — seeds for init, never fallbacks an
+  # agent silently inherits.
+  #
+  # Every field is optional and nullable. Sections that do not apply to the
+  # project_type are omitted entirely (a backend_only project has no `web`).
+  # ---------------------------------------------------------------------------
+  stack:
+    type: object
+    required: false
+    properties:
+      language: {type: [string, "null"], example: "typescript"}
+      backend:
+        type: object
+        required: false
+        properties:
+          framework: {type: [string, "null"], example: "nestjs"}
+          database:  {type: [string, "null"], example: "postgresql"}
+          orm:       {type: [string, "null"], example: "prisma"}
+          auth:      {type: [string, "null"], example: "jwt"}
+      web:
+        type: object
+        required: false
+        properties:
+          framework: {type: [string, "null"], example: "react"}
+          language:  {type: [string, "null"], example: "typescript"}
+          styling:   {type: [string, "null"], example: "tailwind"}
+          state:     {type: [string, "null"], example: "tanstack-query"}
+      mobile:
+        type: object
+        required: false
+        properties:
+          framework: {type: [string, "null"], example: "react-native"}
+          ios:       {type: [string, "null"], example: "swiftui"}
+          android:   {type: [string, "null"], example: "jetpack-compose"}
+      test:
+        type: object
+        required: false
+        properties:
+          unit:        {type: [string, "null"], example: "jest"}
+          integration: {type: [string, "null"], example: "supertest"}
+          e2e:
+            type: [string, "null"]
+            description: |
+              The end-to-end runner pm-reviewer uses for acceptance. When null,
+              pm-reviewer discovers it from the project and returns BLOCKED with the
+              candidates rather than installing one.
+            example: "playwright"
+      ci:              {type: [string, "null"], example: "github-actions"}
+      hosting:         {type: [string, "null"], example: "vercel"}
+      package_manager: {type: [string, "null"], example: "pnpm"}
+      notes:
+        type: [string, "null"]
+        required: false
+        description: "Anything an agent should know that the fields above cannot express."
+
+  # ---------------------------------------------------------------------------
+  # optional_agents — which non-core agents join automatically, and where.
+  #
+  # Hook points:
+  #   design           Phase 2, alongside the per-story design gate
+  #   story_review     Phase 3, after qa-engineer and before pm-reviewer
+  #   release_quality  Phase 4, the release-wide quality pass
+  #   pre_ship         Phase 5, before the ship ritual
+  #
+  # An EMPTY list means available but never automatic: the agent still exists and
+  # is dispatched on request. That is the difference between discoverable and
+  # mandatory.
+  #
+  # Defaults are pre-selected by `mode` (in current-phase.yaml) and ASKED, never
+  # assumed: quick starts with nothing automatic, full starts with code-reviewer at
+  # story_review + release_quality and a11y-expert at story_review on a UI project.
+  # ---------------------------------------------------------------------------
+  optional_agents:
+    type: object
+    required: false
+    description: "Agent name -> the hook points at which it runs automatically."
+    propertyNames:
+      enum: [a11y-expert, code-reviewer, doc-writer, ui-animation-designer]
+    additionalProperties:
+      type: array
+      items:
+        type: string
+        enum: [design, story_review, release_quality, pre_ship]
+
+# -----------------------------------------------------------------------------
+# Example — project-settings.yaml
+# -----------------------------------------------------------------------------
+# schema_version: "2.1"
+# project_type: fullstack
+# api_contract_path: docs/api-contract.md
+# stack:
+#   language: typescript
+#   backend: {framework: fastapi, database: postgresql, orm: sqlalchemy, auth: jwt}
+#   web:     {framework: react, language: typescript, styling: tailwind}
+#   test:    {unit: pytest, integration: httpx, e2e: playwright}
+#   ci: github-actions
+#   hosting: fly.io
+#   package_manager: uv
+# optional_agents:
+#   code-reviewer:         [story_review, release_quality]
+#   a11y-expert:           [story_review]
+#   ui-animation-designer: []
+#   doc-writer:            []

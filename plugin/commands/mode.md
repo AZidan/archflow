@@ -1,5 +1,5 @@
 ---
-description: Show or switch ceremony mode: quick (solo, light gates) or full (team, strict gates)
+description: "Show or switch ceremony mode: quick (solo, light gates) or full (team, strict gates)"
 argument-hint: "[quick|full]"
 ---
 
@@ -56,3 +56,22 @@ When a `quick` project shows growth signals, OFFER (do not auto-switch) a move t
 Prompt: "This project looks like it's outgrowing quick mode (<reason>). Switch to full mode? It adds
 explicit releases and role-based design/spec gates. `/archflow:mode full` — or keep going as is."
 Remember a decline so it doesn't nag every session.
+
+## Optional agents follow the mode
+
+`optional_agents` in `project-settings.yaml` was pre-selected by the mode at setup: `quick` starts with
+nothing automatic, `full` with code review on every story and accessibility review on a project with
+a UI.
+
+Switching the mode does NOT rewrite that block silently — it is a user decision, and quietly adding a
+step to every story is exactly the kind of surprise that makes people distrust a tool. Offer it:
+
+```
+Switching to {mode}. Optional review steps are currently:
+  {each agent: name -> hook points, or "not automatic"}
+
+{full}:  Turn on code review for every story? Accessibility review too?
+{quick}: Keep them, or turn them off to keep the loop short?
+
+[Update / Leave as they are]
+```

@@ -21,6 +21,9 @@
 # -----------------------------------------------------------------------------
 # Run  (autopilot/{run-id}.yaml)
 # -----------------------------------------------------------------------------
+# Document root: `run`
+$root: run
+
 run:
   type: object
   required: [run_id, started_at, status, base_branch, run_branch, release, envelope, queue]
@@ -106,7 +109,7 @@ envelope:
     merge_to_main:       {type: boolean, enum: [false],  description: "Always false. The user merges to main."}
     open_pr:             {type: boolean, enum: [false],  description: "Always false."}
     run_qa:              {type: boolean, default: true,  description: "qa-engineer after implementation"}
-    run_acceptance:      {type: boolean, default: true,  description: "pm-maestro-reviewer after QA"}
+    run_acceptance:      {type: boolean, default: true,  description: "pm-reviewer after QA"}
 
 # -----------------------------------------------------------------------------
 # Stop conditions
@@ -132,7 +135,7 @@ stop_conditions:
     max_qa_retries:
       type: integer
       default: 2
-      description: "pm-maestro-reviewer REJECTED retries before the story is failed."
+      description: "pm-reviewer REJECTED retries before the story is failed."
 
 # -----------------------------------------------------------------------------
 # Decision — one answered interview question
@@ -158,7 +161,14 @@ queue_item:
   type: object
   required: [story_id, title, order, state]
   properties:
-    story_id: {type: string, pattern: "^S[0-9]+-[0-9]+[a-z]?$", example: "S3-07"}
+    story_id:
+      type: string
+      pattern: "^(S[0-9]+-[0-9]+[a-z]?|[A-Z][A-Z0-9-]+)$"
+      example: "S3-04"
+      description: |
+        Usually a story id. A run may also queue non-story work it inherited — a real
+        run used PRE-EXISTING-FAILURE for a broken test it had to deal with before it
+        could proceed — so an uppercase sentinel is permitted alongside the story shape.
     title:    {type: string}
     order:    {type: integer, description: "1-based position in the run queue."}
     state:
@@ -173,10 +183,12 @@ queue_item:
     started_at:   {type: string, format: iso8601, required: false}
     finished_at:  {type: string, format: iso8601, required: false}
     commits:
-      type: array
+      type: [number, "null"]
       required: false
-      description: "Short SHAs landed for this story."
-      items: {type: string}
+      description: |
+        How many commits landed for this story. A COUNT, not a list — the run reports
+        "6 commits", and the SHAs are in git where they belong. The schema asked for a
+        list of short SHAs for months while every real run wrote a number.
     review_risk:
       type: string
       required: false
@@ -239,7 +251,7 @@ queue_item:
 #     order: 1
 #     state: done
 #     branch: checkout/saved-cards
-#     commits: ["a1b2c3d", "e4f5a6b"]
+#     commits: 2
 #     review_risk: high
 #   - story_id: S3-07
 #     title: "Refund flow"

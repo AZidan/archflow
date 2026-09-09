@@ -1,5 +1,11 @@
 # Phase 2.5: API Architecture
 
+> Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
+>
+> **Resolve the contract path first.** Read `api_contract_path` from
+> `.archflow/project-settings.yaml`; default to `docs/api-contract.md` only when unset.
+> `{api_contract_path}` below means that resolved value — never the literal default.
+
 ## 🎯 Phase Objective
 API architecture splits into TWO kinds of work (v2.0 — Pillar 2), mirroring the design split:
 
@@ -26,7 +32,7 @@ For each story in the active release with `gates.needs_contract: true`, run just
 ahead of that story's build):
 
 ```bash
-api-contract-architect: {contract-architecture} + story context → docs/api-contract.md (this story's endpoints)
+api-contract-architect: {contract-architecture} + story context → {api_contract_path} (this story's endpoints)
 ```
 Then in the release file, advance the story's `status` to `contract_ready` (or `ready` if
 `needs_design` is false / already met). Endpoints MUST conform to the contract architecture.
@@ -40,12 +46,12 @@ story's endpoints to the contract.
 Define the shared contract rules before per-story endpoints are specified.
 
 ```bash
-api-contract-architect: design-artifacts/wireframes/ + active release → docs/api-contract.md (architecture section)
+api-contract-architect: design-artifacts/wireframes/ + active release → {api_contract_path} (architecture section)
 ```
 Per-*endpoint* specs for individual stories happen in the per-story contract gate above, not here.
 
 ## 📤 Expected Outputs
-- `docs/api-contract.md` - Complete API specifications including:
+- `{api_contract_path}` - Complete API specifications including:
   - All endpoint definitions (paths, methods, parameters)
   - Request/response schemas and examples
   - Authentication requirements
@@ -79,7 +85,7 @@ Per-*endpoint* specs for individual stories happen in the per-story contract gat
 
 Before transitioning to the next phase, commit all artifacts:
 ```bash
-git add docs/api-contract.md
+git add {api_contract_path}
 git commit -m "docs: complete Phase 2.5 - API contract"
 ```
 
@@ -88,7 +94,7 @@ git commit -m "docs: complete Phase 2.5 - API contract"
 Before updating `current-phase.yaml`, verify:
 
 1. **Artifacts exist**:
-   - [ ] `docs/api-contract.md` exists (or equivalent at `api_contract_path`). For `frontend_only`/`mobile`: required if app consumes external APIs (`api_contract_path` is set)
+   - [ ] the contract exists at `{api_contract_path}`. For `frontend_only`/`mobile`: required if app consumes external APIs (`api_contract_path` is set)
 
 2. **Git state**:
    - [ ] All artifacts committed (`git status` shows clean tree)
