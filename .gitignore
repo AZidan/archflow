@@ -32,6 +32,7 @@ ph.env
 
 # Internal marketing workspace — same reasoning.
 .claude/skills/archflow-marketing/
+.claude/product-marketing-context.md
 
 # HyperFrames video skills (local tooling, installed via `npx skills add heygen-com/hyperframes`)
 .agents/
@@ -44,6 +45,12 @@ videos/
 
 # Acceptance test credentials (template is .example.yaml)
 .archflow/test-accounts.yaml
+
+# Agent scratch output
+Claude outputs/
+
+# Stray duplicate of docs/logo.png, which is the tracked one
+/logo.png
 
 # macOS
 .DS_Store

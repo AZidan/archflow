@@ -10,36 +10,9 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 ## [Unreleased]
 
-### Added
+Nothing yet.
 
-- **Review findings are state, not chat.** A story gains an optional `issues[]`: `qa-engineer`,
-  `pm-reviewer` and the `story_review` optional agents write what they found into the release file
-  alongside their report, instead of handing it back as prose that the next compaction loses. Each
-  entry carries `found_by`, `severity`, a location and a pointer to the report — never a copy of it.
-  Two invariants are enforced by `validate_archflow.py` (and so by `/archflow:doctor`): a story
-  cannot be `done` while it holds an open `blocking` issue, and a `deferred` issue must name the
-  backlog stub it moved into. Existing projects need no migration; `issues` is optional and absent
-  means none.
-- **`/archflow:issue`** — the human's way into that array: record a defect on a story being built,
-  list what is open across the active release, or `defer` a minor finding into the backlog. Deferral
-  is reserved for a human, so this is the only verb for it. The command routes before it writes:
-  anything that is not a defect in a story currently in the build loop goes to `/archflow:feature`,
-  which is what keeps a release file from turning into a bug tracker.
-
-### Fixed
-
-- **Stories now walk their status ladder instead of jumping it.** Nothing in the framework said who
-  writes `in_progress` or `review`: Phase 3 read `in_progress` in its serialization check but never
-  wrote it, and `/archflow:autopilot` went straight to `done`. Overnight runs therefore produced
-  stories that had never been observably in progress, and a run that died mid-story left one that
-  looked untouched. Both now write each transition as it happens and commit it. A story being fixed
-  after a REJECTED verdict stays at `review` rather than flapping back to `in_progress`, which
-  would erase that it had already been through QA.
-- **The autopilot morning report names what actually broke.** A failed story now lists its open
-  blocking issues with file, line and report path, read from the release file — rather than only
-  reporting that QA rejected it three times.
-
-## [2.3.0] — 2026-09-06
+## [2.3.0] — 2026-09-10
 
 ### Security
 
@@ -107,6 +80,20 @@ touches.
 
 ### Added
 
+- **Review findings are state, not chat.** A story gains an optional `issues[]`: `qa-engineer`,
+  `pm-reviewer` and the `story_review` optional agents write what they found into the release file
+  alongside their report, instead of handing it back as prose that the next compaction loses. Each
+  entry carries `found_by`, `severity`, a location and a pointer to the report — never a copy of it.
+  Two invariants are enforced by `validate_archflow.py` (and so by `/archflow:doctor`): a story
+  cannot be `done` while it holds an open `blocking` issue, and a `deferred` issue must name the
+  backlog stub it moved into. Existing projects need no migration; `issues` is optional and absent
+  means none.
+- **`/archflow:issue`** — the human's way into that array: record a defect on a story being built,
+  list what is open across the active release, or `defer` a minor finding into the backlog. Deferral
+  is reserved for a human, so this is the only verb for it. The command routes before it writes:
+  anything that is not a defect in a story currently in the build loop goes to `/archflow:feature`,
+  which is what keeps a release file from turning into a bug tracker.
+
 - **`optional_agents`, a per-project setting for which non-core agents run automatically.**
   `code-reviewer`, `a11y-expert`, `ui-animation-designer` and `doc-writer` are always available on
   request; this says whether they also join automatically, and where, via four hook points:
@@ -166,6 +153,17 @@ touches.
   had been stated but not applied.
 
 ### Fixed
+
+- **Stories now walk their status ladder instead of jumping it.** Nothing in the framework said who
+  writes `in_progress` or `review`: Phase 3 read `in_progress` in its serialization check but never
+  wrote it, and `/archflow:autopilot` went straight to `done`. Overnight runs therefore produced
+  stories that had never been observably in progress, and a run that died mid-story left one that
+  looked untouched. Both now write each transition as it happens and commit it. A story being fixed
+  after a REJECTED verdict stays at `review` rather than flapping back to `in_progress`, which
+  would erase that it had already been through QA.
+- **The autopilot morning report names what actually broke.** A failed story now lists its open
+  blocking issues with file, line and report path, read from the release file — rather than only
+  reporting that QA rejected it three times.
 
 - **`api_contract_path` was only half a setting.** `ui-engineer` and `qa-engineer` resolved through
   it, while `api-engineer` and `api-contract-architect` hardcoded `docs/api-contract.md` in seven
