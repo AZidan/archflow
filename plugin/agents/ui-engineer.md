@@ -231,7 +231,7 @@ Subtasks completed: [X/Y]
 Ready for: qa-engineer → acceptance testing → user approval
 ```
 
-### 4. Do NOT:
+### 4. Do NOT
 - Mark story status as "done" (orchestrator does this after user approval)
 - Merge branches (requires user approval)
 - Start the next story

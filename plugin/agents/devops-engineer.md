@@ -181,4 +181,3 @@ report rather than proceeding.
 
 **Never merge to `main`.** That is the user's, per `.archflow/workflow.md`, including during the
 ship ritual.
-

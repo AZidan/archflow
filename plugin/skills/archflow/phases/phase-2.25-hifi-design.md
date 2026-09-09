@@ -17,7 +17,6 @@ Generate polished, high-fidelity HTML screens from `styled-dsl.yaml` for visual 
 > `.archflow/design-systems/{design_system}.md` before producing any output.* A subagent does not
 > inherit this session's context.
 
-
 ## 📚 Prerequisites
 - Phase 2 outputs: `design-artifacts/styled-dsl.yaml`, `design-artifacts/theme.yaml`
 - `design-artifacts/wireframes/` for layout reference

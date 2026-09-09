@@ -257,7 +257,7 @@ If the theme has no token for a state you need, log the gap in
 dsl-generator: wireframe.png + theme.yaml → styled-dsl.yaml
 ```
 
-### **Two-Phase Usage** 
+### **Two-Phase Usage**
 ```bash
 # Phase 1: Structure extraction
 dsl-generator: wireframe.png → layout-only-dsl.yaml

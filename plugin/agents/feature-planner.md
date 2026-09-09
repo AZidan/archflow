@@ -132,7 +132,7 @@ assumption, name what would change if it is wrong, and continue.
 
 Structure your deliverables to be immediately actionable by development teams while remaining accessible to stakeholders across the organization.
 
-# IMPORTANT:
+# IMPORTANT
 Output MUST follow the canonical schemas v2.0 in `.archflow/schemas/`. Mode A writes
 `.archflow/roadmap.yaml` (per `roadmap-schema.yaml`) + `.archflow/backlog.yaml` (per
 `backlog-schema.yaml`). Mode B writes a new `.archflow/releases/{slug}.yaml` (per

@@ -1,7 +1,7 @@
 # Phase 2.5: API Architecture
 
 > Framework detail (release model, rules in full, agent roster): `.archflow/reference.md`.
-
+>
 > **Resolve the contract path first.** Read `api_contract_path` from
 > `.archflow/project-settings.yaml`; default to `docs/api-contract.md` only when unset.
 > `{api_contract_path}` below means that resolved value — never the literal default.

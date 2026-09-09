@@ -115,4 +115,4 @@ Always provide:
 3. Usage examples showing how to trigger and control animations
 4. When requested, create animation specification documentation in YAML or Markdown format
 
-Before implementing, analyze the existing component structure and user interaction patterns to determine the most appropriate animation approach.State any assumption you had to make in your output, naming what would change if it is wrong — as a dispatched subagent you cannot hold a conversation. 
+Before implementing, analyze the existing component structure and user interaction patterns to determine the most appropriate animation approach.State any assumption you had to make in your output, naming what would change if it is wrong — as a dispatched subagent you cannot hold a conversation.

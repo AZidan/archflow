@@ -165,7 +165,7 @@ API contract compliance: [X/Y endpoints verified]
 Ready for: qa-engineer → acceptance testing → user approval
 ```
 
-### 5. Do NOT:
+### 5. Do NOT
 - Mark story status as "done" (orchestrator does this after user approval)
 - Merge branches (requires user approval)
 - Start the next story

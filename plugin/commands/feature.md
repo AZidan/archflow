@@ -313,8 +313,8 @@ For each task in `.archflow/current-feature.yaml`:
 > `.archflow/design-systems/{design_system}.md` before producing any output.* A subagent does not
 > inherit this session's context.
 
-   - `frontend_only`: only use `ui-engineer`
-   - `fullstack`: use both based on task `type` field
+- `frontend_only`: only use `ui-engineer`
+- `fullstack`: use both based on task `type` field
 
 4. **Build and test locally** (per workflow.md testing checklist)
 

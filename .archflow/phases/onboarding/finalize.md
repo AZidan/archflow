@@ -4,7 +4,7 @@ Loaded by `/archflow:onboard` at Phase C, once the audit and synthesis are done.
 shapes: what to show the user, what to write, and what to clean up. None of it is needed while the
 audit is running.
 
-### STEP C4: Presentation
+## STEP C4: Presentation
 
 Present using the format from `phase-onboarding.md`:
 ```
@@ -31,7 +31,7 @@ If "Yes": present each artifact for approval/editing, one at a time.
   - Skip (record as gap)
 ```
 
-### STEP C5: Finalize & Cleanup
+## STEP C5: Finalize & Cleanup
 
 1. **Create the two project files.** Settings that describe the project and the cursor that says
    where it is are separate on purpose — the cursor is rewritten at every phase transition.

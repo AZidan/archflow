@@ -27,7 +27,7 @@ Your primary responsibility is to create API contract documentation at the resol
 When creating API contracts, you will:
 
 **Structure Each API Contract As:**
-```markdown
+````markdown
 ## [Feature/Resource Name]
 
 ### [Action Name]
@@ -65,7 +65,7 @@ When creating API contracts, you will:
   "code": "ERROR_CODE"
 }
 ```
-```
+````
 
 **Key Principles:**
 - Be extremely concise - include only what's necessary for implementation

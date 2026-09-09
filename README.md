@@ -572,7 +572,6 @@ command, and what an agent must never contain. Participation is covered by our
 [Code of Conduct](CODE_OF_CONDUCT.md), and security reports go through [SECURITY.md](SECURITY.md).
 Release history is in [CHANGELOG.md](CHANGELOG.md).
 
-
 **Archflow Studio's files are generated, not authored here.** `plugin/server/`, `plugin/dist/`,
 `plugin/commands/studio.md` and `plugin/hooks/studio-session-context.mjs` are built in the
 [archflow-studio](https://github.com/AZidan/archflow-studio) repo and copied in by its
@@ -580,7 +579,6 @@ Release history is in [CHANGELOG.md](CHANGELOG.md).
 `npm run sync:plugin -- --check` there to detect drift. This adds roughly 5.6 MB to the plugin for
 everyone, including people who never open Studio, which is a deliberate tradeoff for one namespace
 and one install.
-
 
 Contributions are welcome. Areas of interest:
 
