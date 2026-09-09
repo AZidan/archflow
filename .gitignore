@@ -23,3 +23,9 @@ docs/v2-launch-post.md
 docs/landing-page-cro-review.md
 .claude/skills/linkedin-post-creator/
 .claude/skills/reddit-post-creator/
+
+# Credentials. Never commit these — the ignore rule for docs/internal/ lives on
+# another branch, so secrets must be matched by pattern regardless of location.
+*.env
+!*.example.env
+ph.env
