@@ -1647,9 +1647,29 @@
       }
 
       // 3. Audience mix: which of the three entry paths people pick.
+      //
+      //    CAREFUL: `existing` is the DEFAULT tab (aria-selected="true"), so a
+      //    visitor who wants that path sees it immediately and never clicks.
+      //    start_path_selected therefore measures people switching AWAY from the
+      //    default and, read alone, says the opposite of the truth. The observer
+      //    below supplies the denominator: sessions that saw the section at all.
+      //    Default share = start_section_viewed - sessions with any selection.
       document.querySelectorAll('[data-tabs="start"] [role="tab"]').forEach(function (t) {
         t.addEventListener('click', function () { cap('start_path_selected', { path: t.id.replace('tab-', '') }); });
       });
+
+      var startSection = document.getElementById('start');
+      if (startSection && 'IntersectionObserver' in window) {
+        var startSeen = false;
+        new IntersectionObserver(function (es) {
+          es.forEach(function (e) {
+            if (e.isIntersecting && !startSeen) {
+              startSeen = true;
+              cap('start_section_viewed', { default_path: 'existing' });
+            }
+          });
+        }, { threshold: 0.3 }).observe(startSection);
+      }
 
       // 4. Which objection actually bites.
       document.querySelectorAll('details.faq').forEach(function (d) {

@@ -23,3 +23,20 @@ docs/v2-launch-post.md
 docs/landing-page-cro-review.md
 .claude/skills/linkedin-post-creator/
 .claude/skills/reddit-post-creator/
+
+# Credentials. Never commit these — the ignore rule for docs/internal/ lives on
+# another branch, so secrets must be matched by pattern regardless of location.
+*.env
+!*.example.env
+ph.env
+
+# Internal working docs. The repo is public and this material carries unannounced
+# pricing, competitive analysis and marketing strategy. Block matches the one on
+# refactor/split-project-settings verbatim so the two merge without a conflict.
+docs/internal/*
+!docs/internal/archflow-releases-v2-proposal.md
+!docs/internal/archflow-skill-scaffolding-proposal.md
+!docs/internal/landing-page-plan.md
+
+# Internal marketing workspace — same reasoning.
+.claude/skills/archflow-marketing/
