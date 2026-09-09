@@ -10,9 +10,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-0f766e)](https://opensource.org/licenses/MIT) [![Claude Code](https://img.shields.io/badge/Claude%20Code-Framework-0f766e)](https://docs.anthropic.com/en/docs/claude-code) [![Agents](https://img.shields.io/badge/Agents-17-0d9488)](https://github.com/AZidan/archflow) [![Phases](https://img.shields.io/badge/Phases-6-0d9488)](https://github.com/AZidan/archflow) [![Studio](https://img.shields.io/badge/Studio-Beta-14b8a6)](#or-skip-the-terminal)
 
-[Website](https://archflowai.dev/) · [Quick Start](#quick-start) · [Three Ways to Start](#three-ways-to-start) · [Studio](#or-skip-the-terminal) · [Commands](#commands) · [How It Works](#how-it-works) · [Phases](#the-phases) · [Agents](#agents)
+[Website](https://archflowai.dev/) · [Watch it work](https://www.youtube.com/@archflowai-dev) · [Quick Start](#quick-start) · [Three Ways to Start](#three-ways-to-start) · [Studio](#or-skip-the-terminal) · [Commands](#commands) · [How It Works](#how-it-works) · [Phases](#the-phases) · [Agents](#agents)
 
 <img src="docs/archflow-overview.svg" alt="Archflow Overview" width="700" />
+
+**[▶ Watch the 59-second overview](https://www.youtube.com/watch?v=sc2qEDnDeP0)** · or the [3-minute onboarding run](https://archflowai.dev/#start) on a real codebase
 
 </div>
 
@@ -93,7 +95,7 @@ Dispatches up to 9 agents in parallel to read your codebase, imports context fro
 
 It also works out which phase your project has reached, so you don't redo work that's already done.
 
-📖 [Full guide: onboarding an existing codebase](https://archflowai.dev/guides/existing-codebase/)
+▶ **[Watch a real repo get onboarded](https://archflowai.dev/#start)** (3m20s, unedited) · 📖 [Full guide: onboarding an existing codebase](https://archflowai.dev/guides/existing-codebase/)
 
 ### 3. From prototype to product
 

@@ -21,6 +21,9 @@
   <meta name="twitter:image:alt" content="Archflow Studio: a release board with stories moving through ready, in progress and done">
   <meta name="twitter:title" content="Archflow: Turn Claude Code into a structured development team">
   <meta name="twitter:description" content="17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have.">
+  <!-- Canonical: azidan.github.io/archflow/ 301s here, but Google still has the
+       old URL indexed. This consolidates the two faster than the redirect alone. -->
+  <link rel="canonical" href="https://archflowai.dev/">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -77,6 +80,53 @@
     }
   </script>
   <link rel="stylesheet" href="assets/theme.css">
+
+  <!-- Structured data. Every value here must stay true to the copy below it:
+       schema that disagrees with the page is worse than no schema. The FAQ
+       entries mirror the two <details class="faq"> blocks verbatim, which is
+       what Google requires (the answer must be visible on the page). -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "Archflow",
+        "url": "https://archflowai.dev/",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "macOS, Linux, Windows",
+        "description": "Phase-based AI development framework for Claude Code. 17 specialized agents across 6 phases, handing off through files in your repo. Reads the codebase you already have.",
+        "softwareVersion": "2.3.0",
+        "license": "https://opensource.org/licenses/MIT",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "codeRepository": "https://github.com/AZidan/archflow",
+        "author": { "@type": "Person", "name": "Abd Allah Zidan" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Too much process for a weekend project?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Then don't run it. Archflow has two modes over the same schema, and new projects start in the light one. quick mode is one implicit release with gates that record but never block \u2014 you still get agents, contracts and phases, without the paperwork. full mode adds an explicit release pipeline and enforced readiness gates when a team makes them necessary. Switching costs nothing."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Isn't this just a big CLAUDE.md file?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "A prompt file describes the process; Archflow runs it. Phases are state on disk, so current-phase.yaml knows where you are and each agent loads only its own phase's instructions rather than every rule at once. Handoffs are artifacts in your repo that diff in a pull request, not chat you have to trust. And /archflow:onboard audits an existing codebase and reconstructs the plan around it \u2014 no prompt file does archaeology."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
   <style>
     * { box-sizing: border-box; }
     /* base colour lives on <html> so the fixed ambient layer can sit above it */
@@ -372,6 +422,9 @@
         <p class="text-text-muted text-xs mt-6 text-center leading-relaxed">
           <a href="https://www.youtube.com/watch?v=sc2qEDnDeP0" target="_blank" rel="noopener"
              class="text-text-secondary hover:text-text-primary underline underline-offset-2">Watch the 59-second overview</a>
+          <span class="mx-2" aria-hidden="true">&middot;</span>
+          <a href="https://www.youtube.com/@archflowai-dev" target="_blank" rel="noopener"
+             class="text-text-secondary hover:text-text-primary underline underline-offset-2">More demos on YouTube</a>
         </p>
       </div>
     </div>
@@ -804,6 +857,19 @@
               <p class="text-text-secondary text-sm pt-1">Artifacts generated for your approval</p>
             </div>
           </div>
+          <!-- The onboarding run, unedited, 3m20s. It was already recorded and was
+               only reachable from the Studio guide; this is the panel it argues for.
+               preload="none" keeps 3.2MB off the critical path of a launch page. -->
+          <figure class="mb-6">
+            <video id="onboard-demo" class="w-full h-auto rounded-2xl border border-dark-700/40"
+                   controls preload="none" playsinline
+                   poster="assets/video/studio-onboard-poster.jpg">
+              <source src="assets/video/studio-onboard.mp4" type="video/mp4">
+            </video>
+            <figcaption class="text-text-muted text-xs mt-3 text-center leading-relaxed">
+              A real repo, onboarded start to finish. Nothing is written until you approve it.
+            </figcaption>
+          </figure>
           <a href="guides/existing-codebase/" class="inline-flex items-center gap-1.5 text-sm text-accent-light hover:underline">Full guide: onboarding an existing codebase<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
         </div>
 
@@ -1235,6 +1301,10 @@
       <div class="flex items-center gap-3">
         <img src="logo-96.png" alt="" width="20" height="20" class="h-5 w-5" />
         <span class="text-text-muted text-sm">MIT Licensed</span>
+        <span class="text-text-muted text-sm" aria-hidden="true">&middot;</span>
+        <a href="https://github.com/AZidan/archflow" class="text-text-muted hover:text-text-primary text-sm underline underline-offset-2">GitHub</a>
+        <span class="text-text-muted text-sm" aria-hidden="true">&middot;</span>
+        <a href="https://www.youtube.com/@archflowai-dev" target="_blank" rel="noopener" class="text-text-muted hover:text-text-primary text-sm underline underline-offset-2">YouTube</a>
       </div>
     </div>
   </footer>
@@ -1351,6 +1421,10 @@
       frame.addEventListener('load', () => {
         loads += 1;
         if (loads < 2) return; // the form itself
+        // The submit happens inside a cross-origin iframe, so this second load is
+        // the only signal we get. Treat it as "probably subscribed" and reconcile
+        // against joinbox's own count: a joinbox error page also fires load.
+        try { posthog.capture('email_subscribed', { source: 'joinbox_iframe' }); } catch (e) {}
         formView.classList.add('hidden');
         doneView.classList.remove('hidden');
       });
@@ -1598,6 +1672,11 @@
       // 6. Did the Studio demo actually get watched?
       var sv = document.getElementById('studio-video');
       if (sv) sv.addEventListener('play', function () { cap('studio_video_played'); }, { once: true });
+
+      // 7. Did the onboarding demo get watched? This is the wedge; if nobody
+      //    presses play on it, the positioning is not landing.
+      var od = document.getElementById('onboard-demo');
+      if (od) od.addEventListener('play', function () { cap('onboard_demo_played'); }, { once: true });
     })();
   </script>
 </body>

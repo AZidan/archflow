@@ -1,0 +1,39 @@
+# Archflow — https://archflowai.dev
+#
+# NOTE ON PRECEDENCE: while Cloudflare's "managed robots.txt" feature is enabled
+# for this zone, Cloudflare serves its own file and this one is not what visitors
+# or crawlers see. Disable that feature in the Cloudflare dashboard for this file
+# to take effect. See docs/internal/marketing-strategy.md, Appendix A.2.
+#
+# POLICY: crawling and citation are welcome; training is not. That is what the
+# Content-Signal below declares, and it is why there are no Disallow rules for
+# AI crawlers here. Blocking them outright also blocks citation, and this product
+# exists for Claude Code users — being unreachable by Claude's crawler is the one
+# outcome to avoid.
+
+User-agent: *
+Content-Signal: search=yes, ai-train=no, use=reference
+Allow: /
+
+# Named explicitly so the intent is legible rather than inferred from the
+# wildcard. These are the crawlers that decide whether an AI assistant can cite
+# this site when someone asks it which framework to use.
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://archflowai.dev/sitemap.xml
