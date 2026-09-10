@@ -12,6 +12,25 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 Nothing yet.
 
+## [2.3.2] — 2026-09-10
+
+### Fixed
+
+- **A project's framework files are kept in step with the plugin.** `.archflow/` is a copy made at
+  setup, and the only reconciliation that existed copied files that were *absent* — which almost
+  never happens, since every project gets the full set. The real drift was staleness, and it was
+  invisible: a project onboarded months ago validated against last quarter's schemas, ran last
+  quarter's phase files, and injected last quarter's `instructions.md` into every session.
+  `/archflow:doctor --fix` now compares content across everything the plugin ships — `phases/`,
+  `schemas/`, `design-systems/`, `stacks/`, `workflow.md`, `stack-detection.md`, `instructions.md`
+  and `reference.md` — and refreshes what is behind, backing up each original first.
+
+  Two things it will not do. A file the plugin does not ship is invisible to it, so a design system
+  or stack profile you wrote is never touched. And when the project's `plugin_version` already
+  matches the installed plugin, a difference is something a human did after the last upgrade: it is
+  reported and left alone, because silently discarding a deliberate edit is the one outcome worse
+  than staleness. Deleting a file is how you ask for it back.
+
 ## [2.3.1] — 2026-09-10
 
 ### Added

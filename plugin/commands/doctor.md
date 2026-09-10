@@ -173,6 +173,8 @@ project still works, it is just behind. It detects:
 | `tech_stack:` present, `stack:` absent | Agents read `stack:`. Without it each one stops and asks on its first dispatch |
 | No stack at all | Same, but nothing to convert from. `--fix` detects it from the repo's manifests and asks before writing (Step 5c) |
 | Framework files the plugin ships that the project lacks | An agent told to read a missing design system stops rather than guessing |
+| Framework files whose content is **behind** the plugin | The drift that was invisible until now. A stale schema validates the wrong shape, a stale phase file teaches a retired rule, and a stale `instructions.md` is injected into every session. Refreshed with the originals backed up |
+| Framework files that differ on a project already **in step** with the plugin | Someone edited them after the last upgrade. Reported, never refreshed — an edit made on purpose outranks the shipped copy. Deleting the file restores it |
 | `plugin_version` behind the installed plugin | The only signal a project has fallen behind |
 
 ### The one repair `--fix` does itself: splitting settings out of the cursor
