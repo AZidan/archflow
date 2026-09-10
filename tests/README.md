@@ -18,6 +18,7 @@ Requires `pyyaml` and `pytest`. CI runs the same suite plus a mirror diff and a 
 | `test_migrate.py` | The v1.0 to v2.0 migration, both roadmap variants. Its real contract is that its output validates against the v2.0 schemas, not merely that it produced something |
 | `test_mirrors.py` | `.archflow/` and `plugin/skills/archflow/` stay byte-identical, and no second agents tree reappears |
 | `test_story_issues.py` | `issues[]` (ADR 004): the schema shape, the two semantic invariants — a `done` story with an open blocking issue, a `deferred` issue naming no backlog stub — and the story status ladder autopilot used to jump |
+| `test_framework_refresh.py` | Stale framework files are refreshed from the plugin, a file the plugin does not ship is never touched, and an edit made on a project already in step is reported rather than overwritten |
 | `test_stack_detection.py` | The shared detection procedure is defined once and restated nowhere, the null and conflict rules survive, `/archflow:doctor --fix` Step 5c asks rather than overwrites, and every file the skill ships reaches existing projects |
 | `test_command_registration.py` | Every shipped command is listed on all six surfaces that advertise the command set, and no surface names a command that no longer exists |
 | `test_issue_command.py` | `/archflow:issue` routes before it writes, and refuses the three things that would corrupt a release file: a defect on a story never built, a blocking issue deferred, a `done` story reopened silently |

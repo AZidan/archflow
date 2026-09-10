@@ -179,9 +179,9 @@ def test_doctor_still_refuses_to_invent_a_value():
 # that until this test was written.
 # --------------------------------------------------------------------------
 
-# Not project copies: the plugin's own manifest, and the two files the session
-# hook reads from the plugin rather than from .archflow/.
-NOT_COPIED = {"SKILL.md", "mcp-registry.yaml", "instructions.md", "reference.md"}
+# Not project copies: the plugin's own manifest and its skill entry point. Both
+# are read from the plugin, never from a project's .archflow/.
+NOT_COPIED = {"SKILL.md", "mcp-registry.yaml"}
 
 
 def test_every_shipped_framework_file_is_copied_into_projects():

@@ -45,7 +45,7 @@ RENAMED_AGENTS = {"pm-maestro-reviewer": "pm-reviewer"}
 # Framework directories a project should carry a copy of.
 FRAMEWORK_DIRS = ["phases", "schemas", "design-systems", "stacks"]
 FRAMEWORK_FILES = ["workflow.md", "base-dsl-structure.yaml", "test-accounts.example.yaml",
-                   "stack-detection.md"]
+                   "stack-detection.md", "instructions.md", "reference.md"]
 
 # tech_stack (pre-2.2.1) -> stack. The old block never had a reader; this is the
 # only place its contents have ever been used.
@@ -200,23 +200,43 @@ def find_missing_stack(archflow: Path):
     )]
 
 
-def find_missing_framework_files(archflow: Path, plugin_skill: Path):
+def shipped_relpaths(plugin_skill: Path):
+    """Every file the plugin ships into a project's .archflow/, relative to it.
+
+    Iterating the PLUGIN's tree, never the project's, is what makes refreshing safe:
+    a file the plugin does not ship is invisible here, so a design system or stack
+    profile the user wrote themselves is never touched.
+    """
     if not plugin_skill or not plugin_skill.is_dir():
         return []
-    missing = []
+    out = []
     for d in FRAMEWORK_DIRS:
         src = plugin_skill / d
         if not src.is_dir():
             continue
         for f in sorted(src.glob("*")):
-            if f.is_dir():
-                continue
-            dst = archflow / d / f.name
-            if not dst.exists():
-                missing.append(f"{d}/{f.name}")
+            if not f.is_dir():
+                out.append(f"{d}/{f.name}")
     for name in FRAMEWORK_FILES:
-        if (plugin_skill / name).exists() and not (archflow / name).exists():
-            missing.append(name)
+        if (plugin_skill / name).exists():
+            out.append(name)
+    return out
+
+
+def _stamped_version(archflow: Path):
+    cp = archflow / "current-phase.yaml"
+    if not cp.exists():
+        return None
+    try:
+        doc = yaml.safe_load(cp.read_text()) or {}
+    except yaml.YAMLError:
+        return None
+    return doc.get("plugin_version") if isinstance(doc, dict) else None
+
+
+def find_missing_framework_files(archflow: Path, plugin_skill: Path):
+    missing = [rel for rel in shipped_relpaths(plugin_skill)
+               if not (archflow / rel).exists()]
     if not missing:
         return []
     return [Finding(
@@ -231,6 +251,71 @@ def find_missing_framework_files(archflow: Path, plugin_skill: Path):
 
 # Fields that moved out of current-phase.yaml in schema v2.1.
 MOVED_TO_SETTINGS = ["project_type", "api_contract_path", "stack", "optional_agents"]
+
+
+def find_stale_framework_files(archflow: Path, plugin_skill: Path, version):
+    """Framework files whose content no longer matches what the plugin ships.
+
+    This is the drift that has always been invisible. `find_missing_framework_files`
+    catches a file that is ABSENT, which almost never happens — every project gets
+    the full set at setup. What happens instead is that the plugin moves on and the
+    project keeps its copy forever, so a project onboarded months ago validates
+    against last quarter's schemas and injects last quarter's instructions into
+    every session.
+
+    Whether a difference is staleness or a deliberate edit cannot be known from the
+    file. The version stamp is the one signal available:
+
+      stamp != installed  the project has never been reconciled with THIS plugin, so
+                          a difference is presumed stale -> the script refreshes it,
+                          backing up the original first.
+      stamp == installed  the project is already in step, so a difference is
+                          something a human did after the last upgrade -> report it
+                          and leave it alone.
+
+    The second case is why this is not simply `cp -r`. A refresh that silently
+    discards a local edit is the one outcome worse than staleness, because nothing
+    surfaces it.
+    """
+    differing = []
+    for rel in shipped_relpaths(plugin_skill):
+        src, dst = plugin_skill / rel, archflow / rel
+        if not dst.exists():
+            continue          # absence is find_missing_framework_files' job
+        try:
+            if src.read_bytes() != dst.read_bytes():
+                differing.append(rel)
+        except OSError:
+            continue
+    if not differing:
+        return []
+
+    stamp = _stamped_version(archflow)
+    reconciled = bool(version) and stamp == version
+
+    if reconciled:
+        return [Finding(
+            "edited-framework-files",
+            f"{len(differing)} framework file(s) differ from the plugin, which this project "
+            f"is already in step with ({stamp})",
+            "The stamp says this project was reconciled with the installed plugin, so these\n"
+            "differences were made locally afterwards. NOT refreshed: an edit someone made on\n"
+            "purpose outranks a copy of the shipped file. Delete a file to have it restored.",
+            fixable=False,
+            fix_by="user",
+            files=differing,
+        )]
+
+    return [Finding(
+        "stale-framework-files",
+        f"{len(differing)} framework file(s) are behind the plugin"
+        + (f" (project stamped {stamp!r}, plugin {version!r})" if version else ""),
+        "These are copies made at setup and never refreshed. A stale schema validates the\n"
+        "wrong shape, a stale phase file teaches an agent a retired rule, and a stale\n"
+        "instructions.md is injected into every session. Refreshed from the plugin, with the\n"
+        "originals backed up. Files the plugin does not ship are never touched.",
+        files=differing,
+    )]
 
 
 def find_split_project_settings(archflow: Path):
@@ -440,6 +525,23 @@ def apply_missing_files(archflow: Path, plugin_skill: Path, missing):
     return copied
 
 
+def apply_stale_files(archflow: Path, plugin_skill: Path, stale, stamp: str):
+    """Overwrite each stale copy with the plugin's, backing up the original first.
+
+    Atomic, because instructions.md is read by a SessionStart hook: a half-written
+    one would be injected into the next session as a truncated instruction set.
+    """
+    refreshed = []
+    for rel in stale:
+        src, dst = plugin_skill / rel, archflow / rel
+        if not src.exists() or not dst.exists():
+            continue
+        backup(dst, archflow, stamp)
+        _atomic_write(dst, src.read_text())
+        refreshed.append(rel)
+    return refreshed
+
+
 def apply_roadmap_schema_version(archflow: Path, stamp: str):
     """Bump roadmap.yaml to 2.1. Only safe once the settings split is done.
 
@@ -520,6 +622,7 @@ def main() -> int:
                 + find_tech_stack(archflow)
                 + find_missing_stack(archflow)
                 + find_missing_framework_files(archflow, plugin_skill)
+                + find_stale_framework_files(archflow, plugin_skill, version)
                 + find_version_stamp(archflow, version))
 
     if not args.apply:
@@ -571,6 +674,11 @@ def main() -> int:
             deferred.append(
                 "roadmap.yaml stays at schema_version 2.0 until the settings split is done — "
                 "bumping first would claim 2.1 on a file that is still v2.0-shaped")
+    if "stale-framework-files" in keys and plugin_skill:
+        stale = next(f.files for f in findings if f.key == "stale-framework-files")
+        refreshed = apply_stale_files(archflow, plugin_skill, stale, stamp)
+        if refreshed:
+            actions.append(f"refreshed {len(refreshed)} stale framework file(s) from the plugin")
     if "version-stamp" in keys and version:
         r = apply_version_stamp(archflow, version, stamp)
         if r:
