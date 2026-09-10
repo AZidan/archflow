@@ -44,7 +44,8 @@ RENAMED_AGENTS = {"pm-maestro-reviewer": "pm-reviewer"}
 
 # Framework directories a project should carry a copy of.
 FRAMEWORK_DIRS = ["phases", "schemas", "design-systems", "stacks"]
-FRAMEWORK_FILES = ["workflow.md", "base-dsl-structure.yaml", "test-accounts.example.yaml"]
+FRAMEWORK_FILES = ["workflow.md", "base-dsl-structure.yaml", "test-accounts.example.yaml",
+                   "stack-detection.md"]
 
 # tech_stack (pre-2.2.1) -> stack. The old block never had a reader; this is the
 # only place its contents have ever been used.

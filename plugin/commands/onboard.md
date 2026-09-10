@@ -227,30 +227,12 @@ All user input gathered in one pass. No heavy analysis, no agent dispatch.
 ### STEP A1: Project Detection
 
 **Actions:**
-1. Scan for code indicators. Read manifests first — they are declarative and reliable — then fall
-   back to file patterns:
-   - **Manifests**: `package.json`, `pyproject.toml`, `requirements.txt`, `go.mod`, `Gemfile`,
-     `pom.xml`, `build.gradle`, `Cargo.toml`, `composer.json`, `Podfile`, `*.csproj`
-   - **Lockfiles** for the package manager: `pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`,
-     `uv.lock`, `poetry.lock`, `Gemfile.lock`
-   - **Layout**: `src/`, `backend/`, `frontend/`, `ios/`, `android/`, `e2e/`, `tests/`
-   - **Config**: any framework's own config file, `Dockerfile`, `.github/workflows/`, `.gitlab-ci.yml`
-2. **Detect the stack** and write it to `stack:` in `project-settings.yaml` (template below). Fill only
-   what the evidence supports:
-   - `language`, `package_manager` — from the manifest and lockfile
-   - `backend.framework` / `backend.database` / `backend.orm` / `backend.auth` — from dependencies
-     and data-layer files
-   - `web.framework` / `web.language` / `web.styling` / `web.state` — from dependencies and config
-   - `mobile.framework` / `mobile.ios` / `mobile.android` — from `Podfile`, `build.gradle`, or a
-     cross-platform framework in the manifest
-   - `test.unit` / `test.integration` / `test.e2e` — from dev dependencies, test scripts, and the
-     test directories that actually exist
-   - `ci`, `hosting` — from CI config and deploy config
-
-   **Write `null` for anything the evidence does not support.** Do not infer a database from an ORM,
-   or an e2e runner from the presence of a `tests/` folder. A null makes the agent ask with the repo
-   in front of it; a wrong value makes it silently build the wrong thing. Detection confidence is
-   not a reason to guess — it is exactly what the confirmation step below is for.
+1. **Detect the stack.** Read and follow
+   `${CLAUDE_PLUGIN_ROOT}/skills/archflow/stack-detection.md` — the evidence sources, the
+   field-by-field mapping, and the rule that anything the evidence does not support is written
+   `null`. It is defined there once because `/archflow:doctor --fix` runs the same detection, and
+   two copies would drift into two different answers about the same repo.
+2. Write the result to `stack:` in `project-settings.yaml` (template below).
 3. Detect project type using rules from `.archflow/phases/phase-onboarding.md`:
    - `fullstack` | `frontend_only` | `backend_only` | `mobile`
 4. If codemap is installed, run `codemap init .` and `codemap stats` for codebase metrics. Skip
