@@ -10,6 +10,10 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [2.3.1] — 2026-09-10
+
 ### Added
 
 - **`/archflow:doctor --fix` completes the project's stack.** As its last repair, it detects the
