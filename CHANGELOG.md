@@ -10,6 +10,10 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [2.3.2] — 2026-09-10
+
 ### Fixed
 
 - **A project's framework files are kept in step with the plugin.** `.archflow/` is a copy made at
