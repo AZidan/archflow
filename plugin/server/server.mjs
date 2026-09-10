@@ -63518,9 +63518,6 @@ function resolveMode(options = {}) {
   } else if (envMode) {
     mode = envMode;
     source = "env";
-  } else if (sessionContext) {
-    mode = "companion";
-    source = "session-context";
   } else {
     mode = "full";
     source = "default";

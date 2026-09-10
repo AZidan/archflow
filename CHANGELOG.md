@@ -12,6 +12,31 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 Nothing yet.
 
+## [2.3.1] — 2026-09-10
+
+### Added
+
+- **`/archflow:doctor --fix` completes the project's stack.** As its last repair, it detects the
+  stack from the repo's own manifests and lockfiles and fills the `stack:` fields that are null,
+  after showing the diff. A null `test.e2e` meant `pm-reviewer` returned BLOCKED on every acceptance
+  run while `@playwright/test` sat in `package.json` the whole time; that question is now asked once.
+  A field that is already set and disagrees with the evidence is a question, never an overwrite —
+  asked one field at a time, because a value can be set deliberately against the manifests (a
+  mid-migration project with both frameworks installed, a monorepo whose root manifest is not the
+  app). `--fix` still installs nothing and still writes no value the repo does not evidence.
+
+### Changed
+
+- **Stack detection is defined once**, in `stack-detection.md`, and read by both `/archflow:onboard`
+  and `/archflow:doctor --fix`. It was previously spelled out inside `onboard.md`, which is where a
+  second copy would have gone.
+
+### Fixed
+
+- **Framework files the plugin ships now all reach existing projects.** `upgrade_archflow.py` copies
+  from an explicit list, and a file added to the skill without being added to that list was shipped
+  to new projects and silently never copied into old ones. A test now fails when the two disagree.
+
 ## [2.3.0] — 2026-09-10
 
 ### Security

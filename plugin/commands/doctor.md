@@ -6,8 +6,8 @@ argument-hint: "[--validate] [--fix]"
 # /archflow:doctor — Environment and project health check
 
 Arguments (`$ARGUMENTS`): `--validate` also validates every `.archflow/` state file against its
-schema. `--fix` repairs the mechanical drift between this project and the installed plugin. Empty →
-environment and project checks only.
+schema. `--fix` repairs the mechanical drift between this project and the installed plugin, and completes
+the project's `stack:` from what the repo declares. Empty → environment and project checks only.
 
 Report only, **except with `--fix`**, which is the one mode that writes. Without it, `doctor` never
 installs anything, never edits state, and never changes a phase. It ends with the exact commands the
@@ -83,7 +83,7 @@ ls .archflow/ 2>/dev/null
 | `api_contract_path` in `project-settings.yaml` | **WARN** if unset | Phase 3 reads it. Default is `docs/api-contract.md` |
 | `test-accounts.yaml` | **WARN** if absent on a project with a UI | `pm-reviewer` needs credentials. Template is `.archflow/test-accounts.example.yaml` |
 | `project_type` disagrees between `project-settings.yaml` and `roadmap.yaml` | **WARN** | `project-settings.yaml` is the owner; `roadmap.yaml` mirrors it for readers that only load the index. Report both values and offer to correct the mirror |
-| `stack` in `project-settings.yaml` | **WARN** if absent or empty past Phase 1 | Agents carry no technology of their own. An unset stack means each one stops and asks mid-story. Fix with `/archflow:onboard` detection, or write it by hand from `.archflow/stacks/*.yaml` |
+| `stack` in `project-settings.yaml` | **WARN** if absent or empty past Phase 1 | Agents carry no technology of their own. An unset stack means each one stops and asks mid-story. `--fix` detects it from the repo and asks before writing (Step 5c); `/archflow:onboard` does the same on setup |
 
 Also report, without judging them: current phase, mode, active release with stories done over total,
 and any story with `status: parked`, since a parked story blocks the ship by default.
@@ -171,7 +171,7 @@ project still works, it is just behind. It detects:
 |---|---|
 | A retired agent name in release or history files | A story assigned to it dispatches an agent that does not exist, and `verified_by` fails validation |
 | `tech_stack:` present, `stack:` absent | Agents read `stack:`. Without it each one stops and asks on its first dispatch |
-| No stack at all | Same, but nothing to convert from. **Not auto-fixable** — offer `/archflow:onboard` detection |
+| No stack at all | Same, but nothing to convert from. `--fix` detects it from the repo's manifests and asks before writing (Step 5c) |
 | Framework files the plugin ships that the project lacks | An agent told to read a missing design system stops rather than guessing |
 | `plugin_version` behind the installed plugin | The only signal a project has fallen behind |
 
@@ -231,8 +231,72 @@ human. Suggest committing `.archflow/` afterwards so the change is reviewable.
 
 `--fix` is deliberately narrow. The script renames, converts and copies — operations where the
 input's shape does not matter. Anything that requires reading and understanding a document, like the
-settings split above, you do yourself, showing a diff first. Neither ever writes project content,
-picks a stack, or resolves a conflict; those are reported for the user to decide.
+settings split above or the stack detection in 5c, you do yourself, showing a diff first. Neither
+ever writes project content, invents a value the repo does not evidence, or resolves a conflict;
+those are reported for the user to decide.
+
+## Step 5c — Stack detection (the last thing `--fix` does)
+
+Runs **after** every repair above, and **only** with `--fix`. It goes last on purpose: the settings
+split in 5b may be what creates `project-settings.yaml` in the first place, and detection writes into
+that file.
+
+**Skip entirely, silently, when any of these hold:**
+
+- No `--fix`. Without it, an incomplete stack is reported in Step 6 and nothing else.
+- No `.archflow/project-settings.yaml`. There is nowhere to write, and a project without one is an
+  onboarding job — say so and point at `/archflow:onboard`.
+- `stack:` is already complete for this `project_type`. Nothing to fill, so nothing to ask about.
+  A `backend_only` project needs no `web.*`, and absent lanes are not gaps.
+
+### What it does
+
+1. **Detect**, following `${CLAUDE_PLUGIN_ROOT}/skills/archflow/stack-detection.md`. That file is the
+   procedure — the evidence sources, the field mapping, and the rule that anything the evidence does
+   not support is written `null`. `/archflow:onboard` runs the same one, which is why neither
+   restates it.
+
+2. **Sort every field into exactly one of three buckets.** This is the whole step; the rest is
+   reporting.
+
+   | Current value | Evidence | Action |
+   |---|---|---|
+   | null or missing | found | **Propose to fill.** This is the case worth having |
+   | set | agrees | Nothing. Do not rewrite a file to change nothing |
+   | set | disagrees | **Ask.** Never overwrite, never pick |
+   | null or missing | none found | Leave null, and say so — a null is a working state, not a defect |
+
+3. **On a disagreement, ask — one field at a time.** Show both values and where each came from:
+
+   ```
+   test.e2e disagrees with the repo.
+     settings say   cypress
+     repo suggests  playwright   (@playwright/test in devDependencies; no cypress dependency)
+
+   Which is correct?  [Keep cypress / Use playwright / Neither — I'll edit it myself]
+   ```
+
+   A set value can be deliberately against the evidence: a project mid-migration with both
+   frameworks installed, a monorepo whose root manifest is not the app, a runner installed but not
+   the one acceptance uses. Detection cannot see intent, and the value it would overwrite is the
+   only place that intent is written down. **Never resolve one of these on the user's behalf**, and
+   never batch them into a single "apply all" — each is a separate decision.
+
+4. **Show the diff and get approval**, then write. Same discipline as every other `--fix` repair:
+   back up `project-settings.yaml` to `.archflow/backup-upgrade-{timestamp}/` first, edit the file
+   rather than regenerating it so comments and ordering survive, and run the validator afterwards.
+
+5. **Report what changed**, by field, with the evidence for each — not "stack updated".
+
+### Why this is a repair and not a guess
+
+`--fix` does not pick a stack. It reads what the repo already declares in its own manifests and
+lockfiles, proposes it, and asks. The alternative is not neutrality: a null `test.e2e` means
+`pm-reviewer` returns BLOCKED on every acceptance run and the user answers the same question every
+time, while `@playwright/test` sits in `package.json` the whole while.
+
+What stays out of reach is unchanged. `--fix` still never installs anything, never writes a value the
+evidence does not support, and never overrules a value a human set.
 
 ## Step 6 — Report
 
@@ -259,6 +323,9 @@ Archflow doctor
   Fixes
     /archflow:design
       pick a design system before any further UI work
+
+    /archflow:doctor --fix
+      3 stack fields are null that the repo answers (test.e2e, backend.orm, package_manager)
 
     pip install "git+https://github.com/AZidan/codemap.git@v1.3.1"
       optional — cuts navigation tokens by roughly 60-80%
