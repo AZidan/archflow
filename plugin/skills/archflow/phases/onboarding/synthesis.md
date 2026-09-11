@@ -179,13 +179,14 @@ If "Yes": present each artifact for approval/editing, one at a time.
 ### C5: Finalization
 
 1. Create `.archflow/current-phase.yaml` with full schema (see onboard.md)
-2. Create or update `CLAUDE.md` with Archflow section (see onboard.md for full template):
-   - If `CLAUDE.md` does NOT exist: create it with project overview, common commands, architecture, and Archflow section — all derived from onboarding analysis
-   - If `CLAUDE.md` ALREADY exists: append the Archflow section to the end
+2. Create or update the project's agent instruction file with the Archflow section (see onboard.md for full template).
+   Write `AGENTS.md` (read by every host) and also `CLAUDE.md` (Claude Code only):
+   - If the file does NOT exist: create it with project overview, common commands, architecture, and Archflow section — all derived from onboarding analysis
+   - If the file ALREADY exists: append the Archflow section to the end (between `<!-- archflow:start -->` / `<!-- archflow:end -->` markers so it can be updated in place later)
    - The Archflow section MUST include: current phase, links to project-context.md, roadmap.yaml, api-contract.md (if generated), and available `/archflow:*` commands
    - Only list artifacts that were actually created
 3. Clean up ALL temporary `.onboard-*` files (`rm .onboard-*`). No `.onboard-*` files should remain after finalization
 4. Offer to remove onboarding-only MCPs
-5. Print summary with next steps (include CLAUDE.md in the created artifacts list)
+5. Print summary with next steps (include AGENTS.md — and CLAUDE.md (Claude Code only) — in the created artifacts list)
 
 ---

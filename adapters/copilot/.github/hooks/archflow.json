@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "bash": "cat .archflow/instructions.md 2>/dev/null || true",
+        "cwd": ".",
+        "timeoutSec": 3
+      },
+      {
+        "type": "command",
+        "bash": "node .github/archflow/hooks/check-upgrade.mjs",
+        "cwd": ".",
+        "env": {
+          "CLAUDE_PLUGIN_ROOT": ".github/archflow",
+          "CLAUDE_PROJECT_DIR": "."
+        },
+        "timeoutSec": 6
+      }
+    ],
+    "PreToolUse": [
+      {
+        "type": "command",
+        "bash": "node .github/archflow/hooks/guard-git.mjs",
+        "cwd": ".",
+        "env": {
+          "CLAUDE_PLUGIN_ROOT": ".github/archflow",
+          "CLAUDE_PROJECT_DIR": "."
+        },
+        "timeoutSec": 5
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "bash": "node .github/archflow/hooks/check-state.mjs",
+        "cwd": ".",
+        "env": {
+          "CLAUDE_PLUGIN_ROOT": ".github/archflow",
+          "CLAUDE_PROJECT_DIR": "."
+        },
+        "timeoutSec": 5
+      }
+    ]
+  }
+}

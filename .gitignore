@@ -34,8 +34,10 @@ ph.env
 .claude/skills/archflow-marketing/
 .claude/product-marketing-context.md
 
-# HyperFrames video skills (local tooling, installed via `npx skills add heygen-com/hyperframes`)
-.agents/
+# HyperFrames video skills (local tooling, installed via `npx skills add heygen-com/hyperframes`).
+# Anchored to the repo root: the generated host adapters under adapters/<host>/.agents/ are
+# shipped and must stay tracked.
+/.agents/
 .claude/skills/*
 !.claude/skills/codemap/
 skills-lock.json

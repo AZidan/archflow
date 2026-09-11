@@ -1,0 +1,11 @@
+name: react-native-mobile
+label: "React Native (iOS + Android)"
+project_types: [mobile]
+description: "Cross-platform mobile. Pair with a backend profile for fullstack."
+
+stack:
+  language: typescript
+  mobile:   {framework: react-native, ios: null, android: null}
+  test:     {unit: jest, integration: null, e2e: detox}
+  ci: github-actions
+  package_manager: pnpm

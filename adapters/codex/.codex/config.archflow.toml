@@ -1,0 +1,8 @@
+# Merge into .codex/config.toml (project) or ~/.codex/config.toml (user).
+# Both features are on by default in current Codex; listed so they survive a user config that turned them off.
+[features]
+hooks = true        # legacy alias: codex_hooks
+multi_agent = true
+
+[agents]
+max_concurrent_threads_per_session = 9  # $archflow-onboard dispatches up to 9

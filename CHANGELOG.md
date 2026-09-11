@@ -10,7 +10,38 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **Archflow runs on hosts other than Claude Code.** `scripts/build-adapters.mjs` generates a
+  host-native package from the plugin for OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI,
+  OpenCode, and a generic `AGENTS.md` + Agent Skills package for anything else. Each lands in
+  `adapters/<host>/` with its own README describing install steps and what that host cannot do.
+  The `.archflow/` state files, schemas, phases, design systems and stack profiles are identical
+  across hosts, so one project can be worked on from several tools. CI fails if the adapters drift
+  from the plugin (`node scripts/build-adapters.mjs --check`).
+
+  Codex and Copilot CLI also load the unmodified Claude Code plugin directly
+  (`copilot --plugin-dir plugin`, Codex's plugin importer); the adapters exist for teams that want
+  host-native, repo-committed configuration.
+
+- **A git `pre-push` guard** (`plugin/scripts/archflow-pre-push.sh`) gives hosts without a
+  `PreToolUse` hook the same protection Claude Code has: no force-push to `main`/`master`, no push
+  to `main` while an autopilot run is live. `/archflow:doctor --fix` offers to install it (Step 5d),
+  chaining any existing hook. It also protects the human's own terminal.
+
+### Changed
+
+- `/archflow:init` and `/archflow:onboard` now write the Archflow section to `AGENTS.md` (read by
+  every host) as well as `CLAUDE.md`, wrapped in `<!-- archflow:start/end -->` markers.
+- `hooks/guard-git.mjs` accepts the shell tool names other hosts use (`bash`,
+  `run_shell_command`) in addition to Claude Code's `Bash`.
+
+### Not ported
+
+- `/archflow:studio` stays Claude Code only: it drives the `claude` binary's session fork.
+- `memory: user` agent memory has no equivalent elsewhere.
+- OpenCode plugin hooks do not fire inside subagents (upstream #5894), so its git guard covers the
+  primary agent only; use the `pre-push` guard as well.
 
 ## [2.3.2] — 2026-09-10
 

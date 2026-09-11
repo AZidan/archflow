@@ -268,14 +268,17 @@ theme:
   brand_tokens: null              # optional path to a tokens.json override
 ```
 
-### Step 5: Update Project CLAUDE.md
+### Step 5: Update the project's agent instruction file
 
-If `CLAUDE.md` does NOT exist in the project root, create it:
+Write the section below into `AGENTS.md` (every host reads it) and also into `CLAUDE.md` (Claude Code only).
+Wrap it in `<!-- archflow:start -->` / `<!-- archflow:end -->` markers so later commands can update it in place.
+
+If the file does NOT exist in the project root, create it:
 
 ```markdown
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding agents working with code in this repository.
 
 ## Archflow Framework
 
@@ -291,7 +294,7 @@ Commands:
 - `/archflow:design` — Show or change the project's design system
 ```
 
-If `CLAUDE.md` ALREADY exists, append the Archflow section to the end:
+If the file ALREADY exists, append the Archflow section to the end:
 
 ```markdown
 
@@ -317,7 +320,8 @@ Archflow initialized at Phase 1 (Strategy & Planning).
 Created:
   .archflow/current-phase.yaml
   .archflow/design-system.yaml       [or: not set — chosen in Phase 2]
-  CLAUDE.md [created / updated with Archflow section]
+  AGENTS.md [created / updated with Archflow section]
+  CLAUDE.md (Claude Code only)
 
 Mode: quick (single implicit release, gates auto-satisfied).
   Switch anytime with /archflow:mode full.

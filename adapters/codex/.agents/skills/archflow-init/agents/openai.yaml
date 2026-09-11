@@ -1,0 +1,5 @@
+interface:
+  display_name: "Archflow: init"
+  short_description: "Set up Archflow in a NEW, empty project — creates .archflow/ and starts at Phase 1"
+policy:
+  allow_implicit_invocation: false

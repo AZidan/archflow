@@ -300,6 +300,20 @@ time, while `@playwright/test` sits in `package.json` the whole while.
 What stays out of reach is unchanged. `--fix` still never installs anything, never writes a value the
 evidence does not support, and never overrules a value a human set.
 
+## Step 5d — Git guard (checked always, installed only with `--fix`)
+
+On Claude Code the plugin's `PreToolUse` hook stops an agent force-pushing to `main` or pushing during
+an autopilot run. Other hosts get the same protection from a plain git `pre-push` hook, which also
+covers the human's own terminal. Report **WARN** if `.git/hooks/pre-push` does not mention
+`archflow-pre-push`; with `--fix`, ask, then run:
+
+```bash
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/archflow-install-git-guard.sh"
+```
+
+It chains any existing `pre-push` hook rather than replacing it. Skip silently when the project is
+not a git repository.
+
 ## Step 6 — Report
 
 Print the three sections, then a summary line, then only the fixes that apply:

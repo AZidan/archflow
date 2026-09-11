@@ -1,0 +1,5 @@
+interface:
+  display_name: "Archflow: feature"
+  short_description: "Add a story (name or description), or pull a backlog story into the active release"
+policy:
+  allow_implicit_invocation: false

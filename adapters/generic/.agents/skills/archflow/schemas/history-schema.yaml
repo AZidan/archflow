@@ -1,0 +1,72 @@
+# =============================================================================
+# Archflow HISTORY Schema — v2.0
+# =============================================================================
+# Canonical schema for `.archflow/history.yaml` — the institutional-memory /
+# intent layer. Append-only, one entry per SHIPPED story. Loaded ONLY on lookup,
+# never per-step.
+#
+# codemap answers "what/where is this code"; history answers "why does it exist
+# and what was it supposed to do". Advisory, never a gate.
+#
+# Written by the phase-5 ship ritual; read by the pre-modification check (phase-3)
+# and by skill scaffolding (debug/per-module skill generation).
+#
+# Related schemas:
+#   .archflow/roadmap.yaml -> roadmap-schema.yaml   (index; shipped ledger)
+#   releases/archive/*.yaml -> release-schema.yaml  (full detail an entry points at)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# history.yaml is an array of history_entry
+# -----------------------------------------------------------------------------
+# Document root: `history_entry` (the file is a LIST of these)
+$root: history_entry
+$root_is_list: true
+
+history_entry:
+  type: object
+  # A RECORD of what shipped, not live state. Entries written before a field
+  # existed, or migrated from v1.0, cannot be made to carry it retroactively —
+  # the same reason a finished autopilot run is not validated. Only the identity
+  # of the entry is required.
+  required: [story, release, summary]
+  properties:
+    story:   {type: string, pattern: "^S[0-9]+-[0-9]+[a-z]?$", example: "S3-04"}
+    release: {type: string, example: "checkout-redesign"}
+    version: {type: string, required: false, example: "v1.4.0"}
+    shipped_at: {type: string, format: iso8601, required: false, example: "2026-03-14"}
+    summary: {type: string, example: "Redesigned checkout payment form with saved cards"}
+    touched:
+      required: false
+      type: object
+      description: "Captured from the git diff at ship (tag-to-tag). Symbol/path anchors, never line numbers."
+      properties:
+        files:     {type: array, items: {type: string}}
+        endpoints: {type: array, items: {type: string}}
+        screens:   {type: array, items: {type: string}}
+    acceptance_criteria:
+      required: false
+      type: array
+      items: {type: string}
+      description: "The ACs the story shipped with (text only)."
+    archive:
+      type: string
+      required: false
+      description: "Pointer to the archived release file for full detail."
+      example: "releases/archive/checkout-redesign.yaml"
+
+# =============================================================================
+# Example — history.yaml
+# =============================================================================
+# - story: S1-01
+#   release: mvp
+#   version: v1.0.0
+#   shipped_at: 2026-01-10
+#   summary: "Admin login with Firebase Auth"
+#   touched:
+#     files: [frontend/auth/LoginPage.tsx, backend/auth/auth.controller.ts]
+#     endpoints: [POST /auth/login]
+#     screens: [login]
+#   acceptance_criteria:
+#     - "Login page with email/password form"
+#   archive: releases/archive/mvp.yaml

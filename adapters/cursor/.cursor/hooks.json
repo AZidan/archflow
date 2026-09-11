@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "node .cursor/archflow/hooks/cursor-bridge.mjs sessionStart",
+        "timeout": 8
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "node .cursor/archflow/hooks/cursor-bridge.mjs beforeShellExecution",
+        "timeout": 5
+      }
+    ],
+    "stop": [
+      {
+        "command": "node .cursor/archflow/hooks/cursor-bridge.mjs stop",
+        "timeout": 5
+      }
+    ]
+  }
+}

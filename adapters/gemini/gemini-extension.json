@@ -1,0 +1,6 @@
+{
+  "name": "archflow",
+  "version": "2.3.2",
+  "description": "Phase-based AI development framework: 17 specialized agents, structured phases, file-based handoffs.",
+  "contextFileName": "GEMINI.md"
+}

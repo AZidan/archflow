@@ -1,0 +1,5 @@
+interface:
+  display_name: "Archflow: issue"
+  short_description: "Record a defect against a story in the active release, list what is open, or defer a minor one to the backlog"
+policy:
+  allow_implicit_invocation: false

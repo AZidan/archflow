@@ -1,0 +1,5 @@
+interface:
+  display_name: "Archflow: onboard"
+  short_description: "Set up Archflow in an EXISTING codebase — audit code, import context, pick the phase"
+policy:
+  allow_implicit_invocation: false

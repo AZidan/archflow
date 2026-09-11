@@ -625,7 +625,7 @@ Project: [Name] ([Type]: [Tech Stack])
 Current Phase: [N] ([Phase Name])
 
 Created:
-  ✅ CLAUDE.md [created / updated with Archflow section]
+  ✅ AGENTS.md [created / updated with Archflow section] (+ CLAUDE.md on Claude Code)
   ✅ project-context.md
   ✅ roadmap.yaml ([N] features)
   ✅ API contract: [path]

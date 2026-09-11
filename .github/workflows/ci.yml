@@ -75,6 +75,9 @@ jobs:
       - name: Mirrored trees are identical
         run: diff -r -x SKILL.md -x mcp-registry.yaml -x .DS_Store .archflow plugin/skills/archflow
 
+      - name: Host adapters match the plugin
+        run: node scripts/build-adapters.mjs --check
+
       - name: Validator self-check on fixtures
         run: |
           python plugin/scripts/validate_archflow.py tests/fixtures/valid-project

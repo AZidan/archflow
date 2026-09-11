@@ -1,0 +1,5 @@
+interface:
+  display_name: "Archflow: contract"
+  short_description: "The release's API contract architecture, and per-story endpoint specs that clear a story's contract gate"
+policy:
+  allow_implicit_invocation: false

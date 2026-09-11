@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Liquid Glass — Login</title><link rel="stylesheet" href="theme.css"></head><body>
+<div class="screen">
+  <div class="canvas"></div>
+  <div class="status"><span>9:41</span><div class="dots"><i></i></div></div>
+  <div style="position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;
+       padding:0 20px;padding-top:120px">
+    <div style="width:76px;height:76px;border-radius:20px;background:rgba(255,255,255,.7);
+         -webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);
+         border:.5px solid var(--glass-stroke);box-shadow:var(--glass-shadow);
+         display:grid;place-items:center;color:var(--tint);margin:0 auto 22px">
+      <svg width="38" height="38" viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>
+    </div>
+    <h1 class="title1" style="margin:0 0 6px;text-align:center">Fieldnote</h1>
+    <p class="subheadline secondary" style="margin:0 0 28px;text-align:center">
+      Sign in to sync your crew's fieldwork.</p>
+
+    <div class="section on-glass" style="margin:0 0 10px">
+      <div class="field"><label>Email</label><input value="rowan@fieldnote.app"></div>
+      <div class="field"><label>Password</label><input type="password" value="•••••••••••"></div>
+    </div>
+    <div style="text-align:right;margin:0 4px 26px">
+      <button class="btn-plain callout" style="border:0;padding:0">Forgot password?</button></div>
+
+    <button class="btn btn-glass-prominent">Sign In</button>
+    <div style="height:12px"></div>
+    <button class="btn btn-glass">
+      <svg width="19" height="19" viewBox="0 0 24 24"><path d="M17.05 12.54c-.03-2.6 2.12-3.85 2.22-3.91-1.21-1.77-3.1-2.01-3.77-2.04-1.6-.16-3.13.94-3.94.94-.81 0-2.07-.92-3.4-.9-1.75.03-3.36 1.02-4.26 2.58-1.81 3.15-.46 7.81 1.3 10.36.86 1.25 1.89 2.65 3.24 2.6 1.3-.05 1.79-.84 3.36-.84s2.01.84 3.39.81c1.4-.02 2.28-1.27 3.13-2.53.99-1.45 1.4-2.86 1.42-2.93-.03-.01-2.72-1.04-2.75-4.14zM14.5 4.6c.71-.87 1.2-2.07 1.06-3.27-1.03.04-2.28.69-3.02 1.55-.66.77-1.24 2-1.08 3.17 1.15.09 2.32-.58 3.04-1.45z"/></svg>
+      Sign in with Apple</button>
+    <div style="flex:1"></div>
+    <div style="text-align:center;padding-bottom:44px" class="footnote secondary">
+      Don't have an account?
+      <button class="btn-plain footnote" style="border:0;padding:0;font-weight:600">Sign Up</button></div>
+  </div>
+</div></body></html>

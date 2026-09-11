@@ -67,6 +67,24 @@ Then pick the entry point that matches where you actually are.
 
 ---
 
+## Other Hosts
+
+Archflow is built as a Claude Code plugin, but the framework is files, so it runs elsewhere too.
+Codex and GitHub Copilot CLI load `plugin/` directly. For host-native, repo-committed configuration,
+`adapters/` ships generated packages; each has a README with install steps and the host's limits.
+
+| Host | Package | Sub-agents | Hooks | Notes |
+|---|---|---|---|---|
+| Claude Code | `plugin/` | yes | yes | Reference implementation; Studio lives here |
+| OpenAI Codex | `plugin/` or `adapters/codex` | yes | yes | `$archflow-<cmd>` skills |
+| GitHub Copilot CLI | `plugin/` or `adapters/copilot` | yes | yes | Same tree works in VS Code agent mode |
+| Cursor | `adapters/cursor` | yes | yes | Also a Cursor Plugin |
+| Gemini CLI | `adapters/gemini` | preview | yes | Installs as an extension |
+| OpenCode | `adapters/opencode` | yes | partial | Hooks skip subagents |
+| Anything with `AGENTS.md` + Agent Skills | `adapters/generic` | serial | git guard only | Cline, Windsurf, Zed, Amp… |
+
+Regenerate after changing `plugin/`: `node scripts/build-adapters.mjs` (CI checks for drift).
+
 ## Three Ways to Start
 
 Whichever you pick, Archflow proposes and waits: every artifact is shown to you before it's written, and no phase advances without your approval. Your code is never modified during setup.

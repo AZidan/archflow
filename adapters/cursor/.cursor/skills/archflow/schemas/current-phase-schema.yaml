@@ -1,0 +1,86 @@
+# current-phase.yaml — canonical schema (v2.1)
+#
+# WHERE THIS PROJECT IS. A cursor, rewritten at every phase transition.
+#
+# In v2.1 the project SETTINGS moved out to project-settings.yaml — `project_type`,
+# `stack`, `api_contract_path` and `optional_agents`. This file had become two
+# things with change frequencies orders of magnitude apart, so a settings change
+# was buried in phase churn.
+#
+# `mode` stayed. It is consulted on nearly every operation and is already mirrored
+# in roadmap.yaml, so moving it would cost more than it saves.
+#
+# Document root: the object below (no named definitions in this file)
+$root: null
+
+type: object
+required: [phase, phase_file, mode]
+
+properties:
+
+  phase:
+    type: [number, string]
+    description: "Current lifecycle phase. 2.25 and 2.5 are valid sub-phases."
+    enum: [1, 2, 2.25, 2.5, 3, 4, 5, 6]
+
+  phase_name:
+    type: string
+    example: "Implementation"
+
+  phase_file:
+    type: string
+    description: "Path, relative to .archflow/, of the phase instructions to load."
+    example: "phases/phase-3-implementation.md"
+
+  mode:
+    type: string
+    enum: [quick, full]
+    default: quick
+    description: |
+      Ceremony mode. A density switch over the same schema, not a fork. Also
+      mirrored in roadmap.yaml. See /archflow-mode.
+
+  active_release:
+    type: [string, "null"]
+    description: "Slug of the one in_progress release; null when none is being built."
+    example: "v0.3-checkout"
+
+  onboarded:      {type: boolean, default: false}
+  onboarded_at:   {type: string, format: iso8601, required: false}
+
+  plugin_version:
+    type: [string, "null"]
+    required: false
+    description: |
+      The Archflow plugin version that last touched this project. Stamped by
+      /archflow-init, /archflow-onboard and /archflow-doctor --fix. Its absence, or a
+      value older than the installed plugin, is how an upgrade is detected — the state
+      files carry no other version signal, since schema_version tracks the data model
+      rather than the framework.
+    example: "2.2.1"
+
+  # Phase tracking
+  phases_completed:      {type: array, items: {type: [number, string]}}
+  phases_partial:        {type: array, items: {type: [number, string]}}
+  phases_skipped:        {type: array, items: {type: [number, string]}}
+  phases_not_applicable: {type: array, items: {type: [number, string]}}
+
+  gaps:
+    type: array
+    description: "Known gaps recorded at onboarding."
+    items: {type: string}
+
+# -----------------------------------------------------------------------------
+# Example — current-phase.yaml
+# -----------------------------------------------------------------------------
+# phase: 3
+# phase_name: "Implementation"
+# phase_file: "phases/phase-3-implementation.md"
+# mode: quick
+# active_release: v0.3-checkout
+# onboarded: true
+# plugin_version: "2.3.0"
+# phases_completed: [1, 2, 2.5]
+#
+# Project settings (project_type, stack, api_contract_path, optional_agents) live
+# in .archflow/project-settings.yaml.

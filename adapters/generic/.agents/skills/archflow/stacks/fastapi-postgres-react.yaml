@@ -1,0 +1,13 @@
+name: fastapi-postgres-react
+label: "FastAPI + PostgreSQL + React"
+project_types: [fullstack, backend_only]
+description: "Python backend with a TypeScript web front end."
+
+stack:
+  language: null            # two languages; neither dominates
+  backend:  {framework: fastapi, database: postgresql, orm: sqlalchemy, auth: jwt}
+  web:      {framework: react, language: typescript, styling: tailwind, state: tanstack-query}
+  test:     {unit: pytest, integration: httpx, e2e: playwright}
+  ci: github-actions
+  hosting: null
+  package_manager: uv

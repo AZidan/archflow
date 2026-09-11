@@ -1,0 +1,5 @@
+interface:
+  display_name: "Archflow: status"
+  short_description: "Where the project stands: phase, mode, active release, and what to run next"
+policy:
+  allow_implicit_invocation: false

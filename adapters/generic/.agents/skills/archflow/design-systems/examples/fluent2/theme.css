@@ -1,0 +1,97 @@
+/* Fluent 2 — webLightTheme design tokens (reference rendering only) */
+:root{
+  --nbg1:#ffffff; --nbg2:#FAFAFA; --nbg3:#F5F5F5; --nbg4:#F0F0F0; --nbg1-sel:#EBEBEB;
+  --nfg1:#242424; --nfg2:#424242; --nfg3:#616161; --nfg4:#707070; --nfg-disabled:#BDBDBD;
+  --stroke1:#D1D1D1; --stroke2:#E0E0E0; --stroke3:#F0F0F0;
+  --brand-bg:#0F6CBD; --brand-bg-hover:#115EA3; --brand-fg:#0F6CBD; --brand-fg-link:#0F6CBD;
+  --brand-bg2:#EBF3FC; --brand-stroke2:#B4D6FA;
+  --red:#D13438; --red-bg:#FDF3F4; --green:#0E700E; --green-bg:#F1FAF1;
+  --yellow:#F7630C; --yellow-bg:#FFF9F5;
+  --r-s:2px; --r-m:4px; --r-l:6px; --r-xl:8px; --r-circ:999px;
+  --sh2:0 0 2px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.14);
+  --sh4:0 0 2px rgba(0,0,0,.12),0 2px 4px rgba(0,0,0,.14);
+  --sh8:0 0 2px rgba(0,0,0,.12),0 4px 8px rgba(0,0,0,.14);
+  --sh16:0 0 2px rgba(0,0,0,.12),0 8px 16px rgba(0,0,0,.14);
+}
+*{box-sizing:border-box;-webkit-font-smoothing:antialiased}
+html,body{margin:0;padding:0;width:1200px;height:800px;overflow:hidden}
+body{background:var(--nbg3);color:var(--nfg1);
+  font-family:"Segoe UI Variable Text","Segoe UI",-apple-system,system-ui,sans-serif;
+  font-size:14px;line-height:20px}
+svg{display:block;fill:currentColor}
+h1,h2,h3,p{margin:0}
+.caption1{font-size:12px;line-height:16px}
+.body1{font-size:14px;line-height:20px}
+.body1s{font-size:14px;line-height:20px;font-weight:600}
+.subtitle2{font-size:16px;line-height:22px;font-weight:600}
+.subtitle1{font-size:20px;line-height:26px;font-weight:600}
+.title3{font-size:24px;line-height:32px;font-weight:600}
+.title2{font-size:28px;line-height:36px;font-weight:600}
+.fg2{color:var(--nfg2)} .fg3{color:var(--nfg3)}
+/* button — 32px medium */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:32px;padding:0 12px;
+  border-radius:var(--r-m);border:1px solid var(--stroke1);background:var(--nbg1);color:var(--nfg1);
+  font-family:inherit;font-size:14px;font-weight:600;line-height:20px;cursor:pointer;white-space:nowrap}
+.btn-primary{background:var(--brand-bg);border-color:transparent;color:#fff}
+.btn-outline{background:transparent}
+.btn-subtle{background:transparent;border-color:transparent;color:var(--nfg2);font-weight:400}
+.btn-icon{width:32px;padding:0}
+.btn-lg{height:40px;padding:0 16px}
+.btn-full{width:100%}
+/* field + input */
+.field{display:flex;flex-direction:column;gap:4px}
+.field > label{font-size:14px;line-height:20px;font-weight:400;color:var(--nfg1)}
+.inp{height:32px;border:1px solid var(--stroke1);border-bottom:1px solid var(--nfg4);
+  border-radius:var(--r-m);background:var(--nbg1);padding:0 10px;font:inherit;color:var(--nfg1);outline:none;width:100%}
+.inp.lg{height:40px}
+.hint{font-size:12px;line-height:16px;color:var(--nfg3)}
+/* card */
+.card{background:var(--nbg1);border:1px solid var(--stroke2);border-radius:var(--r-xl);
+  box-shadow:var(--sh2)}
+/* badge */
+.badge{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:var(--r-circ);
+  font-size:12px;line-height:16px;font-weight:600}
+.badge-brand{background:var(--brand-bg2);color:var(--brand-fg)}
+.badge-danger{background:var(--red-bg);color:var(--red)}
+.badge-success{background:var(--green-bg);color:var(--green)}
+.badge-neutral{background:var(--nbg4);color:var(--nfg2)}
+/* tablist — underline indicator */
+.tablist{display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--stroke2)}
+.tab{position:relative;height:44px;padding:0 10px;display:inline-flex;align-items:center;gap:6px;
+  font-size:14px;color:var(--nfg2);border-radius:var(--r-m) var(--r-m) 0 0}
+.tab.active{color:var(--nfg1);font-weight:600}
+.tab.active::after{content:"";position:absolute;left:10px;right:10px;bottom:0;height:2px;
+  background:var(--brand-bg);border-radius:1px}
+/* shell */
+.shell{display:flex;height:800px;background:var(--nbg1)}
+.nav{width:228px;flex:none;background:var(--nbg2);border-right:1px solid var(--stroke2);
+  display:flex;flex-direction:column;padding:8px}
+.nav-brand{display:flex;align-items:center;gap:10px;height:48px;padding:0 8px;font-weight:600;font-size:16px}
+.nav-cat{font-size:12px;line-height:16px;color:var(--nfg3);padding:14px 10px 4px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:12px;height:36px;padding:0 10px;border-radius:var(--r-m);
+  color:var(--nfg1);font-size:14px;position:relative}
+.nav-item.active{background:var(--nbg1-sel);font-weight:600}
+.nav-item.active::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;
+  background:var(--brand-bg);border-radius:2px}
+.nav-item .count{margin-left:auto;font-size:12px;color:var(--nfg3);font-weight:400}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.titlebar{height:48px;flex:none;background:var(--nbg2);border-bottom:1px solid var(--stroke2);
+  display:flex;align-items:center;gap:8px;padding:0 12px}
+.search{height:32px;width:380px;border:1px solid var(--stroke1);border-bottom-color:var(--nfg4);
+  border-radius:var(--r-m);background:var(--nbg1);display:flex;align-items:center;gap:8px;padding:0 10px;
+  color:var(--nfg3);font-size:14px}
+.avatar{width:32px;height:32px;border-radius:var(--r-circ);background:var(--brand-bg);color:#fff;
+  display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.crumb{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--nfg3)}
+.crumb b{color:var(--nfg1);font-weight:600}
+/* datagrid */
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead th{height:44px;text-align:left;padding:0 12px;font-weight:600;font-size:14px;color:var(--nfg1);
+  border-bottom:1px solid var(--stroke2)}
+tbody td{height:44px;padding:0 12px;border-bottom:1px solid var(--stroke3);vertical-align:middle}
+tbody tr.sel{background:var(--brand-bg2)}
+.checkbox{width:16px;height:16px;border:1px solid var(--nfg4);border-radius:var(--r-m);display:grid;
+  place-items:center;flex:none;background:var(--nbg1)}
+.checkbox.on{background:var(--brand-bg);border-color:var(--brand-bg);color:#fff}
+.msgbar{display:flex;align-items:center;gap:10px;min-height:36px;padding:8px 12px;border-radius:var(--r-m);
+  background:var(--brand-bg2);border:1px solid var(--brand-stroke2);font-size:14px}

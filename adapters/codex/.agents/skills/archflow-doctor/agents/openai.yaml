@@ -1,0 +1,5 @@
+interface:
+  display_name: "Archflow: doctor"
+  short_description: "Check the environment and project state — what Archflow needs, what is missing, and how to fix it"
+policy:
+  allow_implicit_invocation: false
