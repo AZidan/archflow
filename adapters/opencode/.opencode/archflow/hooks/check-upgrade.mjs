@@ -24,17 +24,99 @@
  *   for something that will otherwise bite them later.
  *
  * FAIL-OPEN and FAST: any error, missing file or slow detector exits silently.
+ *
+ * NEWER RELEASE (hosts other than Claude Code)
+ *   Claude Code updates the plugin through its marketplace. Every other host runs
+ *   a copied adapter that nothing refreshes, so this hook also says when a newer
+ *   Archflow release exists. The check is the npm/brew kind: it reads a cache
+ *   (~/.cache/archflow-install/latest.json), and when that is older than a day it
+ *   spawns a detached child to refresh it. The hook itself never waits on the
+ *   network. Off with `update_check: false` in project-settings.yaml, or the
+ *   ARCHFLOW_NO_UPDATE_CHECK env var. The host is named by ARCHFLOW_HOST, which
+ *   each adapter's hook wiring sets; unset means Claude Code, and silence.
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { homedir } from "node:os";
+import { spawn, spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
+const RELEASES_URL = process.env.ARCHFLOW_RELEASES_URL || "https://github.com/AZidan/archflow/releases/latest";
+const CACHE_DIR = process.env.ARCHFLOW_CACHE_DIR || join(homedir(), ".cache", "archflow-install");
+const LATEST = join(CACHE_DIR, "latest.json");
+const DAY = 24 * 60 * 60 * 1000;
+
+// Detached refresher: resolve the latest tag through the releases-page redirect
+// (no API, no rate limit), write the cache, exit. Only ever run in the background.
+if (process.argv.includes("--refresh-latest")) {
+  try {
+    const res = await fetch(RELEASES_URL, { redirect: "follow", signal: AbortSignal.timeout(8000) });
+    const tag = new URL(res.url).pathname.split("/").pop();
+    if (/^\d+\.\d+\.\d+$/.test(tag)) {
+      mkdirSync(CACHE_DIR, { recursive: true });
+      writeFileSync(LATEST, JSON.stringify({ tag, checkedAt: Date.now() }) + "\n");
+    }
+  } catch {
+    // offline, or GitHub is not answering: try again next time
+  }
+  process.exit(0);
+}
 
 const cwd = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || join(cwd, "plugin");
 
+// Set once the installed version is known; printed on every exit path.
+let releaseNotice = null;
+
 function quit() {
+  if (releaseNotice) process.stdout.write(releaseNotice);
   process.exit(0);
+}
+
+function isNewer(a, b) {
+  const pa = a.split(".").map(Number);
+  const pb = b.split(".").map(Number);
+  for (let i = 0; i < 3; i++) {
+    if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) > (pb[i] || 0);
+  }
+  return false;
+}
+
+function checkRelease(installed) {
+  const host = process.env.ARCHFLOW_HOST;
+  if (!host || host === "claude" || process.env.ARCHFLOW_NO_UPDATE_CHECK) return null;
+  try {
+    const settings = readFileSync(join(cwd, ".archflow", "project-settings.yaml"), "utf8");
+    if (/^\s*update_check:\s*false\b/m.test(settings)) return null;
+  } catch {
+    // no settings file: the check is on by default
+  }
+  let cache = null;
+  try {
+    cache = JSON.parse(readFileSync(LATEST, "utf8"));
+  } catch {
+    // no cache yet
+  }
+  const fresh = cache && typeof cache.checkedAt === "number" && Date.now() - cache.checkedAt < DAY;
+  if (!fresh) {
+    try {
+      const child = spawn(process.execPath, [fileURLToPath(import.meta.url), "--refresh-latest"], {
+        detached: true, stdio: "ignore", env: process.env,
+      });
+      child.unref();
+    } catch {
+      // cannot spawn: no check this time
+    }
+  }
+  if (!cache?.tag || typeof cache.tag !== "string" || !isNewer(cache.tag, installed)) return null;
+  return [
+    `⬆️  Archflow ${cache.tag} is available. This project's ${host} adapter is ${installed}.`,
+    `    Upgrade from the project root:  npx archflow-install --host ${host}`,
+    `    Then run the Archflow doctor with --fix so .archflow/ catches up.`,
+    `    Tell the user. Do not run either unless they ask.`,
+    "",
+  ].join("\n");
 }
 
 // Not an Archflow project.
@@ -50,6 +132,8 @@ try {
   quit(); // cannot tell what is installed; say nothing
 }
 if (!installed) quit();
+
+releaseNotice = checkRelease(installed);
 
 let stamped = null;
 try {
@@ -116,5 +200,5 @@ lines.push("");
 lines.push("    Tell the user this before running their command. Do not repair anything unless");
 lines.push("    they ask. If they would rather continue, that is fine — say what may misbehave.");
 
-process.stdout.write(lines.join("\n") + "\n");
+process.stdout.write((releaseNotice || "") + lines.join("\n") + "\n");
 process.exit(0);

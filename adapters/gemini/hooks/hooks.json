@@ -18,7 +18,7 @@
           {
             "name": "archflow-check-upgrade",
             "type": "command",
-            "command": "CLAUDE_PLUGIN_ROOT=\"${extensionPath}\" CLAUDE_PROJECT_DIR=\"${workspacePath}\" node \"${extensionPath}/hooks/check-upgrade.mjs\"",
+            "command": "CLAUDE_PLUGIN_ROOT=\"${extensionPath}\" CLAUDE_PROJECT_DIR=\"${workspacePath}\" ARCHFLOW_HOST=gemini node \"${extensionPath}/hooks/check-upgrade.mjs\"",
             "timeout": 6000
           }
         ]
@@ -31,7 +31,7 @@
           {
             "name": "archflow-git-guard",
             "type": "command",
-            "command": "CLAUDE_PLUGIN_ROOT=\"${extensionPath}\" CLAUDE_PROJECT_DIR=\"${workspacePath}\" node \"${extensionPath}/hooks/guard-git.mjs\"",
+            "command": "CLAUDE_PLUGIN_ROOT=\"${extensionPath}\" CLAUDE_PROJECT_DIR=\"${workspacePath}\" ARCHFLOW_HOST=gemini node \"${extensionPath}/hooks/guard-git.mjs\"",
             "timeout": 5000
           }
         ]
@@ -43,7 +43,7 @@
           {
             "name": "archflow-check-state",
             "type": "command",
-            "command": "CLAUDE_PLUGIN_ROOT=\"${extensionPath}\" CLAUDE_PROJECT_DIR=\"${workspacePath}\" node \"${extensionPath}/hooks/check-state.mjs\"",
+            "command": "CLAUDE_PLUGIN_ROOT=\"${extensionPath}\" CLAUDE_PROJECT_DIR=\"${workspacePath}\" ARCHFLOW_HOST=gemini node \"${extensionPath}/hooks/check-state.mjs\"",
             "timeout": 5000
           }
         ]

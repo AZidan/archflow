@@ -16,5 +16,5 @@ This is the lowest-common-denominator package: `AGENTS.md` + Agent Skills (agent
 ## What you give up
 
 - No sub-agents: roles run serially inside the main context (bigger context use, slower Phase 3).
-- No lifecycle hooks: instructions load via AGENTS.md; upgrade and schema-drift checks run inside `$archflow-doctor` instead of automatically.
+- No lifecycle hooks: instructions load via AGENTS.md, and the upgrade check runs because AGENTS.md asks the agent to run it, not because the host does.
 - The git guard is a real `pre-push` hook, so it also protects you from your own terminal.

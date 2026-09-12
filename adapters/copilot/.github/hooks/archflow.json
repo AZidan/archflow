@@ -14,7 +14,8 @@
         "cwd": ".",
         "env": {
           "CLAUDE_PLUGIN_ROOT": ".github/archflow",
-          "CLAUDE_PROJECT_DIR": "."
+          "CLAUDE_PROJECT_DIR": ".",
+          "ARCHFLOW_HOST": "copilot"
         },
         "timeoutSec": 6
       }
@@ -26,7 +27,8 @@
         "cwd": ".",
         "env": {
           "CLAUDE_PLUGIN_ROOT": ".github/archflow",
-          "CLAUDE_PROJECT_DIR": "."
+          "CLAUDE_PROJECT_DIR": ".",
+          "ARCHFLOW_HOST": "copilot"
         },
         "timeoutSec": 5
       }
@@ -38,7 +40,8 @@
         "cwd": ".",
         "env": {
           "CLAUDE_PLUGIN_ROOT": ".github/archflow",
-          "CLAUDE_PROJECT_DIR": "."
+          "CLAUDE_PROJECT_DIR": ".",
+          "ARCHFLOW_HOST": "copilot"
         },
         "timeoutSec": 5
       }

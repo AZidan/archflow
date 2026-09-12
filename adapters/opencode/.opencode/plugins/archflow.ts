@@ -13,7 +13,7 @@ function runHook(cwd: string, script: string, payload: object): { code: number; 
     input: JSON.stringify(payload),
     encoding: "utf8",
     timeout: 6000,
-    env: { ...process.env, CLAUDE_PLUGIN_ROOT: join(cwd, ROOT), CLAUDE_PROJECT_DIR: cwd },
+    env: { ...process.env, CLAUDE_PLUGIN_ROOT: join(cwd, ROOT), CLAUDE_PROJECT_DIR: cwd, ARCHFLOW_HOST: "opencode" },
   })
   return { code: r.status ?? 0, stdout: r.stdout ?? "", stderr: r.stderr ?? "" }
 }

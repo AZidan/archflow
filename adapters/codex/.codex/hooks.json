@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "CLAUDE_PLUGIN_ROOT=\"$PWD/.codex/archflow\" CLAUDE_PROJECT_DIR=\"$PWD\" node .codex/archflow/hooks/check-upgrade.mjs",
+            "command": "CLAUDE_PLUGIN_ROOT=\"$PWD/.codex/archflow\" CLAUDE_PROJECT_DIR=\"$PWD\" ARCHFLOW_HOST=codex node .codex/archflow/hooks/check-upgrade.mjs",
             "timeout": 6
           }
         ]
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "CLAUDE_PLUGIN_ROOT=\"$PWD/.codex/archflow\" CLAUDE_PROJECT_DIR=\"$PWD\" node .codex/archflow/hooks/guard-git.mjs",
+            "command": "CLAUDE_PLUGIN_ROOT=\"$PWD/.codex/archflow\" CLAUDE_PROJECT_DIR=\"$PWD\" ARCHFLOW_HOST=codex node .codex/archflow/hooks/guard-git.mjs",
             "timeout": 5
           }
         ]
@@ -39,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "CLAUDE_PLUGIN_ROOT=\"$PWD/.codex/archflow\" CLAUDE_PROJECT_DIR=\"$PWD\" node .codex/archflow/hooks/check-state.mjs",
+            "command": "CLAUDE_PLUGIN_ROOT=\"$PWD/.codex/archflow\" CLAUDE_PROJECT_DIR=\"$PWD\" ARCHFLOW_HOST=codex node .codex/archflow/hooks/check-state.mjs",
             "timeout": 5
           }
         ]

@@ -13,7 +13,7 @@ let input = {};
 try { input = JSON.parse(readFileSync(0, "utf8") || "{}"); } catch {}
 const cwd = input.cwd || process.cwd();
 const isArchflow = existsSync(join(cwd, ".archflow"));
-const env = { ...process.env, CLAUDE_PLUGIN_ROOT: root, CLAUDE_PROJECT_DIR: cwd };
+const env = { ...process.env, CLAUDE_PLUGIN_ROOT: root, CLAUDE_PROJECT_DIR: cwd, ARCHFLOW_HOST: "cursor" };
 const run = (script, payload) =>
   spawnSync("node", [join(here, script)], { cwd, env, input: JSON.stringify(payload), encoding: "utf8", timeout: 6000 });
 const out = (o) => { process.stdout.write(JSON.stringify(o)); process.exit(0); };

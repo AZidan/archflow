@@ -82,6 +82,9 @@ async function resolveSource(opts) {
   catch (e) { log(`note  ${e.message}; using the adapters bundled with this package (${VERSION})`); return; }
   const cacheRoot = join(homedir(), ".cache", "archflow-install");
   const cache = join(cacheRoot, tag);
+  if (!opts.version) { // share what we learned with the session-start hook, so it does not nag about this tag
+    try { mkdirSync(cacheRoot, { recursive: true }); writeFileSync(join(cacheRoot, "latest.json"), JSON.stringify({ tag, checkedAt: Date.now() }) + "\n"); } catch {}
+  }
   if (existsSync(join(cache, "adapters"))) { useSource(cache, `release ${tag}, cached`); return; }
   mkdirSync(cacheRoot, { recursive: true });
   const tmp = mkdtempSync(join(cacheRoot, "tmp-")); // same filesystem as the cache, so the final rename is atomic

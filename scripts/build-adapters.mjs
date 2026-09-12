@@ -151,7 +151,7 @@ function runHook(cwd: string, script: string, payload: object): { code: number; 
     input: JSON.stringify(payload),
     encoding: "utf8",
     timeout: 6000,
-    env: { ...process.env, CLAUDE_PLUGIN_ROOT: join(cwd, ROOT), CLAUDE_PROJECT_DIR: cwd },
+    env: { ...process.env, CLAUDE_PLUGIN_ROOT: join(cwd, ROOT), CLAUDE_PROJECT_DIR: cwd, ARCHFLOW_HOST: "opencode" },
   })
   return { code: r.status ?? 0, stdout: r.stdout ?? "", stderr: r.stderr ?? "" }
 }
@@ -215,7 +215,7 @@ let input = {};
 try { input = JSON.parse(readFileSync(0, "utf8") || "{}"); } catch {}
 const cwd = input.cwd || process.cwd();
 const isArchflow = existsSync(join(cwd, ".archflow"));
-const env = { ...process.env, CLAUDE_PLUGIN_ROOT: root, CLAUDE_PROJECT_DIR: cwd };
+const env = { ...process.env, CLAUDE_PLUGIN_ROOT: root, CLAUDE_PROJECT_DIR: cwd, ARCHFLOW_HOST: "cursor" };
 const run = (script, payload) =>
   spawnSync("node", [join(here, script)], { cwd, env, input: JSON.stringify(payload), encoding: "utf8", timeout: 6000 });
 const out = (o) => { process.stdout.write(JSON.stringify(o)); process.exit(0); };
@@ -344,7 +344,7 @@ const HOSTS = {
       cpSync(join(PLUGIN, "scripts"), join(out, hookRoot, "scripts"), { recursive: true });
       // upgrade_archflow.py / doctor read framework files from <root>/skills/archflow
       link(join(out, ".agents", "skills", "archflow"), join(out, hookRoot, "skills", "archflow"));
-      const env = `CLAUDE_PLUGIN_ROOT="$PWD/${hookRoot}" CLAUDE_PROJECT_DIR="$PWD"`;
+      const env = `CLAUDE_PLUGIN_ROOT="$PWD/${hookRoot}" CLAUDE_PROJECT_DIR="$PWD" ARCHFLOW_HOST=codex`;
       const hooks = {
         hooks: {
           SessionStart: [
@@ -486,7 +486,7 @@ const HOSTS = {
       }
       cpSync(join(PLUGIN, ".claude-plugin", "plugin.json"), join(out, ".claude-plugin", "plugin.json"));
       cpSync(join(PLUGIN, "scripts"), join(out, "scripts"), { recursive: true });
-      const env = `CLAUDE_PLUGIN_ROOT="\${extensionPath}" CLAUDE_PROJECT_DIR="\${workspacePath}"`;
+      const env = `CLAUDE_PLUGIN_ROOT="\${extensionPath}" CLAUDE_PROJECT_DIR="\${workspacePath}" ARCHFLOW_HOST=gemini`;
       const hooks = {
         hooks: {
           SessionStart: [
@@ -696,6 +696,8 @@ const HOSTS = {
       const root = ".agents/archflow";
       cpSync(join(PLUGIN, "scripts"), join(out, root, "scripts"), { recursive: true });
       cpSync(join(PLUGIN, ".claude-plugin", "plugin.json"), join(out, root, ".claude-plugin", "plugin.json"));
+      // No session hooks here, so AGENTS.md asks the agent to run the upgrade check itself.
+      cpSync(join(PLUGIN, "hooks", "check-upgrade.mjs"), join(out, root, "hooks", "check-upgrade.mjs"));
       link(join(out, ".agents", "skills", "archflow"), join(out, root, "skills", "archflow"));
 
       const cmdList = commands.filter((c) => !this.skip.has(c.name))
@@ -704,7 +706,9 @@ const HOSTS = {
         join(out, "AGENTS.archflow.md"),
         `<!-- archflow:start (managed by Archflow ${manifest.version}; merge into AGENTS.md) -->\n# Archflow\n\n` +
           `This project is managed by Archflow, a phase-based development workflow. State lives in \`.archflow/\`.\n\n` +
-          `**At the start of every session, read \`.archflow/instructions.md\` before doing anything else.**\n\n` +
+          `**At the start of every session, read \`.archflow/instructions.md\` before doing anything else.** ` +
+          `Then run \`ARCHFLOW_HOST=generic node .agents/archflow/hooks/check-upgrade.mjs\` and relay anything it prints: ` +
+          `it is the upgrade check other hosts run automatically at session start.\n\n` +
           `Archflow actions are skills under \`.agents/skills/\`. Run one when the user asks for it by name:\n\n${cmdList}\n\n` +
           `Specialised roles are skills named \`archflow-agent-<role>\`. When a phase delegates to a role, load that skill and perform the role yourself, one role at a time. ` +
           `Phase 3 runs \`ui-engineer\` then \`api-engineer\` serially against the same API contract.\n\n` +
@@ -716,7 +720,7 @@ const HOSTS = {
           `This is the lowest-common-denominator package: \`AGENTS.md\` + Agent Skills (agentskills.io). It works in any host that reads those, ` +
           `including Cline, Roo, Kilo, Windsurf, Zed, Amp and Copilot/Codex/OpenCode/Cursor without their native adapters.\n\n` +
           `## Install\n\n**One command:** \`npx archflow-install --host ${ctx.host}\` from your project root does every step below, and re-running it upgrades in place. By hand:\n\n1. Copy \`.agents/\` into your project root.\n2. Merge \`AGENTS.archflow.md\` into \`AGENTS.md\`.\n3. Install the git guard: \`sh .agents/archflow/scripts/archflow-install-git-guard.sh\`\n4. Ask your agent to run \`$archflow-init\` or \`$archflow-onboard\`.\n\n` +
-          `## What you give up\n\n- No sub-agents: roles run serially inside the main context (bigger context use, slower Phase 3).\n- No lifecycle hooks: instructions load via AGENTS.md; upgrade and schema-drift checks run inside \`$archflow-doctor\` instead of automatically.\n- The git guard is a real \`pre-push\` hook, so it also protects you from your own terminal.\n`,
+          `## What you give up\n\n- No sub-agents: roles run serially inside the main context (bigger context use, slower Phase 3).\n- No lifecycle hooks: instructions load via AGENTS.md, and the upgrade check runs because AGENTS.md asks the agent to run it, not because the host does.\n- The git guard is a real \`pre-push\` hook, so it also protects you from your own terminal.\n`,
       );
     },
   },
@@ -862,7 +866,7 @@ const HOSTS = {
       cpSync(join(PLUGIN, ".claude-plugin", "plugin.json"), join(out, root, ".claude-plugin", "plugin.json"));
       cpSync(join(PLUGIN, "scripts"), join(out, root, "scripts"), { recursive: true });
       link(join(G, "skills", "archflow"), join(out, root, "skills", "archflow"));
-      const env = { CLAUDE_PLUGIN_ROOT: root, CLAUDE_PROJECT_DIR: "." };
+      const env = { CLAUDE_PLUGIN_ROOT: root, CLAUDE_PROJECT_DIR: ".", ARCHFLOW_HOST: "copilot" };
       // PascalCase event names => VS-Code/Claude-compatible snake_case payloads.
       write(join(G, "hooks", "archflow.json"), JSON.stringify({
         version: 1,

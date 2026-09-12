@@ -3,7 +3,7 @@
 
 This project is managed by Archflow, a phase-based development workflow. State lives in `.archflow/`.
 
-**At the start of every session, read `.archflow/instructions.md` before doing anything else.**
+**At the start of every session, read `.archflow/instructions.md` before doing anything else.** Then run `ARCHFLOW_HOST=generic node .agents/archflow/hooks/check-upgrade.mjs` and relay anything it prints: it is the upgrade check other hosts run automatically at session start.
 
 Archflow actions are skills under `.agents/skills/`. Run one when the user asks for it by name:
 
