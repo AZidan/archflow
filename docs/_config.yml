@@ -5,7 +5,7 @@
 # is completely unaffected by this file.
 
 title: Archflow
-description: Phase-based AI development framework for Claude Code.
+description: Phase-based AI development framework for Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode.
 url: https://archflowai.dev
 baseurl: ""
 

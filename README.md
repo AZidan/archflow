@@ -24,7 +24,7 @@
 
 Getting AI to write code stopped being the hard part. Keeping it coherent is. Sessions end and take their context with them. The frontend drifts from the backend. Two weeks in, nobody can say what's actually finished.
 
-Archflow is a **phase-based AI development framework** for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that fixes this structurally, with 17 specialized agents working from product strategy through to production deployment.
+Archflow is a **phase-based AI development framework** for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that fixes this structurally, with 17 specialized agents working from product strategy through to production deployment. It also runs on OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode; see [Other Hosts](#other-hosts) for what each gets and what is verified.
 
 Instead of one AI doing everything, each task goes to an agent with deep expertise in its domain. A `product-strategist` defines business goals. A `ux-designer` creates the design system. An `api-contract-architect` locks down API specs. Then `ui-engineer` and `api-engineer` build frontend and backend in parallel against that same contract, so they can't quietly disagree. Handoffs happen through files, not chat, so context outlives the session that created it.
 
@@ -63,42 +63,43 @@ cd your-project
 claude
 ```
 
-Then pick the entry point that matches where you actually are.
+Then pick the entry point that matches where you actually are. Not on Claude Code? See [Other Hosts](#other-hosts).
 
 ---
 
 ## Other Hosts
 
-Archflow is built as a Claude Code plugin, but the framework is files, so it runs elsewhere too.
-Codex and GitHub Copilot CLI load `plugin/` directly. For host-native, repo-committed configuration,
-`adapters/` ships generated packages; each has a README with install steps and the host's limits.
-
-| Host | Package | Sub-agents | Hooks | Notes |
-|---|---|---|---|---|
-| Claude Code | `plugin/` via the marketplace | yes | yes | Reference implementation; Studio lives here |
-| OpenAI Codex | `plugin/` or `adapters/codex` | yes | yes | `$archflow-<cmd>` skills |
-| GitHub Copilot CLI | `plugin/` or `adapters/copilot` | yes | yes | Same tree works in VS Code agent mode |
-| Cursor | `adapters/cursor` | yes | yes | Also a Cursor Plugin |
-| Gemini CLI | `adapters/gemini` | preview | yes | Installs as an extension |
-| OpenCode | `adapters/opencode` | yes | partial | Hooks skip subagents |
-| Anything with `AGENTS.md` + Agent Skills | `adapters/generic` | serial | git guard only | Cline, Windsurf, Zed, Amp… |
-
-Install for any of them, Claude Code included, with one command from the project root. It detects the
-hosts on the machine, copies the adapter in, merges the `AGENTS.md` block and installs the git guard.
-For Claude Code it installs the marketplace plugin at project scope, so the choice is committed with
-the repo and teammates are prompted to install. Re-run it to upgrade.
+Archflow is built as a Claude Code plugin, but the framework is files, so the same `.archflow/` state,
+agents and phases run on other coding agents. One command from the project root sets it up:
 
 ```bash
-npx archflow-install            # detect hosts and install
-npx archflow-install --host claude,codex
+npx archflow-install            # detects the hosts on this machine and installs for each
+npx archflow-install --host codex,cursor
 npx archflow-install --dry-run  # show the plan only
 ```
 
-The adapters come from the latest GitHub release, whatever version of the installer npx has cached,
-so re-running the same command is the upgrade: it refreshes the copied files in place, then the
-next session's upgrade check asks you to run the doctor to bring `.archflow/` up to date.
+It copies a host-native adapter into the project, merges the Archflow block into `AGENTS.md` and
+installs a git pre-push guard. For Claude Code it installs the marketplace plugin at project scope, so
+the choice is committed with the repo and teammates are prompted to install. Re-running it is the
+upgrade: the adapters come from the latest GitHub release, whatever version of the installer npx has
+cached, and a session-start check tells you when a newer release exists.
 
-Regenerate the adapters after changing `plugin/`: `node scripts/build-adapters.mjs` (CI checks for drift).
+| Host | What you get | Sub-agents | Hooks | Verified |
+|---|---|---|---|---|
+| Claude Code | The plugin, via the marketplace. Studio lives here | yes | yes | yes, the reference host |
+| OpenAI Codex | `.codex/` agents and `$archflow-<cmd>` skills | yes | yes | yes, on a real project |
+| GitHub Copilot CLI | `.github/` agents, skills and hooks; VS Code agent mode reads the same tree | yes | yes | shipped, not yet verified |
+| Cursor | `.cursor/` agents, commands, rules and hooks; also a Cursor Plugin | yes | yes | shipped, not yet verified |
+| Gemini CLI | An extension, installed per user | preview | yes | shipped, not yet verified |
+| OpenCode | `.opencode/` agents, commands and a plugin for hooks | yes | primary agent only | shipped, not yet verified |
+| Anything with `AGENTS.md` + Agent Skills | Skills only; roles run serially; the git guard is the safety net | no | no | shipped, not yet verified |
+
+What does not port: `/archflow:studio` drives the `claude` binary, and `memory: user` agent memory
+has no equivalent elsewhere. Each adapter's README under `adapters/<host>/` lists that host's limits.
+Contributors regenerate the adapters after changing `plugin/` with `node scripts/build-adapters.mjs`;
+CI fails on drift.
+
+---
 
 ## Three Ways to Start
 
@@ -409,7 +410,7 @@ Archflow manages these files in your project:
 <details>
 <summary><strong>File Structure</strong></summary>
 
-Archflow is distributed as a Claude Code plugin marketplace. The plugin contains all framework code; your project only stores state files.
+Archflow is distributed as a Claude Code plugin marketplace, and for other hosts as generated adapter packages that `npx archflow-install` copies into a project. The plugin contains all framework code; your project only stores state files.
 
 ### Marketplace (this repo)
 
@@ -509,7 +510,7 @@ These integrations are primarily used during `/archflow:onboard` to pull existin
 
 | Tool | Why | Used by |
 |---|---|---|
-| [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) | Archflow is a Claude Code plugin | Everything |
+| A supported coding agent: [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) is the reference host; OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode through [Other Hosts](#other-hosts) | Archflow runs inside it | Everything |
 | Git | Branch-per-story workflow, release tags, the ship ritual | All phases |
 | Node.js 18+ | Archflow Studio and the `SessionStart` hook that ships with the plugin; some MCP servers too | Studio, hooks |
 
@@ -569,7 +570,7 @@ Archflow never auto-updates either of these.
 
 ### What Archflow runs on your machine
 
-Archflow drives Claude Code, so everything runs as ordinary tool calls you can see and approve:
+Archflow drives your coding agent, Claude Code or one of the other hosts, so everything runs as ordinary tool calls you can see and approve:
 
 - **Git** — branch, commit, tag, and read history. It never merges to `main`; that stays yours.
 - **File writes** — inside `.archflow/`, `docs/`, `design-artifacts/`, and your source tree.

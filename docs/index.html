@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Archflow: Turn Claude Code into a structured development team</title>
-  <meta name="description" content="Turn Claude Code into a structured development team. 17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have. Free and MIT.">
+  <meta name="description" content="Turn Claude Code into a structured development team. 17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have. Free and MIT. Also runs on OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode.">
   <meta property="og:title" content="Archflow: Turn Claude Code into a structured development team">
-  <meta property="og:description" content="17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have.">
+  <meta property="og:description" content="17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have. Also runs on OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://archflowai.dev">
   <!-- Wide card carrying the product, not the mark: a launch share should show
@@ -20,7 +20,7 @@
   <meta name="twitter:image" content="https://archflowai.dev/assets/video/studio-poster.jpg">
   <meta name="twitter:image:alt" content="Archflow Studio: a release board with stories moving through ready, in progress and done">
   <meta name="twitter:title" content="Archflow: Turn Claude Code into a structured development team">
-  <meta name="twitter:description" content="17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have.">
+  <meta name="twitter:description" content="17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have. Also runs on OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode.">
   <!-- Canonical: azidan.github.io/archflow/ 301s here, but Google still has the
        old URL indexed. This consolidates the two faster than the redirect alone. -->
   <link rel="canonical" href="https://archflowai.dev/">
@@ -95,7 +95,7 @@
         "url": "https://archflowai.dev/",
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "macOS, Linux, Windows",
-        "description": "Phase-based AI development framework for Claude Code. 17 specialized agents across 6 phases, handing off through files in your repo. Reads the codebase you already have.",
+        "description": "Phase-based AI development framework for Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode. 17 specialized agents across 6 phases, handing off through files in your repo. Reads the codebase you already have.",
         "softwareVersion": "2.3.0",
         "license": "https://opensource.org/licenses/MIT",
         "isAccessibleForFree": true,
@@ -411,6 +411,10 @@
           </div>
           <p class="text-text-muted text-xs mt-2.5 leading-relaxed">
             <code class="font-mono">--scope project</code> installs Archflow into this repo only, so it travels with the project instead of your machine.
+          </p>
+          <!-- Hosts line: the widened audience, stated with its verification status. -->
+          <p class="text-text-muted text-xs mt-2 leading-relaxed">
+            Not on Claude Code? <code class="font-mono">npx archflow-install</code> sets up Codex, Copilot CLI, Cursor, Gemini CLI or OpenCode. <a href="#install" class="text-accent-light hover:underline">Details</a>.
           </p>
         </div>
 
@@ -1217,6 +1221,20 @@
         <a href="#studio" class="font-mono text-xs text-accent-light hover:underline">/archflow:studio</a>
         to do the whole thing in the browser instead.
       </p>
+      <!-- Other hosts. Verification status stays in the copy on purpose: name the
+           limitation out loud, it is the credibility. Update it as hosts are verified. -->
+      <div class="fade-in max-w-2xl mx-auto mb-10 rounded-xl border border-dark-700/60 bg-dark-800/40 px-6 py-5">
+        <p class="text-text-primary font-heading font-600 text-base mb-2">Not on Claude Code?</p>
+        <p class="text-text-secondary text-sm leading-relaxed mb-3">
+          One command from your project root sets up Archflow for OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI or OpenCode. Same <code class="font-mono text-xs text-text-primary">.archflow/</code> files, same agents and phases, so one project can be worked on from more than one tool.
+        </p>
+        <div class="code-block rounded-lg overflow-hidden mb-3">
+          <div class="px-4 py-3 font-mono text-xs sm:text-sm"><span class="text-text-muted select-none">$ </span><span class="text-text-primary">npx archflow-install</span></div>
+        </div>
+        <p class="text-text-muted text-xs leading-relaxed">
+          Codex is verified end to end on a real project. Copilot CLI, Cursor, Gemini CLI and OpenCode are shipped and not yet verified. Studio stays Claude Code only.
+        </p>
+      </div>
 
       <!-- Trust signals -->
       <p class="fade-in text-text-muted text-sm text-center mb-10">
