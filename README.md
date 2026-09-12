@@ -6,11 +6,11 @@
   Archflow
 </h1>
 
-**Turn Claude Code into a structured development team.**
+**Turn your coding agent into a structured development team.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-0f766e)](https://opensource.org/licenses/MIT) [![Claude Code](https://img.shields.io/badge/Claude%20Code-Framework-0f766e)](https://docs.anthropic.com/en/docs/claude-code) [![Agents](https://img.shields.io/badge/Agents-17-0d9488)](https://github.com/AZidan/archflow) [![Phases](https://img.shields.io/badge/Phases-6-0d9488)](https://github.com/AZidan/archflow) [![Studio](https://img.shields.io/badge/Studio-Beta-14b8a6)](#or-skip-the-terminal)
+[![License: MIT](https://img.shields.io/badge/License-MIT-0f766e)](https://opensource.org/licenses/MIT) [![Agents](https://img.shields.io/badge/Agents-17-0d9488)](https://github.com/AZidan/archflow) [![Phases](https://img.shields.io/badge/Phases-6-0d9488)](https://github.com/AZidan/archflow) [![Studio](https://img.shields.io/badge/Studio-Beta-14b8a6)](#or-skip-the-terminal)
 
-[Website](https://archflowai.dev/) · [Watch it work](https://www.youtube.com/@archflowai-dev) · [Quick Start](#quick-start) · [Three Ways to Start](#three-ways-to-start) · [Studio](#or-skip-the-terminal) · [Commands](#commands) · [How It Works](#how-it-works) · [Phases](#the-phases) · [Agents](#agents)
+[Website](https://archflowai.dev/) · [Watch it work](https://www.youtube.com/@archflowai-dev) · [Quick Start](#quick-start) · [Hosts](#hosts) · [Three Ways to Start](#three-ways-to-start) · [Studio](#or-skip-the-terminal) · [Commands](#commands) · [How It Works](#how-it-works) · [Phases](#the-phases) · [Agents](#agents)
 
 <img src="docs/archflow-overview.svg" alt="Archflow Overview" width="700" />
 
@@ -24,7 +24,7 @@
 
 Getting AI to write code stopped being the hard part. Keeping it coherent is. Sessions end and take their context with them. The frontend drifts from the backend. Two weeks in, nobody can say what's actually finished.
 
-Archflow is a **phase-based AI development framework** for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that fixes this structurally, with 17 specialized agents working from product strategy through to production deployment. It also runs on OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode; see [Other Hosts](#other-hosts) for what each gets and what is verified.
+Archflow is a **phase-based AI development framework** for your coding agent that fixes this structurally, with 17 specialized agents working from product strategy through to production deployment. It runs on Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode, from the same files in your repo; see [Hosts](#hosts).
 
 Instead of one AI doing everything, each task goes to an agent with deep expertise in its domain. A `product-strategist` defines business goals. A `ux-designer` creates the design system. An `api-contract-architect` locks down API specs. Then `ui-engineer` and `api-engineer` build frontend and backend in parallel against that same contract, so they can't quietly disagree. Handoffs happen through files, not chat, so context outlives the session that created it.
 
@@ -40,62 +40,60 @@ Works with any project type (fullstack, frontend-only, backend-only, or mobile),
 
 ## Quick Start
 
-### 1. Add the Marketplace (one-time)
+### 1. Install
+
+From your project root:
+
+```bash
+npx archflow install
+```
+
+It detects the coding agents on your machine and sets Archflow up for each one: Claude Code, OpenAI
+Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode. Everything it writes lands in your repo, so
+teammates get it on clone. Pass `--host codex,cursor` to choose, or `--dry-run` to see the plan first.
+
+On Claude Code the plugin marketplace works too, and is what `npx archflow install` runs for you there:
 
 ```bash
 claude plugin marketplace add AZidan/archflow
-```
-
-### 2. Install the Plugin
-
-```bash
 claude plugin install archflow --scope project
 ```
 
-This saves the plugin reference to `.claude/settings.json` in your repo, so any team member who clones gets prompted to install automatically.
+Free and open source. No lock-in. Uninstall by deleting what it added; on Claude Code,
+`claude plugin uninstall archflow`.
 
-Free and open source. No lock-in. Uninstall anytime with `claude plugin uninstall archflow`.
-
-### 3. Open Claude Code in your project
+### 2. Open your coding agent in the project
 
 ```bash
 cd your-project
-claude
+claude        # or codex, cursor, gemini, opencode, copilot
 ```
 
-Then pick the entry point that matches where you actually are. Not on Claude Code? See [Other Hosts](#other-hosts).
+Then pick the entry point that matches where you actually are.
 
 ---
 
-## Other Hosts
+## Hosts
 
-Archflow is built as a Claude Code plugin, but the framework is files, so the same `.archflow/` state,
-agents and phases run on other coding agents. One command from the project root sets it up:
+Archflow is files, so the same `.archflow/` state, agents and phases run on every host it supports.
+`npx archflow install` copies a host-native adapter into the project, merges the Archflow block into
+`AGENTS.md` and installs a git pre-push guard; on Claude Code it installs the marketplace plugin at
+project scope. Re-running it is the upgrade: the adapters come from the latest GitHub release, whatever
+version of the installer npx has cached, and a session-start check tells you when a newer release exists.
 
-```bash
-npx archflow install            # detects the hosts on this machine and installs for each
-npx archflow install --host codex,cursor
-npx archflow install --dry-run  # show the plan only
-```
-
-It copies a host-native adapter into the project, merges the Archflow block into `AGENTS.md` and
-installs a git pre-push guard. For Claude Code it installs the marketplace plugin at project scope, so
-the choice is committed with the repo and teammates are prompted to install. Re-running it is the
-upgrade: the adapters come from the latest GitHub release, whatever version of the installer npx has
-cached, and a session-start check tells you when a newer release exists.
-
-| Host | What you get | Sub-agents | Hooks | Verified |
-|---|---|---|---|---|
-| Claude Code | The plugin, via the marketplace. Studio lives here | yes | yes | yes, the reference host |
-| OpenAI Codex | `.codex/` agents and `$archflow-<cmd>` skills | yes | yes | yes, on a real project |
-| GitHub Copilot CLI | `.github/` agents, skills and hooks; VS Code agent mode reads the same tree | yes | yes | shipped, not yet verified |
-| Cursor | `.cursor/` agents, commands, rules and hooks; also a Cursor Plugin | yes | yes | shipped, not yet verified |
-| Gemini CLI | An extension, installed per user | preview | yes | shipped, not yet verified |
-| OpenCode | `.opencode/` agents, commands and a plugin for hooks | yes | primary agent only | shipped, not yet verified |
-| Anything with `AGENTS.md` + Agent Skills | Skills only; roles run serially; the git guard is the safety net | no | no | shipped, not yet verified |
+| Host | What you get | Sub-agents | Hooks |
+|---|---|---|---|
+| Claude Code | The plugin, via the marketplace. Studio lives here | yes | yes |
+| OpenAI Codex | `.codex/` agents and `$archflow-<cmd>` skills | yes | yes |
+| GitHub Copilot CLI | `.github/` agents, skills and hooks; VS Code agent mode reads the same tree | yes | yes |
+| Cursor | `.cursor/` agents, commands, rules and hooks; also a Cursor Plugin | yes | yes |
+| Gemini CLI | An extension, installed per user | preview | yes |
+| OpenCode | `.opencode/` agents, commands and a plugin for hooks | yes | primary agent only |
+| Anything with `AGENTS.md` + Agent Skills | Skills only; roles run serially; the git guard is the safety net | no | no |
 
 What does not port: `/archflow:studio` drives the `claude` binary, and `memory: user` agent memory
 has no equivalent elsewhere. Each adapter's README under `adapters/<host>/` lists that host's limits.
+Something off on your host? [Open an issue](https://github.com/AZidan/archflow/issues).
 Contributors regenerate the adapters after changing `plugin/` with `node scripts/build-adapters.mjs`;
 CI fails on drift.
 
@@ -510,7 +508,7 @@ These integrations are primarily used during `/archflow:onboard` to pull existin
 
 | Tool | Why | Used by |
 |---|---|---|
-| A supported coding agent: [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) is the reference host; OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode through [Other Hosts](#other-hosts) | Archflow runs inside it | Everything |
+| One of the supported coding agents: Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode (see [Hosts](#hosts)) | Archflow runs inside it | Everything |
 | Git | Branch-per-story workflow, release tags, the ship ritual | All phases |
 | Node.js 18+ | Archflow Studio and the `SessionStart` hook that ships with the plugin; some MCP servers too | Studio, hooks |
 
