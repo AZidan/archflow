@@ -72,10 +72,9 @@ __pycache__/
 # list. The three exceptions below are design records that were already public
 # and are worth keeping in the repo; they are still excluded from the site build
 # by docs/_config.yml.
-docs/internal/*
-!docs/internal/archflow-releases-v2-proposal.md
-!docs/internal/archflow-skill-scaffolding-proposal.md
-!docs/internal/landing-page-plan.md
+# The whole directory, including the path itself — it is a symlink into the private
+# archflow-internal repo, and the symlink must not be tracked either.
+docs/internal
 
 # npm package build output (archflow, and the archflowai alias)
 /node_modules/
