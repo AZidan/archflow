@@ -1,7 +1,7 @@
 ---
 layout: guide
 title: "Archflow vs gstack"
-description: "An honest comparison of two MIT frameworks that turn Claude Code into a team of specialists. gstack wins reach, review depth and the browser. Archflow reads the repository you already have — and keeps what it reads in the repo."
+description: "An honest comparison of two MIT frameworks that turn a coding agent into a team of specialists. gstack wins reach, review depth and the browser. Archflow reads the repository you already have — and keeps what it reads in the repo."
 permalink: /compare/archflow-vs-gstack/
 ---
 
