@@ -141,8 +141,8 @@ properties:
   # ---------------------------------------------------------------------------
   # update_check — may the session-start hook say a newer Archflow release exists?
   #
-  # Hosts other than Gemini CLI only; Gemini CLI updates through its
-  # marketplace. The hook reads a cache (~/.cache/archflow-install/latest.json)
+  # On Gemini CLI the fix it names is the plugin update; on other hosts, the
+  # installer. The hook reads a cache (~/.cache/archflow-install/latest.json)
   # that a detached child refreshes at most once a day, so nothing ever blocks
   # on the network. false turns it off, for teams that object to any outbound
   # request from a session start.
@@ -151,7 +151,7 @@ properties:
     type: boolean
     required: false
     default: true
-    description: "false silences the newer-release notice on non-Claude hosts."
+    description: "false silences the newer-release notice at session start."
 
 # -----------------------------------------------------------------------------
 # Example — project-settings.yaml

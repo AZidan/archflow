@@ -238,12 +238,12 @@ settings split above or the stack detection in 5c, you do yourself, showing a di
 ever writes project content, invents a value the repo does not evidence, or resolves a conflict;
 those are reported for the user to decide.
 
-**Newer release.** On hosts other than Cursor the session-start hook also reports when a newer
-Archflow release exists than the installed adapter. It reads `~/.cache/archflow-install/latest.json`,
+**Newer release.** The session-start hook also reports when a newer Archflow release exists than
+what is installed, the marketplace plugin on Cursor or the copied adapter elsewhere. It reads `~/.cache/archflow-install/latest.json`,
 refreshed in the background at most once a day, and is silenced by `update_check: false` in
-`project-settings.yaml`. Report the same comparison here when that file exists: the fix is
-`npx archflow-install` from the project root, which refreshes the adapter, followed by `--fix` here.
-Cursor updates the plugin through its marketplace, so say nothing there.
+`project-settings.yaml`. Report the same comparison here when that file exists. The fix on Cursor
+is `claude plugin marketplace update archflow && claude plugin update archflow@archflow`; on other
+hosts it is `npx archflow-install` from the project root, which refreshes the adapter. Then `--fix` here.
 
 ## Step 5c — Stack detection (the last thing `--fix` does)
 

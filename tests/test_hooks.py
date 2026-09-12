@@ -262,7 +262,9 @@ def run_check_upgrade(cwd):
         capture_output=True, text=True, timeout=15,
         env={"PATH": _os.environ["PATH"],
              "CLAUDE_PROJECT_DIR": str(cwd),
-             "CLAUDE_PLUGIN_ROOT": str(REPO / "plugin")},
+             "CLAUDE_PLUGIN_ROOT": str(REPO / "plugin"),
+             # these tests are about drift, not releases; keep them off the network and the real cache
+             "ARCHFLOW_NO_UPDATE_CHECK": "1"},
     )
 
 
@@ -396,10 +398,14 @@ def test_release_notice_also_prints_alongside_the_drift_notice(stale_project, tm
     assert "behind the installed Archflow plugin" in out
 
 
-def test_release_notice_is_silent_on_claude_code(current_project, tmp_path):
+def test_release_notice_on_claude_code_names_the_plugin_update(current_project, tmp_path):
+    """No ARCHFLOW_HOST means Claude Code: the fix is the plugin update, not the installer."""
     cache = _cache(tmp_path, "99.0.0")
-    assert run_check_upgrade_as(current_project, None, cache).stdout.strip() == ""
-    assert run_check_upgrade_as(current_project, "claude", cache).stdout.strip() == ""
+    for host in (None, "claude"):
+        out = run_check_upgrade_as(current_project, host, cache).stdout
+        assert "Archflow 99.0.0 is available" in out
+        assert "claude plugin update archflow@archflow" in out
+        assert "archflow-install" not in out
 
 
 def test_release_notice_is_silent_when_installed_is_current_or_newer(current_project, tmp_path):
@@ -478,7 +484,7 @@ def test_stale_cache_is_refreshed_in_the_background_without_blocking(current_pro
 
 
 def test_every_adapter_names_its_host_to_the_hook():
-    """Without ARCHFLOW_HOST the hook assumes Claude Code and stays silent."""
+    """Without ARCHFLOW_HOST the hook assumes Claude Code and points at the plugin update."""
     wiring = {
         "codex": REPO / "adapters" / "codex" / ".codex" / "hooks.json",
         "copilot": REPO / "adapters" / "copilot" / ".github" / "hooks" / "archflow.json",

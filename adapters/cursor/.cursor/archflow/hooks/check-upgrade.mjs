@@ -25,15 +25,17 @@
  *
  * FAIL-OPEN and FAST: any error, missing file or slow detector exits silently.
  *
- * NEWER RELEASE (hosts other than Claude Code)
- *   Claude Code updates the plugin through its marketplace. Every other host runs
- *   a copied adapter that nothing refreshes, so this hook also says when a newer
- *   Archflow release exists. The check is the npm/brew kind: it reads a cache
+ * NEWER RELEASE
+ *   The hook also says when a newer Archflow release exists than what is installed.
+ *   On Claude Code that means the marketplace plugin fell behind (auto-update off, or
+ *   a plugin loaded from a path); on every other host it means the copied adapter,
+ *   which nothing refreshes. The check is the npm/brew kind: it reads a cache
  *   (~/.cache/archflow-install/latest.json), and when that is older than a day it
  *   spawns a detached child to refresh it. The hook itself never waits on the
  *   network. Off with `update_check: false` in project-settings.yaml, or the
  *   ARCHFLOW_NO_UPDATE_CHECK env var. The host is named by ARCHFLOW_HOST, which
- *   each adapter's hook wiring sets; unset means Claude Code, and silence.
+ *   each adapter's hook wiring sets; unset means Claude Code, and the notice then
+ *   names the plugin update command instead of the installer.
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -84,8 +86,8 @@ function isNewer(a, b) {
 }
 
 function checkRelease(installed) {
-  const host = process.env.ARCHFLOW_HOST;
-  if (!host || host === "claude" || process.env.ARCHFLOW_NO_UPDATE_CHECK) return null;
+  const host = process.env.ARCHFLOW_HOST || "claude";
+  if (process.env.ARCHFLOW_NO_UPDATE_CHECK) return null;
   try {
     const settings = readFileSync(join(cwd, ".archflow", "project-settings.yaml"), "utf8");
     if (/^\s*update_check:\s*false\b/m.test(settings)) return null;
@@ -110,13 +112,15 @@ function checkRelease(installed) {
     }
   }
   if (!cache?.tag || typeof cache.tag !== "string" || !isNewer(cache.tag, installed)) return null;
-  return [
-    `⬆️  Archflow ${cache.tag} is available. This project's ${host} adapter is ${installed}.`,
-    `    Upgrade from the project root:  npx archflow-install --host ${host}`,
-    `    Then run the Archflow doctor with --fix so .archflow/ catches up.`,
-    `    Tell the user. Do not run either unless they ask.`,
-    "",
-  ].join("\n");
+  const how = host === "claude"
+    ? [`⬆️  Archflow ${cache.tag} is available. The installed plugin is ${installed}.`,
+       `    Update it:  claude plugin marketplace update archflow && claude plugin update archflow@archflow`,
+       `    (add --scope project if it was installed for this project only; /plugin in Claude Code does the same).`,
+       `    Then run /archflow:doctor --fix so .archflow/ catches up.`]
+    : [`⬆️  Archflow ${cache.tag} is available. This project's ${host} adapter is ${installed}.`,
+       `    Upgrade from the project root:  npx archflow-install --host ${host}`,
+       `    Then run the Archflow doctor with --fix so .archflow/ catches up.`];
+  return [...how, `    Tell the user. Do not run either unless they ask.`, ""].join("\n");
 }
 
 // Not an Archflow project.

@@ -40,6 +40,11 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   installer to every release and checks `package.json` against the tag. Re-running the installer
   is the upgrade path on every host; on Claude Code it also runs `claude plugin update`.
 
+- **A session-start notice when a newer Archflow release exists.** The upgrade hook compares the
+  installed version with a cache of the latest GitHub release tag, refreshed by a detached child at
+  most once a day, so nothing blocks on the network. On Claude Code it names the plugin update; on
+  other hosts the installer. Off with `update_check: false` in `project-settings.yaml`.
+
 - **A git `pre-push` guard** (`plugin/scripts/archflow-pre-push.sh`) gives hosts without a
   `PreToolUse` hook the same protection Claude Code has: no force-push to `main`/`master`, no push
   to `main` while an autopilot run is live. `/archflow:doctor --fix` offers to install it (Step 5d),
