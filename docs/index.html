@@ -83,7 +83,7 @@
 
   <!-- Structured data. Every value here must stay true to the copy below it:
        schema that disagrees with the page is worse than no schema. The FAQ
-       entries mirror the two <details class="faq"> blocks verbatim, which is
+       entries mirror the three <details class="faq"> blocks verbatim, which is
        what Google requires (the answer must be visible on the page). -->
   <script type="application/ld+json">
   {
@@ -119,7 +119,15 @@
             "name": "Isn't this just a big CLAUDE.md file?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "A prompt file describes the process; Archflow runs it. Phases are state on disk, so current-phase.yaml knows where you are and each agent loads only its own phase's instructions rather than every rule at once. Handoffs are artifacts in your repo that diff in a pull request, not chat you have to trust. And /archflow:onboard audits an existing codebase and reconstructs the plan around it \u2014 no prompt file does archaeology."
+              "text": "A prompt file describes the process; Archflow runs it. Phases are state on disk, so current-phase.yaml knows where you are and each agent loads only its own phase's instructions rather than every rule at once. Handoffs are artifacts in your repo that diff in a pull request, not chat you have to trust. And /archflow:onboard audits an existing codebase and reconstructs the plan around it as a roadmap, releases, a contract and a history kept in the repo. A prompt file can tell the model to look around before each change; it cannot keep what it finds."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How is this different from BMAD or gstack?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Less than either author would like. All three are MIT and turn a coding agent into named specialists with gates between them, and both BMAD and gstack are bigger and better documented by third parties. Archflow makes one different bet: it reads the codebase you already have, once, upfront, and keeps what it finds in the repo as a roadmap, a release, a contract and a history, then shows that plan in Studio. Full comparisons: archflowai.dev/compare/archflow-vs-bmad/ and archflowai.dev/compare/archflow-vs-gstack/."
             }
           }
         ]
@@ -1082,7 +1090,7 @@
     <div class="max-w-container mx-auto px-6">
       <div class="fade-in text-center mb-10">
         <h2 class="font-heading text-3xl md:text-4xl lg:text-5xl font-700 leading-tight tracking-tight">
-          The two questions everyone asks
+          The three questions everyone asks
         </h2>
       </div>
 
@@ -1153,12 +1161,42 @@
             <div>
               <h3 class="font-heading text-base font-600 text-text-primary mb-2">It reads what you already built.</h3>
               <p class="text-text-secondary text-sm leading-relaxed">
-                <code class="font-mono text-sm text-text-primary">/archflow:onboard</code> audits an existing codebase and reconstructs the plan around it. No prompt file does archaeology.
+                <code class="font-mono text-sm text-text-primary">/archflow:onboard</code> audits an existing codebase and reconstructs the plan around it: roadmap, releases, contract and history, kept in the repo. A prompt file can tell the model to look around before each change. It cannot keep what it finds.
               </p>
             </div>
             <p class="text-text-secondary text-sm leading-relaxed pt-5 border-t border-dark-700/40">
               Archflow is also <em>made of</em> files: plain markdown and YAML in <code class="font-mono text-sm text-text-primary">.archflow/</code>. If you want to fork the whole process and change every phase, that&rsquo;s a text editor and a pull request. MIT.
             </p>
+          </div>
+        </details>
+
+        <!-- The comparison pages live under /compare/, not /guides/: a guide answers
+             "how do I do X", a comparison answers "should I use this at all". This
+             item is their only link from the landing page, so keep it. -->
+        <details class="faq group rounded-2xl border border-dark-700/60 bg-dark-800/40 overflow-hidden">
+          <summary class="cursor-pointer select-none list-none px-6 py-5 flex items-center justify-between gap-4">
+            <span class="font-heading text-lg md:text-xl font-600 text-text-primary">How is this different from BMAD or gstack?</span>
+            <svg class="faq-chevron w-5 h-5 flex-shrink-0 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+          <div class="px-6 pb-6 space-y-5">
+            <p class="text-text-secondary leading-relaxed">
+              Less than either author would like. All three are MIT, all three turn a coding agent into named specialists with gates between them, and both of them are bigger, older in the market, and better documented by third parties. If you are starting a new project today and want the most-travelled path, either will serve you well.
+            </p>
+            <p class="text-text-secondary text-sm leading-relaxed">
+              Archflow makes one different bet: it reads the codebase you already have, once, upfront, and keeps what it finds <span class="text-text-primary font-500">in the repo</span> as a roadmap, a release, a contract and a history. Then it shows you that plan in Studio. The honest version of each comparison, including where they win, is written up in full:
+            </p>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <a href="compare/archflow-vs-bmad/" class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-4 hover:border-accent/40 transition-colors">
+                <p class="text-text-primary text-sm font-500">Archflow vs BMAD-METHOD</p>
+                <p class="text-text-muted text-xs mt-1.5 leading-relaxed">Just-in-time investigation versus upfront extraction into durable plan state.</p>
+              </a>
+              <a href="compare/archflow-vs-gstack/" class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-4 hover:border-accent/40 transition-colors">
+                <p class="text-text-primary text-sm font-500">Archflow vs gstack</p>
+                <p class="text-text-muted text-xs mt-1.5 leading-relaxed">A plan that follows the person versus a plan that follows the repo.</p>
+              </a>
+            </div>
           </div>
         </details>
 
