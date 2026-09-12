@@ -10,6 +10,10 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [2.4.0] — 2026-09-12
+
 ### Added
 
 - **Archflow runs on hosts other than Claude Code.** `scripts/build-adapters.mjs` generates a

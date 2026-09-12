@@ -1,7 +1,7 @@
 {
   "name": "archflow",
   "displayName": "Archflow",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "description": "Phase-based AI development framework: 17 specialized agents, structured phases, file-based handoffs.",
   "author": {
     "name": "AZidan"

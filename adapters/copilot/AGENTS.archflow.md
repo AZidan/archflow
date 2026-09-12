@@ -1,4 +1,4 @@
-<!-- archflow:start (managed by Archflow 2.3.2; merge into AGENTS.md) -->
+<!-- archflow:start (managed by Archflow 2.4.0; merge into AGENTS.md) -->
 # Archflow
 
 This project is managed by Archflow, a phase-based development workflow. State lives in `.archflow/`.

@@ -1,6 +1,6 @@
 {
   "name": "archflowai",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "description": "Alias for the `archflow` package: `npx archflowai install` is `npx archflow install`.",
   "bin": {
     "archflowai": "bin.mjs"
@@ -9,7 +9,7 @@
     "bin.mjs"
   ],
   "dependencies": {
-    "archflow": ">=2.3.2"
+    "archflow": ">=2.4.0"
   },
   "engines": {
     "node": ">=18"

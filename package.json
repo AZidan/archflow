@@ -1,6 +1,6 @@
 {
   "name": "archflow",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "description": "Archflow, the phase-based AI development framework: `npx archflow install` sets it up in a project for Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI, OpenCode, or any AGENTS.md + Agent Skills host.",
   "bin": {
     "archflow": "scripts/archflow.mjs"

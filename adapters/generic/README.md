@@ -1,6 +1,6 @@
 # Archflow for any Agent-Skills host
 
-Generated from Archflow 2.3.2 by `scripts/build-adapters.mjs`. Do not edit here.
+Generated from Archflow 2.4.0 by `scripts/build-adapters.mjs`. Do not edit here.
 
 This is the lowest-common-denominator package: `AGENTS.md` + Agent Skills (agentskills.io). It works in any host that reads those, including Cline, Roo, Kilo, Windsurf, Zed, Amp and Copilot/Codex/OpenCode/Cursor without their native adapters.
 

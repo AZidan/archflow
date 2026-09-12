@@ -1,6 +1,6 @@
 # Archflow for GitHub Copilot CLI
 
-Generated from Archflow 2.3.2 by `scripts/build-adapters.mjs`. Do not edit here.
+Generated from Archflow 2.4.0 by `scripts/build-adapters.mjs`. Do not edit here.
 
 ## Install
 
