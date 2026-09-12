@@ -75,7 +75,7 @@ Codex and GitHub Copilot CLI load `plugin/` directly. For host-native, repo-comm
 
 | Host | Package | Sub-agents | Hooks | Notes |
 |---|---|---|---|---|
-| Claude Code | `plugin/` | yes | yes | Reference implementation; Studio lives here |
+| Claude Code | `plugin/` via the marketplace | yes | yes | Reference implementation; Studio lives here |
 | OpenAI Codex | `plugin/` or `adapters/codex` | yes | yes | `$archflow-<cmd>` skills |
 | GitHub Copilot CLI | `plugin/` or `adapters/copilot` | yes | yes | Same tree works in VS Code agent mode |
 | Cursor | `adapters/cursor` | yes | yes | Also a Cursor Plugin |
@@ -83,12 +83,14 @@ Codex and GitHub Copilot CLI load `plugin/` directly. For host-native, repo-comm
 | OpenCode | `adapters/opencode` | yes | partial | Hooks skip subagents |
 | Anything with `AGENTS.md` + Agent Skills | `adapters/generic` | serial | git guard only | Cline, Windsurf, Zed, Amp… |
 
-Install for any of them with one command from the project root. It detects the hosts on the machine,
-copies the adapter in, merges the `AGENTS.md` block and installs the git guard. Re-run it to upgrade.
+Install for any of them, Claude Code included, with one command from the project root. It detects the
+hosts on the machine, copies the adapter in, merges the `AGENTS.md` block and installs the git guard.
+For Claude Code it installs the marketplace plugin at project scope, so the choice is committed with
+the repo and teammates are prompted to install. Re-run it to upgrade.
 
 ```bash
 npx archflow-install            # detect hosts and install
-npx archflow-install --host codex,cursor
+npx archflow-install --host claude,codex
 npx archflow-install --dry-run  # show the plan only
 ```
 

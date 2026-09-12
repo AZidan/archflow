@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * archflow-install — put Archflow into a project for hosts other than Claude Code.
+ * archflow-install — put Archflow into a project, for Claude Code or any other supported host.
  *
  * Does, per host, exactly what adapters/<host>/README.md tells a human to do by hand:
  * copy the adapter tree in, merge the AGENTS.md block, merge Codex's config.toml
@@ -13,11 +13,16 @@
  *   npx archflow-install --dry-run            # show the plan only
  *
  * Options:
- *   --host <a,b>   codex | copilot | cursor | gemini | opencode | generic
- *   --dir <path>   project directory (default: cwd)
- *   --dry-run      print what would happen, change nothing
- *   --no-guard     skip the git pre-push guard
- *   --yes          do not ask for confirmation
+ *   --host <a,b>          claude | codex | copilot | cursor | gemini | opencode | generic
+ *   --dir <path>          project directory (default: cwd)
+ *   --marketplace <src>   Claude Code only: marketplace to install the plugin from
+ *                         (default AZidan/archflow; a local checkout path works for testing)
+ *   --dry-run             print what would happen, change nothing
+ *   --no-guard            skip the git pre-push guard
+ *   --yes                 do not ask for confirmation
+ *
+ * Claude Code is the reference host: `--host claude` installs the marketplace plugin at
+ * project scope (`.claude/settings.json`), so the choice is committed with the repo.
  *
  * Local testing without publishing:
  *   node /path/to/archflow/scripts/archflow-install.mjs --host codex
@@ -26,7 +31,7 @@
 
 import {
   chmodSync, cpSync, existsSync, lstatSync, mkdirSync, readFileSync, renameSync, rmSync,
-  symlinkSync, writeFileSync,
+  statSync, symlinkSync, writeFileSync,
 } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createInterface } from "node:readline";
@@ -45,7 +50,15 @@ const VERSION = JSON.parse(readFileSync(join(PKG, "plugin", ".claude-plugin", "p
 // skills/archflow, which the adapter provides as a relative symlink. npm drops
 // symlinks when packing, so `ensureLink` recreates it after the copy.
 // ---------------------------------------------------------------------------
+const MARKETPLACE_REPO = "AZidan/archflow";
+
 const HOSTS = {
+  claude: {
+    label: "Claude Code",
+    detect: () => has(homedir(), ".claude") || onPath("claude"),
+    plugin: true, // the marketplace plugin, enabled at project scope; no adapter tree
+    next: ["Restart Claude Code (or run /reload-plugins).", "Run `/archflow:init` or `/archflow:onboard`."],
+  },
   codex: {
     label: "OpenAI Codex",
     detect: (p) => has(p, ".codex") || has(homedir(), ".codex") || onPath("codex"),
@@ -108,14 +121,16 @@ function onPath(bin) {
   return r.status === 0;
 }
 const log = (s) => process.stdout.write(s + "\n");
+process.stdout.on("error", (e) => { if (e.code === "EPIPE") process.exit(0); throw e; }); // `| head` is not an error
 
 function parseArgs(argv) {
-  const o = { hosts: [], dir: process.cwd(), dryRun: false, guard: true, yes: false };
+  const o = { hosts: [], dir: process.cwd(), dryRun: false, guard: true, yes: false, marketplace: MARKETPLACE_REPO };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--host") o.hosts.push(...argv[++i].split(",").map((s) => s.trim()).filter(Boolean));
     else if (a.startsWith("--host=")) o.hosts.push(...a.slice(7).split(","));
     else if (a === "--dir") o.dir = resolve(argv[++i]);
+    else if (a === "--marketplace") o.marketplace = argv[++i];
     else if (a === "--dry-run") o.dryRun = true;
     else if (a === "--no-guard") o.guard = false;
     else if (a === "--yes" || a === "-y") o.yes = true;
@@ -286,6 +301,59 @@ function installGuard(project, dry) {
   return chained ? `write .git/hooks/pre-push (archflow guard, previous hook chained as ${chainedName})` : "write .git/hooks/pre-push (archflow guard)";
 }
 
+/**
+ * Claude Code: the plugin itself, from the marketplace, enabled at project scope so the
+ * choice is committed with the repo and teammates are prompted to install. Prefer the
+ * `claude` CLI; without it, write the same two settings keys by hand.
+ */
+function installClaude(project, source, dry) {
+  const rel = ".claude/settings.json";
+  if (onPath("claude")) {
+    const steps = [
+      ["marketplace", ["plugin", "marketplace", "add", source, "--scope", "project"]],
+      ["install", ["plugin", "install", "archflow@archflow", "--scope", "project", "-y"]],
+    ];
+    if (dry) return steps.map(([, a]) => `run   claude ${a.join(" ")}`);
+    const out = [];
+    for (const [what, args] of steps) {
+      const r = spawnSync("claude", args, { cwd: project, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 180000 });
+      const msg = ((r.stdout || "") + (r.stderr || "")).trim().split("\n").filter(Boolean).pop() || "";
+      if (r.status === 0 || /already/i.test(msg)) { out.push(`run   claude ${args.join(" ")} → ${msg || "ok"}`); continue; }
+      out.push(`fail  claude ${args.join(" ")} → ${msg || `exit ${r.status}`}`);
+      out.push(...writeClaudeSettings(project, source, dry));
+      return out;
+    }
+    return out;
+  }
+  return [...writeClaudeSettings(project, source, dry), "note  `claude` is not on PATH; the plugin installs when Claude Code next opens this project"];
+}
+
+function writeClaudeSettings(project, source, dry) {
+  const file = join(project, ".claude", "settings.json");
+  let settings = {};
+  if (existsSync(file)) {
+    try { settings = JSON.parse(readFileSync(file, "utf8")); }
+    catch { return [`skip  .claude/settings.json (not valid JSON; add enabledPlugins[\"archflow@archflow\"] = true yourself)`]; }
+  }
+  const gh = source.match(/^([\w.-]+)\/([\w.-]+)$/);
+  const changed = [];
+  settings.extraKnownMarketplaces ??= {};
+  if (!settings.extraKnownMarketplaces.archflow) {
+    settings.extraKnownMarketplaces.archflow = gh
+      ? { source: { source: "github", repo: `${gh[1]}/${gh[2]}` } }
+      : { source: { source: "directory", path: source } };
+    changed.push("extraKnownMarketplaces.archflow");
+  }
+  settings.enabledPlugins ??= {};
+  if (settings.enabledPlugins["archflow@archflow"] !== true) {
+    settings.enabledPlugins["archflow@archflow"] = true;
+    changed.push("enabledPlugins[archflow@archflow]");
+  }
+  if (!changed.length) return ["keep  .claude/settings.json (plugin already enabled for this project)"];
+  if (!dry) { mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, JSON.stringify(settings, null, 2) + "\n"); }
+  return [`${existsSync(file) ? "merge" : "create"} .claude/settings.json (+ ${changed.join(", ")})`];
+}
+
 /** Gemini: a per-user extension. Prefer the CLI; fall back to copying into ~/.gemini/extensions. */
 function installGemini(dry) {
   const src = join(ADAPTERS, "gemini");
@@ -311,7 +379,7 @@ function installGemini(dry) {
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   const project = opts.dir;
-  if (!existsSync(project) || !lstatSync(project).isDirectory()) {
+  if (!existsSync(project) || !statSync(project).isDirectory()) {
     console.error(`Not a directory: ${project}`); process.exit(2);
   }
   if (!existsSync(ADAPTERS)) {
@@ -343,11 +411,13 @@ async function main() {
   for (const name of hosts) {
     const host = HOSTS[name];
     const src = join(ADAPTERS, name);
-    if (!existsSync(src)) { console.error(`adapters/${name} is missing from this package.`); process.exit(2); }
+    if (!host.plugin && !existsSync(src)) { console.error(`adapters/${name} is missing from this package.`); process.exit(2); }
     log(`▸ ${host.label}`);
     const actions = [];
 
-    if (host.extension) {
+    if (host.plugin) {
+      actions.push(...installClaude(project, opts.marketplace, opts.dryRun));
+    } else if (host.extension) {
       actions.push(...installGemini(opts.dryRun));
     } else {
       for (const rel of host.copy) {

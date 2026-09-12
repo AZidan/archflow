@@ -24,8 +24,10 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   (`copilot --plugin-dir plugin`, Codex's plugin importer); the adapters exist for teams that want
   host-native, repo-committed configuration.
 
-- **`npx archflow-install`** installs Archflow into a project for any of those hosts. It detects
-  the hosts on the machine (or takes `--host`), copies the adapter in, merges the `AGENTS.md`
+- **`npx archflow-install`** installs Archflow into a project for any of those hosts, and for Claude
+  Code itself (`--host claude` installs the marketplace plugin at project scope through the `claude`
+  CLI, or writes the same `.claude/settings.json` keys when the CLI is absent). It detects the hosts
+  on the machine (or takes `--host`), copies the adapter in, merges the `AGENTS.md`
   block between `<!-- archflow:start/end -->` markers (one section per host when several share a
   project), merges Codex's `config.toml` flags without overriding a human's values, installs
   Gemini as an extension, and installs the git guard. Re-running upgrades in place and never
