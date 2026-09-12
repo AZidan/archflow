@@ -237,6 +237,13 @@ settings split above or the stack detection in 5c, you do yourself, showing a di
 ever writes project content, invents a value the repo does not evidence, or resolves a conflict;
 those are reported for the user to decide.
 
+**Newer release.** The session-start hook also reports when a newer Archflow release exists than
+what is installed, the marketplace plugin on Claude Code or the copied adapter elsewhere. It reads `~/.cache/archflow/latest.json`,
+refreshed in the background at most once a day, and is silenced by `update_check: false` in
+`project-settings.yaml`. Report the same comparison here when that file exists. The fix on Claude Code
+is `claude plugin marketplace update archflow && claude plugin update archflow@archflow`; on other
+hosts it is `npx archflow install` from the project root, which refreshes the adapter. Then `--fix` here.
+
 ## Step 5c — Stack detection (the last thing `--fix` does)
 
 Runs **after** every repair above, and **only** with `--fix`. It goes last on purpose: the settings
@@ -299,6 +306,20 @@ time, while `@playwright/test` sits in `package.json` the whole while.
 
 What stays out of reach is unchanged. `--fix` still never installs anything, never writes a value the
 evidence does not support, and never overrules a value a human set.
+
+## Step 5d — Git guard (checked always, installed only with `--fix`)
+
+On Claude Code the plugin's `PreToolUse` hook stops an agent force-pushing to `main` or pushing during
+an autopilot run. Other hosts get the same protection from a plain git `pre-push` hook, which also
+covers the human's own terminal. Report **WARN** if `.git/hooks/pre-push` does not mention
+`archflow-pre-push`; with `--fix`, ask, then run:
+
+```bash
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/archflow-install-git-guard.sh"
+```
+
+It chains any existing `pre-push` hook rather than replacing it. Skip silently when the project is
+not a git repository.
 
 ## Step 6 — Report
 

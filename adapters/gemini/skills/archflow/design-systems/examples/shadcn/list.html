@@ -1,0 +1,132 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>shadcn/ui — List</title><link rel="stylesheet" href="theme.css"></head><body>
+<div class="shell">
+<div class="sidebar">
+  <div class="side-brand">
+    <div style="width:24px;height:24px;border-radius:6px;background:var(--primary);
+         color:var(--primary-foreground);display:grid;place-items:center">
+      <svg width="14" height="14" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
+    Fieldnote
+  </div>
+  <div class="side-label">Workspace</div>
+  <div class="side-item active">
+    <svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    Tasks <span class="count">24</span></div>
+  <div class="side-item">
+    <svg width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Schedule</div>
+  <div class="side-item">
+    <svg width="16" height="16" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/></svg>
+    Crew</div>
+  <div class="side-item">
+    <svg width="16" height="16" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+    Reports</div>
+  <div class="side-label">Sites</div>
+  <div class="side-item">
+    <svg width="16" height="16" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    North Ridge</div>
+  <div class="side-item">
+    <svg width="16" height="16" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    Halden Flats</div>
+  <div style="flex:1"></div>
+  <div class="side-item" style="height:48px">
+    <div class="avatar" style="width:28px;height:28px">RM</div>
+    <div style="line-height:1.2"><div style="font-size:13px;font-weight:500">Rowan Mills</div>
+      <div class="xs muted">rowan@fieldnote.app</div></div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <button class="btn btn-ghost btn-icon"><svg width="16" height="16" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="sep-v" style="height:20px;align-self:center"></div>
+    <div class="crumb">Workspace<span>/</span><b>Tasks</b></div>
+    <div style="flex:1"></div>
+    <div style="position:relative;width:240px">
+      <svg width="15" height="15" viewBox="0 0 24 24" style="position:absolute;left:10px;top:11px;color:var(--muted-foreground)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="input" style="padding-left:32px" placeholder="Search tasks...">
+    </div>
+    <button class="btn btn-ghost btn-icon"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></button>
+    <div class="avatar">RM</div>
+  </div>
+  <div style="flex:1;padding:24px;overflow:hidden">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+      <div><h1 class="h1">Tasks</h1>
+        <p class="small muted" style="margin-top:4px">24 open across 2 sites. 6 due this week.</p></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
+        <button class="btn btn-default btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New task</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="tabs">
+        <div class="tab active">All</div><div class="tab">Assigned to me</div>
+        <div class="tab">Overdue</div><div class="tab">Done</div>
+      </div>
+      <button class="btn btn-outline btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filter</button>
+    </div>
+    <div class="card" style="overflow:hidden">
+      <table>
+        <thead><tr>
+          <th style="width:44px"><div class="checkbox"></div></th>
+          <th>Task</th><th style="width:150px">Assignee</th><th style="width:120px">Status</th>
+          <th style="width:110px">Priority</th><th style="width:110px">Due</th><th style="width:52px"></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><div class="checkbox on"><svg width="11" height="11" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div></td>
+            <td><div style="font-weight:500">Soil sample — Plot 14</div><div class="xs muted">FN-1042 · North Ridge</div></td>
+            <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="width:24px;height:24px;font-size:10px">RM</div>Rowan M.</div></td>
+            <td><span class="badge badge-secondary">In progress</span></td>
+            <td><span class="badge badge-outline">High</span></td>
+            <td class="muted">Today</td>
+            <td><button class="btn btn-ghost btn-icon btn-sm"><svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td></tr>
+          <tr><td><div class="checkbox"></div></td>
+            <td><div style="font-weight:500">Recalibrate moisture probe</div><div class="xs muted">FN-1039 · North Ridge</div></td>
+            <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="width:24px;height:24px;font-size:10px">JA</div>Jae A.</div></td>
+            <td><span class="badge badge-secondary">Todo</span></td>
+            <td><span class="badge badge-outline">Medium</span></td>
+            <td class="muted">Tomorrow</td>
+            <td><button class="btn btn-ghost btn-icon btn-sm"><svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td></tr>
+          <tr><td><div class="checkbox"></div></td>
+            <td><div style="font-weight:500">Fence line survey, north edge</div><div class="xs muted">FN-1036 · North Ridge</div></td>
+            <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="width:24px;height:24px;font-size:10px">TK</div>Toni K.</div></td>
+            <td><span class="badge badge-secondary">Todo</span></td>
+            <td><span class="badge badge-outline">Medium</span></td>
+            <td class="muted">Fri, Sep 5</td>
+            <td><button class="btn btn-ghost btn-icon btn-sm"><svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td></tr>
+          <tr><td><div class="checkbox"></div></td>
+            <td><div style="font-weight:500">Upload drone imagery set 09</div><div class="xs muted">FN-1031 · Halden Flats</div></td>
+            <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="width:24px;height:24px;font-size:10px">RM</div>Rowan M.</div></td>
+            <td><span class="badge badge-default">Blocked</span></td>
+            <td><span class="badge badge-outline">Low</span></td>
+            <td class="muted">Fri, Sep 5</td>
+            <td><button class="btn btn-ghost btn-icon btn-sm"><svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td></tr>
+          <tr><td><div class="checkbox"></div></td>
+            <td><div style="font-weight:500">Weekly crew briefing notes</div><div class="xs muted">FN-1028 · All sites</div></td>
+            <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="width:24px;height:24px;font-size:10px">DO</div>Dai O.</div></td>
+            <td><span class="badge badge-secondary">Todo</span></td>
+            <td><span class="badge badge-outline">Low</span></td>
+            <td class="muted">Mon, Sep 8</td>
+            <td><button class="btn btn-ghost btn-icon btn-sm"><svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td></tr>
+          <tr><td><div class="checkbox"></div></td>
+            <td><div style="font-weight:500">Replace gate sensor battery</div><div class="xs muted">FN-1019 · Halden Flats</div></td>
+            <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="width:24px;height:24px;font-size:10px">JA</div>Jae A.</div></td>
+            <td><span class="badge badge-secondary">Todo</span></td>
+            <td><span class="badge badge-outline">Low</span></td>
+            <td class="muted">—</td>
+            <td><button class="btn btn-ghost btn-icon btn-sm"><svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+      <span class="small muted">1 of 24 row(s) selected.</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm">Previous</button>
+        <button class="btn btn-outline btn-sm">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div></body></html>

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Archflow: migrate"
+  short_description: "Upgrade a v1.0 archflow-onboarded project (sprints) to schema v2.0 (releases) — dry-run first, then apply"
+policy:
+  allow_implicit_invocation: false

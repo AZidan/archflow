@@ -1,0 +1,49 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat .archflow/instructions.md 2>/dev/null || true",
+            "statusMessage": "Loading Archflow instructions"
+          }
+        ]
+      },
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CLAUDE_PLUGIN_ROOT=\"$PWD/.codex/archflow\" CLAUDE_PROJECT_DIR=\"$PWD\" ARCHFLOW_HOST=codex node .codex/archflow/hooks/check-upgrade.mjs",
+            "timeout": 6
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CLAUDE_PLUGIN_ROOT=\"$PWD/.codex/archflow\" CLAUDE_PROJECT_DIR=\"$PWD\" ARCHFLOW_HOST=codex node .codex/archflow/hooks/guard-git.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CLAUDE_PLUGIN_ROOT=\"$PWD/.codex/archflow\" CLAUDE_PROJECT_DIR=\"$PWD\" ARCHFLOW_HOST=codex node .codex/archflow/hooks/check-state.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

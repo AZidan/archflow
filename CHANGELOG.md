@@ -10,7 +10,60 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **Archflow runs on hosts other than Claude Code.** `scripts/build-adapters.mjs` generates a
+  host-native package from the plugin for OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI,
+  OpenCode, and a generic `AGENTS.md` + Agent Skills package for anything else. Each lands in
+  `adapters/<host>/` with its own README describing install steps and what that host cannot do.
+  The `.archflow/` state files, schemas, phases, design systems and stack profiles are identical
+  across hosts, so one project can be worked on from several tools. CI fails if the adapters drift
+  from the plugin (`node scripts/build-adapters.mjs --check`).
+
+  Codex and Copilot CLI also load the unmodified Claude Code plugin directly
+  (`copilot --plugin-dir plugin`, Codex's plugin importer); the adapters exist for teams that want
+  host-native, repo-committed configuration.
+
+- **`npx archflow install`** (npm package `archflow`; `archflowai` is an alias) installs Archflow into a
+  project for any of those hosts, and for Claude
+  Code itself (`--host claude` installs the marketplace plugin at project scope through the `claude`
+  CLI, or writes the same `.claude/settings.json` keys when the CLI is absent). It detects the hosts
+  on the machine (or takes `--host`), copies the adapter in, merges the `AGENTS.md`
+  block between `<!-- archflow:start/end -->` markers (one section per host when several share a
+  project), merges Codex's `config.toml` flags without overriding a human's values, installs
+  Gemini as an extension, and installs the git guard. Re-running upgrades in place and never
+  deletes a user's file. `--dry-run` shows the plan. The root `package.json` publishes it with
+  the adapters bundled.
+
+  The adapters are fetched from the **latest GitHub release** by default and cached per tag under
+  `~/.cache/archflow/`, so an npx-cached installer never installs stale files. `--version`
+  pins a release, `--bundled` skips the network. The release workflow now attaches the packed
+  installer to every release and checks `package.json` against the tag. Re-running the installer
+  is the upgrade path on every host; on Claude Code it also runs `claude plugin update`.
+
+- **A session-start notice when a newer Archflow release exists.** The upgrade hook compares the
+  installed version with a cache of the latest GitHub release tag, refreshed by a detached child at
+  most once a day, so nothing blocks on the network. On Claude Code it names the plugin update; on
+  other hosts the installer. Off with `update_check: false` in `project-settings.yaml`.
+
+- **A git `pre-push` guard** (`plugin/scripts/archflow-pre-push.sh`) gives hosts without a
+  `PreToolUse` hook the same protection Claude Code has: no force-push to `main`/`master`, no push
+  to `main` while an autopilot run is live. `/archflow:doctor --fix` offers to install it (Step 5d),
+  chaining any existing hook. It also protects the human's own terminal.
+
+### Changed
+
+- `/archflow:init` and `/archflow:onboard` now write the Archflow section to `AGENTS.md` (read by
+  every host) as well as `CLAUDE.md`, wrapped in `<!-- archflow:start/end -->` markers.
+- `hooks/guard-git.mjs` accepts the shell tool names other hosts use (`bash`,
+  `run_shell_command`) in addition to Claude Code's `Bash`.
+
+### Not ported
+
+- `/archflow:studio` stays Claude Code only: it drives the `claude` binary's session fork.
+- `memory: user` agent memory has no equivalent elsewhere.
+- OpenCode plugin hooks do not fire inside subagents (upstream #5894), so its git guard covers the
+  primary agent only; use the `pre-push` guard as well.
 
 ## [2.3.2] — 2026-09-10
 

@@ -1,0 +1,267 @@
+# Generated from plugin/commands/contract.md — do not edit.
+description = "The release's API contract architecture, and per-story endpoint specs that clear a story's contract gate"
+prompt = '''
+# /archflow:contract — API contract architecture and per-story endpoints
+
+API architecture splits into two kinds of work, exactly as `phase-2.5-api-architecture.md` defines
+it, mirroring the design split. This command owns both.
+
+1. **Foundation** — the contract *architecture*, set once at release start. Auth pattern, URL and
+   JSON conventions, the error-response envelope, pagination, versioning. The shared rules every
+   endpoint obeys.
+2. **Per-story gate** — one story's *endpoints*, specified just-in-time against that architecture,
+   one step ahead of its build. Clears that story's `needs_contract` gate.
+
+The contract is the SACRED DOCUMENT. `api-engineer` and `ui-engineer` both build against
+it with zero tolerance for deviation, and `qa-engineer` verifies implementations against it. This
+command is the only sanctioned way to change it.
+
+## Usage
+```
+/archflow:contract                → show the contract architecture, or create it if absent
+/archflow:contract <story-id>     → specify one story's endpoints and clear its contract gate
+                                    e.g. /archflow:contract S7-20
+/archflow:contract path <path>    → move the contract somewhere else, or point at an existing one
+```
+
+---
+
+## Step 0 — Which mode
+
+Match `{{args}}` against the story-id pattern from `release-schema.yaml`:
+
+```
+^S[0-9]+-[0-9]+[a-z]?$
+```
+
+- **Matches** → per-story gate. Go to Step 2.
+- **Empty** → foundation. Continue to Step 1.
+- **`path <new-path>`** → relocate. Resolve the CURRENT path via Step 0b first, then go to
+  Step 3. A bare `path` with no argument is not a relocation: show the current value and stop.
+- **Anything else** → say the argument is not a story id, show the usage block, and stop. Do not
+  guess.
+
+**State the mode in your first line of output.**
+
+## Step 0b — Resolve the contract path
+
+Read `api_contract_path` from `.archflow/project-settings.yaml`. Default to `docs/api-contract.md` when
+unset. Use the resolved path everywhere below; never hardcode the default.
+
+**`frontend_only` with no backend** → there is no contract to own. Say so and stop.
+
+---
+
+## Step 1 — Foundation: contract architecture
+
+Read the contract at the resolved path.
+
+**If it exists**, show its architecture section and stop:
+```
+API contract: {path}
+Architecture:
+  Auth:        {auth pattern}
+  Conventions: {URL + JSON conventions}
+  Errors:      {error envelope}
+  Pagination:  {pagination scheme}
+  Versioning:  {versioning scheme}
+
+  {n} stories have specified endpoints here.
+
+Specify a story's endpoints with /archflow:contract <story-id>.
+```
+
+**If it does not exist**, this is release-start foundation work. Confirm first, since this creates
+the document every engineer is bound by:
+```
+No API contract at {path}.
+
+The contract architecture is set once at release start and every endpoint obeys it.
+Create it now for release {active_release}? [Create / Cancel]
+```
+
+On create, dispatch `api-contract-architect` in foundation mode:
+
+```
+api-contract-architect: release {active_release} foundation → {path}
+
+  Write ONLY the architecture section: auth pattern, URL and JSON conventions,
+  the error-response envelope, pagination, versioning.
+  Do NOT specify any story's endpoints — those are added one story at a time.
+
+  Project context: .archflow/project-context.md
+  Stack: {stack from project-context.md}
+```
+
+Present it and **stop for user approval** before anything is built against it. On approval, write
+`api_contract_path` into `.archflow/project-settings.yaml` if it is not already set.
+
+---
+
+## Step 2 — Per-story contract gate
+
+`phase-2.5-api-architecture.md` § "Per-story contract gate (readiness pipeline)" defines this
+transition. **Follow it; do not restate it here.** This command is the entry point, not a second
+definition.
+
+### 2a. Resolve the story
+
+1. Read `.archflow/current-phase.yaml` for `active_release` and `mode`, and
+   `.archflow/project-settings.yaml` for `project_type`.
+2. Read `.archflow/releases/{active_release}.yaml` and find the story by id.
+
+If it is not there, look in `.archflow/backlog.yaml`. If it is in the backlog, say so and stop:
+```
+{story-id} is in the backlog, not the active release ({active_release}).
+
+Endpoints are specified one step ahead of a story's build, not ahead of its scheduling.
+Pull it into the release first with /archflow:feature, then specify it.
+```
+Never specify endpoints for an unscheduled story silently.
+
+If it is in neither, say which release you searched and stop.
+
+### 2b. Check the gate
+
+| State | Response |
+|---|---|
+| `gates.needs_contract: false` | `{story-id} has no contract gate — gates.needs_contract is false. Nothing to do.` Stop. |
+| `status` already `contract_ready`, `ready`, `in_progress`, `review` or `done` | Report the current status and the story's `contract_endpoints`. Offer to re-open only if the user asks explicitly. Stop. |
+| `status: parked` | Report the parked question. A parked story needs an answer, not endpoints. Stop. |
+| `status: backlog` | Not groomed yet. Point at `/archflow:groom {story-id}` and stop. |
+| otherwise | Proceed. |
+
+Re-running is a no-op with an explanation, never a second set of endpoints.
+
+### 2c. Mode
+
+In `quick` mode this gate auto-satisfies. Say so and offer the override:
+```
+Mode is quick, so contract gates auto-satisfy and {story-id} does not need this step.
+
+Run it anyway? [Specify the endpoints / Skip]
+```
+In `full` mode, proceed without asking.
+
+### 2d. Architecture must exist first
+
+If the contract has no architecture section, run Step 1 inline before specifying anything. Endpoints
+written against no conventions are how three projects ended up with three different formats.
+
+### 2e. Dispatch
+
+One `api-contract-architect`, scoped to this one story:
+
+```
+api-contract-architect: story {story-id} → {path}
+
+  APPEND this story's endpoints under a `## {story-id} — {title}` heading.
+  Never rewrite, reorder or drop another story's section. The contract is append-only
+  per story; other stories' endpoints are already being built against.
+
+  Every endpoint MUST conform to the architecture section: auth, URL and JSON
+  conventions, error envelope, pagination, versioning.
+
+  Story: {title}
+  Description: {description}
+  Acceptance criteria: {acceptance_criteria[].text}
+  Design artifact: {design_artifact or "none — no UI for this story"}
+  Scope: this story only.
+
+  Return the list of operation identifiers you created.
+```
+
+### 2f. Present and wait
+
+Show the endpoints and **stop for acceptance**:
+```
+Endpoints ready for review — {story-id}: {title}
+
+  {method} {path}   {summary}
+  ...
+
+  Appended to {path}
+
+Accept and advance {story-id} to contract_ready? [Accept / Request changes]
+```
+
+On "request changes", re-dispatch with the feedback. Do not write the status.
+
+### 2g. On acceptance
+
+Apply the transition exactly as `phase-2.5-api-architecture.md` defines it. Write
+`contract_endpoints` on the story — the operation identifiers, not the endpoint definitions
+themselves. The contract stays the single source of truth; this field is the pointer back to it, the
+counterpart to `design_artifact`.
+
+```yaml
+contract_endpoints:
+  - listCartItems
+  - addCartItem
+```
+
+Then report:
+```
+{story-id} → {new status}
+  contract_endpoints: {n} operations in {path}
+
+Next: {the next gate or "ready to build"}
+```
+
+---
+
+## Step 3 — `path <path>`: where the contract lives
+
+`api_contract_path` in `.archflow/project-settings.yaml` is written once at setup and every agent
+resolves through it. This is how it changes afterwards — without it the setting is write-once, which
+makes it a decoration rather than a setting.
+
+Two cases, and they are different:
+
+**The file already exists at the new path.** The project has a contract somewhere else and is
+pointing Archflow at it. Confirm the file looks like a contract, update the field, and stop. Move
+nothing.
+
+**The file does not exist at the new path.** The user wants the contract moved. Show what will
+happen and get approval before touching anything:
+
+```
+Move the API contract?
+
+  from  {current path}
+  to    {new path}
+
+  {n} stories reference it. Every agent resolves through api_contract_path, so
+  they will follow — but anything outside Archflow that links to the old path
+  will not.
+
+[Move / Just update the pointer / Cancel]
+```
+
+On **Move**: move the file with `git mv` when the repo is a git checkout and the file is tracked,
+otherwise a plain `mv`. Either way git records a delete and an add; rename detection is done at read
+time by `git log --follow`, so nothing is preserved or lost by the choice of command. Then update the field.
+
+On **Just update the pointer**: change the field only, and say plainly that the contract is now expected at a path where
+no file exists, so the next agent to read it will stop.
+
+Afterwards, grep the repo for the old path and report anything still naming it — READMEs, CI config,
+docs. Do not edit those yourself; they are outside Archflow's state and may be deliberate.
+
+---
+
+## Rules
+
+1. **The contract is append-only per story.** Other stories' endpoints are already being built
+   against. Never rewrite or drop a section that is not the one you were asked for.
+2. **Architecture before endpoints.** An endpoint specified against no conventions is the bug this
+   command exists to prevent.
+3. **Record pointers, not copies.** `contract_endpoints` holds operation identifiers. Endpoint
+   definitions live in the contract and nowhere else, or the two will drift.
+4. **Stop for the human.** The agent specifies; the user accepts. Never advance a status past the
+   point the framework requires a human.
+5. **One story at a time.** Never specify endpoints for a story you were not asked about, however
+   obviously related it looks.
+6. **Callable non-interactively** with the story id supplied, since Archflow Studio invokes this
+   programmatically.
+'''

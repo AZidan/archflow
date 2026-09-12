@@ -1,0 +1,5 @@
+interface:
+  display_name: "Archflow: setup-mcp"
+  short_description: "Connect an external tool via MCP (Jira, Notion, Linear, GitHub, SuperDesign, ...)"
+policy:
+  allow_implicit_invocation: false

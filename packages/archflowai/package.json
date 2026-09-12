@@ -1,0 +1,25 @@
+{
+  "name": "archflowai",
+  "version": "2.3.2",
+  "description": "Alias for the `archflow` package: `npx archflowai install` is `npx archflow install`.",
+  "bin": {
+    "archflowai": "bin.mjs"
+  },
+  "files": [
+    "bin.mjs"
+  ],
+  "dependencies": {
+    "archflow": ">=2.3.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AZidan/archflow.git",
+    "directory": "packages/archflowai"
+  },
+  "homepage": "https://archflowai.dev"
+}

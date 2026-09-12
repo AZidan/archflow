@@ -1,0 +1,59 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Custom tokens — Login</title><link rel="stylesheet" href="theme.css"></head><body>
+<div style="height:800px;display:grid;grid-template-columns:1fr 1fr">
+  <div style="background:var(--c-brand-600);color:var(--text-inverse);padding:var(--sp-8);
+       display:flex;flex-direction:column;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:var(--sp-3);font-weight:700;font-size:var(--fs-lg)">
+      <div style="width:32px;height:32px;border-radius:var(--rad-md);background:var(--c-brand-200);
+           color:var(--c-brand-700);display:grid;place-items:center">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
+      Fieldnote</div>
+    <div>
+      <p class="t-2xl" style="margin-bottom:var(--sp-4);max-width:420px">Every colour on this
+        screen comes from one file.</p>
+      <p class="t-md" style="opacity:.82;max-width:420px">Fieldnote's brand lives in
+        <code style="background:rgba(255,255,255,.16);padding:2px 6px;border-radius:var(--rad-sm)">tokens.json</code>.
+        Light theme, dark theme, and every white-label tenant are the same components with a
+        different value set.</p>
+    </div>
+    <div style="display:flex;gap:var(--sp-2)">
+      <span style="width:28px;height:28px;border-radius:var(--rad-sm);background:var(--c-brand-200)"></span>
+      <span style="width:28px;height:28px;border-radius:var(--rad-sm);background:var(--c-brand-300)"></span>
+      <span style="width:28px;height:28px;border-radius:var(--rad-sm);background:var(--c-brand-400)"></span>
+      <span style="width:28px;height:28px;border-radius:var(--rad-sm);background:var(--c-brand-500)"></span>
+      <span style="width:28px;height:28px;border-radius:var(--rad-sm);background:var(--c-brand-700)"></span>
+    </div>
+  </div>
+  <div style="background:var(--surface-default);display:grid;place-items:center;padding:var(--sp-8)">
+    <div style="width:380px">
+      <h1 class="t-xl" style="margin-bottom:var(--sp-2)">Welcome back</h1>
+      <p class="t-sm muted" style="margin-bottom:var(--sp-6)">Sign in to your Fieldnote workspace.</p>
+      <div class="FormField" style="margin-bottom:var(--sp-4)">
+        <label class="FormLabel">Work email</label>
+        <input class="TextInput" value="rowan@fieldnote.app">
+      </div>
+      <div class="FormField" style="margin-bottom:var(--sp-3)">
+        <label class="FormLabel">Password</label>
+        <input class="TextInput" type="password" value="••••••••••••">
+        <span class="FormHint">Minimum 12 characters.</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-5)">
+        <label style="display:flex;align-items:center;gap:var(--sp-2)" class="t-sm">
+          <span class="Checkbox Checkbox--on"><svg width="12" height="12" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+          Remember me</label>
+        <a class="t-sm strong" style="color:var(--text-brand)">Forgot password?</a>
+      </div>
+      <button class="Button Button--primary Button--block">Sign in</button>
+      <div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-5) 0">
+        <div style="flex:1;height:1px;background:var(--border-default)"></div>
+        <span class="t-xs muted">or</span>
+        <div style="flex:1;height:1px;background:var(--border-default)"></div>
+      </div>
+      <button class="Button Button--outline Button--block">
+        <svg width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+        Sign in with SSO</button>
+      <p class="t-sm muted" style="text-align:center;margin-top:var(--sp-6)">
+        New here? <a class="strong" style="color:var(--text-brand)">Request access</a></p>
+    </div>
+  </div>
+</div></body></html>

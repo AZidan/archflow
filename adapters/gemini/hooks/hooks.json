@@ -1,0 +1,53 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "name": "archflow-instructions",
+            "type": "command",
+            "command": "cat \"${workspacePath}/.archflow/instructions.md\" 2>/dev/null || true",
+            "timeout": 3000
+          }
+        ]
+      },
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "name": "archflow-check-upgrade",
+            "type": "command",
+            "command": "CLAUDE_PLUGIN_ROOT=\"${extensionPath}\" CLAUDE_PROJECT_DIR=\"${workspacePath}\" ARCHFLOW_HOST=gemini node \"${extensionPath}/hooks/check-upgrade.mjs\"",
+            "timeout": 6000
+          }
+        ]
+      }
+    ],
+    "BeforeTool": [
+      {
+        "matcher": "run_shell_command",
+        "hooks": [
+          {
+            "name": "archflow-git-guard",
+            "type": "command",
+            "command": "CLAUDE_PLUGIN_ROOT=\"${extensionPath}\" CLAUDE_PROJECT_DIR=\"${workspacePath}\" ARCHFLOW_HOST=gemini node \"${extensionPath}/hooks/guard-git.mjs\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "AfterAgent": [
+      {
+        "hooks": [
+          {
+            "name": "archflow-check-state",
+            "type": "command",
+            "command": "CLAUDE_PLUGIN_ROOT=\"${extensionPath}\" CLAUDE_PROJECT_DIR=\"${workspacePath}\" ARCHFLOW_HOST=gemini node \"${extensionPath}/hooks/check-state.mjs\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}

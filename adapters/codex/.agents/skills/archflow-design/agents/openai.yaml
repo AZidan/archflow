@@ -1,0 +1,5 @@
+interface:
+  display_name: "Archflow: design"
+  short_description: "The project's design system, and per-story screen design that clears a story's design gate"
+policy:
+  allow_implicit_invocation: false

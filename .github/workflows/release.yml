@@ -34,11 +34,17 @@ jobs:
           plugin = json.load(open("plugin/.claude-plugin/plugin.json"))["version"]
           market = json.load(open(".claude-plugin/marketplace.json"))
           entry = next(p for p in market["plugins"] if p["name"] == "archflow")["version"]
+          pkg = json.load(open("package.json"))["version"]
+          alias = json.load(open("packages/archflowai/package.json"))["version"]
           problems = []
           if plugin != tag:
               problems.append(f"plugin.json says {plugin}, tag is {tag}")
           if entry != tag:
               problems.append(f"marketplace.json says {entry}, tag is {tag}")
+          if pkg != tag:
+              problems.append(f"package.json says {pkg}, tag is {tag}")
+          if alias != tag:
+              problems.append(f"packages/archflowai/package.json says {alias}, tag is {tag}")
           if problems:
               print("\n".join(problems)); sys.exit(1)
           print(f"manifests agree on {tag}")
@@ -46,6 +52,16 @@ jobs:
 
       - name: Tests
         run: python -m pytest tests/ -q
+
+      # The installer (`npx archflow install`) fetches the adapters from the latest
+      # release by default, so every release ships them as an asset. The adapters
+      # must already match the plugin; CI checks that on every push, this re-checks
+      # at the tag.
+      - name: Package the installer with the host adapters
+        run: |
+          node scripts/build-adapters.mjs --check
+          npm pack
+          ls -la archflow-*.tgz
 
       # The changelog section IS the release notes. If the tag has no section,
       # the release would ship empty, so fail instead.
@@ -68,6 +84,22 @@ jobs:
           PY
           echo "--- notes ---"; cat release-notes.md
 
+      # npm: the `archflow` package (installer + adapters) and its `archflowai` alias, at the
+      # tag's version. Skipped, not failed, when the NPM_TOKEN secret is absent, so a release
+      # can still be cut before npm publishing is set up.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then echo "NPM_TOKEN is not set; skipping npm publish"; exit 0; fi
+          npm publish --access public
+          (cd packages/archflowai && npm publish --access public)
+
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -75,4 +107,5 @@ jobs:
           gh release create "${GITHUB_REF_NAME}" \
             --title "Archflow ${GITHUB_REF_NAME}" \
             --notes-file release-notes.md \
-            --verify-tag
+            --verify-tag \
+            "archflow-${GITHUB_REF_NAME}.tgz#archflow ${GITHUB_REF_NAME} (npm package: npx archflow install, with the host adapters)"

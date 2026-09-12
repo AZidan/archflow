@@ -1,0 +1,13 @@
+name: express-mongo-next
+label: "Express + MongoDB + Next.js"
+project_types: [fullstack, frontend_only]
+description: "Lighter-weight JavaScript stack with server-rendered web."
+
+stack:
+  language: typescript
+  backend:  {framework: express, database: mongodb, orm: mongoose, auth: jwt}
+  web:      {framework: nextjs, language: typescript, styling: tailwind, state: null}
+  test:     {unit: vitest, integration: supertest, e2e: playwright}
+  ci: github-actions
+  hosting: vercel
+  package_manager: pnpm

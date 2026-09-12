@@ -262,7 +262,9 @@ def run_check_upgrade(cwd):
         capture_output=True, text=True, timeout=15,
         env={"PATH": _os.environ["PATH"],
              "CLAUDE_PROJECT_DIR": str(cwd),
-             "CLAUDE_PLUGIN_ROOT": str(REPO / "plugin")},
+             "CLAUDE_PLUGIN_ROOT": str(REPO / "plugin"),
+             # these tests are about drift, not releases; keep them off the network and the real cache
+             "ARCHFLOW_NO_UPDATE_CHECK": "1"},
     )
 
 
@@ -336,3 +338,162 @@ def test_notice_fast_path_is_cheap(tmp_path):
 def test_upgrade_hook_registered_on_session_start():
     hooks = _json.loads((REPO / "plugin" / "hooks" / "hooks.json").read_text())["hooks"]
     assert "check-upgrade.mjs" in _json.dumps(hooks["SessionStart"])
+
+
+# --------------------------------------------------------------------------
+# Newer-release notice (hosts other than Claude Code)
+#
+# The adapters are copied files that nothing refreshes. The hook reads a cache
+# and, when it is stale, refreshes it in a detached child. The hook itself must
+# never wait on the network.
+# --------------------------------------------------------------------------
+
+import http.server as _http
+import threading as _threading
+import time as _time
+
+
+def run_check_upgrade_as(cwd, host, cache_dir, extra=None):
+    env = {"PATH": _os.environ["PATH"],
+           "CLAUDE_PROJECT_DIR": str(cwd),
+           "CLAUDE_PLUGIN_ROOT": str(REPO / "plugin"),
+           "ARCHFLOW_CACHE_DIR": str(cache_dir),
+           # never reach GitHub from a test; a refresh would fail fast and write nothing
+           "ARCHFLOW_RELEASES_URL": "http://127.0.0.1:9/releases/latest"}
+    if host:
+        env["ARCHFLOW_HOST"] = host
+    env.update(extra or {})
+    return subprocess.run(["node", str(CHECK_UPGRADE)], capture_output=True, text=True, timeout=15, env=env)
+
+
+@pytest.fixture
+def current_project(tmp_path):
+    """A project that is up to date with the installed plugin: the fast path."""
+    af = tmp_path / ".archflow"
+    af.mkdir()
+    (af / "current-phase.yaml").write_text(
+        f'phase: 1\nphase_file: x\nproject_type: fullstack\nmode: quick\n'
+        f'plugin_version: "{_installed_version()}"\n'
+    )
+    return tmp_path
+
+
+def _cache(tmp_path, tag, age_seconds=0):
+    d = tmp_path / "cache"
+    d.mkdir(exist_ok=True)
+    (d / "latest.json").write_text(_json.dumps({"tag": tag, "checkedAt": int((_time.time() - age_seconds) * 1000)}))
+    return d
+
+
+def test_release_notice_names_the_newer_release_and_the_host(current_project, tmp_path):
+    out = run_check_upgrade_as(current_project, "codex", _cache(tmp_path, "99.0.0")).stdout
+    assert "Archflow 99.0.0 is available" in out
+    assert "npx archflow install --host codex" in out
+    assert "doctor" in out
+
+
+def test_release_notice_also_prints_alongside_the_drift_notice(stale_project, tmp_path):
+    out = run_check_upgrade_as(stale_project, "cursor", _cache(tmp_path, "99.0.0")).stdout
+    assert "Archflow 99.0.0 is available" in out
+    assert "behind the installed Archflow plugin" in out
+
+
+def test_release_notice_on_claude_code_names_the_plugin_update(current_project, tmp_path):
+    """No ARCHFLOW_HOST means Claude Code: the fix is the plugin update, not the installer."""
+    cache = _cache(tmp_path, "99.0.0")
+    for host in (None, "claude"):
+        out = run_check_upgrade_as(current_project, host, cache).stdout
+        assert "Archflow 99.0.0 is available" in out
+        assert "claude plugin update archflow@archflow" in out
+        assert "npx archflow" not in out
+
+
+def test_release_notice_is_silent_when_installed_is_current_or_newer(current_project, tmp_path):
+    assert run_check_upgrade_as(current_project, "codex", _cache(tmp_path, _installed_version())).stdout.strip() == ""
+    assert run_check_upgrade_as(current_project, "codex", _cache(tmp_path, "0.0.1")).stdout.strip() == ""
+
+
+def test_release_notice_respects_update_check_false(current_project, tmp_path):
+    (current_project / ".archflow" / "project-settings.yaml").write_text("project_type: fullstack\nupdate_check: false\n")
+    assert run_check_upgrade_as(current_project, "codex", _cache(tmp_path, "99.0.0")).stdout.strip() == ""
+
+
+def test_release_notice_respects_the_env_opt_out(current_project, tmp_path):
+    out = run_check_upgrade_as(current_project, "codex", _cache(tmp_path, "99.0.0"), {"ARCHFLOW_NO_UPDATE_CHECK": "1"}).stdout
+    assert out.strip() == ""
+
+
+def test_release_notice_ignores_a_garbled_cache(current_project, tmp_path):
+    d = tmp_path / "cache"
+    d.mkdir()
+    (d / "latest.json").write_text("{ not json")
+    proc = run_check_upgrade_as(current_project, "codex", d)
+    assert proc.returncode == 0 and proc.stdout.strip() == ""
+
+
+class _Redirect(_http.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(302)
+        self.send_header("Location", "/releases/tag/9.9.9")
+        self.end_headers()
+
+    def log_message(self, *_):
+        pass
+
+
+class _Tag(_http.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"ok")
+
+    def log_message(self, *_):
+        pass
+
+
+def test_stale_cache_is_refreshed_in_the_background_without_blocking(current_project, tmp_path):
+    """The hook returns at once; a detached child resolves the tag through the redirect."""
+    class Handler(_http.BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path.endswith("/releases/latest"):
+                self.send_response(302); self.send_header("Location", "/releases/tag/9.9.9"); self.end_headers()
+            else:
+                self.send_response(200); self.end_headers(); self.wfile.write(b"ok")
+        def log_message(self, *_):
+            pass
+    server = _http.HTTPServer(("127.0.0.1", 0), Handler)
+    _threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        cache = _cache(tmp_path, "0.0.1", age_seconds=2 * 24 * 3600)  # two days old
+        url = f"http://127.0.0.1:{server.server_port}/releases/latest"
+        start = _time.monotonic()
+        proc = run_check_upgrade_as(current_project, "opencode", cache, {"ARCHFLOW_RELEASES_URL": url})
+        assert _time.monotonic() - start < 3, "the hook must not wait for the refresh"
+        assert proc.stdout.strip() == "", "a stale cache with an old tag says nothing this session"
+        deadline = _time.monotonic() + 8
+        while _time.monotonic() < deadline:
+            data = _json.loads((cache / "latest.json").read_text())
+            if data["tag"] == "9.9.9":
+                break
+            _time.sleep(0.2)
+        assert data["tag"] == "9.9.9", "the detached refresh should have rewritten the cache"
+        # Next session sees it.
+        assert "Archflow 9.9.9 is available" in run_check_upgrade_as(current_project, "opencode", cache).stdout
+    finally:
+        server.shutdown()
+
+
+def test_every_adapter_names_its_host_to_the_hook():
+    """Without ARCHFLOW_HOST the hook assumes Claude Code and points at the plugin update."""
+    wiring = {
+        "codex": REPO / "adapters" / "codex" / ".codex" / "hooks.json",
+        "copilot": REPO / "adapters" / "copilot" / ".github" / "hooks" / "archflow.json",
+        "cursor": REPO / "adapters" / "cursor" / ".cursor" / "archflow" / "hooks" / "cursor-bridge.mjs",
+        "gemini": REPO / "adapters" / "gemini" / "hooks" / "hooks.json",
+        "opencode": REPO / "adapters" / "opencode" / ".opencode" / "plugins" / "archflow.ts",
+        "generic": REPO / "adapters" / "generic" / "AGENTS.archflow.md",
+    }
+    for host, path in wiring.items():
+        text = path.read_text()
+        forms = (f"ARCHFLOW_HOST={host}", f'ARCHFLOW_HOST: "{host}"', f'"ARCHFLOW_HOST": "{host}"')
+        assert any(f in text for f in forms), f"{path} does not set ARCHFLOW_HOST={host}"

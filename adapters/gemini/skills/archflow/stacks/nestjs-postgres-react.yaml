@@ -1,0 +1,13 @@
+name: nestjs-postgres-react
+label: "NestJS + PostgreSQL + React"
+project_types: [fullstack, backend_only, frontend_only]
+description: "TypeScript end to end. Opinionated backend, mainstream web front end."
+
+stack:
+  language: typescript
+  backend:  {framework: nestjs, database: postgresql, orm: prisma, auth: jwt}
+  web:      {framework: react, language: typescript, styling: tailwind, state: tanstack-query}
+  test:     {unit: jest, integration: supertest, e2e: playwright}
+  ci: github-actions
+  hosting: null
+  package_manager: pnpm

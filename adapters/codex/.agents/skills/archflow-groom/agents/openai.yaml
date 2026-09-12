@@ -1,0 +1,5 @@
+interface:
+  display_name: "Archflow: groom"
+  short_description: "Detail or refine a story: acceptance criteria, subtasks, gates. Works on a backlog stub or a story already in a release"
+policy:
+  allow_implicit_invocation: false

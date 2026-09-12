@@ -1,0 +1,81 @@
+/* Apple HIG / Liquid Glass — reference rendering only (web approximation of a system material) */
+:root{
+  --label:#000; --label-2:rgba(60,60,67,.6); --label-3:rgba(60,60,67,.3);
+  --separator:rgba(60,60,67,.29); --tint:#007AFF; --red:#FF3B30; --green:#34C759; --orange:#FF9500;
+  --grouped-bg:#F2F2F7; --grouped-surface:#FFFFFF;
+  --glass:rgba(255,255,255,.6); --glass-stroke:rgba(255,255,255,.75);
+  --glass-shadow:0 10px 34px rgba(0,0,0,.14),0 1px 2px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;-webkit-font-smoothing:antialiased}
+html,body{margin:0;padding:0;width:390px;height:844px;overflow:hidden}
+body{color:var(--label);background:var(--grouped-bg);
+  font-family:-apple-system,"SF Pro Text","SF Pro Display","Helvetica Neue",system-ui,sans-serif;
+  letter-spacing:-.24px}
+.screen{width:390px;height:844px;position:relative;overflow:hidden}
+/* Dynamic Type text styles */
+.large-title{font-size:34px;line-height:41px;font-weight:700;letter-spacing:.37px}
+.title1{font-size:28px;line-height:34px;font-weight:700;letter-spacing:.36px}
+.title2{font-size:22px;line-height:28px;font-weight:700;letter-spacing:.35px}
+.title3{font-size:20px;line-height:25px;font-weight:600;letter-spacing:.38px}
+.headline{font-size:17px;line-height:22px;font-weight:600;letter-spacing:-.41px}
+.body{font-size:17px;line-height:22px;letter-spacing:-.41px}
+.callout{font-size:16px;line-height:21px;letter-spacing:-.32px}
+.subheadline{font-size:15px;line-height:20px;letter-spacing:-.24px}
+.footnote{font-size:13px;line-height:18px;letter-spacing:-.08px}
+.caption{font-size:12px;line-height:16px}
+.secondary{color:var(--label-2)}
+/* content layer background */
+.canvas{position:absolute;inset:0;
+  background:
+    radial-gradient(120% 90% at 12% 0%, #8ED8FF 0%, rgba(142,216,255,0) 60%),
+    radial-gradient(100% 80% at 92% 8%, #FFC48E 0%, rgba(255,196,142,0) 55%),
+    radial-gradient(110% 70% at 50% 100%, #C6B8FF 0%, rgba(198,184,255,0) 62%),
+    linear-gradient(160deg,#EAF4FF 0%,#F7F2FF 55%,#FFF4EC 100%)}
+/* status bar */
+.status{position:absolute;top:0;left:0;right:0;height:54px;z-index:30;display:flex;
+  align-items:center;justify-content:space-between;padding:14px 28px 0;
+  font-size:15px;font-weight:600;letter-spacing:0}
+.status .dots{display:flex;gap:6px;align-items:center}
+.status .dots i{display:block;width:17px;height:11px;border:1.5px solid currentColor;
+  border-radius:3px;opacity:.85}
+/* the glass layer */
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(30px) saturate(180%);
+  backdrop-filter:blur(30px) saturate(180%);border:.5px solid var(--glass-stroke);
+  box-shadow:var(--glass-shadow)}
+.navbar{position:absolute;top:44px;left:12px;right:12px;height:52px;z-index:20;border-radius:22px;
+  display:flex;align-items:center;gap:6px;padding:0 8px}
+.navbar .title{flex:1;text-align:center;font-size:17px;font-weight:600;letter-spacing:-.41px}
+.navbtn{min-width:36px;height:36px;border:0;background:transparent;border-radius:18px;color:var(--tint);
+  display:grid;place-items:center;font-size:17px;letter-spacing:-.41px;padding:0 8px}
+svg{display:block;fill:currentColor}
+.tabbar{position:absolute;bottom:26px;left:22px;right:22px;height:64px;z-index:20;border-radius:32px;
+  display:flex;align-items:center;padding:6px}
+.tab{flex:1;height:52px;border-radius:26px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;color:var(--label-2);font-size:10px;font-weight:500;letter-spacing:0}
+.tab.active{color:var(--tint);background:rgba(255,255,255,.72);
+  box-shadow:0 1px 3px rgba(0,0,0,.08)}
+/* buttons */
+.btn{height:50px;border:0;border-radius:25px;font-size:17px;font-weight:600;letter-spacing:-.41px;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;cursor:pointer}
+.btn-glass-prominent{background:var(--tint);color:#fff;box-shadow:0 6px 20px rgba(0,122,255,.35)}
+.btn-glass{background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(24px) saturate(180%);
+  backdrop-filter:blur(24px) saturate(180%);border:.5px solid var(--glass-stroke);color:var(--label);
+  box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.btn-plain{background:transparent;color:var(--tint);font-weight:400;height:auto}
+/* grouped list — the content layer */
+.section{margin:0 16px 22px;background:var(--grouped-surface);border-radius:18px;overflow:hidden}
+.section.on-glass{background:rgba(255,255,255,.68);-webkit-backdrop-filter:blur(24px) saturate(180%);
+  backdrop-filter:blur(24px) saturate(180%);border:.5px solid var(--glass-stroke)}
+.section-title{font-size:13px;font-weight:400;color:var(--label-2);text-transform:uppercase;
+  letter-spacing:.5px;margin:0 16px 7px 32px}
+.row{display:flex;align-items:center;gap:12px;min-height:52px;padding:9px 16px}
+.row + .row{border-top:.5px solid var(--separator);margin-left:16px;padding-left:0}
+.row .icon{width:29px;height:29px;border-radius:7px;flex:none;display:grid;place-items:center;color:#fff}
+.row .grow{flex:1;min-width:0}
+.row .val{color:var(--label-2);font-size:17px;letter-spacing:-.41px}
+.chev{color:var(--label-3);flex:none}
+.field{display:flex;align-items:center;gap:12px;min-height:50px;padding:0 16px}
+.field + .field{border-top:.5px solid var(--separator);margin-left:16px;padding-left:0}
+.field label{width:88px;flex:none;font-size:17px;letter-spacing:-.41px}
+.field input{flex:1;border:0;background:transparent;outline:none;font:inherit;font-size:17px;
+  letter-spacing:-.41px;color:var(--label);padding:0}

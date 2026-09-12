@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Archflow: Turn Claude Code into a structured development team</title>
-  <meta name="description" content="Turn Claude Code into a structured development team. 17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have. Free and MIT.">
-  <meta property="og:title" content="Archflow: Turn Claude Code into a structured development team">
-  <meta property="og:description" content="17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have.">
+  <title>Archflow: Turn your coding agent into a structured development team</title>
+  <meta name="description" content="Turn your coding agent into a structured development team. 17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have. Free and MIT. For Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode.">
+  <meta property="og:title" content="Archflow: Turn your coding agent into a structured development team">
+  <meta property="og:description" content="17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have. For Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://archflowai.dev">
   <!-- Wide card carrying the product, not the mark: a launch share should show
@@ -19,8 +19,8 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://archflowai.dev/assets/video/studio-poster.jpg">
   <meta name="twitter:image:alt" content="Archflow Studio: a release board with stories moving through ready, in progress and done">
-  <meta name="twitter:title" content="Archflow: Turn Claude Code into a structured development team">
-  <meta name="twitter:description" content="17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have.">
+  <meta name="twitter:title" content="Archflow: Turn your coding agent into a structured development team">
+  <meta name="twitter:description" content="17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have. For Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode.">
   <!-- Canonical: azidan.github.io/archflow/ 301s here, but Google still has the
        old URL indexed. This consolidates the two faster than the redirect alone. -->
   <link rel="canonical" href="https://archflowai.dev/">
@@ -95,7 +95,7 @@
         "url": "https://archflowai.dev/",
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "macOS, Linux, Windows",
-        "description": "Phase-based AI development framework for Claude Code. 17 specialized agents across 6 phases, handing off through files in your repo. Reads the codebase you already have.",
+        "description": "Phase-based AI development framework for Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode. 17 specialized agents across 6 phases, handing off through files in your repo. Reads the codebase you already have.",
         "softwareVersion": "2.3.0",
         "license": "https://opensource.org/licenses/MIT",
         "isAccessibleForFree": true,
@@ -380,7 +380,7 @@
     <div class="relative max-w-container mx-auto px-6 py-14 md:py-20 text-center">
       <div class="fade-in">
         <h1 class="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-800 leading-[1.08] tracking-tight mb-6 max-w-4xl mx-auto">
-          Turn Claude Code into a structured development team
+          Turn your coding agent into a structured development team
         </h1>
         <p class="text-text-secondary text-lg md:text-xl leading-relaxed max-w-2xl mx-auto mb-4">
           17 specialized agents across 6 phases, handing off through files in your repo, so context outlives the session that created it. Works on the codebase you already have.
@@ -405,12 +405,11 @@
         <div class="mt-8 max-w-xl mx-auto text-left">
           <div class="code-block rounded-xl overflow-hidden">
             <div class="p-4 font-mono text-xs sm:text-sm leading-relaxed">
-              <div class="overflow-x-auto whitespace-nowrap"><span class="text-text-muted select-none">$ </span><span class="text-text-primary">claude plugin marketplace add AZidan/archflow</span></div>
-              <div class="overflow-x-auto whitespace-nowrap"><span class="text-text-muted select-none">$ </span><span class="text-text-primary">claude plugin install archflow --scope project</span></div>
+              <div class="overflow-x-auto whitespace-nowrap"><span class="text-text-muted select-none">$ </span><span class="text-text-primary">npx archflow install</span></div>
             </div>
           </div>
           <p class="text-text-muted text-xs mt-2.5 leading-relaxed">
-            <code class="font-mono">--scope project</code> installs Archflow into this repo only, so it travels with the project instead of your machine.
+            Detects the coding agents on your machine and sets Archflow up for each: Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI, OpenCode. Everything it writes lands in your repo, so it travels with the project instead of your machine.
           </p>
         </div>
 
@@ -1179,7 +1178,7 @@
     <div class="relative max-w-container mx-auto px-6">
       <div class="fade-in text-center mb-12">
         <h2 class="font-heading text-3xl md:text-4xl lg:text-5xl font-700 leading-tight tracking-tight mb-4">
-          Two commands to install
+          One command to install
         </h2>
       </div>
 
@@ -1196,15 +1195,12 @@
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/>
               </svg>
-              Copy both commands
+              Copy install command
             </button>
           </div>
           <div class="p-6 font-mono text-sm leading-loose">
             <div>
-              <span class="text-text-muted select-none">$ </span><span class="text-text-primary">claude plugin marketplace add AZidan/archflow</span>
-            </div>
-            <div>
-              <span class="text-text-muted select-none">$ </span><span class="text-text-primary">claude plugin install archflow --scope project</span>
+              <span class="text-text-muted select-none">$ </span><span class="text-text-primary">npx archflow install</span>
             </div>
           </div>
         </div>
@@ -1213,11 +1209,25 @@
       <!-- The fork that makes the widened audience real rather than claimed:
            the install used to end at a slash command only. -->
       <p class="fade-in text-text-secondary text-sm text-center mb-4 max-w-xl mx-auto leading-relaxed">
-        Then run <span class="font-mono text-xs text-accent-light">/archflow:onboard</span> in your project, or
+        Works with Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode, and lands everything in your repo.
+        Then open your coding agent in the project and run <span class="font-mono text-xs text-accent-light">/archflow:onboard</span>, or
         <a href="#studio" class="font-mono text-xs text-accent-light hover:underline">/archflow:studio</a>
-        to do the whole thing in the browser instead.
+        on Claude Code to do the whole thing in the browser instead.
       </p>
-
+      <!-- Claude Code alternative: the marketplace route. Posts carry this command and it
+           converts, so it stays on the page as the secondary path. -->
+      <div class="fade-in max-w-2xl mx-auto mb-10 rounded-xl border border-dark-700/60 bg-dark-800/40 px-6 py-5">
+        <p class="text-text-primary font-heading font-600 text-base mb-2">On Claude Code, the plugin marketplace works too</p>
+        <div class="code-block rounded-lg overflow-hidden mb-3">
+          <div class="px-4 py-3 font-mono text-xs sm:text-sm leading-loose">
+            <div class="overflow-x-auto whitespace-nowrap"><span class="text-text-muted select-none">$ </span><span class="text-text-primary">claude plugin marketplace add AZidan/archflow</span></div>
+            <div class="overflow-x-auto whitespace-nowrap"><span class="text-text-muted select-none">$ </span><span class="text-text-primary">claude plugin install archflow --scope project</span></div>
+          </div>
+        </div>
+        <p class="text-text-muted text-xs leading-relaxed">
+          Same result: <code class="font-mono">npx archflow install</code> runs these for you on Claude Code. Studio is Claude Code only.
+        </p>
+      </div>
       <!-- Trust signals -->
       <p class="fade-in text-text-muted text-sm text-center mb-10">
         Free and open source. MIT licensed.
@@ -1457,10 +1467,7 @@
       // Two buttons share this (hero + install section) with different labels,
       // so restore whatever this button had rather than a hardcoded one.
       const original = btn.dataset.original || (btn.dataset.original = btn.innerHTML);
-      const commands = [
-        'claude plugin marketplace add AZidan/archflow',
-        'claude plugin install archflow --scope project'
-      ].join('\n');
+      const commands = 'npx archflow install';
 
       navigator.clipboard.writeText(commands).then(() => {
         btn.classList.add('copied');

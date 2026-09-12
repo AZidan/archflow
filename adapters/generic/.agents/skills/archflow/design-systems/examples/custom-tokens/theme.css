@@ -1,0 +1,114 @@
+/* custom-tokens — generated from tokens.json (primitive → semantic → component)
+   Values below are the emitted artefact; components below reference ONLY the last two tiers. */
+:root{
+  /* ── tier 1: primitives ───────────────────────────────────────── */
+  --c-brand-50:#FBF1EC; --c-brand-100:#F5DCD0; --c-brand-200:#E8B69F; --c-brand-300:#D88E6D;
+  --c-brand-400:#C46A47; --c-brand-500:#A6432B; --c-brand-600:#8C3623; --c-brand-700:#6E2A1B;
+  --c-neutral-0:#FFFFFF; --c-neutral-50:#FAF8F6; --c-neutral-100:#F2EEEA; --c-neutral-200:#E4DED8;
+  --c-neutral-300:#CFC7BF; --c-neutral-400:#A79D94; --c-neutral-500:#7D7368; --c-neutral-600:#5C534A;
+  --c-neutral-700:#3E362F; --c-neutral-900:#241F1A;
+  --c-success-500:#2F7A55; --c-warning-500:#B7791F; --c-danger-500:#B3261E;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; --sp-7:48px; --sp-8:64px;
+  --rad-sm:4px; --rad-md:8px; --rad-lg:12px; --rad-xl:16px; --rad-full:9999px;
+  --fs-xs:12px; --fs-sm:14px; --fs-md:16px; --fs-lg:20px; --fs-xl:24px; --fs-2xl:32px;
+  --lh-tight:1.2; --lh-normal:1.5;
+  --sh-sm:0 1px 2px rgba(36,31,26,.06); --sh-md:0 4px 12px rgba(36,31,26,.08);
+  --sh-lg:0 12px 32px rgba(36,31,26,.12);
+  /* ── tier 2: semantics ────────────────────────────────────────── */
+  --surface-default:var(--c-neutral-0); --surface-raised:var(--c-neutral-0);
+  --surface-sunken:var(--c-neutral-50); --surface-accent:var(--c-brand-50);
+  --text-default:var(--c-neutral-900); --text-muted:var(--c-neutral-500);
+  --text-inverse:var(--c-neutral-0); --text-on-action:var(--c-neutral-0);
+  --text-brand:var(--c-brand-600);
+  --border-default:var(--c-neutral-200); --border-strong:var(--c-neutral-300);
+  --border-focus:var(--c-brand-500);
+  --action-primary:var(--c-brand-500); --action-primary-hover:var(--c-brand-600);
+  --action-secondary:var(--c-neutral-100);
+  --feedback-success:var(--c-success-500); --feedback-warning:var(--c-warning-500);
+  --feedback-danger:var(--c-danger-500);
+  /* ── tier 3: component tokens ─────────────────────────────────── */
+  --button-height:40px; --button-radius:var(--rad-md); --button-padding-x:var(--sp-4);
+  --input-height:40px; --input-radius:var(--rad-md);
+  --card-radius:var(--rad-lg); --card-padding:var(--sp-5);
+  --row-height:64px;
+}
+*{box-sizing:border-box;-webkit-font-smoothing:antialiased}
+html,body{margin:0;padding:0;width:1200px;height:800px;overflow:hidden}
+body{background:var(--surface-sunken);color:var(--text-default);
+  font-family:"Inter","Segoe UI",-apple-system,system-ui,sans-serif;
+  font-size:var(--fs-md);line-height:var(--lh-normal)}
+svg{display:block;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+h1,h2,h3,p{margin:0}
+.t-2xl{font-size:var(--fs-2xl);line-height:var(--lh-tight);font-weight:700;letter-spacing:-.6px}
+.t-xl{font-size:var(--fs-xl);line-height:var(--lh-tight);font-weight:700;letter-spacing:-.3px}
+.t-lg{font-size:var(--fs-lg);line-height:var(--lh-tight);font-weight:600;letter-spacing:-.2px}
+.t-md{font-size:var(--fs-md)} .t-sm{font-size:var(--fs-sm)} .t-xs{font-size:var(--fs-xs)}
+.strong{font-weight:600}
+.muted{color:var(--text-muted)}
+/* Button */
+.Button{display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);
+  height:var(--button-height);padding:0 var(--button-padding-x);border-radius:var(--button-radius);
+  border:1px solid transparent;font:inherit;font-size:var(--fs-sm);font-weight:600;cursor:pointer;
+  white-space:nowrap;line-height:1}
+.Button--primary{background:var(--action-primary);color:var(--text-on-action);box-shadow:var(--sh-sm)}
+.Button--secondary{background:var(--action-secondary);color:var(--text-default)}
+.Button--ghost{background:transparent;color:var(--text-muted)}
+.Button--outline{background:var(--surface-default);border-color:var(--border-default);color:var(--text-default)}
+.Button--sm{height:32px;padding:0 var(--sp-3);font-size:var(--fs-xs)}
+.Button--icon{width:var(--button-height);padding:0}
+.Button--block{width:100%}
+/* TextInput + FormLabel */
+.FormField{display:flex;flex-direction:column;gap:var(--sp-2)}
+.FormLabel{font-size:var(--fs-sm);font-weight:600}
+.TextInput{height:var(--input-height);border:1px solid var(--border-default);border-radius:var(--input-radius);
+  background:var(--surface-default);padding:0 var(--sp-3);font:inherit;font-size:var(--fs-sm);
+  color:var(--text-default);outline:none;width:100%}
+.TextInput::placeholder{color:var(--text-muted)}
+.FormHint{font-size:var(--fs-xs);color:var(--text-muted)}
+/* Card */
+.Card{background:var(--surface-raised);border:1px solid var(--border-default);
+  border-radius:var(--card-radius);box-shadow:var(--sh-sm)}
+.CardHeader{padding:var(--card-padding);padding-bottom:var(--sp-3)}
+.CardBody{padding:0 var(--card-padding) var(--card-padding)}
+/* Tag */
+.Tag{display:inline-flex;align-items:center;gap:var(--sp-1);height:24px;padding:0 var(--sp-2);
+  border-radius:var(--rad-sm);font-size:var(--fs-xs);font-weight:600;line-height:1;
+  background:var(--action-secondary);color:var(--text-muted)}
+.Tag--brand{background:var(--surface-accent);color:var(--text-brand)}
+.Tag--danger{background:#FBEDEC;color:var(--feedback-danger)}
+.Tag--success{background:#EEF6F1;color:var(--feedback-success)}
+/* Tabs */
+.Tabs{display:flex;gap:var(--sp-5);border-bottom:1px solid var(--border-default)}
+.Tab{padding:0 0 var(--sp-3);font-size:var(--fs-sm);font-weight:600;color:var(--text-muted);
+  border-bottom:2px solid transparent;margin-bottom:-1px}
+.Tab--active{color:var(--text-brand);border-bottom-color:var(--action-primary)}
+/* AppHeader + SideNav */
+.AppShell{display:flex;height:800px}
+.SideNav{width:248px;flex:none;background:var(--surface-default);border-right:1px solid var(--border-default);
+  display:flex;flex-direction:column;padding:var(--sp-4)}
+.SideNav__brand{display:flex;align-items:center;gap:var(--sp-3);height:48px;font-weight:700;
+  font-size:var(--fs-md);letter-spacing:-.2px;margin-bottom:var(--sp-4)}
+.SideNav__label{font-size:var(--fs-xs);font-weight:600;color:var(--text-muted);
+  letter-spacing:.6px;text-transform:uppercase;padding:var(--sp-4) var(--sp-3) var(--sp-2)}
+.SideNavItem{display:flex;align-items:center;gap:var(--sp-3);height:40px;padding:0 var(--sp-3);
+  border-radius:var(--rad-md);font-size:var(--fs-sm);color:var(--text-default)}
+.SideNavItem--active{background:var(--surface-accent);color:var(--text-brand);font-weight:600}
+.SideNavItem .count{margin-left:auto;font-size:var(--fs-xs);color:var(--text-muted)}
+.AppMain{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface-sunken)}
+.AppHeader{height:64px;flex:none;background:var(--surface-default);
+  border-bottom:1px solid var(--border-default);display:flex;align-items:center;
+  gap:var(--sp-3);padding:0 var(--sp-5)}
+.Breadcrumbs{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-sm);color:var(--text-muted)}
+.Breadcrumbs b{color:var(--text-default);font-weight:600}
+.Avatar{width:36px;height:36px;border-radius:var(--rad-full);background:var(--c-brand-100);
+  color:var(--c-brand-700);display:grid;place-items:center;font-size:var(--fs-xs);font-weight:700;flex:none}
+/* ListRow */
+.ListRow{display:flex;align-items:center;gap:var(--sp-4);min-height:var(--row-height);
+  padding:var(--sp-3) var(--sp-5);background:var(--surface-default)}
+.ListRow + .ListRow{border-top:1px solid var(--border-default)}
+.ListRow__leading{width:40px;height:40px;border-radius:var(--rad-md);flex:none;display:grid;
+  place-items:center;background:var(--surface-accent);color:var(--text-brand)}
+.ListRow__grow{flex:1;min-width:0}
+.Checkbox{width:18px;height:18px;border:1.5px solid var(--border-strong);border-radius:var(--rad-sm);
+  display:grid;place-items:center;flex:none;background:var(--surface-default)}
+.Checkbox--on{background:var(--action-primary);border-color:var(--action-primary);color:var(--text-on-action)}
