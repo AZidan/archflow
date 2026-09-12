@@ -238,11 +238,11 @@ ever writes project content, invents a value the repo does not evidence, or reso
 those are reported for the user to decide.
 
 **Newer release.** The session-start hook also reports when a newer Archflow release exists than
-what is installed, the marketplace plugin on OpenCode or the copied adapter elsewhere. It reads `~/.cache/archflow-install/latest.json`,
+what is installed, the marketplace plugin on OpenCode or the copied adapter elsewhere. It reads `~/.cache/archflow/latest.json`,
 refreshed in the background at most once a day, and is silenced by `update_check: false` in
 `project-settings.yaml`. Report the same comparison here when that file exists. The fix on OpenCode
 is `claude plugin marketplace update archflow && claude plugin update archflow@archflow`; on other
-hosts it is `npx archflow-install` from the project root, which refreshes the adapter. Then `--fix` here.
+hosts it is `npx archflow install` from the project root, which refreshes the adapter. Then `--fix` here.
 
 ## Step 5c — Stack detection (the last thing `--fix` does)
 

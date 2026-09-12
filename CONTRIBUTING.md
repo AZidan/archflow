@@ -118,7 +118,9 @@ Conventional commits: `feat(scope):`, `fix(scope):`, `docs(scope):`, `test(scope
 
 Commit only what you changed. Never `git add .` — this repo usually has unrelated work in progress.
 
-To release: update the version in `plugin/.claude-plugin/plugin.json` and `marketplace.json`, move
+To release: update the version in `plugin/.claude-plugin/plugin.json`, `marketplace.json`,
+`package.json` and `packages/archflowai/package.json` (the release workflow refuses a tag they
+disagree with), move
 `[Unreleased]` into a dated section in `CHANGELOG.md`, then tag. The release workflow builds the
 GitHub release from the changelog section.
 

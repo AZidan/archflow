@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * archflow-install — put Archflow into a project, for Claude Code or any other supported host.
+ * archflow — put Archflow into a project, for Claude Code or any other supported host.
  *
  * Does, per host, exactly what adapters/<host>/README.md tells a human to do by hand:
  * copy the adapter tree in, merge the AGENTS.md block, merge Codex's config.toml
@@ -8,9 +8,11 @@
  * deletes a file it did not write.
  *
  * Usage (from inside the target project):
- *   npx archflow-install                      # detect hosts, install for each
- *   npx archflow-install --host codex,cursor  # explicit hosts
- *   npx archflow-install --dry-run            # show the plan only
+ *   npx archflow install                      # detect hosts, install for each
+ *   npx archflow install --host codex,cursor  # explicit hosts
+ *   npx archflow install --dry-run            # show the plan only
+ *   npx archflow                              # same as `install`, the only command today
+ *   npx archflowai ...                        # alias package, identical
  *
  * Options:
  *   --host <a,b>          claude | codex | copilot | cursor | gemini | opencode | generic
@@ -25,15 +27,15 @@
  *
  * The adapters come from the latest GitHub release by default, so the installed copy is
  * never older than what is published, whatever version of this package npx cached. Each
- * release is fetched once into ~/.cache/archflow-install/<tag>. When the network or the
+ * release is fetched once into ~/.cache/archflow/<tag>. When the network or the
  * release is unavailable, the copy bundled with this package is used and the run says so.
  *
  * Claude Code is the reference host: `--host claude` installs the marketplace plugin at
  * project scope (`.claude/settings.json`), so the choice is committed with the repo.
  *
  * Local testing without publishing:
- *   node /path/to/archflow/scripts/archflow-install.mjs --host codex
- *   or `npm link` in the archflow checkout, then `archflow-install` anywhere.
+ *   node /path/to/archflow/scripts/archflow.mjs --host codex
+ *   or `npm link` in the archflow checkout, then `archflow install` anywhere.
  */
 
 import {
@@ -50,7 +52,7 @@ const PKG = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = "AZidan/archflow";
 
 // Where the adapters come from. Default: the latest GitHub release, cached per tag
-// under ~/.cache/archflow-install. Falls back to the copy bundled with this package.
+// under ~/.cache/archflow. Falls back to the copy bundled with this package.
 let SRC, ADAPTERS, PRE_PUSH, VERSION;
 function useSource(root, origin) {
   SRC = { root, origin };
@@ -80,7 +82,7 @@ async function resolveSource(opts) {
   let tag;
   try { tag = opts.version || await latestTag(); }
   catch (e) { log(`note  ${e.message}; using the adapters bundled with this package (${VERSION})`); return; }
-  const cacheRoot = join(homedir(), ".cache", "archflow-install");
+  const cacheRoot = join(homedir(), ".cache", "archflow");
   const cache = join(cacheRoot, tag);
   if (!opts.version) { // share what we learned with the session-start hook, so it does not nag about this tag
     try { mkdirSync(cacheRoot, { recursive: true }); writeFileSync(join(cacheRoot, "latest.json"), JSON.stringify({ tag, checkedAt: Date.now() }) + "\n"); } catch {}
@@ -90,7 +92,7 @@ async function resolveSource(opts) {
   const tmp = mkdtempSync(join(cacheRoot, "tmp-")); // same filesystem as the cache, so the final rename is atomic
   try {
     const tgz = join(tmp, "release.tgz");
-    const asset = `https://github.com/${REPO}/releases/download/${tag}/archflow-install-${tag}.tgz`;
+    const asset = `https://github.com/${REPO}/releases/download/${tag}/archflow-${tag}.tgz`;
     const source = `https://github.com/${REPO}/archive/refs/tags/${tag}.tar.gz`;
     if (!(await download(asset, tgz)) && !(await download(source, tgz))) throw new Error(`release ${tag} was not found on GitHub`);
     const extracted = join(tmp, "x");
@@ -189,6 +191,7 @@ process.stdout.on("error", (e) => { if (e.code === "EPIPE") process.exit(0); thr
 
 function parseArgs(argv) {
   const o = { hosts: [], dir: process.cwd(), dryRun: false, guard: true, yes: false, marketplace: MARKETPLACE_REPO, version: null, bundled: false };
+  if (argv[0] === "install") argv = argv.slice(1); // the default and, today, only command
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--host") o.hosts.push(...argv[++i].split(",").map((s) => s.trim()).filter(Boolean));
@@ -204,7 +207,8 @@ function parseArgs(argv) {
     else if (a === "--no-guard") o.guard = false;
     else if (a === "--yes" || a === "-y") o.yes = true;
     else if (a === "--help" || a === "-h") { log(readFileSync(fileURLToPath(import.meta.url), "utf8").match(/\/\*\*([\s\S]*?)\*\//)[1].replace(/^ \* ?/gm, "")); process.exit(0); }
-    else { console.error(`Unknown option: ${a}`); process.exit(2); }
+    else if (a.startsWith("-")) { console.error(`Unknown option: ${a}`); process.exit(2); }
+    else { console.error(`Unknown command: ${a}. Commands: install (the default). Try --help.`); process.exit(2); }
   }
   return o;
 }
@@ -360,11 +364,11 @@ function installGuard(project, dry) {
   if (existing !== null && !chained) return "keep  .git/hooks/pre-push (archflow guard already installed; script refreshed)";
   if (chained) renameSync(hook, join(hooks, chainedName));
   const body = chained
-    ? `#!/bin/sh\n# Installed by archflow-install ${VERSION}. Runs the Archflow guard, then your previous hook (${chainedName}).\n` +
+    ? `#!/bin/sh\n# Installed by archflow ${VERSION}. Runs the Archflow guard, then your previous hook (${chainedName}).\n` +
       `hooks="$(cd "$(dirname "$0")" && pwd)"\ntmp="$(mktemp)"; cat >"$tmp"\n` +
       `"$hooks/archflow-pre-push.sh" "$@" <"$tmp" || { rm -f "$tmp"; exit 1; }\n` +
       `"$hooks/${chainedName}" "$@" <"$tmp"; rc=$?; rm -f "$tmp"; exit $rc\n`
-    : `#!/bin/sh\n# Installed by archflow-install ${VERSION}.\nexec "$(cd "$(dirname "$0")" && pwd)/archflow-pre-push.sh" "$@"\n`;
+    : `#!/bin/sh\n# Installed by archflow ${VERSION}.\nexec "$(cd "$(dirname "$0")" && pwd)/archflow-pre-push.sh" "$@"\n`;
   writeFileSync(hook, body);
   chmodSync(hook, 0o755);
   return chained ? `write .git/hooks/pre-push (archflow guard, previous hook chained as ${chainedName})` : "write .git/hooks/pre-push (archflow guard)";
@@ -538,4 +542,4 @@ async function main() {
   log("\nRe-run this command after upgrading Archflow; it updates in place and never deletes your files.");
 }
 
-main().catch((err) => { console.error(`archflow-install: ${err?.message ?? err}`); process.exit(1); });
+main().catch((err) => { console.error(`archflow: ${err?.message ?? err}`); process.exit(1); });

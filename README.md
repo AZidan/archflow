@@ -73,9 +73,9 @@ Archflow is built as a Claude Code plugin, but the framework is files, so the sa
 agents and phases run on other coding agents. One command from the project root sets it up:
 
 ```bash
-npx archflow-install            # detects the hosts on this machine and installs for each
-npx archflow-install --host codex,cursor
-npx archflow-install --dry-run  # show the plan only
+npx archflow install            # detects the hosts on this machine and installs for each
+npx archflow install --host codex,cursor
+npx archflow install --dry-run  # show the plan only
 ```
 
 It copies a host-native adapter into the project, merges the Archflow block into `AGENTS.md` and
@@ -410,7 +410,7 @@ Archflow manages these files in your project:
 <details>
 <summary><strong>File Structure</strong></summary>
 
-Archflow is distributed as a Claude Code plugin marketplace, and for other hosts as generated adapter packages that `npx archflow-install` copies into a project. The plugin contains all framework code; your project only stores state files.
+Archflow is distributed as a Claude Code plugin marketplace, and for other hosts as generated adapter packages that `npx archflow install` copies into a project. The plugin contains all framework code; your project only stores state files.
 
 ### Marketplace (this repo)
 

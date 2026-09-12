@@ -30,7 +30,7 @@
  *   On Claude Code that means the marketplace plugin fell behind (auto-update off, or
  *   a plugin loaded from a path); on every other host it means the copied adapter,
  *   which nothing refreshes. The check is the npm/brew kind: it reads a cache
- *   (~/.cache/archflow-install/latest.json), and when that is older than a day it
+ *   (~/.cache/archflow/latest.json), and when that is older than a day it
  *   spawns a detached child to refresh it. The hook itself never waits on the
  *   network. Off with `update_check: false` in project-settings.yaml, or the
  *   ARCHFLOW_NO_UPDATE_CHECK env var. The host is named by ARCHFLOW_HOST, which
@@ -45,7 +45,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const RELEASES_URL = process.env.ARCHFLOW_RELEASES_URL || "https://github.com/AZidan/archflow/releases/latest";
-const CACHE_DIR = process.env.ARCHFLOW_CACHE_DIR || join(homedir(), ".cache", "archflow-install");
+const CACHE_DIR = process.env.ARCHFLOW_CACHE_DIR || join(homedir(), ".cache", "archflow");
 const LATEST = join(CACHE_DIR, "latest.json");
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -118,7 +118,7 @@ function checkRelease(installed) {
        `    (add --scope project if it was installed for this project only; /plugin in Claude Code does the same).`,
        `    Then run /archflow:doctor --fix so .archflow/ catches up.`]
     : [`⬆️  Archflow ${cache.tag} is available. This project's ${host} adapter is ${installed}.`,
-       `    Upgrade from the project root:  npx archflow-install --host ${host}`,
+       `    Upgrade from the project root:  npx archflow install --host ${host}`,
        `    Then run the Archflow doctor with --fix so .archflow/ catches up.`];
   return [...how, `    Tell the user. Do not run either unless they ask.`, ""].join("\n");
 }

@@ -77,6 +77,9 @@ docs/internal/*
 !docs/internal/archflow-skill-scaffolding-proposal.md
 !docs/internal/landing-page-plan.md
 
-# npm package build output (archflow-install)
+# npm package build output (archflow, and the archflowai alias)
 /node_modules/
-/archflow-install-*.tgz
+/archflow-*.tgz
+packages/*/node_modules/
+packages/*/package-lock.json
+packages/*/*.tgz

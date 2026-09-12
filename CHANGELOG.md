@@ -24,7 +24,8 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   (`copilot --plugin-dir plugin`, Codex's plugin importer); the adapters exist for teams that want
   host-native, repo-committed configuration.
 
-- **`npx archflow-install`** installs Archflow into a project for any of those hosts, and for Claude
+- **`npx archflow install`** (npm package `archflow`; `archflowai` is an alias) installs Archflow into a
+  project for any of those hosts, and for Claude
   Code itself (`--host claude` installs the marketplace plugin at project scope through the `claude`
   CLI, or writes the same `.claude/settings.json` keys when the CLI is absent). It detects the hosts
   on the machine (or takes `--host`), copies the adapter in, merges the `AGENTS.md`
@@ -35,7 +36,7 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   the adapters bundled.
 
   The adapters are fetched from the **latest GitHub release** by default and cached per tag under
-  `~/.cache/archflow-install/`, so an npx-cached installer never installs stale files. `--version`
+  `~/.cache/archflow/`, so an npx-cached installer never installs stale files. `--version`
   pins a release, `--bundled` skips the network. The release workflow now attaches the packed
   installer to every release and checks `package.json` against the tag. Re-running the installer
   is the upgrade path on every host; on Claude Code it also runs `claude plugin update`.

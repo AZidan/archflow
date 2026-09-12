@@ -1,13 +1,13 @@
 {
-  "name": "archflow-install",
+  "name": "archflow",
   "version": "2.3.2",
-  "description": "Install Archflow, the phase-based AI development framework, into a project for OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI, OpenCode, or any AGENTS.md + Agent Skills host. Claude Code users install the plugin from the marketplace instead.",
+  "description": "Archflow, the phase-based AI development framework: `npx archflow install` sets it up in a project for Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI, OpenCode, or any AGENTS.md + Agent Skills host.",
   "bin": {
-    "archflow-install": "scripts/archflow-install.mjs"
+    "archflow": "scripts/archflow.mjs"
   },
   "files": [
     "adapters",
-    "scripts/archflow-install.mjs",
+    "scripts/archflow.mjs",
     "plugin/.claude-plugin/plugin.json",
     "plugin/scripts/archflow-pre-push.sh"
   ],
@@ -25,5 +25,16 @@
     "url": "https://github.com/AZidan/archflow.git"
   },
   "homepage": "https://archflowai.dev",
-  "keywords": ["archflow", "agents", "codex", "copilot", "cursor", "gemini", "opencode", "agent-skills"]
+  "keywords": [
+    "archflow",
+    "archflowai",
+    "agents",
+    "claude-code",
+    "codex",
+    "copilot",
+    "cursor",
+    "gemini",
+    "opencode",
+    "agent-skills"
+  ]
 }

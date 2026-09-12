@@ -388,7 +388,7 @@ def _cache(tmp_path, tag, age_seconds=0):
 def test_release_notice_names_the_newer_release_and_the_host(current_project, tmp_path):
     out = run_check_upgrade_as(current_project, "codex", _cache(tmp_path, "99.0.0")).stdout
     assert "Archflow 99.0.0 is available" in out
-    assert "npx archflow-install --host codex" in out
+    assert "npx archflow install --host codex" in out
     assert "doctor" in out
 
 
@@ -405,7 +405,7 @@ def test_release_notice_on_claude_code_names_the_plugin_update(current_project, 
         out = run_check_upgrade_as(current_project, host, cache).stdout
         assert "Archflow 99.0.0 is available" in out
         assert "claude plugin update archflow@archflow" in out
-        assert "archflow-install" not in out
+        assert "npx archflow" not in out
 
 
 def test_release_notice_is_silent_when_installed_is_current_or_newer(current_project, tmp_path):

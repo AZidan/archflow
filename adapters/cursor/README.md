@@ -4,7 +4,7 @@ Generated from Archflow 2.3.2 by `scripts/build-adapters.mjs`. Do not edit here.
 
 ## Install
 
-**One command:** `npx archflow-install --host cursor` from your project root does every step below, and re-running it upgrades in place. By hand:
+**One command:** `npx archflow install --host cursor` from your project root does every step below, and re-running it upgrades in place. By hand:
 
 **As a project overlay:** copy `.cursor/` into your project root and restart Cursor.
 

@@ -142,7 +142,7 @@ properties:
   # update_check — may the session-start hook say a newer Archflow release exists?
   #
   # On Claude Code the fix it names is the plugin update; on other hosts, the
-  # installer. The hook reads a cache (~/.cache/archflow-install/latest.json)
+  # installer. The hook reads a cache (~/.cache/archflow/latest.json)
   # that a detached child refreshes at most once a day, so nothing ever blocks
   # on the network. false turns it off, for teams that object to any outbound
   # request from a session start.
