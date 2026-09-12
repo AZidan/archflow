@@ -34,6 +34,12 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   deletes a user's file. `--dry-run` shows the plan. The root `package.json` publishes it with
   the adapters bundled.
 
+  The adapters are fetched from the **latest GitHub release** by default and cached per tag under
+  `~/.cache/archflow-install/`, so an npx-cached installer never installs stale files. `--version`
+  pins a release, `--bundled` skips the network. The release workflow now attaches the packed
+  installer to every release and checks `package.json` against the tag. Re-running the installer
+  is the upgrade path on every host; on Claude Code it also runs `claude plugin update`.
+
 - **A git `pre-push` guard** (`plugin/scripts/archflow-pre-push.sh`) gives hosts without a
   `PreToolUse` hook the same protection Claude Code has: no force-push to `main`/`master`, no push
   to `main` while an autopilot run is live. `/archflow:doctor --fix` offers to install it (Step 5d),

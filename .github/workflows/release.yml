@@ -34,11 +34,14 @@ jobs:
           plugin = json.load(open("plugin/.claude-plugin/plugin.json"))["version"]
           market = json.load(open(".claude-plugin/marketplace.json"))
           entry = next(p for p in market["plugins"] if p["name"] == "archflow")["version"]
+          pkg = json.load(open("package.json"))["version"]
           problems = []
           if plugin != tag:
               problems.append(f"plugin.json says {plugin}, tag is {tag}")
           if entry != tag:
               problems.append(f"marketplace.json says {entry}, tag is {tag}")
+          if pkg != tag:
+              problems.append(f"package.json says {pkg}, tag is {tag}")
           if problems:
               print("\n".join(problems)); sys.exit(1)
           print(f"manifests agree on {tag}")
@@ -46,6 +49,16 @@ jobs:
 
       - name: Tests
         run: python -m pytest tests/ -q
+
+      # The installer (`npx archflow-install`) fetches the adapters from the latest
+      # release by default, so every release ships them as an asset. The adapters
+      # must already match the plugin; CI checks that on every push, this re-checks
+      # at the tag.
+      - name: Package the installer with the host adapters
+        run: |
+          node scripts/build-adapters.mjs --check
+          npm pack
+          ls -la archflow-install-*.tgz
 
       # The changelog section IS the release notes. If the tag has no section,
       # the release would ship empty, so fail instead.
@@ -75,4 +88,5 @@ jobs:
           gh release create "${GITHUB_REF_NAME}" \
             --title "Archflow ${GITHUB_REF_NAME}" \
             --notes-file release-notes.md \
-            --verify-tag
+            --verify-tag \
+            "archflow-install-${GITHUB_REF_NAME}.tgz#archflow-install ${GITHUB_REF_NAME} (npx installer with host adapters)"

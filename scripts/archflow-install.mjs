@@ -15,11 +15,18 @@
  * Options:
  *   --host <a,b>          claude | codex | copilot | cursor | gemini | opencode | generic
  *   --dir <path>          project directory (default: cwd)
+ *   --version <tag>       install the adapters from that GitHub release instead of the latest
+ *   --bundled             use the adapters bundled with this package; no network
  *   --marketplace <src>   Claude Code only: marketplace to install the plugin from
  *                         (default AZidan/archflow; a local checkout path works for testing)
  *   --dry-run             print what would happen, change nothing
  *   --no-guard            skip the git pre-push guard
  *   --yes                 do not ask for confirmation
+ *
+ * The adapters come from the latest GitHub release by default, so the installed copy is
+ * never older than what is published, whatever version of this package npx cached. Each
+ * release is fetched once into ~/.cache/archflow-install/<tag>. When the network or the
+ * release is unavailable, the copy bundled with this package is used and the run says so.
  *
  * Claude Code is the reference host: `--host claude` installs the marketplace plugin at
  * project scope (`.claude/settings.json`), so the choice is committed with the repo.
@@ -30,8 +37,8 @@
  */
 
 import {
-  chmodSync, cpSync, existsSync, lstatSync, mkdirSync, readFileSync, renameSync, rmSync,
-  statSync, symlinkSync, writeFileSync,
+  chmodSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync,
+  rmSync, statSync, symlinkSync, writeFileSync,
 } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createInterface } from "node:readline";
@@ -40,9 +47,63 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const PKG = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const ADAPTERS = join(PKG, "adapters");
-const PRE_PUSH = join(PKG, "plugin", "scripts", "archflow-pre-push.sh");
-const VERSION = JSON.parse(readFileSync(join(PKG, "plugin", ".claude-plugin", "plugin.json"), "utf8")).version;
+const REPO = "AZidan/archflow";
+
+// Where the adapters come from. Default: the latest GitHub release, cached per tag
+// under ~/.cache/archflow-install. Falls back to the copy bundled with this package.
+let SRC, ADAPTERS, PRE_PUSH, VERSION;
+function useSource(root, origin) {
+  SRC = { root, origin };
+  ADAPTERS = join(root, "adapters");
+  PRE_PUSH = join(root, "plugin", "scripts", "archflow-pre-push.sh");
+  VERSION = JSON.parse(readFileSync(join(root, "plugin", ".claude-plugin", "plugin.json"), "utf8")).version;
+}
+useSource(PKG, "bundled with this package");
+
+async function latestTag() {
+  const res = await fetch(`https://github.com/${REPO}/releases/latest`, { redirect: "follow" });
+  const tag = new URL(res.url).pathname.split("/").pop();
+  if (!/^\d+\.\d+\.\d+$/.test(tag)) throw new Error(`could not resolve the latest release from ${res.url}`);
+  return tag;
+}
+
+async function download(url, file) {
+  const res = await fetch(url, { redirect: "follow" });
+  if (!res.ok) return false;
+  writeFileSync(file, Buffer.from(await res.arrayBuffer()));
+  return true;
+}
+
+/** Point ADAPTERS at a release (latest unless --version), or stay on the bundled copy. */
+async function resolveSource(opts) {
+  if (opts.bundled) return;
+  let tag;
+  try { tag = opts.version || await latestTag(); }
+  catch (e) { log(`note  ${e.message}; using the adapters bundled with this package (${VERSION})`); return; }
+  const cacheRoot = join(homedir(), ".cache", "archflow-install");
+  const cache = join(cacheRoot, tag);
+  if (existsSync(join(cache, "adapters"))) { useSource(cache, `release ${tag}, cached`); return; }
+  mkdirSync(cacheRoot, { recursive: true });
+  const tmp = mkdtempSync(join(cacheRoot, "tmp-")); // same filesystem as the cache, so the final rename is atomic
+  try {
+    const tgz = join(tmp, "release.tgz");
+    const asset = `https://github.com/${REPO}/releases/download/${tag}/archflow-install-${tag}.tgz`;
+    const source = `https://github.com/${REPO}/archive/refs/tags/${tag}.tar.gz`;
+    if (!(await download(asset, tgz)) && !(await download(source, tgz))) throw new Error(`release ${tag} was not found on GitHub`);
+    const extracted = join(tmp, "x");
+    mkdirSync(extracted);
+    const r = spawnSync("tar", ["-xzf", tgz, "-C", extracted, "--strip-components=1"], { encoding: "utf8" });
+    if (r.status !== 0) throw new Error(`could not extract release ${tag}: ${(r.stderr || "").trim()}`);
+    if (!existsSync(join(extracted, "adapters"))) throw new Error(`release ${tag} ships no host adapters (it predates multi-host support)`);
+    rmSync(cache, { recursive: true, force: true });
+    renameSync(extracted, cache);
+    useSource(cache, `release ${tag}, downloaded`);
+  } catch (e) {
+    log(`note  ${e.message}; using the adapters bundled with this package (${VERSION})`);
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Host table. `copy` are adapter-relative paths copied into the project.
@@ -124,13 +185,18 @@ const log = (s) => process.stdout.write(s + "\n");
 process.stdout.on("error", (e) => { if (e.code === "EPIPE") process.exit(0); throw e; }); // `| head` is not an error
 
 function parseArgs(argv) {
-  const o = { hosts: [], dir: process.cwd(), dryRun: false, guard: true, yes: false, marketplace: MARKETPLACE_REPO };
+  const o = { hosts: [], dir: process.cwd(), dryRun: false, guard: true, yes: false, marketplace: MARKETPLACE_REPO, version: null, bundled: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--host") o.hosts.push(...argv[++i].split(",").map((s) => s.trim()).filter(Boolean));
     else if (a.startsWith("--host=")) o.hosts.push(...a.slice(7).split(","));
     else if (a === "--dir") o.dir = resolve(argv[++i]);
     else if (a === "--marketplace") o.marketplace = argv[++i];
+    else if (a === "--version") {
+      o.version = argv[++i];
+      if (!/^\d+\.\d+\.\d+$/.test(o.version || "")) { console.error(`--version wants a release tag like 2.4.0, got "${o.version}"`); process.exit(2); }
+    }
+    else if (a === "--bundled") o.bundled = true;
     else if (a === "--dry-run") o.dryRun = true;
     else if (a === "--no-guard") o.guard = false;
     else if (a === "--yes" || a === "-y") o.yes = true;
@@ -315,13 +381,28 @@ function installClaude(project, source, dry) {
     ];
     if (dry) return steps.map(([, a]) => `run   claude ${a.join(" ")}`);
     const out = [];
-    for (const [what, args] of steps) {
+    const run = (args) => {
       const r = spawnSync("claude", args, { cwd: project, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 180000 });
       const msg = ((r.stdout || "") + (r.stderr || "")).trim().split("\n").filter(Boolean).pop() || "";
-      if (r.status === 0 || /already/i.test(msg)) { out.push(`run   claude ${args.join(" ")} → ${msg || "ok"}`); continue; }
-      out.push(`fail  claude ${args.join(" ")} → ${msg || `exit ${r.status}`}`);
-      out.push(...writeClaudeSettings(project, source, dry));
-      return out;
+      return { ok: r.status === 0 || /already/i.test(msg), msg: msg || (r.status === 0 ? "ok" : `exit ${r.status}`) };
+    };
+    let installedBefore = false;
+    for (const [, args] of steps) {
+      const { ok, msg } = run(args);
+      if (!ok) {
+        out.push(`fail  claude ${args.join(" ")} → ${msg}`);
+        out.push(...writeClaudeSettings(project, source, dry));
+        return out;
+      }
+      out.push(`run   claude ${args.join(" ")} → ${msg}`);
+      if (args[1] === "install" && /already installed/i.test(msg)) installedBefore = true;
+    }
+    // A re-run is an upgrade: refresh the marketplace and move the plugin to its latest version.
+    if (installedBefore) {
+      for (const args of [["plugin", "marketplace", "update", "archflow"], ["plugin", "update", "archflow@archflow", "--scope", "project"]]) {
+        const { msg } = run(args);
+        out.push(`run   claude ${args.join(" ")} → ${msg}`);
+      }
     }
     return out;
   }
@@ -382,8 +463,9 @@ async function main() {
   if (!existsSync(project) || !statSync(project).isDirectory()) {
     console.error(`Not a directory: ${project}`); process.exit(2);
   }
+  await resolveSource(opts);
   if (!existsSync(ADAPTERS)) {
-    console.error(`No adapters/ next to this script (${ADAPTERS}). Run \`node scripts/build-adapters.mjs\` first.`); process.exit(2);
+    console.error(`No adapters/ in ${SRC.root}. Run \`node scripts/build-adapters.mjs\` first.`); process.exit(2);
   }
 
   let hosts = [...new Set(opts.hosts)];
@@ -398,11 +480,11 @@ async function main() {
       log("No supported host detected. Pass --host, e.g. --host cursor, or --host generic for any AGENTS.md + Agent Skills tool.");
       process.exit(1);
     }
-    log(`Archflow ${VERSION} — detected: ${hosts.map((h) => HOSTS[h].label).join(", ")}`);
+    log(`Archflow ${VERSION} (${SRC.origin}) — detected: ${hosts.map((h) => HOSTS[h].label).join(", ")}`);
     log(`Project: ${project}\n`);
     if (!opts.yes && !opts.dryRun && !(await confirm(`Install for ${hosts.join(", ")}?`))) process.exit(0);
   } else {
-    log(`Archflow ${VERSION} — hosts: ${hosts.join(", ")}\nProject: ${project}\n`);
+    log(`Archflow ${VERSION} (${SRC.origin}) — hosts: ${hosts.join(", ")}\nProject: ${project}\n`);
   }
   if (opts.dryRun) log("DRY RUN — nothing will be written.\n");
 

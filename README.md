@@ -94,6 +94,10 @@ npx archflow-install --host claude,codex
 npx archflow-install --dry-run  # show the plan only
 ```
 
+The adapters come from the latest GitHub release, whatever version of the installer npx has cached,
+so re-running the same command is the upgrade: it refreshes the copied files in place, then the
+next session's upgrade check asks you to run the doctor to bring `.archflow/` up to date.
+
 Regenerate the adapters after changing `plugin/`: `node scripts/build-adapters.mjs` (CI checks for drift).
 
 ## Three Ways to Start
