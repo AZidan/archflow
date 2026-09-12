@@ -24,6 +24,14 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   (`copilot --plugin-dir plugin`, Codex's plugin importer); the adapters exist for teams that want
   host-native, repo-committed configuration.
 
+- **`npx archflow-install`** installs Archflow into a project for any of those hosts. It detects
+  the hosts on the machine (or takes `--host`), copies the adapter in, merges the `AGENTS.md`
+  block between `<!-- archflow:start/end -->` markers (one section per host when several share a
+  project), merges Codex's `config.toml` flags without overriding a human's values, installs
+  Gemini as an extension, and installs the git guard. Re-running upgrades in place and never
+  deletes a user's file. `--dry-run` shows the plan. The root `package.json` publishes it with
+  the adapters bundled.
+
 - **A git `pre-push` guard** (`plugin/scripts/archflow-pre-push.sh`) gives hosts without a
   `PreToolUse` hook the same protection Claude Code has: no force-push to `main`/`master`, no push
   to `main` while an autopilot run is live. `/archflow:doctor --fix` offers to install it (Step 5d),

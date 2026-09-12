@@ -6,6 +6,8 @@ This is the lowest-common-denominator package: `AGENTS.md` + Agent Skills (agent
 
 ## Install
 
+**One command:** `npx archflow-install --host generic` from your project root does every step below, and re-running it upgrades in place. By hand:
+
 1. Copy `.agents/` into your project root.
 2. Merge `AGENTS.archflow.md` into `AGENTS.md`.
 3. Install the git guard: `sh .agents/archflow/scripts/archflow-install-git-guard.sh`

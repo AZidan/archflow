@@ -4,7 +4,7 @@
  *
  * The plugin under ./plugin stays the single source of truth. This script
  * reads it and writes ./adapters/<host>/, a directory a user copies (or
- * `npx archflow init --host <host>` copies) into their project root.
+ * `npx archflow-install` copies) into their project root.
  *
  * Usage:
  *   node scripts/build-adapters.mjs            # all hosts
@@ -394,7 +394,7 @@ const HOSTS = {
         join(out, "README.md"),
         `# Archflow for ${this.label}\n\n` +
           `Generated from Archflow ${manifest.version} by \`scripts/build-adapters.mjs\`. Do not edit here; edit \`plugin/\` and rebuild.\n\n` +
-          `## Install\n\n` +
+          `## Install\n\n**One command:** \`npx archflow-install --host ${ctx.host}\` from your project root does every step below, and re-running it upgrades in place. By hand:\n\n` +
           `1. Copy \`.agents/\` and \`.codex/\` into your project root.\n` +
           `2. Merge \`AGENTS.archflow.md\` into your \`AGENTS.md\` (create it if absent).\n` +
           `3. Merge \`.codex/config.archflow.toml\` into \`.codex/config.toml\`.\n` +
@@ -533,7 +533,7 @@ const HOSTS = {
       write(
         join(out, "README.md"),
         `# Archflow for ${this.label}\n\nGenerated from Archflow ${manifest.version} by \`scripts/build-adapters.mjs\`. Do not edit here.\n\n` +
-          `## Install\n\n\`\`\`\ngemini extensions install https://github.com/AZidan/archflow --ref main   # once published under adapters/gemini\ngemini extensions link ./adapters/gemini                                # local development\n\`\`\`\n\n` +
+          `## Install\n\n**One command:** \`npx archflow-install --host ${ctx.host}\` from your project root does every step below, and re-running it upgrades in place. By hand:\n\n\`\`\`\ngemini extensions install https://github.com/AZidan/archflow --ref main   # once published under adapters/gemini\ngemini extensions link ./adapters/gemini                                # local development\n\`\`\`\n\n` +
           `Restart Gemini CLI, then run \`/archflow:init\` or \`/archflow:onboard\`. Node.js 18+ is required for the hooks.\n\n` +
           `## What is different on Gemini CLI\n\n| Claude Code | Gemini CLI |\n|---|---|\n` +
           `| \`/archflow:<cmd>\` | \`/archflow:<cmd>\` (identical; TOML commands under \`commands/archflow/\`) |\n` +
@@ -632,7 +632,7 @@ const HOSTS = {
       write(
         join(out, "README.md"),
         `# Archflow for ${this.label}\n\nGenerated from Archflow ${manifest.version} by \`scripts/build-adapters.mjs\`. Do not edit here.\n\n` +
-          `## Install\n\n1. Copy \`.opencode/\` into your project root.\n2. Merge \`AGENTS.archflow.md\` into \`AGENTS.md\`.\n3. Restart OpenCode; run \`/archflow-init\` or \`/archflow-onboard\`.\n\nNode.js 18+ (or Bun) is required for the plugin hooks.\n\n` +
+          `## Install\n\n**One command:** \`npx archflow-install --host ${ctx.host}\` from your project root does every step below, and re-running it upgrades in place. By hand:\n\n1. Copy \`.opencode/\` into your project root.\n2. Merge \`AGENTS.archflow.md\` into \`AGENTS.md\`.\n3. Restart OpenCode; run \`/archflow-init\` or \`/archflow-onboard\`.\n\nNode.js 18+ (or Bun) is required for the plugin hooks.\n\n` +
           `## What is different on OpenCode\n\n| Claude Code | OpenCode |\n|---|---|\n` +
           `| \`/archflow:<cmd>\` | \`/archflow-<cmd>\` (OpenCode has no colon namespaces) |\n` +
           `| \`agents/*.md\` sub-agents | \`.opencode/agents/*.md\` with \`mode: subagent\` |\n` +
@@ -715,7 +715,7 @@ const HOSTS = {
         `# Archflow for ${this.label}\n\nGenerated from Archflow ${manifest.version} by \`scripts/build-adapters.mjs\`. Do not edit here.\n\n` +
           `This is the lowest-common-denominator package: \`AGENTS.md\` + Agent Skills (agentskills.io). It works in any host that reads those, ` +
           `including Cline, Roo, Kilo, Windsurf, Zed, Amp and Copilot/Codex/OpenCode/Cursor without their native adapters.\n\n` +
-          `## Install\n\n1. Copy \`.agents/\` into your project root.\n2. Merge \`AGENTS.archflow.md\` into \`AGENTS.md\`.\n3. Install the git guard: \`sh .agents/archflow/scripts/archflow-install-git-guard.sh\`\n4. Ask your agent to run \`$archflow-init\` or \`$archflow-onboard\`.\n\n` +
+          `## Install\n\n**One command:** \`npx archflow-install --host ${ctx.host}\` from your project root does every step below, and re-running it upgrades in place. By hand:\n\n1. Copy \`.agents/\` into your project root.\n2. Merge \`AGENTS.archflow.md\` into \`AGENTS.md\`.\n3. Install the git guard: \`sh .agents/archflow/scripts/archflow-install-git-guard.sh\`\n4. Ask your agent to run \`$archflow-init\` or \`$archflow-onboard\`.\n\n` +
           `## What you give up\n\n- No sub-agents: roles run serially inside the main context (bigger context use, slower Phase 3).\n- No lifecycle hooks: instructions load via AGENTS.md; upgrade and schema-drift checks run inside \`$archflow-doctor\` instead of automatically.\n- The git guard is a real \`pre-push\` hook, so it also protects you from your own terminal.\n`,
       );
     },
@@ -801,7 +801,7 @@ const HOSTS = {
           `Nothing advances a phase or merges to \`main\` without explicit user approval.\n`);
       write(join(out, "README.md"),
         `# Archflow for ${this.label}\n\nGenerated from Archflow ${manifest.version} by \`scripts/build-adapters.mjs\`. Do not edit here.\n\n` +
-          `## Install\n\n**As a project overlay:** copy \`.cursor/\` into your project root and restart Cursor.\n\n**As a plugin:** the directory is a Cursor Plugin (\`.cursor-plugin/plugin.json\`); install it from Customize → Plugins, or publish it to a marketplace.\n\nNode.js 18+ is required for the hooks.\n\n` +
+          `## Install\n\n**One command:** \`npx archflow-install --host ${ctx.host}\` from your project root does every step below, and re-running it upgrades in place. By hand:\n\n**As a project overlay:** copy \`.cursor/\` into your project root and restart Cursor.\n\n**As a plugin:** the directory is a Cursor Plugin (\`.cursor-plugin/plugin.json\`); install it from Customize → Plugins, or publish it to a marketplace.\n\nNode.js 18+ is required for the hooks.\n\n` +
           `## What is different on Cursor\n\n| Claude Code | Cursor |\n|---|---|\n` +
           `| \`/archflow:<cmd>\` | \`/archflow-<cmd>\` (\`.cursor/commands/\`) |\n` +
           `| \`agents/*.md\` sub-agents | \`.cursor/agents/*.md\` (\`model: inherit\`; reviewers \`readonly: true\`) |\n` +
@@ -890,7 +890,7 @@ const HOSTS = {
           `Nothing advances a phase or merges to \`main\` without explicit user approval.\n<!-- archflow:end -->\n`);
       write(join(out, "README.md"),
         `# Archflow for ${this.label}\n\nGenerated from Archflow ${manifest.version} by \`scripts/build-adapters.mjs\`. Do not edit here.\n\n` +
-          `## Install\n\n**Fastest: load the Claude Code plugin directly.** Copilot CLI reads \`.claude-plugin/plugin.json\` and Claude-shaped \`hooks.json\`, and sets \`CLAUDE_PLUGIN_ROOT\` / \`CLAUDE_PROJECT_DIR\` for plugin hooks:\n\n\`\`\`\ncopilot --plugin-dir /path/to/archflow/plugin      # local checkout\ncopilot plugin install AZidan/archflow:plugin      # from GitHub (subdirectory form)\n\`\`\`\n\n**Repo-scoped (this adapter), for teams that want it committed under .github/:**\n\n1. Copy \`.github/agents\`, \`.github/skills\`, \`.github/hooks\` and \`.github/archflow\` into your repo (they merge alongside your workflows).\n2. Merge \`AGENTS.archflow.md\` into \`AGENTS.md\`.\n3. Restart Copilot CLI; ask for \`/archflow-init\` or \`/archflow-onboard\`.\n\nNode.js 18+ is required for the hooks. The same \`.github/\` tree is read by VS Code agent mode and by Copilot cloud agent (hooks must be on the default branch for cloud agent).\n\n` +
+          `## Install\n\n**One command:** \`npx archflow-install --host ${ctx.host}\` from your project root does every step below, and re-running it upgrades in place. By hand:\n\n**Fastest: load the Claude Code plugin directly.** Copilot CLI reads \`.claude-plugin/plugin.json\` and Claude-shaped \`hooks.json\`, and sets \`CLAUDE_PLUGIN_ROOT\` / \`CLAUDE_PROJECT_DIR\` for plugin hooks:\n\n\`\`\`\ncopilot --plugin-dir /path/to/archflow/plugin      # local checkout\ncopilot plugin install AZidan/archflow:plugin      # from GitHub (subdirectory form)\n\`\`\`\n\n**Repo-scoped (this adapter), for teams that want it committed under .github/:**\n\n1. Copy \`.github/agents\`, \`.github/skills\`, \`.github/hooks\` and \`.github/archflow\` into your repo (they merge alongside your workflows).\n2. Merge \`AGENTS.archflow.md\` into \`AGENTS.md\`.\n3. Restart Copilot CLI; ask for \`/archflow-init\` or \`/archflow-onboard\`.\n\nNode.js 18+ is required for the hooks. The same \`.github/\` tree is read by VS Code agent mode and by Copilot cloud agent (hooks must be on the default branch for cloud agent).\n\n` +
           `## What is different on Copilot\n\n| Claude Code | Copilot |\n|---|---|\n` +
           `| \`/archflow:<cmd>\` | \`archflow-<cmd>\` skills (\`.github/skills/\`), invoked by name |\n` +
           `| \`agents/*.md\` sub-agents | \`.github/agents/*.agent.md\` custom agents (\`disable-model-invocation: true\`, so only Archflow dispatches them) |\n` +

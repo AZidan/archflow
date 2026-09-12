@@ -4,6 +4,8 @@ Generated from Archflow 2.3.2 by `scripts/build-adapters.mjs`. Do not edit here.
 
 ## Install
 
+**One command:** `npx archflow-install --host opencode` from your project root does every step below, and re-running it upgrades in place. By hand:
+
 1. Copy `.opencode/` into your project root.
 2. Merge `AGENTS.archflow.md` into `AGENTS.md`.
 3. Restart OpenCode; run `/archflow-init` or `/archflow-onboard`.

@@ -76,3 +76,7 @@ docs/internal/*
 !docs/internal/archflow-releases-v2-proposal.md
 !docs/internal/archflow-skill-scaffolding-proposal.md
 !docs/internal/landing-page-plan.md
+
+# npm package build output (archflow-install)
+/node_modules/
+/archflow-install-*.tgz

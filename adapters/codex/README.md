@@ -4,6 +4,8 @@ Generated from Archflow 2.3.2 by `scripts/build-adapters.mjs`. Do not edit here;
 
 ## Install
 
+**One command:** `npx archflow-install --host codex` from your project root does every step below, and re-running it upgrades in place. By hand:
+
 1. Copy `.agents/` and `.codex/` into your project root.
 2. Merge `AGENTS.archflow.md` into your `AGENTS.md` (create it if absent).
 3. Merge `.codex/config.archflow.toml` into `.codex/config.toml`.

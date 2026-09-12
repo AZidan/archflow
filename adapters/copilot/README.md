@@ -4,6 +4,8 @@ Generated from Archflow 2.3.2 by `scripts/build-adapters.mjs`. Do not edit here.
 
 ## Install
 
+**One command:** `npx archflow-install --host copilot` from your project root does every step below, and re-running it upgrades in place. By hand:
+
 **Fastest: load the Claude Code plugin directly.** Copilot CLI reads `.claude-plugin/plugin.json` and Claude-shaped `hooks.json`, and sets `CLAUDE_PLUGIN_ROOT` / `CLAUDE_PROJECT_DIR` for plugin hooks:
 
 ```

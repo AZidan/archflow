@@ -1,0 +1,29 @@
+{
+  "name": "archflow-install",
+  "version": "2.3.2",
+  "description": "Install Archflow, the phase-based AI development framework, into a project for OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI, OpenCode, or any AGENTS.md + Agent Skills host. Claude Code users install the plugin from the marketplace instead.",
+  "bin": {
+    "archflow-install": "scripts/archflow-install.mjs"
+  },
+  "files": [
+    "adapters",
+    "scripts/archflow-install.mjs",
+    "plugin/.claude-plugin/plugin.json",
+    "plugin/scripts/archflow-pre-push.sh"
+  ],
+  "scripts": {
+    "build:adapters": "node scripts/build-adapters.mjs",
+    "check:adapters": "node scripts/build-adapters.mjs --check"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AZidan/archflow.git"
+  },
+  "homepage": "https://archflowai.dev",
+  "keywords": ["archflow", "agents", "codex", "copilot", "cursor", "gemini", "opencode", "agent-skills"]
+}

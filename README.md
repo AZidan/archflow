@@ -83,7 +83,16 @@ Codex and GitHub Copilot CLI load `plugin/` directly. For host-native, repo-comm
 | OpenCode | `adapters/opencode` | yes | partial | Hooks skip subagents |
 | Anything with `AGENTS.md` + Agent Skills | `adapters/generic` | serial | git guard only | Cline, Windsurf, Zed, Amp… |
 
-Regenerate after changing `plugin/`: `node scripts/build-adapters.mjs` (CI checks for drift).
+Install for any of them with one command from the project root. It detects the hosts on the machine,
+copies the adapter in, merges the `AGENTS.md` block and installs the git guard. Re-run it to upgrade.
+
+```bash
+npx archflow-install            # detect hosts and install
+npx archflow-install --host codex,cursor
+npx archflow-install --dry-run  # show the plan only
+```
+
+Regenerate the adapters after changing `plugin/`: `node scripts/build-adapters.mjs` (CI checks for drift).
 
 ## Three Ways to Start
 
