@@ -6,7 +6,8 @@ argument-hint: "[on|off|status]"
 # /archflow:telemetry — Show or change anonymous usage telemetry
 
 Argument (`$ARGUMENTS`): optional `on` or `off`. Empty or `status` → show the current setting.
-Anything else → run nothing; tell the user the options are `on`, `off`, or nothing to see the setting.
+Anything else → run nothing; tell the user the options are `on`, `off`, or `status` (or nothing)
+to see the setting.
 
 Telemetry is **on by default**. The first time a session starts on a machine whose
 `~/.archflow/config.json` has not yet recorded the notice as shown (no `noticeShownAt` in it; see
@@ -30,7 +31,8 @@ after it).
 node "${CLAUDE_PLUGIN_ROOT}/hooks/telemetry.mjs" --status
 ```
 If it says the config file could not be read, telemetry stays off and nothing is changed until the
-user fixes or deletes that file.
+user fixes or deletes that file. If turning it on or off says the file could not be written, nothing
+was changed and nothing was sent; telemetry is as it was.
 
 ## Change it
 ```bash

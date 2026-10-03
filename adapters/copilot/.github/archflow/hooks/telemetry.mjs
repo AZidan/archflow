@@ -28,7 +28,7 @@ import { existsSync, readFileSync, readdirSync, writeSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isatty } from "node:tty";
-import { CONFIG_UNREADABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isEnabled, loadConfig, optInConfirmation, optOutLine, recordNoticeShown, setConsent, statusLine } from "../lib/telemetry.mjs";
+import { CONFIG_UNREADABLE_NOTE, CONFIG_UNWRITABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isEnabled, loadConfig, optInConfirmation, optOutLine, recordNoticeShown, setConsent, statusLine } from "../lib/telemetry.mjs";
 
 /**
  * This hook's own install root: plugin/ for the Claude Code plugin, <host>/archflow/
@@ -187,10 +187,16 @@ if (arg === "--enable" || arg === "--disable") {
   // Each adapter's telemetry command passes `--host <name>`: an agent runs it outside any hook,
   // where ARCHFLOW_HOST is unset. The allow-list in capture() still checks the value.
   const hostAt = process.argv.indexOf("--host");
-  const host = hostAt > 2 ? process.argv[hostAt + 1] : undefined;
-  const { sentOptOut, unreadable } = setConsent(on, { via: "command", archflow_version: pluginVersion(pluginRoot), host });
+  // `--host` with no value is reported as "other", never as the Claude Code default.
+  const host = hostAt > 2 ? process.argv[hostAt + 1] || "other" : undefined;
+  const { sentOptOut, unreadable, saved } = setConsent(on, { via: "command", archflow_version: pluginVersion(pluginRoot), host });
   if (unreadable) {
     process.stdout.write(`Nothing was changed. ${CONFIG_UNREADABLE_NOTE}\n`);
+    process.exit(0);
+  }
+  if (!saved) {
+    // Same line as the CLI. Exit 0 like every path here: the line itself is what the agent relays.
+    process.stdout.write(`${CONFIG_UNWRITABLE_NOTE}\n`);
     process.exit(0);
   }
   process.stdout.write(on ? `${optInConfirmation()}\n` : `${OPT_OUT_CONFIRMATION}${sentOptOut ? OPT_OUT_SENT_NOTE : ""}\n`);

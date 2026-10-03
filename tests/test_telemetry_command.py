@@ -8,6 +8,7 @@ set ARCHFLOW_TELEMETRY_SINK and point HOME and ARCHFLOW_CONFIG_DIR at a temp dir
 """
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -158,6 +159,69 @@ def test_cli_status_suggests_the_other_setting_when_it_can_take_effect(home, arg
 
 
 # --------------------------------------------------------------------------
+# A choice that cannot be saved is not reported as made, and sends nothing
+# --------------------------------------------------------------------------
+
+@pytest.fixture
+def read_only_config(home):
+    """A config dir the process cannot write to, holding the given starting state."""
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        pytest.skip("root ignores directory permissions")
+    made = []
+
+    def make(state):
+        path = write_config(home, json.dumps(state))
+        os.chmod(home / ".archflow", 0o500)
+        made.append(home / ".archflow")
+        return path
+
+    yield make
+    for d in made:
+        os.chmod(d, 0o700)
+
+
+UNWRITABLE = "Nothing was changed: could not write "
+
+
+@pytest.mark.parametrize("arg,start", [("off", True), ("on", False)])
+def test_cli_unsaved_choice_fails_and_sends_nothing(home, project, read_only_config, arg, start):
+    path = read_only_config({"telemetryEnabled": start, "noticeShownAt": OLD_NOTICE})
+    before = path.read_text()
+    proc = cli(home, arg)
+    assert proc.returncode != 0
+    assert UNWRITABLE in proc.stderr and str(path) in proc.stderr
+    assert "now OFF" not in proc.stdout + proc.stderr and "now ON" not in proc.stdout + proc.stderr
+    assert path.read_text() == before, "state unchanged"
+    assert sent(home) == [], "no opt-out/opt-in event for a choice that did not persist"
+    if start:
+        hook(home, project)
+        assert events(home) == ["session_start"], "still on, and honestly so"
+
+
+@pytest.mark.parametrize("flag,start", [("--disable", True), ("--enable", False)])
+def test_hook_unsaved_choice_says_so_and_sends_nothing(home, project, read_only_config, flag, start):
+    path = read_only_config({"telemetryEnabled": start, "noticeShownAt": OLD_NOTICE})
+    before = path.read_text()
+    out = hook(home, project, [flag, "--host", "cursor"]).stdout
+    assert out.startswith(UNWRITABLE) and str(path) in out
+    assert "now OFF" not in out and "now ON" not in out
+    assert path.read_text() == before
+    assert sent(home) == []
+
+
+def test_opt_out_event_goes_out_only_after_off_is_stored(home):
+    """The one event that is sent follows a stored "off": the claim in the confirmation is true."""
+    cli(home, "off")
+    assert events(home) == ["telemetry_opted_out"]
+    assert config(home)["telemetryEnabled"] is False
+
+
+def test_host_flag_without_a_value_is_other(home, project):
+    hook(home, project, ["--disable", "--host"])
+    assert [e["properties"]["host"] for e in sent(home)] == ["other"]
+
+
+# --------------------------------------------------------------------------
 # "since" is the last consent change, not the notice
 # --------------------------------------------------------------------------
 
@@ -257,7 +321,7 @@ HINT_FILES = {
     "claude": PLUGIN / "commands" / "telemetry.md",
     "codex": ADAPTERS / "codex" / ".agents" / "skills" / "archflow-telemetry" / "SKILL.md",
 }
-SKILL_LISTINGS = [PLUGIN / "skills" / "archflow" / "SKILL.md"] + [
+SKILL_LISTINGS = [PLUGIN / "skills" / "archflow" / "SKILL.md", PLUGIN.parent / "CHANGELOG.md"] + [
     ADAPTERS / h / p / "skills" / "archflow" / "SKILL.md"
     for h, p in [("codex", ".agents"), ("generic", ".agents"), ("copilot", ".github"),
                  ("cursor", ".cursor"), ("opencode", ".opencode"), ("gemini", ".")]
@@ -270,6 +334,8 @@ def test_argument_hints_list_status(path):
     assert "telemetry" in text
     assert "[on|off]" not in text, f"{path}: hint omits status"
     assert "[on|off|status]" in text
+    if path == HINT_FILES["claude"]:
+        assert "the options are `on`, `off`, or `status`" in text, "the bad-argument reply names status"
 
 
 @pytest.mark.parametrize("host", sorted(HOST_FILES))
