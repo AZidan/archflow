@@ -101,7 +101,9 @@ A one-time notice says so and how to turn it off; it is a notice, not a question
 install` prints it in your terminal. In a coding-agent session the first session start (or, on
 Claude Code and OpenCode, the first Archflow command) gives it to the agent, which is asked to relay
 it to you. On Codex, Copilot, Cursor and Gemini, a command typed before any session start has run on
-the machine can send one `command_run` before the notice appears.
+the machine can send one `command_run` before the notice appears. When Copilot CLI loads the Claude Code plugin directly
+rather than the Copilot adapter, session events are sent but the notice cannot be shown there; it
+still appears in the first session on any other host.
 
 How a command is recognised differs by host. Claude Code and OpenCode report the command name
 directly. On Codex, Copilot, Cursor and Gemini a prompt-submit hook reads your prompt **on your

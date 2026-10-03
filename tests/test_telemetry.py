@@ -14,6 +14,7 @@ the one-time notice.
 import json
 import os
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -444,7 +445,7 @@ def test_copilot_session_start_notice_is_json_additional_context(home, project):
     doc = json.loads(out)  # Copilot drops non-JSON SessionStart output
     assert set(doc) == {"additionalContext"}
     assert "anonymous usage telemetry" in doc["additionalContext"]
-    assert "/archflow:telemetry off" in doc["additionalContext"]
+    assert "/archflow-telemetry off" in doc["additionalContext"]
     assert "noticeShownAt" in config(home)
 
 
@@ -597,6 +598,74 @@ def test_invalid_stored_distinct_id_is_replaced(home, project, bad_id):
     assert len(ids) == 2 and ids[0] == ids[1] and UUID.match(ids[0])
     assert config(home)["distinctId"] == ids[0]
     assert_no_leak(sent(home), SECRET)
+
+
+OPT_OUT = {
+    "claude": "/archflow:telemetry off",
+    "gemini": "/archflow:telemetry off",
+    "codex": "$archflow-telemetry off",
+    "generic": "$archflow-telemetry off",
+    "copilot": "/archflow-telemetry off",
+    "cursor": "/archflow-telemetry off",
+    "opencode": "/archflow-telemetry off",
+}
+
+
+@pytest.mark.parametrize("host", sorted(OPT_OUT))
+def test_notice_names_the_hosts_own_opt_out_command(home, project, host):
+    out = _session_start_output(home, project, host)
+    if host == "copilot":
+        text = json.loads(out)["additionalContext"]
+    elif host == "gemini":
+        text = json.loads(out)["hookSpecificOutput"]["additionalContext"]
+    else:
+        text = out
+    assert f"that {OPT_OUT[host]} turns it off" in text, f"{host}: {out!r}"
+    others = {c for h, c in OPT_OUT.items() if c != OPT_OUT[host]}
+    assert not any(c in text for c in others), f"{host} names another host's command"
+
+
+@pytest.mark.parametrize("host", sorted(OPT_OUT))
+def test_opt_out_command_exists_in_that_hosts_adapter(host):
+    """The command the notice names is one the host really ships."""
+    name = {
+        "claude": PLUGIN / "commands" / "telemetry.md",
+        "gemini": ADAPTERS / "gemini" / "commands" / "archflow" / "telemetry.toml",
+        "codex": ADAPTERS / "codex" / ".agents" / "skills" / "archflow-telemetry",
+        "generic": ADAPTERS / "generic" / ".agents" / "skills" / "archflow-telemetry",
+        "copilot": ADAPTERS / "copilot" / ".github" / "skills" / "archflow-telemetry",
+        "cursor": ADAPTERS / "cursor" / ".cursor" / "commands" / "archflow-telemetry.md",
+        "opencode": ADAPTERS / "opencode" / ".opencode" / "commands" / "archflow-telemetry.md",
+    }[host]
+    assert name.exists(), f"{host}: {name} not found, so {OPT_OUT[host]!r} would not work"
+
+
+def test_unknown_host_falls_back_to_the_cli_opt_out():
+    code = (
+        f"import {{ optOutLine }} from {json.dumps(LIB.as_uri())};\n"
+        "process.stdout.write(optOutLine('some-new-host') + '|' + optOutLine(undefined));"
+    )
+    out = subprocess.run(["node", "--input-type=module", "-e", code], capture_output=True, text=True, check=True).stdout
+    assert out.count("npx archflow telemetry off") == 2
+
+
+def test_generic_session_start_resolves_the_version_without_plugin_root(home, tmp_path):
+    """AGENTS.md runs the hook with only ARCHFLOW_HOST=generic set; the version must still resolve."""
+    proj = tmp_path / "proj"
+    shutil.copytree(ADAPTERS / "generic" / ".agents", proj / ".agents", symlinks=True)
+    env = base_env(home, ARCHFLOW_HOST="generic", CLAUDECODE=None)
+    assert "CLAUDE_PLUGIN_ROOT" not in env
+    proc = subprocess.run(
+        "node .agents/archflow/hooks/telemetry.mjs </dev/null",
+        shell=True, cwd=str(proj), capture_output=True, text=True, timeout=15, env=env,
+    )
+    assert proc.returncode == 0, proc.stderr
+    events = sent(home)
+    assert [e["event"] for e in events] == ["session_start"]
+    expected = json.loads((PLUGIN / ".claude-plugin" / "plugin.json").read_text())["version"]
+    assert events[0]["properties"]["archflow_version"] == expected
+    assert events[0]["properties"]["host"] == "generic"
+    assert "$archflow-telemetry off" in proc.stdout
 
 
 def test_security_md_documents_every_named_property():

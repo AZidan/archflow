@@ -36,6 +36,27 @@ export const NOTICE =
   "for an install, the hosts installed and where from. Never project names, file paths, file contents,\n" +
   "prompts or command arguments.\n";
 
+/**
+ * How the user turns telemetry off on each host, as that host invokes the command
+ * (adapters/<host>: Codex and generic run skills as $archflow-<cmd>; Copilot, Cursor
+ * and OpenCode use /archflow-<cmd>; Gemini nests commands as /archflow:<cmd>). Any
+ * other host gets the CLI, which works everywhere.
+ */
+export const OPT_OUT_COMMANDS = {
+  claude: "/archflow:telemetry off",
+  gemini: "/archflow:telemetry off",
+  codex: "$archflow-telemetry off",
+  generic: "$archflow-telemetry off",
+  copilot: "/archflow-telemetry off",
+  cursor: "/archflow-telemetry off",
+  opencode: "/archflow-telemetry off",
+};
+
+export function optOutLine(host) {
+  const command = Object.prototype.hasOwnProperty.call(OPT_OUT_COMMANDS, host) ? OPT_OUT_COMMANDS[host] : "npx archflow telemetry off";
+  return `Tell the user this once, and that ${command} turns it off.\n`;
+}
+
 /*
  * THE ALLOW-LIST. capture() sends only the events named here, only the properties
  * listed for each, and only values that pass the property's check. Anything else

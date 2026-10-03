@@ -83,7 +83,7 @@ stories:
   - id: S8-05
     title: "Framework-wide anonymous telemetry"
     priority: Critical
-    status: review
+    status: done
     gates: {needs_design: false, needs_contract: false}
     assigned: api-engineer
     description: >-
@@ -93,15 +93,15 @@ stories:
       ADR 003 blocker is resolved. Work is uncommitted in plugin/hooks/telemetry.mjs, plugin/lib/,
       adapters/*/telemetry.mjs.
     acceptance_criteria:
-      - {text: "No event carries project names, paths, file contents, prompts or arguments", met: false}
-      - {text: "DO_NOT_TRACK and CI disable telemetry and send nothing", met: false}
-      - {text: "Telemetry is on by default (opt-out) on every host, per S8-07", met: false}
-      - {text: "A one-time notice announces telemetry", met: false}
+      - {text: "No event carries project names, paths, file contents, prompts or arguments", met: true}
+      - {text: "DO_NOT_TRACK and CI disable telemetry and send nothing", met: true}
+      - {text: "Telemetry is on by default (opt-out) on every host, per S8-07", met: true}
+      - {text: "A one-time notice announces telemetry", met: true}
     subtasks:
       - {text: "Telemetry hook and shared lib", completed: true}
       - {text: "Per-host command detection", completed: true}
-      - {text: "Verify the default is on (opt-out) on every host", completed: false}
-      - {text: "Tests for event allow-list", completed: false}
+      - {text: "Verify the default is on (opt-out) on every host", completed: true}
+      - {text: "Tests for event allow-list", completed: true}
     issues:
       - id: I-1
         summary: "Copilot discards plain-text SessionStart stdout, yet the notice is marked shown machine-wide, so a Copilot-first user never sees it"
@@ -145,6 +145,27 @@ stories:
         location: "tests/test_telemetry.py:6"
         report: "docs/qa-reports/S8-05-code-review.md"
         status: fixed
+      - id: I-7
+        summary: "The one-time notice tells the agent to use `/archflow:telemetry off`, a command that does not exist on Codex, Copilot, Cursor, OpenCode or generic (there it is /archflow-telemetry or $archflow-telemetry)"
+        found_by: pm-reviewer
+        severity: minor
+        location: "plugin/hooks/telemetry.mjs:31"
+        report: "docs/acceptance-reports/S8-05-review.md"
+        status: fixed
+      - id: I-8
+        summary: "Generic host session_start always sends archflow_version null, because the AGENTS.md command does not set CLAUDE_PLUGIN_ROOT; SECURITY.md says every event carries the version"
+        found_by: pm-reviewer
+        severity: minor
+        location: "scripts/build-adapters.mjs:781"
+        report: "docs/acceptance-reports/S8-05-review.md"
+        status: fixed
+      - id: I-9
+        summary: "When Copilot loads the Claude plugin directly, session_start events are sent every session but the notice is never shown on that path; SECURITY.md does not say so"
+        found_by: pm-reviewer
+        severity: minor
+        location: "plugin/hooks/telemetry.mjs:125"
+        report: "docs/acceptance-reports/S8-05-review.md"
+        status: open
   - id: S8-06
     title: "/archflow:telemetry and npx archflow telemetry"
     priority: High

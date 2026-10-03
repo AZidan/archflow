@@ -24,11 +24,18 @@
  */
 
 import { existsSync, readFileSync, readdirSync, writeSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { isatty } from "node:tty";
-import { CONFIG_UNREADABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isConfigUnreadable, isEnabled, loadConfig, recordNoticeShown, setConsent } from "../lib/telemetry.mjs";
+import { CONFIG_UNREADABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isConfigUnreadable, isEnabled, loadConfig, optOutLine, recordNoticeShown, setConsent } from "../lib/telemetry.mjs";
 
-const OPT_OUT_LINE = "Tell the user this once, and that /archflow:telemetry off turns it off.\n";
+/**
+ * This hook's own install root: plugin/ for the Claude Code plugin, <host>/archflow/
+ * (or the Gemini extension root) in an adapter. copyHookRuntime ships
+ * .claude-plugin/plugin.json and lib/ next to hooks/ there, so the version and the
+ * command list resolve even where no CLAUDE_PLUGIN_ROOT is set (the generic host).
+ */
+const HOOK_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 function readInput() {
   // isatty(0), not process.stdin.isTTY: touching process.stdin starts a stream reader
@@ -41,12 +48,17 @@ function readInput() {
   }
 }
 
+/** The version shipped beside this script, else under CLAUDE_PLUGIN_ROOT. */
 function pluginVersion(pluginRoot) {
-  try {
-    return JSON.parse(readFileSync(join(pluginRoot, ".claude-plugin", "plugin.json"), "utf8")).version || null;
-  } catch {
-    return null;
+  for (const root of [HOOK_ROOT, pluginRoot]) {
+    try {
+      const version = JSON.parse(readFileSync(join(root, ".claude-plugin", "plugin.json"), "utf8")).version;
+      if (version) return version;
+    } catch {
+      // try the next root
+    }
   }
+  return null;
 }
 
 /** Regex, not a YAML parse, like check-upgrade.mjs. */
@@ -150,7 +162,8 @@ export function formatNotice(text, host = noticeHost(), hookEvent = "SessionStar
  */
 function showNoticeOnce() {
   if (hasSeenNotice(loadConfig()) || !isEnabled()) return;
-  const out = formatNotice(NOTICE + OPT_OUT_LINE);
+  const host = noticeHost();
+  const out = formatNotice(NOTICE + optOutLine(host), host);
   if (out === null) return;
   try {
     writeSync(1, out);
@@ -174,7 +187,7 @@ if (arg === "--status") {
 
 if (arg === "--enable" || arg === "--disable") {
   const on = arg === "--enable";
-  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || join(process.env.CLAUDE_PROJECT_DIR || process.cwd(), "plugin");
+  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || HOOK_ROOT;
   const { sentOptOut, unreadable } = setConsent(on, { via: "command", archflow_version: pluginVersion(pluginRoot) });
   if (unreadable) {
     process.stdout.write(`Nothing was changed. ${CONFIG_UNREADABLE_NOTE}\n`);
@@ -187,7 +200,7 @@ if (arg === "--enable" || arg === "--disable") {
 try {
   const input = readInput();
   const cwd = input.cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd();
-  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || join(cwd, "plugin");
+  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || HOOK_ROOT;
   const common = { archflow_version: pluginVersion(pluginRoot), ...projectState(cwd) };
 
   // The opt-out command itself is never reported: turning telemetry off must not send an event.
