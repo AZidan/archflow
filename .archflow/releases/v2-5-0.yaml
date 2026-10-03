@@ -181,7 +181,15 @@ stories:
     subtasks:
       - {text: "plugin/commands/telemetry.md", completed: true}
       - {text: "Adapter telemetry commands/skills", completed: true}
-      - {text: "CLI telemetry subcommand tests", completed: false}
+      - {text: "CLI telemetry subcommand tests", completed: true}
+    issues:
+      - id: I-1
+        summary: "While DO_NOT_TRACK/CI/ARCHFLOW_TELEMETRY_DISABLED is set, `npx archflow telemetry` advises `archflow telemetry on`, and `on` (CLI and every host command) prints 'now ON' though nothing will be sent"
+        found_by: qa-engineer
+        severity: minor
+        location: "scripts/archflow.mjs:494"
+        report: "docs/qa-reports/S8-06-qa.md"
+        status: fixed
   - id: S7-04
     title: "build-adapters HOOK_SCRIPTS helper"
     priority: Medium

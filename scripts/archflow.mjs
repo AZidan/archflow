@@ -48,7 +48,7 @@ import { createInterface } from "node:readline";
 import { homedir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CONFIG_UNREADABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isConfigUnreadable, isEnabled, loadConfig, recordNoticeShown, setConsent, statusLine } from "../plugin/lib/telemetry.mjs";
+import { CONFIG_UNREADABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, disabledByEnv, hasSeenNotice, isConfigUnreadable, isEnabled, loadConfig, optInConfirmation, recordNoticeShown, setConsent, statusLine } from "../plugin/lib/telemetry.mjs";
 
 const PKG = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = "AZidan/archflow";
@@ -483,15 +483,17 @@ function runTelemetry(arg) {
   if (arg === "on" || arg === "off") {
     const { sentOptOut, unreadable } = setConsent(arg === "on", { via: "cli", host: "cli", archflow_version: VERSION });
     if (unreadable) { log(`Nothing was changed. ${CONFIG_UNREADABLE_NOTE}`); return; }
-    log(arg === "on" ? "Anonymous usage telemetry is now ON." : `${OPT_OUT_CONFIRMATION}${sentOptOut ? OPT_OUT_SENT_NOTE : ""}`);
+    log(arg === "on" ? optInConfirmation() : `${OPT_OUT_CONFIRMATION}${sentOptOut ? OPT_OUT_SENT_NOTE : ""}`);
     return;
   }
   if (arg && arg !== "status") { console.error(`Unknown telemetry option: ${arg}. Try "on", "off" or "status".`); process.exit(2); }
   const config = loadConfig();
   if (isConfigUnreadable(config)) { log(`Anonymous usage telemetry is OFF for now: ${CONFIG_UNREADABLE_NOTE}`); return; }
   // Same line as /archflow:telemetry's --status: on/off, and since when (or which variable disabled it).
+  // While an environment variable disables it, `on` cannot take effect, so suggest nothing.
   const on = isEnabled(config);
-  log(`Anonymous usage telemetry: ${statusLine(config)}. \`archflow telemetry ${on ? "off" : "on"}\` to turn it ${on ? "off" : "on"}.`);
+  const hint = disabledByEnv() ? "" : ` \`archflow telemetry ${on ? "off" : "on"}\` to turn it ${on ? "off" : "on"}.`;
+  log(`Anonymous usage telemetry: ${statusLine(config)}.${hint}`);
 }
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 ---
 description: "Show or change anonymous usage telemetry (on by default; this is how to opt out)"
-argument-hint: "[on|off]"
+argument-hint: "[on|off|status]"
 ---
 
 # /archflow:telemetry — Show or change anonymous usage telemetry

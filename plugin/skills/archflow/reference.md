@@ -258,7 +258,7 @@ All namespaced as `/archflow:<name>`. There is no `/archflow <sub>` argument for
 | `/archflow:autopilot` | Run queued stories unattended on one branch after a blocker interview |
 | `/archflow:setup-mcp [tool]` | Connect an external tool over MCP (Jira, Notion, Linear, GitHub, SuperDesign) |
 | `/archflow:studio [stop\|status\|port n]` | Archflow Studio, a local web workspace over the same files (beta) |
-| `/archflow:telemetry [on\|off]` | Show or change anonymous usage telemetry. On by default; `off` opts out on every project on the machine |
+| `/archflow:telemetry [on\|off\|status]` | Show or change anonymous usage telemetry. On by default; `off` opts out on every project on the machine |
 
 ## Project types
 

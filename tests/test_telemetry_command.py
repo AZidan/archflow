@@ -1,6 +1,6 @@
 """Tests for the telemetry opt-out/in command (S8-06).
 
-`npx archflow telemetry [on|off|status]` (scripts/archflow.mjs) and `/archflow:telemetry [on|off]`
+`npx archflow telemetry [on|off|status]` (scripts/archflow.mjs) and `/archflow:telemetry [on|off|status]`
 on every host (plugin/commands/telemetry.md and the per-host copies build-adapters.mjs generates).
 
 Nothing here reaches PostHog: every process runs with the helpers from test_telemetry.py, which
@@ -125,14 +125,36 @@ def test_cli_sends_nothing_when_disabled_by_the_environment(home, var):
     assert sent(home) == []
     status = cli(home, **{var: "1"}).stdout
     assert f"off ({var} is set" in status
+    assert "archflow telemetry on" not in status, "`on` cannot take effect while the variable is set"
 
 
-def test_cli_rejects_an_unknown_option(home):
-    proc = cli(home, "maybe")
-    assert proc.returncode == 2
-    assert 'Unknown telemetry option: maybe' in proc.stderr
+def env_on_message(var):
+    return (f"Your choice (on) is saved, but anonymous usage telemetry stays OFF while {var} is set; "
+            "nothing is sent.\n")
+
+
+@pytest.mark.parametrize("var", ["DO_NOT_TRACK", "CI", "ARCHFLOW_TELEMETRY_DISABLED"])
+def test_on_while_disabled_by_the_environment_says_it_stays_off(home, project, var):
+    """The CLI and the host command print the same truthful line, and still store the choice."""
+    write_config(home, json.dumps({"telemetryEnabled": False}))
+    proc = cli(home, "on", **{var: "1"})
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout == env_on_message(var)
+    assert "now ON" not in proc.stdout
+    assert config(home)["telemetryEnabled"] is True
+
+    write_config(home, json.dumps({"telemetryEnabled": False}))
+    out = hook(home, project, ["--enable", "--host", "cursor"], **{var: "1"}).stdout
+    assert out == env_on_message(var)
+    assert config(home)["telemetryEnabled"] is True
     assert sent(home) == []
-    assert not (home / ".archflow" / "config.json").exists()
+
+
+@pytest.mark.parametrize("args", [[], ["status"]])
+def test_cli_status_suggests_the_other_setting_when_it_can_take_effect(home, args):
+    assert "`archflow telemetry off` to turn it off" in cli(home, *args).stdout
+    cli(home, "off")
+    assert "`archflow telemetry on` to turn it on" in cli(home, *args).stdout, "off by choice: `on` works"
 
 
 # --------------------------------------------------------------------------
@@ -229,6 +251,25 @@ def test_host_command_file_names_status_on_and_off(host):
     if host != "claude":
         assert f"--enable --host {host}" in lines["enable"] and f"--disable --host {host}" in lines["disable"]
         assert "--host" not in lines["status"]
+
+
+HINT_FILES = {
+    "claude": PLUGIN / "commands" / "telemetry.md",
+    "codex": ADAPTERS / "codex" / ".agents" / "skills" / "archflow-telemetry" / "SKILL.md",
+}
+SKILL_LISTINGS = [PLUGIN / "skills" / "archflow" / "SKILL.md"] + [
+    ADAPTERS / h / p / "skills" / "archflow" / "SKILL.md"
+    for h, p in [("codex", ".agents"), ("generic", ".agents"), ("copilot", ".github"),
+                 ("cursor", ".cursor"), ("opencode", ".opencode"), ("gemini", ".")]
+]
+
+
+@pytest.mark.parametrize("path", list(HINT_FILES.values()) + SKILL_LISTINGS, ids=lambda p: str(p.relative_to(PLUGIN.parent)))
+def test_argument_hints_list_status(path):
+    text = path.read_text()
+    assert "telemetry" in text
+    assert "[on|off]" not in text, f"{path}: hint omits status"
+    assert "[on|off|status]" in text
 
 
 @pytest.mark.parametrize("host", sorted(HOST_FILES))

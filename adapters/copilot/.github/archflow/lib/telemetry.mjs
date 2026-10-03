@@ -253,6 +253,17 @@ export function statusLine(config = loadConfig()) {
 }
 
 export const OPT_OUT_CONFIRMATION = "Anonymous usage telemetry is now OFF.";
+
+/**
+ * What `on` prints, from the CLI and every host's command. While an environment variable
+ * disables telemetry the choice is still saved, but nothing is sent, so say so and name it.
+ */
+export function optInConfirmation() {
+  const byEnv = disabledByEnv();
+  return byEnv
+    ? `Your choice (on) is saved, but anonymous usage telemetry stays OFF while ${byEnv} is set; nothing is sent.`
+    : "Anonymous usage telemetry is now ON.";
+}
 export const OPT_OUT_SENT_NOTE = " One final event recorded the opt-out; nothing else will be sent.";
 
 /**

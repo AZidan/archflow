@@ -31,7 +31,7 @@ $archflow-contract [story-id]        → Contract architecture, or one story's e
 $archflow-issue [story-id|defer ...] → Record a defect on a story in the active release, or defer a minor one
 $archflow-doctor [--validate|--fix]  → Environment + project health check; --fix repairs upgrade drift
 $archflow-studio [stop|status|port n] → Local web workspace over the same files; onboards and migrates from the UI (beta)
-$archflow-telemetry [on|off]         → Show or change anonymous usage telemetry (on by default)
+$archflow-telemetry [on|off|status]  → Show or change anonymous usage telemetry (on by default)
 ```
 
 Command bodies live in `.codex/archflow/commands/<name>.md`. When you need to run one from

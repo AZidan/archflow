@@ -5,7 +5,7 @@ description: "Show or change anonymous usage telemetry (on by default; this is h
 
 > Invoke with `$archflow-telemetry`. Arguments are the text after the mention.
 
-Arguments: `[on|off]`
+Arguments: `[on|off|status]`
 
 
 # $archflow-telemetry — Show or change anonymous usage telemetry

@@ -28,7 +28,7 @@ import { existsSync, readFileSync, readdirSync, writeSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isatty } from "node:tty";
-import { CONFIG_UNREADABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isEnabled, loadConfig, optOutLine, recordNoticeShown, setConsent, statusLine } from "../lib/telemetry.mjs";
+import { CONFIG_UNREADABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isEnabled, loadConfig, optInConfirmation, optOutLine, recordNoticeShown, setConsent, statusLine } from "../lib/telemetry.mjs";
 
 /**
  * This hook's own install root: plugin/ for the Claude Code plugin, <host>/archflow/
@@ -193,7 +193,7 @@ if (arg === "--enable" || arg === "--disable") {
     process.stdout.write(`Nothing was changed. ${CONFIG_UNREADABLE_NOTE}\n`);
     process.exit(0);
   }
-  process.stdout.write(on ? "Anonymous usage telemetry is now ON.\n" : `${OPT_OUT_CONFIRMATION}${sentOptOut ? OPT_OUT_SENT_NOTE : ""}\n`);
+  process.stdout.write(on ? `${optInConfirmation()}\n` : `${OPT_OUT_CONFIRMATION}${sentOptOut ? OPT_OUT_SENT_NOTE : ""}\n`);
   process.exit(0);
 }
 
