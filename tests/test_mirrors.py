@@ -13,21 +13,33 @@ DOGFOOD = REPO / ".archflow"
 # Files that legitimately live only in the shipped tree.
 SHIPPED_ONLY = {"SKILL.md", "mcp-registry.yaml"}
 
+# This repo's own project state from onboarding. It lives only in the dogfood tree.
+DOGFOOD_ONLY = {
+    "current-phase.yaml",
+    "project-settings.yaml",
+    "roadmap.yaml",
+    "backlog.yaml",
+    "history.yaml",
+    "project-context.md",
+    "current-feature.yaml",
+    "releases",
+}
 
-def _relevant(root):
+
+def _relevant(root, skip=SHIPPED_ONLY):
     out = {}
     for p in root.rglob("*"):
         if p.is_dir() or p.name == ".DS_Store":
             continue
         rel = p.relative_to(root)
-        if str(rel) in SHIPPED_ONLY or rel.parts[0] in SHIPPED_ONLY:
+        if str(rel) in skip or rel.parts[0] in skip:
             continue
         out[str(rel)] = p.read_bytes()
     return out
 
 
 def test_mirrors_have_the_same_files():
-    shipped, dogfood = _relevant(SHIPPED), _relevant(DOGFOOD)
+    shipped, dogfood = _relevant(SHIPPED), _relevant(DOGFOOD, SHIPPED_ONLY | DOGFOOD_ONLY)
     only_shipped = sorted(set(shipped) - set(dogfood))
     only_dogfood = sorted(set(dogfood) - set(shipped))
     assert not only_shipped, f"only in plugin/skills/archflow/: {only_shipped}"

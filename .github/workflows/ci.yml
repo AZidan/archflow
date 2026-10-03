@@ -73,7 +73,13 @@ jobs:
         run: python -m pytest tests/test_site_publishing.py -q
 
       - name: Mirrored trees are identical
-        run: diff -r -x SKILL.md -x mcp-registry.yaml -x .DS_Store .archflow plugin/skills/archflow
+        # The dogfood tree also holds this repo's own onboarding state (see DOGFOOD_ONLY
+        # in tests/test_mirrors.py), which the shipped tree never has.
+        run: >-
+          diff -r -x SKILL.md -x mcp-registry.yaml -x .DS_Store
+          -x current-phase.yaml -x project-settings.yaml -x roadmap.yaml -x backlog.yaml
+          -x history.yaml -x project-context.md -x current-feature.yaml -x releases
+          .archflow plugin/skills/archflow
 
       - name: Host adapters match the plugin
         run: node scripts/build-adapters.mjs --check

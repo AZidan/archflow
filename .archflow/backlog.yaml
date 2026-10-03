@@ -1,0 +1,157 @@
+# Unscheduled scope as stubs. Proposed items (from onboarding review) are marked (proposed).
+epics:
+  - id: E1
+    stories:
+      - id: S1-06
+        title: "Fold design-system.yaml into project settings"
+        priority: Low
+        status: backlog
+        target: settings
+        description: "Move .archflow/design-system.yaml into project-settings.yaml (deferred in 2.3.0: 88 refs across 35 files)."
+      - id: S1-07
+        title: "Growth-signal detection offering full mode"
+        priority: Medium
+        status: backlog
+        target: modes
+        description: "Offer full mode on a second release, second contributor or size threshold; verify it works end to end."
+  - id: E2
+    stories:
+      - id: S2-05
+        title: "Contract foundation mode and autopilot design/contract calls"
+        priority: Medium
+        status: backlog
+        target: contract
+        description: "/archflow:contract creates the architecture section when absent; decide whether autopilot calls the design/contract commands (ADR 002 open questions)."
+  - id: E3
+    stories:
+      - id: S3-06
+        title: "OpenAPI 3.1 contract-format ADR and contract schema"
+        priority: Medium
+        status: backlog
+        target: contract
+        description: "Write the ADR 002 carve-out ADR and add a contract schema to .archflow/schemas/."
+      - id: S3-07
+        title: "Release-level issues and tombstone pruning"
+        priority: Low
+        status: backlog
+        description: "Release-level issues[] for performance-optimizer findings; pruning policy for deferred-issue tombstones (ADR 004 open questions)."
+      - id: S3-08
+        title: "Token/cost reporting per story and autopilot run"
+        priority: Low
+        status: backlog
+        description: "Report token and cost per story and per autopilot run (proposed)."
+  - id: E4
+    stories:
+      - id: S4-05
+        title: "init writes api_contract_path"
+        priority: Medium
+        status: backlog
+        target: contract
+        description: "init writes api_contract_path to project settings (AF-39, ADR 002)."
+      - id: S4-06
+        title: "Onboard benchmark suite"
+        priority: Medium
+        status: backlog
+        description: "Fixture repos (brownfield, prototype, monorepo) scoring reconciliation accuracy and gap-report precision in CI (proposed)."
+  - id: E6
+    stories:
+      - id: S6-02
+        title: "Studio beta to GA"
+        priority: High
+        status: backlog
+        target: studio
+        description: "Close user-reported gaps; retire natural-language workarounds now that design/contract verbs exist."
+      - id: S6-03
+        title: "Optional Studio install"
+        priority: Medium
+        status: backlog
+        target: studio
+        description: "Split the ~5.6 MB Studio bundle out of the default plugin and fetch it on first /archflow:studio (proposed)."
+      - id: S6-04
+        title: "Studio on non-Claude hosts"
+        priority: Medium
+        status: backlog
+        target: studio
+        description: "Read-only board over .archflow/ first, for hosts that cannot fork a Claude session (proposed; ADR 001 open question)."
+  - id: E7
+    stories:
+      - id: S7-06
+        title: "Reconcile ADR 001 with generated adapters"
+        priority: Medium
+        status: backlog
+        target: host-parity
+        description: "Mark ADR 001 superseded or schedule role-contract thin bindings (roles/<role>.md)."
+      - id: S7-07
+        title: "Agent Plugins 1.0 layout"
+        priority: Medium
+        status: backlog
+        target: host-parity
+        description: "plugin.json + mcp.json generated from mcp-registry.yaml (ADR 001 decision 2)."
+      - id: S7-08
+        title: "Host capability probe with reduced-mode declaration"
+        priority: Medium
+        status: backlog
+        target: host-parity
+        description: "Probe host capabilities and declare reduced mode explicitly (ADR 001 step 3)."
+      - id: S7-09
+        title: "Track upstream host limits"
+        priority: Low
+        status: backlog
+        target: host-parity
+        description: "Follow OpenCode subagent hooks (#5894) and Gemini subagents preview; adopt when available."
+      - id: S7-10
+        title: "Spec Kit / BMAD import in onboard"
+        priority: Low
+        status: backlog
+        description: "Onboard reads existing constitution/spec/PRD files into project-context and backlog (proposed)."
+  - id: E8
+    stories:
+      - id: S8-08
+        title: "Activation funnel instrumentation"
+        priority: Medium
+        status: backlog
+        target: telemetry
+        description: "install -> first command -> onboard completed -> first story accepted -> release shipped, within the agreed allow-list (proposed; policy decided in S8-07: opt-out)."
+      - id: S8-09
+        title: "Enterprise controls"
+        priority: Low
+        status: backlog
+        target: telemetry
+        description: "Central telemetry disable and a policy file for allowed hosts/MCP servers (proposed)."
+  - id: E9
+    stories:
+      - id: S9-05
+        title: "Publish telemetry page on the site"
+        priority: High
+        status: backlog
+        target: telemetry
+        description: "archflowai.dev/telemetry: field/event allow-list and how to opt out (ADR 003 implementation order)."
+      - id: S9-06
+        title: "CHANGELOG hygiene"
+        priority: Medium
+        status: backlog
+        target: docs-hygiene
+        description: "Fix stack location text (project-settings.yaml), add compare links 2.3.1-2.4.0, point Unreleased at 2.4.0."
+      - id: S9-07
+        title: "README hygiene"
+        priority: Medium
+        status: backlog
+        target: docs-hygiene
+        description: "Remove duplicated Studio-requirements paragraph, fix mcp-registry path, commands-table paren, '10 files' vs 'eight phase files'."
+      - id: S9-08
+        title: "Compare pages vs Spec Kit and Kiro, brownfield showcase"
+        priority: Low
+        status: backlog
+        description: "Compare pages vs GitHub Spec Kit and Kiro; public before/after onboard showcase on real OSS repos (proposed)."
+  - id: E10
+    stories:
+      - id: S10-03
+        title: "Studio sync provenance check"
+        priority: Low
+        status: backlog
+        description: "CI check that plugin/dist and plugin/server match a tagged archflow-studio commit (proposed)."
+      - id: S10-04
+        title: "ADR hygiene"
+        priority: Low
+        status: backlog
+        description: "ADR index with statuses, renumbering rule, and a test flagging stale Proposed ADRs (proposed)."

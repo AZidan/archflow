@@ -1,0 +1,31 @@
+schema_version: "2.1"
+project_type: "backend_only"
+
+# API contract — skipped at onboarding. The only API is Studio's bundled local server
+# (plugin/server/server.mjs), whose source lives outside this repo.
+api_contract_path: null
+
+# Detected at onboarding (2026-09-23). Null = not determined; agents ask.
+stack:
+  language: "javascript"          # Node ESM .mjs, package.json "type": "module", engines node >=18
+  backend:
+    framework: null               # plain Node (scripts/archflow.mjs CLI, plugin/hooks/*.mjs, plugin/server/server.mjs)
+    database: null
+    orm: null
+    auth: null
+  test:
+    unit: "pytest"                # tests/test_*.py; installed in .github/workflows/ci.yml
+    integration: null
+    e2e: null
+  ci: "github-actions"            # .github/workflows/{ci,release,traffic-metrics}.yml
+  hosting: "github-pages"         # docs/CNAME + docs/_config.yml (Jekyll) — user-confirmed
+  package_manager: null           # no lockfile at repo root
+  notes: >-
+    Framework repo: Python is also used (plugin/scripts/*.py, tests/). docs/ is the Jekyll marketing
+    site (archflowai.dev), not an app UI. plugin/dist/ is a prebuilt Studio bundle whose source is in
+    another repo. .archflow/ mirrors plugin/skills/archflow/ byte-for-byte except the dogfood state
+    files (DOGFOOD_ONLY in tests/test_mirrors.py).
+
+optional_agents:
+  code-reviewer: [story_review, release_quality]
+  doc-writer: [pre_ship]

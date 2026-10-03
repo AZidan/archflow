@@ -1,0 +1,24 @@
+schema_version: "2.1"
+project: Archflow
+project_type: backend_only
+mode: full
+epics:
+  - {id: E1, name: "Release model and state schema", scope: backend}
+  - {id: E2, name: "Command surface and story workflow", scope: backend}
+  - {id: E3, name: "Agent roster and quality gates", scope: backend}
+  - {id: E4, name: "Onboarding, upgrade and doctor", scope: backend}
+  - {id: E5, name: "Autopilot (unattended lane)", scope: backend}
+  - {id: E6, name: "Archflow Studio", scope: both}
+  - {id: E7, name: "Multi-host distribution and installer", scope: backend}
+  - {id: E8, name: "Security, privacy and telemetry", scope: backend}
+  - {id: E9, name: "Marketing site and docs", scope: frontend}
+  - {id: E10, name: "Framework integrity (CI, tests, mirrors)", scope: backend}
+active_release: v2-5-0
+releases:
+  - {id: v2-5-0, status: in_progress, file: releases/v2-5-0.yaml}
+shipped:
+  - {id: v1-x, name: "1.x Phases and sprints", version: v1.2.8, released_at: "2026-03-30", file: releases/archive/v1-x.yaml}
+  - {id: v2-0, name: "2.0 Release model", version: v2.0.2, released_at: "2026-08-17", file: releases/archive/v2-0.yaml}
+  - {id: v2-1-v2-2, name: "2.1-2.2 Autopilot and Studio", version: v2.2.0, released_at: "2026-08-31", file: releases/archive/v2-1-v2-2.yaml}
+  - {id: v2-3, name: "2.3 Hardening and quality gates", version: v2.3.2, released_at: "2026-09-10", file: releases/archive/v2-3.yaml}
+  - {id: v2-4, name: "2.4 Multi-host distribution", version: v2.4.0, released_at: "2026-09-12", file: releases/archive/v2-4.yaml}

@@ -1,0 +1,140 @@
+# Active release. Stories reflect uncommitted work in the tree at onboarding (2026-09-23).
+# Decisions recorded 2026-09-23 (user, before the autopilot run) are marked "DECISION" in each story.
+id: v2-5-0
+name: "2.5.0"
+goal: "Telemetry on every host with a one-command opt-out, adapter build and host fixes, and the Studio-first site repositioning."
+status: in_progress
+release_criteria:
+  - {text: "Telemetry policy decided and ADR 003 superseded or amended (S8-07) before this release ships", met: false}
+  - {text: "SECURITY.md and CHANGELOG describe the shipped telemetry behavior exactly", met: false}
+  - {text: "Adapters regenerate with no drift (build-adapters.mjs --check passes)", met: false}
+stories:
+  - id: S8-07
+    title: "Record telemetry policy: on by default (opt-out), framework-wide"
+    priority: Critical
+    status: ready
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: >-
+      DECISION (user, 2026-09-23): telemetry is ON BY DEFAULT (opt-out) on every host, framework-wide,
+      not opt-in and not Studio-only. This supersedes ADR 003's proposal. Remaining work is recording
+      it: a superseding ADR, and SECURITY.md + CHANGELOG aligned in the same change. NOTE: ADRs live in
+      docs/internal/decisions/, which is a symlink into the separate archflow-internal repo; commits
+      to it do not land on this repo's run branch. Write the ADR there, leave it uncommitted for the
+      user, and say so in the report. Runs before S8-05.
+    acceptance_criteria:
+      - {text: "A new ADR records opt-out, framework-wide telemetry (scope, event allow-list, DO_NOT_TRACK/CI disable, notice, opt-out command) and marks ADR 003 superseded", met: false}
+      - {text: "SECURITY.md states that anonymous telemetry is on by default, what is sent, what is never sent, and how to turn it off", met: false}
+      - {text: "CHANGELOG [Unreleased] describes the same default and opt-out", met: false}
+    subtasks:
+      - {text: "Write superseding ADR in docs/internal/decisions/ (uncommitted, other repo)", completed: false}
+      - {text: "Set ADR 003 status to Superseded", completed: false}
+      - {text: "Align SECURITY.md and CHANGELOG", completed: false}
+  - id: S8-05
+    title: "Framework-wide anonymous telemetry"
+    priority: Critical
+    status: in_progress
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: >-
+      session_start, command_run (command name only) and cli_install events on every host, carrying
+      host, entrypoint, Studio, project type, version, phase and mode; never names, paths, contents,
+      prompts or arguments. DECISION (user, 2026-09-23): on by default (opt-out) — see S8-07; the
+      ADR 003 blocker is resolved. Work is uncommitted in plugin/hooks/telemetry.mjs, plugin/lib/,
+      adapters/*/telemetry.mjs.
+    acceptance_criteria:
+      - {text: "No event carries project names, paths, file contents, prompts or arguments", met: false}
+      - {text: "DO_NOT_TRACK and CI disable telemetry and send nothing", met: false}
+      - {text: "Telemetry is on by default (opt-out) on every host, per S8-07", met: false}
+      - {text: "A one-time notice announces telemetry", met: false}
+    subtasks:
+      - {text: "Telemetry hook and shared lib", completed: true}
+      - {text: "Per-host command detection", completed: true}
+      - {text: "Verify the default is on (opt-out) on every host", completed: false}
+      - {text: "Tests for event allow-list", completed: false}
+  - id: S8-06
+    title: "/archflow:telemetry and npx archflow telemetry"
+    priority: High
+    status: in_progress
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: >-
+      Opt-out/in command on every host. Opting out sends one final telemetry_opted_out event and
+      nothing after; opting in sends telemetry_opted_in. DECISION (user, 2026-09-23): build as scoped.
+    acceptance_criteria:
+      - {text: "/archflow:telemetry [on|off] works on every host", met: false}
+      - {text: "After opt-out no further events are sent", met: false}
+    subtasks:
+      - {text: "plugin/commands/telemetry.md", completed: true}
+      - {text: "Adapter telemetry commands/skills", completed: true}
+      - {text: "CLI telemetry subcommand tests", completed: false}
+  - id: S7-04
+    title: "build-adapters HOOK_SCRIPTS helper"
+    priority: Medium
+    status: in_progress
+    gates: {needs_design: false, needs_contract: false}
+    assigned: devops-engineer
+    description: >-
+      build-adapters.mjs copies the hook runtime through one helper, so a new hook is one entry in
+      HOOK_SCRIPTS. DECISION (user, 2026-09-23): build as scoped.
+    acceptance_criteria:
+      - {text: "Adding a hook requires only a HOOK_SCRIPTS entry", met: false}
+      - {text: "build-adapters.mjs --check passes", met: false}
+    subtasks:
+      - {text: "Introduce HOOK_SCRIPTS helper", completed: true}
+      - {text: "Regenerate adapters", completed: false}
+  - id: S7-05
+    title: "Gemini $HOME path and Cursor workspace-root fixes"
+    priority: High
+    status: in_progress
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: >-
+      Gemini commands quoted "~/.gemini/..." which the shell does not expand; now $HOME. Cursor hook
+      bridge falls back to the first workspace root since Cursor sends no cwd. VERIFICATION PLAN
+      (2026-09-23): the run verifies both with automated tests — Gemini command paths expand under a
+      real shell, and cursor-bridge.mjs resolves the project from a recorded no-cwd payload with
+      workspace_roots. The gemini CLI is installed on this machine; Cursor is not. Autopilot must not
+      install the adapter into ~/.gemini or any other global host config. The live on-host check of
+      both is the user's, after the run; do not park the story for it.
+    acceptance_criteria:
+      - {text: "Gemini /archflow:doctor resolves the plugin path (automated test; live check by user)", met: false}
+      - {text: "Cursor hooks find the project without cwd (automated test; live check by user)", met: false}
+    subtasks:
+      - {text: "Fix Gemini command paths", completed: true}
+      - {text: "Cursor bridge fallback", completed: true}
+      - {text: "Automated tests for both fixes", completed: false}
+      - {text: "Live verification on Gemini CLI and Cursor (user, after the run)", completed: false}
+  - id: S9-04
+    title: "Studio-first site repositioning"
+    priority: High
+    status: in_progress
+    gates: {needs_design: false, needs_contract: false}
+    assigned: ui-engineer
+    description: >-
+      Branch site/studio-first. DECISION (user, 2026-09-23): design gate removed; docs/index-next.html
+      becomes the homepage (replaces docs/index.html; index-next.html is deleted). Marketing review done
+      2026-09-23 against .claude/skills/archflow-marketing guardrails; the mechanical fixes are
+      subtasks below. OPEN QUESTIONS for the autopilot interview (do not guess them): (Q1) the banner
+      "Archflow Studio now runs on every supported coding agent" and the hero's "drives your own
+      terminal session on Codex, Copilot CLI, Cursor, Gemini CLI and OpenCode" — CHANGELOG 2.4.0 says
+      Studio stays Claude Code only and backlog S6-04 is unbuilt; is multi-host Studio shipped? If not,
+      the banner and hero must say Claude Code only. (Q2) "Free while in beta" (hero badge + meta
+      description) implies a future paid Studio, against the pricing-silence guardrail; keep, or say
+      "Beta" only? (Q3) "Codex is next, then OpenCode, then the rest" is a public roadmap commitment;
+      keep or drop the ordering? (Q4) the proof numbers — 5 production codebases, 250+ stories, 6
+      months, "Studio ships Studio: 8 releases and 71 stories" — are they current?
+    acceptance_criteria:
+      - {text: "Homepage hero leads with Studio", met: false}
+      - {text: "Studio guide matches current Studio behavior", met: false}
+      - {text: "Page states which hosts Studio supports, consistent with the CHANGELOG", met: false}
+      - {text: "Page passes the archflow-marketing guardrails (no pricing hints, no total command count, one-argument marketplace command, install command present)", met: false}
+    subtasks:
+      - {text: "Rewrite docs/index.html", completed: true}
+      - {text: "Update docs/guides/studio.md", completed: true}
+      - {text: "Decide fate of index-next.html (decided: it becomes the homepage)", completed: true}
+      - {text: "Promote docs/index-next.html to docs/index.html and delete index-next.html", completed: false}
+      - {text: "Fix meta description: 'Point it at the codebase you already have.' appears twice", completed: false}
+      - {text: "Reconcile telemetry with the privacy copy: 'Local, and only local' / 'never leave the machine' must still be true with telemetry on by default (code and credentials never leave; anonymous usage events do)", completed: false}
+      - {text: "Reconcile phase count: '6 gated phases' / 'Six phases' vs the five numbered phases plus the contract gate shown", completed: false}
+      - {text: "Apply the answers to Q1-Q4", completed: false}

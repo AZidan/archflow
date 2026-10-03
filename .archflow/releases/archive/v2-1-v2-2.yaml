@@ -1,0 +1,49 @@
+# Backfilled at onboarding (2026-09-23) from CHANGELOG.md and git tags.
+id: v2-1-v2-2
+name: "2.1-2.2 Autopilot and Studio"
+goal: "An unattended build lane and a local web workspace over the same .archflow/ files."
+status: released
+version: v2.2.0
+released_at: "2026-08-31"
+stories:
+  - id: S5-01
+    title: "/archflow:autopilot"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "Runs queued release stories unattended on one branch after a blocker interview. Pre-authorizes review gates but never the merge to main; parks a story on an undecided question rather than guessing, and a parked story blocks ship by default."
+    acceptance_criteria:
+      - {text: "Autopilot interviews for blockers before going silent", met: true}
+      - {text: "Runs on one branch and never merges to main", met: true}
+      - {text: "An undecided question parks the story with blocks_release true", met: true}
+    subtasks:
+      - {text: "Write autopilot command and autopilot-schema.yaml", completed: true}
+      - {text: "Add parked status to release schema", completed: true}
+  - id: S6-01
+    title: "Archflow Studio (beta)"
+    priority: High
+    status: done
+    gates: {needs_design: true, needs_contract: false}
+    assigned: ui-engineer
+    description: "/archflow:studio opens a local board at 127.0.0.1:3456 over the same .archflow/ files, with onboarding and migration from the UI and forked-session chat. Claude Code only."
+    acceptance_criteria:
+      - {text: "/archflow:studio serves the board on 127.0.0.1", met: true}
+      - {text: "Board reads and writes the same .archflow/ state files", met: true}
+      - {text: "Onboarding and migration can be started from the UI", met: true}
+    subtasks:
+      - {text: "Bundle Studio server and dist into the plugin", completed: true}
+      - {text: "Write /archflow:studio command", completed: true}
+  - id: S9-01
+    title: "Studio guide and guide titles"
+    priority: Medium
+    status: done
+    gates: {needs_design: true, needs_contract: false}
+    assigned: doc-writer
+    description: "A Studio guide on the site, and titles on every guide."
+    acceptance_criteria:
+      - {text: "docs/guides/studio.md published", met: true}
+      - {text: "Every guide page has a title", met: true}
+    subtasks:
+      - {text: "Write Studio guide", completed: true}
+      - {text: "Add titles to guides", completed: true}
