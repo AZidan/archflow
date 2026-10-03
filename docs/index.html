@@ -96,7 +96,7 @@
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "macOS, Linux, Windows",
         "description": "Phase-based AI development framework. 17 specialized agents across five gated phases and an API contract gate, handing off through files in your repo. Runs on Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode. Reads the codebase you already have.",
-        "softwareVersion": "2.3.0",
+        "softwareVersion": "2.4.0",
         "license": "https://opensource.org/licenses/MIT",
         "isAccessibleForFree": true,
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -111,7 +111,7 @@
             "name": "Too much process for a weekend project?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Then don't run it. Archflow has two modes over the same schema, and new projects start in the light one. quick mode is one implicit release with gates that record but never block \u2014 you still get agents, contracts and phases, without the paperwork. full mode adds an explicit release pipeline and enforced readiness gates when a team makes them necessary. Switching costs nothing."
+              "text": "Then don\u2019t run it. Archflow has two modes over the same schema, and new projects start in the light one. quick: Solo, small, moving fast. One implicit release. Gates that record but never block. No ship ceremony until you ask for one. You still get agents, contracts, and phases, without the paperwork. full: Team, releases, real stakes. Explicit release pipeline, enforced readiness gates, role lanes for PM, design, architecture, and QA. Everything a second contributor makes necessary. Same schema either way, so switching costs nothing. When Archflow notices you\u2019ve outgrown quick (a second release, a second contributor), it offers the upgrade. It never forces it."
             }
           },
           {
@@ -119,7 +119,7 @@
             "name": "Isn't this just a big rules file?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "A rules file (CLAUDE.md, AGENTS.md, .cursorrules) describes the process; Archflow runs it. Phases are state on disk, so current-phase.yaml knows where you are and each agent loads only its own phase's instructions. Handoffs are artifacts in your repo that diff in a pull request and that Studio shows as a board, not chat you have to trust. And /archflow:onboard reconstructs the plan around an existing codebase once, as a roadmap, releases, a contract and a history kept in the repo. A rules file can tell the model to look around before each change; it cannot keep what it finds."
+              "text": "That\u2019s the right question, and for a while it was. Here\u2019s what CLAUDE.md, AGENTS.md or .cursorrules can\u2019t do. A rules file describes the process. Archflow runs it. A rules file tells the model how you\u2019d like it to behave, then hopes it complies for the rest of the session. Archflow\u2019s phases are state on disk: current-phase.yaml knows where you are, and the agent for that phase loads only that phase\u2019s instructions. Handoffs are files you can review, not chat you have to trust. The API contract, roadmap and design system are artifacts in your repo. They diff in a pull request. A teammate can read them. Studio shows them as a board. Chat scrollback does none of that. It reads what you already built, and keeps what it finds. A rules file can tell the model to look around before each change. It cannot keep what it finds. /archflow:onboard reconstructs the plan around your codebase once, as a roadmap, releases, a contract and a history, and stores it in the repo. Archflow is also made of files: plain markdown and YAML in .archflow/. If you want to fork the whole process and change every phase, that\u2019s a text editor and a pull request. MIT."
             }
           },
           {
@@ -127,7 +127,7 @@
             "name": "How is this different from BMAD or gstack?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Less than either author would like. All three are MIT and turn a coding agent into named specialists with gates between them. Archflow makes one different bet: it reads the codebase you already have, once, up front, keeps what it finds in the repo as a roadmap, a release, a contract and a history, and shows that plan on a board. BMAD and gstack are bigger, older in the market and better documented by third parties. If you have no code yet and want the most-travelled path, BMAD is a good choice; if you have a codebase, Archflow is built for it. Full comparisons: archflowai.dev/compare/archflow-vs-bmad/ and archflowai.dev/compare/archflow-vs-gstack/."
+              "text": "Less than either author would like. All three are MIT, and all three turn a coding agent into named specialists with gates between them. Archflow makes one different bet: it reads the codebase you already have, once, up front, keeps what it finds in the repo as a roadmap, a release, a contract and a history, and shows you that plan on a board. BMAD and gstack are bigger, older in the market, and better documented by third parties. If you have no code yet and want the most-travelled path, BMAD is a good choice. If you have a codebase, this is the one built for it. The honest version of each comparison, including where they win, is written up in full: Archflow vs BMAD-METHOD: Just-in-time investigation versus upfront extraction into durable plan state. Archflow vs gstack: A plan that follows the person versus a plan that follows the repo."
             }
           }
         ]
@@ -298,7 +298,7 @@
   <!-- over; Studio no longer needs announcing once it IS the page.            -->
   <!-- ============================================ -->
   <div id="announce" hidden class="border-b border-accent/20">
-    <div class="max-w-container mx-auto px-6 py-2.5 flex items-center justify-center gap-3 text-center">
+    <div class="max-w-container mx-auto px-10 py-2.5 flex items-center justify-center gap-3 text-center">
       <a href="#studio" data-ph="announce_click"
          class="text-sm text-text-secondary hover:text-text-primary transition-colors duration-200">
         <span class="font-heading font-600 text-accent-light">New</span>
@@ -1430,8 +1430,15 @@
     // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
       anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
+        // A bare "#" (the nav logo) is not a valid selector: scroll to top.
+        if (href === '#') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+        let target = null;
+        try { target = document.querySelector(href); } catch (err) { return; }
         if (target) {
           target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }

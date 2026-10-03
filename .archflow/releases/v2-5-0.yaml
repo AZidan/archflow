@@ -334,8 +334,44 @@ stories:
       - {text: "Rewrite docs/index.html", completed: true}
       - {text: "Update docs/guides/studio.md", completed: true}
       - {text: "Decide fate of index-next.html (decided: it becomes the homepage)", completed: true}
-      - {text: "Promote docs/index-next.html to docs/index.html and delete index-next.html", completed: false}
-      - {text: "Fix meta description: 'Point it at the codebase you already have.' appears twice", completed: false}
-      - {text: "Reconcile telemetry with the privacy copy: 'Local, and only local' / 'never leave the machine' must still be true with telemetry on by default (code and credentials never leave; anonymous usage events do)", completed: false}
-      - {text: "Reconcile phase count: '6 gated phases' / 'Six phases' vs the five numbered phases plus the contract gate shown", completed: false}
-      - {text: "Apply the answers to Q1-Q4", completed: false}
+      - {text: "Promote docs/index-next.html to docs/index.html and delete index-next.html", completed: true}
+      - {text: "Fix meta description: 'Point it at the codebase you already have.' appears twice", completed: true}
+      - {text: "Reconcile telemetry with the privacy copy: 'Local, and only local' / 'never leave the machine' must still be true with telemetry on by default (code and credentials never leave; anonymous usage events do)", completed: true}
+      - {text: "Reconcile phase count: '6 gated phases' / 'Six phases' vs the five numbered phases plus the contract gate shown", completed: true}
+      - {text: "Apply the answers to Q1-Q4", completed: true}
+    issues:
+      - id: I-1
+        summary: "Five subtasks whose work is done in the diff still read completed: false"
+        found_by: qa-engineer
+        severity: minor
+        location: ".archflow/releases/v2-5-0.yaml:337"
+        report: "docs/qa-reports/S9-04-qa.md"
+        status: fixed
+      - id: I-2
+        summary: "Homepage states a total agent count ('17 specialized agents'), which marketing guardrail 6 forbids"
+        found_by: qa-engineer
+        severity: minor
+        location: "docs/index.html:405"
+        report: "docs/qa-reports/S9-04-qa.md"
+        status: open
+      - id: I-3
+        summary: "JSON-LD drifts from the page: softwareVersion 2.3.0 and FAQ answers not verbatim"
+        found_by: qa-engineer
+        severity: minor
+        location: "docs/index.html:99"
+        report: "docs/qa-reports/S9-04-qa.md"
+        status: fixed
+      - id: I-4
+        summary: "Nav logo href='#' makes the smooth-scroll handler throw (querySelector('#')); logo click does nothing"
+        found_by: qa-engineer
+        severity: minor
+        location: "docs/index.html:1434"
+        report: "docs/qa-reports/S9-04-qa.md"
+        status: fixed
+      - id: I-5
+        summary: "Announcement dismiss button overlaps the banner text at mobile width"
+        found_by: qa-engineer
+        severity: minor
+        location: "docs/index.html:310"
+        report: "docs/qa-reports/S9-04-qa.md"
+        status: fixed
