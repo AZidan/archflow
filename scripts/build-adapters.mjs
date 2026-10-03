@@ -10,6 +10,7 @@
  *   node scripts/build-adapters.mjs            # all hosts
  *   node scripts/build-adapters.mjs codex      # one host
  *   node scripts/build-adapters.mjs --check    # exit 1 if adapters/ is stale
+ *   node scripts/build-adapters.mjs --list-hooks  # print hook lists + host names as JSON (tests)
  *
  * Adding a host = adding an entry to HOSTS below. Each host declares:
  *   - vocab: phrase substitutions applied to every markdown/yaml file
@@ -120,8 +121,20 @@ function write(path, content) {
  * library they import from ../lib, the command list telemetry matches prompts
  * against, plugin.json (version) and scripts/ (doctor, upgrade). One place, so a
  * new hook is one entry in HOOK_SCRIPTS instead of an edit per host.
+ *
+ * Every plugin/hooks/*.mjs must be in exactly one of these two lists; tests/test_build_adapters.py
+ * fails otherwise, so a new hook cannot be silently left out of the adapters.
+ *
+ * One HOOK_SCRIPTS entry copies the hook into every adapter. Wiring it to an event is a
+ * per-host edit, because each host's event model differs (Codex/Gemini/Copilot hooks files,
+ * the Cursor bridge, the OpenCode plugin, the generic AGENTS.md). test_build_adapters.py
+ * fails and lists each host that still needs that edit, and the file to change.
  */
 const HOOK_SCRIPTS = ["check-upgrade.mjs", "check-state.mjs", "guard-git.mjs", "telemetry.mjs"];
+/** Hooks that only make sense on Claude Code and ship in no adapter. */
+const CLAUDE_ONLY_HOOKS = [
+  "studio-session-context.mjs", // Studio drives the `claude` binary; no other host has it
+];
 
 function copyHookRuntime(rootDir, commandNames) {
   for (const f of HOOK_SCRIPTS) cpSync(join(PLUGIN, "hooks", f), join(rootDir, "hooks", f));
@@ -971,6 +984,15 @@ const HOSTS = {
 // ---------------------------------------------------------------------------
 
 const args = process.argv.slice(2);
+
+// Introspection for tests: print the hook lists and build nothing.
+if (args.includes("--list-hooks")) {
+  console.log(JSON.stringify({
+    hook_scripts: HOOK_SCRIPTS, claude_only_hooks: CLAUDE_ONLY_HOOKS, hosts: Object.keys(HOSTS),
+  }));
+  process.exit(0);
+}
+
 const check = args.includes("--check");
 const wanted = args.filter((a) => !a.startsWith("--"));
 const targets = wanted.length ? wanted : Object.keys(HOSTS);
