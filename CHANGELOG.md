@@ -12,7 +12,9 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 ### Added
 
-- Anonymous usage telemetry, on by default, on every host. Sessions send `session_start` and
+- Anonymous usage telemetry, on by default (opt-out), on every host. Archflow previously sent
+  nothing; `SECURITY.md` now documents what is sent and how to turn it off, and ADR 005 records the
+  decision. Sessions send `session_start` and
   Archflow commands send `command_run` with the command name only; `npx archflow install` sends
   `cli_install`. Events carry host, entrypoint, Studio, project type, version, phase and mode,
   never project names, paths, contents, prompts or arguments. A one-time notice announces it.
@@ -22,7 +24,9 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   AGENTS.md package reports session starts only, when the agent runs the script AGENTS.md names.
 - `/archflow:telemetry [on|off]` and `npx archflow telemetry [on|off]` to opt out, on every host.
   Opting out sends one final `telemetry_opted_out` event and nothing after; opting back in sends
-  `telemetry_opted_in`. `DO_NOT_TRACK` and `CI` also turn it off, and send nothing.
+  `telemetry_opted_in`. `DO_NOT_TRACK`, `CI` and `ARCHFLOW_TELEMETRY_DISABLED` also turn it off,
+  and send nothing. The choice is stored in `~/.archflow/config.json` and applies to every project
+  on the machine.
 - `scripts/build-adapters.mjs` copies the hook runtime through one helper, so a new hook is one
   entry in `HOOK_SCRIPTS` rather than an edit per host.
 

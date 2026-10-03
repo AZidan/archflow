@@ -1,8 +1,9 @@
 # Security
 
 Archflow is a set of instructions that drive Claude Code inside your own repository. It has no
-server, stores no credentials, and sends nothing anywhere. Its security surface is therefore about
-three things: what it installs, what it reads, and what it runs.
+server and stores no credentials. The only thing it sends anywhere is anonymous usage telemetry,
+which is on by default and described under [Telemetry](#telemetry), with how to turn it off. Its
+security surface is otherwise about three things: what it installs, what it reads, and what it runs.
 
 ## Supply chain
 
@@ -82,10 +83,13 @@ only your project's own `.archflow/` files. `/archflow:studio stop` ends it.
 
 ## Telemetry
 
-On every supported host and in `npx archflow install`, Archflow sends anonymous usage events to
-PostHog (`us.i.posthog.com`) by default: session starts, which Archflow commands run, and the host,
-project type, version, phase and mode, with a random id generated on your machine. It never sends
-project names, file paths, file contents, prompts or command arguments. The first run says so once.
+Anonymous usage telemetry is **on by default** (opt-out). On every supported host and in
+`npx archflow install`, Archflow sends usage events to PostHog (`us.i.posthog.com`): `session_start`,
+`command_run` with the Archflow command's name only, and `cli_install`. They carry the host, the
+host's entrypoint, whether Studio launched the session, the project type, Archflow version, phase and
+mode, with a random id generated on your machine. It never sends project names, file paths, file
+contents, prompts or command arguments. The first run prints a one-time notice saying so and how to
+turn it off; it is a notice, not a question.
 
 How a command is recognised differs by host. Claude Code and OpenCode report the command name
 directly. On Codex, Copilot, Cursor and Gemini a prompt-submit hook reads your prompt **on your
@@ -94,7 +98,8 @@ only that command's name. The prompt itself never leaves the hook. The generic A
 has no hooks, so it reports a session start only when the agent runs the script AGENTS.md names.
 
 Turn it off with `/archflow:telemetry off`, `npx archflow telemetry off`, `DO_NOT_TRACK=1` or
-`ARCHFLOW_TELEMETRY_DISABLED=1`. It is off whenever `CI` is set.
+`ARCHFLOW_TELEMETRY_DISABLED=1`. It is off whenever `CI` is set. `/archflow:telemetry` or
+`npx archflow telemetry` with no argument shows the current setting.
 
 Turning it off with the command sends one final event, `telemetry_opted_out`, so opt-outs can be
 counted. It carries the host, the Archflow version, where the change was made and how many days
