@@ -3,8 +3,9 @@
  * Telemetry hook. On by default; see plugin/lib/telemetry.mjs for what is sent.
  *
  *   (no flag)       session start: sends session_start with how the session began
- *   --command-run   Claude Code UserPromptExpansion (matcher ^archflow:.*): the
- *                   host names the command; never reads command_input
+ *   --command-run   Claude Code UserPromptExpansion (matcher ^archflow:.*) and
+ *                   OpenCode command.executed: the host names the command, which
+ *                   is reported only if it is a shipped one; never reads command_input
  *   --prompt        a host's prompt-submit hook (Codex, Copilot, Cursor, Gemini):
  *                   reads the raw prompt only to match a LEADING /archflow:x,
  *                   /archflow-x or $archflow-x against the shipped command list,
@@ -13,7 +14,10 @@
  *   --status | --enable | --disable   used by /archflow:telemetry
  *
  * The one-time notice is printed by session start or --command-run, whose
- * plain stdout reaches the model, and marked shown only after printing.
+ * plain stdout reaches the model, and marked shown only after printing. Every
+ * property is checked against the allow-list in ../lib/telemetry.mjs, which
+ * drops unknown keys and turns an unrecognised project_type, phase, mode or
+ * session_source into null (or "other").
  *
  * FAIL-OPEN and FAST: no network in this process, exits 0 on every path.
  */
@@ -95,6 +99,19 @@ export function commandFromPrompt(prompt, known) {
   return `archflow:${m[1]}`;
 }
 
+/**
+ * "archflow:status" from a name a host reports directly ("archflow:status" from
+ * Claude Code, "archflow-status" from OpenCode), only when it is a shipped
+ * command. A user's own archflow-* command, or a name with anything after it,
+ * is not reported.
+ */
+export function commandFromName(name, known) {
+  if (typeof name !== "string") return null;
+  const m = name.match(/^\/?archflow[:-]([a-z][a-z-]*)$/);
+  if (!m || !known?.has(m[1])) return null;
+  return `archflow:${m[1]}`;
+}
+
 function showNoticeOnce() {
   if (hasSeenNotice(loadConfig()) || !isEnabled()) return;
   process.stdout.write(NOTICE + OPT_OUT_LINE);
@@ -125,13 +142,16 @@ try {
 
   // The opt-out command itself is never reported: turning telemetry off must not send an event.
   if (arg === "--command-run") {
-    const command = typeof input.command_name === "string" ? input.command_name : null;
+    const command = commandFromName(input.command_name, knownCommands(pluginRoot));
     if (command && command !== "archflow:telemetry") {
       showNoticeOnce();
       capture("command_run", { ...common, command, detected_by: "command_hook" });
     }
   } else if (arg === "--prompt") {
     const command = commandFromPrompt(input.prompt, knownCommands(pluginRoot));
+    // No notice here: on these hosts prompt-hook stdout is model context or must be JSON. If this
+    // fires before any session start, capture() still mints the id, and the notice stays pending
+    // for the next session start, which prints it through showNoticeOnce like every other surface.
     if (command && command !== "archflow:telemetry") {
       capture("command_run", { ...common, command, detected_by: "prompt_prefix" });
     }
