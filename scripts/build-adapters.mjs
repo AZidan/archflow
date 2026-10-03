@@ -10,7 +10,7 @@
  *   node scripts/build-adapters.mjs            # all hosts
  *   node scripts/build-adapters.mjs codex      # one host
  *   node scripts/build-adapters.mjs --check    # exit 1 if adapters/ is stale
- *   node scripts/build-adapters.mjs --list-hooks  # print HOOK_SCRIPTS as JSON (tests)
+ *   node scripts/build-adapters.mjs --list-hooks  # print hook lists + host names as JSON (tests)
  *
  * Adding a host = adding an entry to HOSTS below. Each host declares:
  *   - vocab: phrase substitutions applied to every markdown/yaml file
@@ -987,7 +987,9 @@ const args = process.argv.slice(2);
 
 // Introspection for tests: print the hook lists and build nothing.
 if (args.includes("--list-hooks")) {
-  console.log(JSON.stringify({ hook_scripts: HOOK_SCRIPTS, claude_only_hooks: CLAUDE_ONLY_HOOKS }));
+  console.log(JSON.stringify({
+    hook_scripts: HOOK_SCRIPTS, claude_only_hooks: CLAUDE_ONLY_HOOKS, hosts: Object.keys(HOSTS),
+  }));
   process.exit(0);
 }
 

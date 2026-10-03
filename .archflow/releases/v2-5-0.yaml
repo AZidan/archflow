@@ -141,6 +141,27 @@ stories:
         location: "scripts/build-adapters.mjs:123"
         report: "docs/qa-reports/S7-04-qa.md"
         status: fixed
+      - id: I-2
+        summary: "Wiring test covers the six adapters but not plugin/hooks/hooks.json, so a new HOOK_SCRIPTS hook can go unwired on Claude Code with all tests green"
+        found_by: code-reviewer
+        severity: minor
+        location: "tests/test_build_adapters.py:78"
+        report: "docs/qa-reports/S7-04-code-review.md"
+        status: fixed
+      - id: I-3
+        summary: "Wiring check is a plain-text filename match, so a comment or dead code in the cursor bridge / OpenCode plugin counts as wired"
+        found_by: code-reviewer
+        severity: minor
+        location: "tests/test_build_adapters.py:97"
+        report: "docs/qa-reports/S7-04-code-review.md"
+        status: fixed
+      - id: I-4
+        summary: "_hosts() and the copy-outside-helper check regex-scan build-adapters.mjs source; non-[a-z] host keys or an indirect copyTree of plugin/hooks slip past"
+        found_by: code-reviewer
+        severity: minor
+        location: "tests/test_build_adapters.py:29"
+        report: "docs/qa-reports/S7-04-code-review.md"
+        status: fixed
   - id: S7-05
     title: "Gemini $HOME path and Cursor workspace-root fixes"
     priority: High

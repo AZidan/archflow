@@ -3,7 +3,8 @@
 S7-04: adding a hook must require only a HOOK_SCRIPTS entry. These tests hold that
 structurally: every plugin hook is either in HOOK_SCRIPTS or declared Claude-only,
 every adapter's hook root carries every HOOK_SCRIPTS file plus lib/, no host copies a
-hook script outside copyHookRuntime, and the committed adapters match the plugin.
+hook script outside copyHookRuntime, every host (and Claude Code itself) runs every hook
+it ships, and the committed adapters match the plugin.
 """
 
 import json
@@ -17,20 +18,24 @@ PLUGIN_HOOKS = REPO / "plugin" / "hooks"
 ADAPTERS = REPO / "adapters"
 
 
-def _hook_lists():
+def _build_info():
+    """HOOK_SCRIPTS, CLAUDE_ONLY_HOOKS and the host names, as build-adapters.mjs reports them."""
     proc = subprocess.run(
         ["node", str(BUILD), "--list-hooks"], capture_output=True, text=True, timeout=30, cwd=REPO
     )
     assert proc.returncode == 0, proc.stderr
-    data = json.loads(proc.stdout)
-    return data["hook_scripts"], data["claude_only_hooks"]
+    return json.loads(proc.stdout)
+
+
+def _hook_lists():
+    info = _build_info()
+    return info["hook_scripts"], info["claude_only_hooks"]
 
 
 def _hosts():
-    """Host names in the HOSTS table, in declaration order."""
-    src = BUILD.read_text()
-    table = src[src.index("const HOSTS = {"):]
-    return re.findall(r"^  ([a-z]+): \{", table, re.M)
+    hosts = _build_info()["hosts"]
+    assert hosts, "build-adapters.mjs --list-hooks reported no hosts"
+    return hosts
 
 
 def _hook_roots(host):
@@ -60,9 +65,7 @@ def test_no_plugin_hook_is_silently_left_out():
 
 def test_every_host_ships_the_full_hook_runtime():
     scripts, claude_only = _hook_lists()
-    hosts = _hosts()
-    assert hosts, "could not read HOSTS from build-adapters.mjs"
-    for host in hosts:
+    for host in _hosts():
         roots = _hook_roots(host)
         assert len(roots) == 1, f"adapters/{host}: expected one hook runtime root, found {roots}"
         root = roots[0]
@@ -74,18 +77,27 @@ def test_every_host_ships_the_full_hook_runtime():
             assert (root / "lib" / lib.name).is_file(), f"adapters/{host}: lib/{lib.name} missing"
 
 
-# Where each host runs its hook scripts: the generated files (under adapters/<host>/) whose
-# combined text must name every HOOK_SCRIPTS entry, and where in build-adapters.mjs to wire one.
+# --- Wiring: a copied hook must also be RUN by each host ---------------------------------
+#
+# Each host lists the files that run its hook scripts, how to read each one, and where to
+# make the per-host edit. Only invocation sites count, never comments or prose:
+#   json — the `command` / `bash` strings of the parsed hooks file
+#   code — quoted string literals ("x.mjs") after // and /* */ comments are stripped
+#   md   — a `node <path>/x.mjs` invocation the agent is told to run
+# Paths are relative to the repo; "claude" is the plugin itself.
 HOOK_WIRING = {
-    "codex": ([".codex/hooks.json"], "the `hooks` object in HOSTS.codex.emit"),
-    "gemini": (["hooks/hooks.json"], "the `hooks` object in HOSTS.gemini.emit"),
-    "copilot": ([".github/hooks/archflow.json"], "the archflow.json hooks in HOSTS.copilot.emit"),
-    "cursor": (
-        [".cursor/hooks.json", ".cursor/archflow/hooks/cursor-bridge.mjs"],
-        "the CURSOR_BRIDGE script (and .cursor/hooks.json in HOSTS.cursor.emit for a new event)",
-    ),
-    "opencode": ([".opencode/plugins/archflow.ts"], "the OPENCODE_PLUGIN script"),
-    "generic": (["AGENTS.archflow.md"], "the session-start instructions in HOSTS.generic.emit"),
+    "claude": [("plugin/hooks/hooks.json", "json", "plugin/hooks/hooks.json")],
+    "codex": [("adapters/codex/.codex/hooks.json", "json", "the `hooks` object in HOSTS.codex.emit")],
+    "gemini": [("adapters/gemini/hooks/hooks.json", "json", "the `hooks` object in HOSTS.gemini.emit")],
+    "copilot": [
+        ("adapters/copilot/.github/hooks/archflow.json", "json", "the archflow.json hooks in HOSTS.copilot.emit")
+    ],
+    "cursor": [
+        ("adapters/cursor/.cursor/hooks.json", "json", "the .cursor/hooks.json events in HOSTS.cursor.emit"),
+        ("adapters/cursor/.cursor/archflow/hooks/cursor-bridge.mjs", "code", "the CURSOR_BRIDGE script"),
+    ],
+    "opencode": [("adapters/opencode/.opencode/plugins/archflow.ts", "code", "the OPENCODE_PLUGIN script")],
+    "generic": [("adapters/generic/AGENTS.archflow.md", "md", "the session-start instructions in HOSTS.generic.emit")],
 }
 
 # (host, script) pairs a host deliberately does not run. One-line reason each.
@@ -95,29 +107,62 @@ NOT_WIRED = {
 }
 
 
-def _names(text, script):
-    return re.search(r"(?<![\w.-])" + re.escape(script) + r"(?![\w.-])", text) is not None
+def _script_re(script):
+    return r"(?<![\w.-])" + re.escape(script) + r"(?![\w.-])"
+
+
+def _json_commands(node):
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if k in ("command", "bash") and isinstance(v, str):
+                yield v
+            else:
+                yield from _json_commands(v)
+    elif isinstance(node, list):
+        for v in node:
+            yield from _json_commands(v)
+
+
+def _strip_comments(code):
+    code = re.sub(r"/\*[\s\S]*?\*/", "", code)
+    return re.sub(r"(?m)(?<![:\"'\\])//.*$", "", code)
+
+
+def _invokes(path, kind, script):
+    text = path.read_text()
+    if kind == "json":
+        return any(re.search(_script_re(script), c) for c in _json_commands(json.loads(text)))
+    if kind == "code":
+        return re.search(r"[\"'`]" + re.escape(script) + r"[\"'`]", _strip_comments(text)) is not None
+    if kind == "md":
+        return re.search(r"\bnode\s+\S*/" + re.escape(script) + r"(?![\w.-])", text) is not None
+    raise ValueError(kind)
+
+
+def _required(host):
+    scripts, claude_only = _hook_lists()
+    return scripts + claude_only if host == "claude" else scripts
 
 
 def test_every_hook_script_is_wired_on_every_host():
     """Copying a hook is automatic; running it is a per-host edit this test asks for."""
-    scripts, _ = _hook_lists()
-    assert set(HOOK_WIRING) == set(_hosts()), "HOOK_WIRING must name every host in HOSTS"
-    stale = [k for k in NOT_WIRED if k[0] not in HOOK_WIRING or k[1] not in scripts]
+    scripts, claude_only = _hook_lists()
+    assert set(HOOK_WIRING) == set(_hosts()) | {"claude"}, "HOOK_WIRING must name claude + every host in HOSTS"
+    stale = [k for k in NOT_WIRED if k[0] not in HOOK_WIRING or k[1] not in _required(k[0])]
     assert not stale, f"NOT_WIRED entries for unknown hosts or scripts: {stale}"
 
     unwired = []
-    for host, (files, where) in HOOK_WIRING.items():
-        text = ""
-        for rel in files:
-            path = ADAPTERS / host / rel
-            assert path.is_file(), f"adapters/{host}/{rel} is missing; regenerate the adapters"
-            text += path.read_text()
-        for script in scripts:
-            if (host, script) not in NOT_WIRED and not _names(text, script):
+    for host, files in HOOK_WIRING.items():
+        for rel, _, _ in files:
+            assert (REPO / rel).is_file(), f"{rel} is missing; regenerate the adapters"
+        for script in _required(host):
+            if (host, script) in NOT_WIRED:
+                continue
+            if not any(_invokes(REPO / rel, kind, script) for rel, kind, _ in files):
+                where = " or ".join(f"{w} ({rel})" for rel, _, w in files)
+                src = "" if host == "claude" else " in scripts/build-adapters.mjs, then regenerate"
                 unwired.append(
-                    f"{host}: {script} is copied but never run; wire it in {where} "
-                    f"(scripts/build-adapters.mjs, generated as adapters/{host}/{files[-1]}), "
+                    f"{host}: {script} is never run; wire it in {where}{src}, "
                     f"or add ({host!r}, {script!r}) to NOT_WIRED with a reason"
                 )
     assert not unwired, "\n".join(unwired)
@@ -131,28 +176,27 @@ def test_cursor_events_route_through_the_bridge():
 
 
 def test_generic_names_the_session_start_scripts():
-    text = (ADAPTERS / "generic" / "AGENTS.archflow.md").read_text()
+    path = ADAPTERS / "generic" / "AGENTS.archflow.md"
     for script in ("check-upgrade.mjs", "telemetry.mjs"):
-        assert _names(text, script), (
+        assert _invokes(path, "md", script), (
             f"generic: AGENTS.archflow.md no longer asks the agent to run {script}; "
             "fix the session-start instructions in HOSTS.generic.emit (scripts/build-adapters.mjs)"
         )
 
 
+# Anything that reads from plugin/hooks, or copies the whole plugin tree (which includes it).
+HOOK_SOURCE = re.compile(r"""join\(\s*PLUGIN\s*,\s*["'`]hooks["'`]|\b(?:cpSync|copyTree)\(\s*PLUGIN\s*[,)]""")
+
+
 def test_hook_scripts_are_copied_only_by_the_helper():
-    """A per-host cpSync of a hook script is the drift S7-04 removed."""
+    """A per-host copy of the hooks dir, by any route, is the drift S7-04 removed."""
     src = BUILD.read_text()
     start = src.index("function copyHookRuntime(")
     end = src.index("\n}\n", start)
     outside = src[:start] + src[end:]
-    scripts, _ = _hook_lists()
-    offenders = [
-        line.strip()
-        for line in outside.splitlines()
-        if "cpSync" in line and ('"hooks"' in line or any(f in line for f in scripts))
-    ]
-    assert not offenders, f"hook files copied outside copyHookRuntime: {offenders}"
-    calls = len(re.findall(r"copyHookRuntime\(", outside))
+    offenders = [line.strip() for line in outside.splitlines() if HOOK_SOURCE.search(line)]
+    assert not offenders, f"plugin/hooks read or copied outside copyHookRuntime: {offenders}"
+    calls = len(re.findall(r"\bcopyHookRuntime\(", outside))
     assert calls == len(_hosts()), f"{calls} copyHookRuntime calls for {len(_hosts())} hosts"
 
 
