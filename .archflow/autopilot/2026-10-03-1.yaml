@@ -1,6 +1,7 @@
 run_id: "2026-10-03-1"
 started_at: "2026-10-03T16:08:03Z"
-status: running
+finished_at: "2026-10-03T21:21:59Z"
+status: finished
 base_branch: v2.5.0
 run_branch: v2.5.0-autopilot
 release: v2-5-0
@@ -97,3 +98,4 @@ events:
   - {at: "2026-10-03T20:28:17Z", story: S8-06, event: merged, detail: "ACCEPTED. QA I-1, code-review I-2(blocking: opt-out not persisted but reported)/I-3, pm I-4 fixed. Suite 505."}
   - {at: "2026-10-03T21:09:18Z", story: S7-05, event: merged, detail: "ACCEPTED. code-review I-1 (blocking: Cursor git guard skipped from project subdirectory) + I-2/I-3, pm I-4 fixed. Extra fixes: Cursor root preference, stop stderr relay, Gemini command refs, quoted migrate path. Live Gemini/Cursor checks remain the user's (subtask left open). Out of scope, report: Codex/Copilot/Cursor/OpenCode/generic reference <root>/commands/<name>.md files they don't ship. Suite 720."}
   - {at: "2026-10-03T21:21:47Z", story: S9-04, event: parked, detail: "npx archflow studio missing; multi-host Studio not in repo/CHANGELOG; Free and MIT vs guardrails. WIP pushed on site/studio-first-homepage, not merged."}
+  - {at: "2026-10-03T21:21:59Z", event: stopped, detail: "Queue exhausted: 6 done (incl. PRE-EXISTING-FAILURE), 1 parked, 0 failed."}
