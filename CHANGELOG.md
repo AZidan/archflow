@@ -38,8 +38,15 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 - Gemini commands that quote the plugin path, such as `/archflow:doctor`, pointed at
   `"~/.gemini/..."`, which the shell does not expand. They now use `$HOME`.
-- The Cursor hook bridge used `cwd`, which Cursor does not send; it now falls back to the first
-  workspace root.
+- Gemini commands, agents and skills that tell the model to follow another command, such as
+  `/archflow:init` handing off to onboard, pointed at `commands/<name>.md`, which the Gemini
+  extension does not ship. They now point at `commands/archflow/<name>.toml`.
+- The Cursor hook bridge used `cwd`, which Cursor does not send. It now uses the first workspace
+  root that is an Archflow project, else the first workspace root, so a multi-root workspace whose
+  Archflow project is not listed first still gets its hooks.
+- On Cursor, the stop hook's warning about `.archflow/` files that no longer match their schemas
+  was never shown, because the bridge relayed only stdout and the warning is written to stderr.
+  The bridge now relays it.
 
 ## [2.4.0] — 2026-09-12
 

@@ -271,7 +271,10 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
 let input = {};
 try { input = JSON.parse(readFileSync(0, "utf8") || "{}"); } catch {}
-const cwd = input.cwd || input.workspace_roots?.[0] || process.cwd();
+// Cursor sends no cwd. Use the first workspace root that is an Archflow project, else the first root,
+// so a multi-root workspace whose Archflow project is not listed first still gets its hooks.
+const roots = Array.isArray(input.workspace_roots) ? input.workspace_roots.filter((r) => typeof r === "string" && r) : [];
+const cwd = input.cwd || roots.find((r) => existsSync(join(r, ".archflow"))) || roots[0] || process.cwd();
 const isArchflow = existsSync(join(cwd, ".archflow"));
 const env = { ...process.env, CLAUDE_PLUGIN_ROOT: root, CLAUDE_PROJECT_DIR: cwd, ARCHFLOW_HOST: "cursor" };
 const run = (script, payload, args = []) =>
@@ -307,7 +310,9 @@ if (event === "beforeShellExecution") {
 }
 if (event === "stop") {
   const r = run("check-state.mjs", { hook_event_name: "Stop", cwd });
-  if (r.stdout?.trim()) console.error(r.stdout.trim()); // advisory; Cursor's stop output is only for follow-ups
+  // check-state reports drift on stderr. Advisory: Cursor's stop stdout is only for follow-ups.
+  const msg = (r.stderr || r.stdout || "").trim();
+  if (msg) console.error(msg);
   out({});
 }
 out({});
@@ -513,6 +518,8 @@ const HOSTS = {
       [/\$ARGUMENTS/g, "{{args}}"],
       // Gemini only substitutes ${extensionPath} in the manifest and hooks, not in prompts.
       // $HOME, not ~: prompts quote the path ("…/scripts/x.py"), and ~ does not expand inside quotes.
+      // Command bodies ship as commands/archflow/<n>.toml here, not commands/<n>.md; the prompt is inside.
+      [/\$\{CLAUDE_PLUGIN_ROOT\}\/commands\/([a-z-]+|<name>)\.md/g, "$HOME/.gemini/extensions/archflow/commands/archflow/$1.toml"],
       [/\$\{CLAUDE_PLUGIN_ROOT\}/g, "$HOME/.gemini/extensions/archflow"],
       [/reloaded via hook/g, "injected by the extension's SessionStart hook"],
     ],
