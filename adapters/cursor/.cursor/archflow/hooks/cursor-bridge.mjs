@@ -3,7 +3,8 @@
 // Translates Cursor hook JSON <-> the Claude-Code-shaped payloads Archflow's hook scripts expect.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { homedir } from "node:os";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const event = process.argv[2];
@@ -11,11 +12,34 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
 let input = {};
 try { input = JSON.parse(readFileSync(0, "utf8") || "{}"); } catch {}
-// Cursor sends no cwd. Use the first workspace root that is an Archflow project, else the first root,
-// so a multi-root workspace whose Archflow project is not listed first still gets its hooks.
-const roots = Array.isArray(input.workspace_roots) ? input.workspace_roots.filter((r) => typeof r === "string" && r) : [];
-const cwd = input.cwd || roots.find((r) => existsSync(join(r, ".archflow"))) || roots[0] || process.cwd();
-const isArchflow = existsSync(join(cwd, ".archflow"));
+if (!input || typeof input !== "object") input = {};
+
+// Which project the event is about. Every Cursor payload carries workspace_roots; only some events
+// (beforeShellExecution among them) carry cwd, the shell's working directory, which may be a
+// subdirectory of the project. ~/.archflow is the telemetry config dir, never a project.
+const isProject = (d) => d !== homedir() && existsSync(join(d, ".archflow"));
+const inside = (d, r) => { const rel = relative(r, d); return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel)); };
+const roots = Array.isArray(input.workspace_roots)
+  ? input.workspace_roots.filter((r) => typeof r === "string" && r).map((r) => resolve(r))
+  : [];
+function projectDir() {
+  const at = typeof input.cwd === "string" && input.cwd ? resolve(input.cwd) : null;
+  if (at) {
+    // 1. The nearest ancestor of cwd (or cwd itself) that is an Archflow project.
+    for (let d = at; ; d = dirname(d)) {
+      if (isProject(d)) return d;
+      if (dirname(d) === d) break;
+    }
+    // 2. cwd inside a workspace root that is not an Archflow project: the command is about that
+    //    repo, which never opted in, so it is treated as a plain workspace.
+    const home = roots.find((r) => inside(at, r));
+    if (home) return home;
+  }
+  // 3. No cwd, or cwd outside every root: the first Archflow root, else the first root.
+  return roots.find(isProject) || roots[0] || at || process.cwd();
+}
+const cwd = projectDir();
+const isArchflow = isProject(cwd);
 const env = { ...process.env, CLAUDE_PLUGIN_ROOT: root, CLAUDE_PROJECT_DIR: cwd, ARCHFLOW_HOST: "cursor" };
 const run = (script, payload, args = []) =>
   spawnSync("node", [join(here, script), ...args], { cwd, env, input: JSON.stringify(payload), encoding: "utf8", timeout: 6000 });
@@ -50,8 +74,9 @@ if (event === "beforeShellExecution") {
 }
 if (event === "stop") {
   const r = run("check-state.mjs", { hook_event_name: "Stop", cwd });
-  // check-state reports drift on stderr. Advisory: Cursor's stop stdout is only for follow-ups.
-  const msg = (r.stderr || r.stdout || "").trim();
+  // Advisory: check-state reports drift on stderr, and anything it prints goes to our stderr too,
+  // because Cursor reads the stop hook's stdout as JSON for follow-ups.
+  const msg = [r.stderr, r.stdout].map((x) => (x || "").trim()).filter(Boolean).join("\n");
   if (msg) console.error(msg);
   out({});
 }

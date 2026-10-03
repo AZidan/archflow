@@ -9,9 +9,11 @@ Two hosts, two ways the plugin could fail to find itself or the project:
   quoted-tilde form, then lay the extension out under a throwaway HOME and run the doctor's shell
   lines in a real bash, the way the agent would.
 
-- Cursor sends hooks no ``cwd``, only ``workspace_roots``. The bridge has to find the project from
-  those. These tests replay Cursor-shaped payloads through the generated ``cursor-bridge.mjs`` with
-  the process cwd set somewhere unrelated, so the payload is the only way to find the project.
+- Cursor sends every hook ``workspace_roots`` but sends ``cwd`` only on some events (of the four
+  the bridge handles, only ``beforeShellExecution``), and that ``cwd`` is the shell's directory,
+  which may be a subdirectory of the project. The bridge has to find the project from those. These
+  tests replay payloads shaped per Cursor's hook docs through the generated ``cursor-bridge.mjs``
+  with the process cwd set somewhere unrelated, so the payload is the only way to find the project.
 
 Nothing here touches the real HOME, ~/.gemini or ~/.archflow, and nothing reaches the network:
 HOME, ARCHFLOW_CONFIG_DIR and ARCHFLOW_CACHE_DIR point at temp dirs, ARCHFLOW_TELEMETRY_SINK writes
@@ -211,6 +213,86 @@ def test_doctor_git_guard_install_runs_against_the_installed_extension(gemini_ho
     assert hook.exists() and "archflow-pre-push" in hook.read_text()
 
 
+def plugin_shell_blocks(text):
+    """Fenced bash/sh blocks in a plugin markdown file (fences may be indented in lists)."""
+    blocks = re.findall(r"^[ \t]*```(?:bash|sh|shell)\n(.*?)^[ \t]*```", text, re.S | re.M)
+    return [b.replace("\\\n", " ") for b in blocks]
+
+
+def unquoted(block, prefix):
+    """Lines of a shell block where `prefix` appears outside double quotes."""
+    bad = []
+    for line in block.splitlines():
+        for m in re.finditer(re.escape(prefix), line):
+            if line[:m.start()].count('"') % 2 == 0:
+                bad.append(line.strip())
+    return bad
+
+
+PLUGIN_MD = sorted((REPO / "plugin").rglob("*.md"))
+
+
+@pytest.mark.parametrize("path", PLUGIN_MD, ids=lambda p: str(p.relative_to(REPO / "plugin")))
+def test_plugin_shell_lines_quote_the_plugin_root(path):
+    # Every host's generated copy inherits this. Unquoted, a plugin root with a space in it (a
+    # HOME such as "/Users/Jane Doe" on Gemini) splits into two words and the command fails.
+    for block in plugin_shell_blocks(path.read_text()):
+        bad = unquoted(block, "${CLAUDE_PLUGIN_ROOT}")
+        assert not bad, f"{path.name}: unquoted plugin root in a shell line: {bad}"
+
+
+@pytest.mark.parametrize("toml_path", GEMINI_COMMANDS, ids=lambda p: p.stem)
+def test_gemini_shell_lines_quote_the_extension_path(toml_path):
+    for block in shell_blocks(prompt_of(toml_path)):
+        bad = unquoted(block, EXT_PREFIX)
+        assert not bad, f"{toml_path.name}: unquoted extension path in a shell line: {bad}"
+
+
+@pytest.fixture
+def spaced_home(tmp_path):
+    """Like gemini_home, but HOME has a space in it, as many real macOS/Windows homes do."""
+    home = tmp_path / "Jane Doe"
+    shutil.copytree(GEMINI, home / ".gemini" / "extensions" / "archflow",
+                    ignore=shutil.ignore_patterns("__pycache__"))
+    return home
+
+
+def test_doctor_lines_survive_a_home_with_a_space(spaced_home, doctor_project):
+    blocks = doctor_blocks()
+    proc = bash(blocks["validate_archflow.py"], spaced_home, doctor_project)
+    assert proc.returncode == 0, f"validate:\n{proc.stdout}\n{proc.stderr}"
+    block = next(b for b in shell_blocks(prompt_of(GEMINI / "commands" / "archflow" / "doctor.toml"))
+                 if "upgrade_archflow.py" in b and "--apply" not in b)
+    proc = bash(block, spaced_home, doctor_project)
+    assert proc.returncode in (0, 1) and "No such file" not in proc.stderr, f"upgrade:\n{proc.stderr}"
+    proc = bash(blocks["archflow-install-git-guard.sh"], spaced_home, doctor_project)
+    assert proc.returncode == 0, f"git guard:\n{proc.stdout}\n{proc.stderr}"
+    assert "archflow-pre-push" in (doctor_project / ".git" / "hooks" / "pre-push").read_text()
+
+
+def test_migrate_dry_run_survives_a_home_with_a_space(spaced_home, tmp_path):
+    project = tmp_path / "v1 project"
+    shutil.copytree(REPO / "tests" / "fixtures" / "v1-project", project)
+    before = sorted(str(p.relative_to(project)) for p in project.rglob("*"))
+    blocks = [b for b in shell_blocks(prompt_of(GEMINI / "commands" / "archflow" / "migrate.toml"))
+              if "migrate.py" in b and "--dry-run" in b]
+    assert blocks, "migrate.toml no longer shows the dry-run line"
+    # The agent fills <project-root> in; quote it, as it must for a path with a space.
+    script = blocks[0].replace("<project-root>", f'"{project}"')
+    proc = bash(script, spaced_home, tmp_path)
+    assert "No such file" not in proc.stderr and "can't open file" not in proc.stderr, proc.stderr
+    assert proc.returncode == 0, f"stdout:\n{proc.stdout}\nstderr:\n{proc.stderr}"
+    assert sorted(str(p.relative_to(project)) for p in project.rglob("*")) == before, "dry run wrote files"
+
+
+def test_an_unquoted_path_really_would_have_failed(spaced_home, tmp_path):
+    """The regression I-3 addresses: unquoted, a HOME with a space splits the script path."""
+    proc = bash(f"python3 {EXT_PREFIX}/scripts/migrate.py --help", spaced_home, tmp_path)
+    assert proc.returncode != 0
+    proc = bash(f'python3 "{EXT_PREFIX}/scripts/migrate.py" --help', spaced_home, tmp_path)
+    assert proc.returncode == 0, proc.stderr
+
+
 def test_the_tilde_form_really_would_have_failed(gemini_home, tmp_path):
     """The regression the fix addresses: a quoted ~ is a literal directory name to the shell."""
     proc = bash('test -e "~/.gemini/extensions/archflow/scripts/validate_archflow.py"', gemini_home, tmp_path)
@@ -220,15 +302,23 @@ def test_the_tilde_form_really_would_have_failed(gemini_home, tmp_path):
 
 
 # ==========================================================================
-# Cursor: the hook bridge finds the project from workspace_roots, not cwd
+# Cursor: the hook bridge finds the project from workspace_roots and, when sent, cwd
 #
-# Root choice, as the bridge implements it:
-#   1. payload `cwd`, when a host sends one;
-#   2. else the first workspace root that contains .archflow/;
-#   3. else workspace_roots[0];
-#   4. else the process cwd.
-# So a multi-root workspace with the Archflow project listed second still gets its hooks, and a
-# workspace with no Archflow root behaves as a plain workspace (telemetry only, every gate open).
+# Payload shapes follow Cursor's hook docs (https://cursor.com/docs/agent/hooks, "Hook
+# Input/Output Schemas"): every hook gets the common fields, including `workspace_roots`; `cwd`
+# (the shell's working directory) is sent on beforeShellExecution, preToolUse, postToolUse,
+# postToolUseFailure and beforeReadFile only. Of the four events the bridge handles, only
+# beforeShellExecution carries it. Project hooks run with the project root as their process cwd.
+#
+# Project choice, as the bridge implements it:
+#   1. with a cwd, the nearest ancestor of it (or itself) that has .archflow/, so a shell in a
+#      monorepo subdirectory is still inside the project and the git guard still applies;
+#   2. with a cwd inside a workspace root that is not an Archflow project (and no Archflow
+#      ancestor), that root: the command runs in a repo that never opted in, so it is a plain
+#      workspace and the guard stays out, even if another root is an Archflow project;
+#   3. otherwise (no cwd, or a cwd outside every root) the first workspace root that has
+#      .archflow/, else workspace_roots[0], else the cwd, else the process cwd.
+# HOME is never a project: ~/.archflow is the telemetry config dir.
 # ==========================================================================
 
 @pytest.fixture
@@ -258,24 +348,35 @@ def plain_folder(path):
 
 
 def cursor_payload(event, roots, **fields):
-    """A Cursor hook payload as Cursor sends it: common fields, workspace_roots, no cwd."""
+    """A Cursor hook payload: the documented common fields plus the event's own fields."""
     payload = {
         "conversation_id": "c0ffee00-0000-4000-8000-000000000001",
         "generation_id": "c0ffee00-0000-4000-8000-000000000002",
+        "model": "claude-4-sonnet",
+        "model_id": "claude-4-sonnet",
+        "model_params": [],
         "hook_event_name": event,
         "cursor_version": "1.7.0",
         "workspace_roots": [str(r) for r in roots],
+        "user_email": None,
+        "transcript_path": None,
     }
-    payload.update(fields)
+    payload.update({k: str(v) if isinstance(v, Path) else v for k, v in fields.items()})
     return payload
 
 
+# Event-specific fields per the docs. beforeShellExecution's cwd is filled in per test.
 EVENT_FIELDS = {
     "sessionStart": {"session_id": "s-1", "is_background_agent": False, "composer_mode": "agent"},
     "beforeSubmitPrompt": {"prompt": "/archflow:status", "attachments": []},
-    "beforeShellExecution": {"command": "git push --force origin main"},
+    "beforeShellExecution": {"command": "git push --force origin main", "sandbox": False},
     "stop": {"status": "completed", "loop_count": 0},
 }
+CWD_EVENTS = {"beforeShellExecution"}
+
+
+def shell_payload(roots, cwd, command="git push --force origin main"):
+    return cursor_payload("beforeShellExecution", roots, command=command, cwd=cwd, sandbox=False)
 
 
 def bridge(event, payload, home, cwd, bridge_dir=CURSOR_DOT):
@@ -289,14 +390,19 @@ def bridge(event, payload, home, cwd, bridge_dir=CURSOR_DOT):
     return proc, (json.loads(proc.stdout) if proc.stdout.strip() else None)
 
 
-def run_all_events(roots, home, cwd, bridge_dir):
-    return {e: bridge(e, cursor_payload(e, roots, **EVENT_FIELDS[e]), home, cwd, bridge_dir)
-            for e in EVENT_FIELDS}
+def run_all_events(roots, home, cwd, bridge_dir, shell_cwd):
+    """Every event, as Cursor sends it; `shell_cwd` is the terminal's directory."""
+    results = {}
+    for e in EVENT_FIELDS:
+        fields = dict(EVENT_FIELDS[e], cwd=shell_cwd) if e in CWD_EVENTS else EVENT_FIELDS[e]
+        results[e] = bridge(e, cursor_payload(e, roots, **fields), home, cwd, bridge_dir)
+    return results
 
 
-def test_cursor_payloads_carry_no_cwd():
+def test_only_the_documented_events_carry_cwd():
     for event, fields in EVENT_FIELDS.items():
-        assert "cwd" not in cursor_payload(event, ["/x"], **fields)
+        payload = cursor_payload(event, ["/x"], **(dict(fields, cwd="/x") if event in CWD_EVENTS else fields))
+        assert ("cwd" in payload) == (event in CWD_EVENTS), event
 
 
 def assert_acted_on(project, results, home):
@@ -328,7 +434,7 @@ def assert_acted_on(project, results, home):
 def test_single_root_without_cwd_resolves_the_project(cursor_env, tmp_path):
     home, elsewhere = cursor_env
     project = make_project(tmp_path / "shop-api")
-    results = run_all_events([project], home, elsewhere, project / ".cursor")
+    results = run_all_events([project], home, elsewhere, project / ".cursor", shell_cwd=project)
     assert_acted_on(project, results, home)
 
 
@@ -336,7 +442,7 @@ def test_multi_root_with_the_archflow_project_first(cursor_env, tmp_path):
     home, elsewhere = cursor_env
     project = make_project(tmp_path / "shop-api")
     other = plain_folder(tmp_path / "shared-docs")
-    results = run_all_events([project, other], home, elsewhere, project / ".cursor")
+    results = run_all_events([project, other], home, elsewhere, project / ".cursor", shell_cwd=project)
     assert_acted_on(project, results, home)
 
 
@@ -346,7 +452,7 @@ def test_multi_root_with_the_archflow_project_not_first(cursor_env, tmp_path):
     home, elsewhere = cursor_env
     other = plain_folder(tmp_path / "shared-docs")
     project = make_project(tmp_path / "shop-api")
-    results = run_all_events([other, project], home, elsewhere, project / ".cursor")
+    results = run_all_events([other, project], home, elsewhere, project / ".cursor", shell_cwd=project)
     assert_acted_on(project, results, home)
 
 
@@ -364,7 +470,7 @@ def test_no_archflow_root_falls_back_to_the_first_root_as_a_plain_workspace(curs
     home, elsewhere = cursor_env
     a = plain_folder(tmp_path / "a")
     b = plain_folder(tmp_path / "b")
-    results = run_all_events([a, b], home, elsewhere, CURSOR_DOT)
+    results = run_all_events([a, b], home, elsewhere, CURSOR_DOT, shell_cwd=a)
     assert results["beforeSubmitPrompt"][1] == {"continue": True}
     # No project: every gate is open and nothing is denied.
     assert results["beforeShellExecution"][1] == {}
@@ -376,14 +482,83 @@ def test_no_archflow_root_falls_back_to_the_first_root_as_a_plain_workspace(curs
         assert e["properties"]["has_project"] is False
 
 
-def test_an_explicit_cwd_still_wins(cursor_env, tmp_path):
+def test_shell_in_a_project_subdirectory_is_still_guarded(cursor_env, tmp_path):
+    # A monorepo: the terminal is in packages/api, the project root holds .archflow/ and .git/.
     home, elsewhere = cursor_env
     project = make_project(tmp_path / "shop-api")
-    other = make_project(tmp_path / "other-api")
-    payload = cursor_payload("sessionStart", [other], **EVENT_FIELDS["sessionStart"])
-    payload["cwd"] = str(project)
-    _, start = bridge("sessionStart", payload, home, elsewhere, project / ".cursor")
-    assert "ARCHFLOW-INSTRUCTIONS-FOR-shop-api" in start["additional_context"]
+    sub = project / "packages" / "api"
+    sub.mkdir(parents=True)
+    _, out = bridge("beforeShellExecution", shell_payload([project], sub), home, elsewhere, project / ".cursor")
+    assert out["permission"] == "deny", f"force push to main from a subdirectory was allowed: {out}"
+    assert "shop-api" in out["agent_message"]
+
+
+def test_shell_in_a_subdirectory_of_a_non_first_root_is_guarded(cursor_env, tmp_path):
+    home, elsewhere = cursor_env
+    docs = plain_folder(tmp_path / "shared-docs")
+    project = make_project(tmp_path / "shop-api")
+    sub = project / "src"
+    sub.mkdir()
+    _, out = bridge("beforeShellExecution", shell_payload([docs, project], sub), home, elsewhere, project / ".cursor")
+    assert out["permission"] == "deny"
+
+
+def test_ordinary_commands_in_a_subdirectory_are_allowed(cursor_env, tmp_path):
+    home, elsewhere = cursor_env
+    project = make_project(tmp_path / "shop-api")
+    sub = project / "packages" / "api"
+    sub.mkdir(parents=True)
+    _, out = bridge("beforeShellExecution", shell_payload([project], sub, command="npm test"),
+                    home, elsewhere, project / ".cursor")
+    assert out == {"permission": "allow"}
+
+
+def test_shell_in_a_non_archflow_root_is_a_plain_workspace(cursor_env, tmp_path):
+    # Rule 2: the terminal is in `tools`, a workspace root that never opted in, while `shop-api`
+    # (another root, on main) is an Archflow project. The push happens in `tools`, so the guard
+    # must not judge it by shop-api's branch: it is allowed and nothing is blocked.
+    home, elsewhere = cursor_env
+    project = make_project(tmp_path / "shop-api")
+    tools = plain_folder(tmp_path / "tools")
+    for roots in ([project, tools], [tools, project]):
+        _, out = bridge("beforeShellExecution", shell_payload(roots, tools), home, elsewhere, project / ".cursor")
+        assert out == {}, f"roots={roots}: {out}"
+
+
+def test_shell_outside_every_root_falls_back_to_the_archflow_root(cursor_env, tmp_path):
+    # Rule 3: a cwd that is in no workspace root and no Archflow project tells the bridge nothing,
+    # so it uses the workspace's Archflow project, as for events without a cwd.
+    home, elsewhere = cursor_env
+    docs = plain_folder(tmp_path / "shared-docs")
+    project = make_project(tmp_path / "shop-api")
+    outside = plain_folder(tmp_path / "scratch")
+    _, out = bridge("beforeShellExecution", shell_payload([docs, project], outside), home, elsewhere, project / ".cursor")
+    assert out["permission"] == "deny"
+    assert "shop-api" in out["agent_message"]
+
+
+def test_shell_cwd_in_an_archflow_project_outside_the_roots_uses_that_project(cursor_env, tmp_path):
+    # Rule 1 before rule 3: the terminal is in another Archflow project (on main) that is not a
+    # workspace root, so that project is the one the command is about.
+    home, elsewhere = cursor_env
+    root = make_project(tmp_path / "shop-api", branch="feature-x")
+    there = make_project(tmp_path / "billing-api")
+    _, out = bridge("beforeShellExecution", shell_payload([root], there), home, elsewhere, root / ".cursor")
+    assert out["permission"] == "deny"
+    assert "billing-api" in out["agent_message"]
+
+
+def test_home_is_never_taken_for_a_project(cursor_env, tmp_path):
+    # ~/.archflow holds the telemetry config. A shell somewhere under HOME, with no project above
+    # it, must not be read as an Archflow project rooted at HOME.
+    home, elsewhere = cursor_env
+    (home / ".archflow").mkdir()
+    (home / ".archflow" / "config.json").write_text("{}")
+    (home / ".git").mkdir()
+    (home / ".git" / "HEAD").write_text("ref: refs/heads/main\n")
+    sub = plain_folder(home / "code" / "scratch")
+    _, out = bridge("beforeShellExecution", shell_payload([sub], sub), home, elsewhere)
+    assert out == {}
 
 
 @pytest.mark.parametrize("event", list(EVENT_FIELDS))
@@ -409,6 +584,18 @@ def test_no_workspace_is_a_graceful_no_op(cursor_env, event, payload):
         # sessionStart: at most the one-time telemetry notice, never project instructions.
         assert out == {} or set(out) == {"additional_context"}
         assert "ARCHFLOW-INSTRUCTIONS" not in json.dumps(out)
+
+
+def test_stop_relays_both_stdout_and_stderr_and_keeps_its_json(cursor_env, tmp_path):
+    home, elsewhere = cursor_env
+    project = make_project(tmp_path / "shop-api")
+    (project / ".cursor" / "archflow" / "hooks" / "check-state.mjs").write_text(
+        'process.stdout.write("STDOUT-ADVISORY\\n"); process.stderr.write("STDERR-NOISE\\n");\n'
+    )
+    proc, out = bridge("stop", cursor_payload("stop", [project], **EVENT_FIELDS["stop"]),
+                       home, elsewhere, project / ".cursor")
+    assert out == {}, "Cursor reads the stop hook's stdout as JSON; it must stay {}"
+    assert "STDOUT-ADVISORY" in proc.stderr and "STDERR-NOISE" in proc.stderr, proc.stderr
 
 
 def test_stop_surfaces_state_drift_for_the_resolved_project(cursor_env, tmp_path):

@@ -29,7 +29,7 @@ ships with the plugin. It requires `python3` + `pyyaml`. Run it against the targ
 
 **1. DRY RUN first (writes nothing) — reconstruct + show the plan:**
 ```bash
-python3 .cursor/archflow/scripts/migrate.py --path <project-root> --dry-run
+python3 ".cursor/archflow/scripts/migrate.py" --path <project-root> --dry-run
 ```
 It prints: detected v1 variant, git deploy boundary, prod branch/release events, the reconstructed
 release timeline (baseline + discrete/rolling releases with story counts), the proposed active
@@ -43,7 +43,7 @@ release, backlog size, and warnings (e.g. multiple `in_progress` sprints, git-da
 
 **3. APPLY — back up and write the v2.0 layout:**
 ```bash
-python3 .cursor/archflow/scripts/migrate.py --path <project-root> --apply --active <sprint-id>
+python3 ".cursor/archflow/scripts/migrate.py" --path <project-root> --apply --active <sprint-id>
 ```
 It backs up v1 to `.archflow/backup-v1/`, then writes `roadmap.yaml` (index), `backlog.yaml`,
 `releases/{active}.yaml`, `releases/archive/{slug}.yaml` per reconstructed release, and `history.yaml`.
