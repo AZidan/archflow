@@ -1,9 +1,11 @@
 # Security
 
 Archflow is a set of instructions that drive Claude Code inside your own repository. It has no
-server and stores no credentials. The only thing it sends anywhere is anonymous usage telemetry,
-which is on by default and described under [Telemetry](#telemetry), with how to turn it off. Its
-security surface is otherwise about three things: what it installs, what it reads, and what it runs.
+server and stores no credentials. It sends no project data anywhere. Its network traffic is
+anonymous usage telemetry, which is on by default and described under [Telemetry](#telemetry) with
+how to turn it off, plus two requests to GitHub that carry no user data: a once-a-day upgrade check at
+session start, and the release download during `npx archflow install`. Its security surface is
+otherwise about three things: what it installs, what it reads, and what it runs.
 
 ## Supply chain
 
@@ -85,9 +87,12 @@ only your project's own `.archflow/` files. `/archflow:studio stop` ends it.
 
 Anonymous usage telemetry is **on by default** (opt-out). On every supported host and in
 `npx archflow install`, Archflow sends usage events to PostHog (`us.i.posthog.com`): `session_start`,
-`command_run` with the Archflow command's name only, and `cli_install`. They carry the host, the
-host's entrypoint, whether Studio launched the session, the project type, Archflow version, phase and
-mode, with a random id generated on your machine. It never sends project names, file paths, file
+`command_run` with the Archflow command's name only, and `cli_install`. Each event carries a random
+id generated on your machine and the Archflow version. Session and command events also carry the
+host, the host's entrypoint, whether Studio launched the session, whether the folder is an Archflow
+project, the project type, phase and mode, and either how the session started (`session_source`) or
+how the command was recognised (`detected_by`). `cli_install` carries only which hosts were installed
+and where the files came from (the npm package or a release tag). It never sends project names, file paths, file
 contents, prompts or command arguments. The first run prints a one-time notice saying so and how to
 turn it off; it is a notice, not a question.
 

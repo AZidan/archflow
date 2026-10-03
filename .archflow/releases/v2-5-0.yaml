@@ -30,6 +30,21 @@ stories:
       - {text: "Write superseding ADR in docs/internal/decisions/ (uncommitted, other repo)", completed: false}
       - {text: "Set ADR 003 status to Superseded", completed: false}
       - {text: "Align SECURITY.md and CHANGELOG", completed: false}
+    issues:
+      - id: I-1
+        summary: "SECURITY.md/CHANGELOG list fewer event properties than ADR 005 and the code, and imply cli_install carries project type/phase/mode"
+        found_by: qa-engineer
+        severity: minor
+        location: "SECURITY.md:88"
+        report: "docs/qa-reports/S8-07-qa.md"
+        status: fixed
+      - id: I-2
+        summary: "SECURITY.md says telemetry is 'the only thing it sends anywhere', but the upgrade check and installer make outbound GitHub requests"
+        found_by: qa-engineer
+        severity: minor
+        location: "SECURITY.md:4"
+        report: "docs/qa-reports/S8-07-qa.md"
+        status: fixed
   - id: S8-05
     title: "Framework-wide anonymous telemetry"
     priority: Critical
