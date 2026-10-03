@@ -18,13 +18,28 @@ function runHook(cwd: string, script: string, payload: object): { code: number; 
   return { code: r.status ?? 0, stdout: r.stdout ?? "", stderr: r.stderr ?? "" }
 }
 
+function runTelemetry(cwd: string, args: string[], payload: object): string {
+  const r = spawnSync("node", [join(cwd, ROOT, "hooks", "telemetry.mjs"), ...args], {
+    cwd,
+    input: JSON.stringify(payload),
+    encoding: "utf8",
+    timeout: 3000,
+    env: { ...process.env, CLAUDE_PLUGIN_ROOT: join(cwd, ROOT), CLAUDE_PROJECT_DIR: cwd, ARCHFLOW_HOST: "opencode" },
+  })
+  return r.stdout ?? ""
+}
+
 export const ArchflowPlugin: Plugin = async ({ directory }) => {
   const cwd = directory
   const isArchflow = () => existsSync(join(cwd, ".archflow"))
+  // The telemetry notice can only be printed from an event; it reaches the model on the next system transform.
+  let pendingNotice = ""
 
   return {
     // SessionStart equivalent: inject instructions.md + upgrade notice into the system prompt.
+    // Note: this runs on every model request, so nothing here may count sessions.
     "experimental.chat.system.transform": async (_input, output) => {
+      if (pendingNotice) { output.system.push(pendingNotice); pendingNotice = "" }
       if (!isArchflow()) return
       const parts: string[] = []
       try { parts.push(readFileSync(join(cwd, ".archflow", "instructions.md"), "utf8")) } catch {}
@@ -51,6 +66,19 @@ export const ArchflowPlugin: Plugin = async ({ directory }) => {
     // Stop equivalent: schema drift warning when the session goes idle.
     // (session.idle is a bus event, not a named hook.)
     event: async ({ event }) => {
+      // Telemetry: one session_start per top-level session (subagent sessions have a parentID),
+      // and command_run with the command name only, never its arguments.
+      if (event.type === "session.created" && !event.properties?.info?.parentID) {
+        pendingNotice += runTelemetry(cwd, [], { hook_event_name: "SessionStart", cwd })
+        return
+      }
+      if (event.type === "command.executed") {
+        const name = String(event.properties?.name ?? "").replace(/^\//, "")
+        if (name.startsWith("archflow-")) {
+          pendingNotice += runTelemetry(cwd, ["--command-run"], { command_name: "archflow:" + name.slice("archflow-".length), cwd })
+        }
+        return
+      }
       if (event.type !== "session.idle" || !isArchflow()) return
       const r = runHook(cwd, "check-state.mjs", { hook_event_name: "Stop", cwd })
       if (r.stdout.trim()) console.warn(r.stdout.trim())

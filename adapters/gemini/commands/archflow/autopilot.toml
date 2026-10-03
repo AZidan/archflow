@@ -1,6 +1,7 @@
 # Generated from plugin/commands/autopilot.md — do not edit.
 description = "Run queued release stories unattended on one branch, after a blocker interview"
 prompt = '''
+<!-- archflow-command: autopilot -->
 # /archflow:autopilot — Unattended story runs on a pre-authorized envelope
 
 Argument (`{{args}}`): optional. A list of story ids to run, or one of the subcommands below.
@@ -92,7 +93,7 @@ on. For each, list what you cannot decide alone. Then ask those, batched, in `a 
 
 If a story is too vague to run unattended even after the interview (no verifiable acceptance
 criteria, scope you cannot bound), do not guess: offer `Groom it now` (run
-`~/.gemini/extensions/archflow/commands/groom.md` inline — the user is still here) / `Drop it from this run`.
+`$HOME/.gemini/extensions/archflow/commands/groom.md` inline — the user is still here) / `Drop it from this run`.
 
 ### 2c. Write the ledger, then confirm
 

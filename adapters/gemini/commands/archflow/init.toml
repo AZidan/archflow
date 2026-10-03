@@ -1,6 +1,7 @@
 # Generated from plugin/commands/init.md — do not edit.
 description = "Set up Archflow in a NEW, empty project — creates .archflow/ and starts at Phase 1"
 prompt = '''
+<!-- archflow-command: init -->
 # /archflow:init — Initialize Archflow in a Project
 
 > **Before you start:** run `/archflow:doctor` to see what is installed and what is
@@ -79,7 +80,7 @@ For existing codebases, use the full onboarding wizard which analyzes
 your code, imports context from external tools, and determines the
 correct development phase.
 ```
-Then load and follow `~/.gemini/extensions/archflow/commands/onboard.md`.
+Then load and follow `$HOME/.gemini/extensions/archflow/commands/onboard.md`.
 
 ---
 
@@ -95,7 +96,7 @@ mkdir -p .archflow
 ```
 
 2. **Copy `workflow.md` into the project's `.archflow/`:**
-   - Source: `~/.gemini/extensions/archflow/skills/archflow/workflow.md` (the plugin's install path)
+   - Source: `$HOME/.gemini/extensions/archflow/skills/archflow/workflow.md` (the plugin's install path)
    - Destination: `.archflow/workflow.md`
    - This file defines the git branching strategy (feature → task → subtask branches, approval gates). It MUST be present in every Archflow project so Phase 3 agents can read it from the repo context.
 
@@ -150,12 +151,12 @@ status: "initialized"
 ### Step 4: Copy Phases, Schemas and Design Systems (if not present)
 
 Copy these from the plugin into the project's `.archflow/`:
-- `~/.gemini/extensions/archflow/skills/archflow/phases/` → `.archflow/phases/`
-- `~/.gemini/extensions/archflow/skills/archflow/schemas/` → `.archflow/schemas/`
-- `~/.gemini/extensions/archflow/skills/archflow/design-systems/` → `.archflow/design-systems/`
-- `~/.gemini/extensions/archflow/skills/archflow/stacks/` → `.archflow/stacks/`
-- `~/.gemini/extensions/archflow/skills/archflow/workflow.md` → `.archflow/workflow.md`
-- `~/.gemini/extensions/archflow/skills/archflow/test-accounts.example.yaml` → `.archflow/`
+- `$HOME/.gemini/extensions/archflow/skills/archflow/phases/` → `.archflow/phases/`
+- `$HOME/.gemini/extensions/archflow/skills/archflow/schemas/` → `.archflow/schemas/`
+- `$HOME/.gemini/extensions/archflow/skills/archflow/design-systems/` → `.archflow/design-systems/`
+- `$HOME/.gemini/extensions/archflow/skills/archflow/stacks/` → `.archflow/stacks/`
+- `$HOME/.gemini/extensions/archflow/skills/archflow/workflow.md` → `.archflow/workflow.md`
+- `$HOME/.gemini/extensions/archflow/skills/archflow/test-accounts.example.yaml` → `.archflow/`
 
 **Copy per FILE, not per directory.** Skip a file that already exists; copy every one that does not.
 Checking whether the *directory* exists is how a project ends up permanently missing files added by
@@ -246,7 +247,7 @@ Skip this step entirely if the user says the project has no UI (a library, a CLI
 service). Write no `design-system.yaml` in that case.
 
 1. **Ask the platform**, then run the picker. Both live in one place: read
-   `~/.gemini/extensions/archflow/commands/design.md` and follow **Step 3 — `pick`** inline. It asks the
+   `$HOME/.gemini/extensions/archflow/commands/design.md` and follow **Step 3 — `pick`** inline. It asks the
    platform, filters `.archflow/design-systems/*.md` by that platform's compatibility (frontmatter
    `platforms` map — a hard gate, so e.g. Liquid Glass is never offered for a web target), shows
    each surviving file's section 1 as the option text, always offers

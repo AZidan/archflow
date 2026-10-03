@@ -3,7 +3,7 @@
 
 This project is managed by Archflow, a phase-based development workflow. State lives in `.archflow/`.
 
-**At the start of every session, read `.archflow/instructions.md` before doing anything else.** Then run `ARCHFLOW_HOST=generic node .agents/archflow/hooks/check-upgrade.mjs` and relay anything it prints: it is the upgrade check other hosts run automatically at session start.
+**At the start of every session, read `.archflow/instructions.md` before doing anything else.** Then run `ARCHFLOW_HOST=generic node .agents/archflow/hooks/check-upgrade.mjs` and `ARCHFLOW_HOST=generic node .agents/archflow/hooks/telemetry.mjs </dev/null`, and relay anything either prints: they are the upgrade check and usage telemetry other hosts run automatically at session start.
 
 Archflow actions are skills under `.agents/skills/`. Run one when the user asks for it by name:
 
@@ -21,6 +21,7 @@ Archflow actions are skills under `.agents/skills/`. Run one when the user asks 
 - `$archflow-release` — Release pipeline: see status, cut a new release, start building it, or ship it
 - `$archflow-setup-mcp` — Connect an external tool via MCP (Jira, Notion, Linear, GitHub, SuperDesign, ...)
 - `$archflow-status` — Where the project stands: phase, mode, active release, and what to run next
+- `$archflow-telemetry` — Show or change anonymous usage telemetry (on by default; this is how to opt out)
 
 Specialised roles are skills named `archflow-agent-<role>`. When a phase delegates to a role, load that skill and perform the role yourself, one role at a time. Phase 3 runs `ui-engineer` then `api-engineer` serially against the same API contract.
 

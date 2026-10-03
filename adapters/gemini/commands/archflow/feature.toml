@@ -1,6 +1,7 @@
 # Generated from plugin/commands/feature.md — do not edit.
 description = "Add a story (name or description), or pull a backlog story into the active release"
 prompt = '''
+<!-- archflow-command: feature -->
 # /archflow:feature — Add or Start a Feature
 
 Argument (`{{args}}`): optional. Either a feature **name or free-text description** (used to pre-fill the wizard — see Option A), or an **existing story id** (e.g. `S2-11`) to pull into the active release. Empty → interactive wizard from scratch.
@@ -126,7 +127,7 @@ In v2.0 stories are NOT in `roadmap.yaml` (that's the story-less index). Existin
 5. User picks one:
    - **Already in the active release** → skip to Step 3 (git workflow).
    - **A backlog stub** → this is a pull-forward: promote/MOVE it into the active release, then Step 3.
-     If the stub is not yet groomed (`status: backlog`), run `~/.gemini/extensions/archflow/commands/groom.md` FIRST to detail it —
+     If the stub is not yet groomed (`status: backlog`), run `$HOME/.gemini/extensions/archflow/commands/groom.md` FIRST to detail it —
      don't detail it inline here. A stub that is already `ready` is promotable as-is. Then MOVE the
      groomed story into the release file with `status: spec_ready` and `pulled_from: backlog`
      (`spec_ready` is set by this promotion, never by grooming). If no release is `in_progress`, tell

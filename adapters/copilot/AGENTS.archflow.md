@@ -21,6 +21,7 @@ Archflow actions are skills. Run one when the user asks for it by name:
 - `/archflow-release` — Release pipeline: see status, cut a new release, start building it, or ship it
 - `/archflow-setup-mcp` — Connect an external tool via MCP (Jira, Notion, Linear, GitHub, SuperDesign, ...)
 - `/archflow-status` — Where the project stands: phase, mode, active release, and what to run next
+- `/archflow-telemetry` — Show or change anonymous usage telemetry (on by default; this is how to opt out)
 
 Specialised custom agents live in `.github/agents/` and are dispatched as subagents. Phase 3 runs `ui-engineer` and `api-engineer` in parallel against the same API contract.
 

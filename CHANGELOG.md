@@ -10,7 +10,28 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- Anonymous usage telemetry, on by default, on every host. Sessions send `session_start` and
+  Archflow commands send `command_run` with the command name only; `npx archflow install` sends
+  `cli_install`. Events carry host, entrypoint, Studio, project type, version, phase and mode,
+  never project names, paths, contents, prompts or arguments. A one-time notice announces it.
+- How commands are detected: Claude Code's `UserPromptExpansion` hook and OpenCode's
+  `command.executed` event name the command directly. Codex, Copilot, Cursor and Gemini read the
+  prompt locally and count it only when it starts with an Archflow command. The generic
+  AGENTS.md package reports session starts only, when the agent runs the script AGENTS.md names.
+- `/archflow:telemetry [on|off]` and `npx archflow telemetry [on|off]` to opt out, on every host.
+  Opting out sends one final `telemetry_opted_out` event and nothing after; opting back in sends
+  `telemetry_opted_in`. `DO_NOT_TRACK` and `CI` also turn it off, and send nothing.
+- `scripts/build-adapters.mjs` copies the hook runtime through one helper, so a new hook is one
+  entry in `HOOK_SCRIPTS` rather than an edit per host.
+
+### Fixed
+
+- Gemini commands that quote the plugin path, such as `/archflow:doctor`, pointed at
+  `"~/.gemini/..."`, which the shell does not expand. They now use `$HOME`.
+- The Cursor hook bridge used `cwd`, which Cursor does not send; it now falls back to the first
+  workspace root.
 
 ## [2.4.0] — 2026-09-12
 

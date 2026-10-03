@@ -1,6 +1,7 @@
 # Generated from plugin/commands/design.md — do not edit.
 description = "The project's design system, and per-story screen design that clears a story's design gate"
 prompt = '''
+<!-- archflow-command: design -->
 # /archflow:design — Design system and per-story design
 
 Design splits into two kinds of work, exactly as `phase-2-design.md` defines it. This command owns
@@ -304,7 +305,7 @@ Next: {the next gate or "ready to build"}
 ## Notes
 
 - Design-system files live in `.archflow/design-systems/`, copied there by `/archflow:init` and
-  `/archflow:onboard` from `~/.gemini/extensions/archflow/skills/archflow/design-systems/`. If the
+  `/archflow:onboard` from `$HOME/.gemini/extensions/archflow/skills/archflow/design-systems/`. If the
   directory is missing in a project, copy it from the plugin before running the picker.
 - These files are plain markdown reference documents — not skills, not commands. They are loaded
   by explicit path, never by description matching.

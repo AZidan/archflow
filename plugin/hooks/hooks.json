@@ -29,6 +29,28 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/telemetry.mjs\"",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "UserPromptExpansion": [
+      {
+        "matcher": "^archflow:.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/telemetry.mjs\" --command-run",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "PreToolUse": [

@@ -80,6 +80,42 @@ Everything runs as ordinary Claude Code tool calls, which you can see and approv
 Archflow Studio additionally runs a local HTTP server on `127.0.0.1` at a port you choose, serving
 only your project's own `.archflow/` files. `/archflow:studio stop` ends it.
 
+## Telemetry
+
+On every supported host and in `npx archflow install`, Archflow sends anonymous usage events to
+PostHog (`us.i.posthog.com`) by default: session starts, which Archflow commands run, and the host,
+project type, version, phase and mode, with a random id generated on your machine. It never sends
+project names, file paths, file contents, prompts or command arguments. The first run says so once.
+
+How a command is recognised differs by host. Claude Code and OpenCode report the command name
+directly. On Codex, Copilot, Cursor and Gemini a prompt-submit hook reads your prompt **on your
+machine**, checks whether it starts with an Archflow command such as `/archflow-status`, and sends
+only that command's name. The prompt itself never leaves the hook. The generic AGENTS.md package
+has no hooks, so it reports a session start only when the agent runs the script AGENTS.md names.
+
+Turn it off with `/archflow:telemetry off`, `npx archflow telemetry off`, `DO_NOT_TRACK=1` or
+`ARCHFLOW_TELEMETRY_DISABLED=1`. It is off whenever `CI` is set.
+
+Turning it off with the command sends one final event, `telemetry_opted_out`, so opt-outs can be
+counted. It carries the host, the Archflow version, where the change was made and how many days
+after the first-run notice. Nothing is sent after it. Turning telemetry back on sends
+`telemetry_opted_in`. The environment variables send nothing, not even that final event. The choice is stored in
+`~/.archflow/config.json` and applies to every project on the machine. Events are sent from a
+short-lived background process, so a network failure never affects a session.
+
+**Archflow Studio sends its own events too**, through this same `~/.archflow/config.json` setting
+and the same opt-out mechanisms above — turning telemetry off in Studio's own Settings, or any of
+the environment variables, silences both the hooks and Studio. Studio's events: `studio_server_start`
+when it binds and opens a project; `studio_page_view` on a client-side view change or first load,
+carrying only the route's matched template (for example `/story/:id`, never the raw path, project
+name, or story id) — never PostHog's own `$pageview`; `studio_action` when a UI control runs an
+Archflow operation (onboard, migrate, cut a release, or copy a command to paste elsewhere); and
+`studio_host_selected` when you change which coding-agent host Studio drives. On a host with no
+native chat channel, copying a command sends only the command's name, never the copied text or any
+argument. Every event carries `host: "studio"` so it is distinguishable in the same PostHog project
+from the hooks' own events, and, when a project is open, the project type, phase and mode — never a
+project name or path.
+
 ## Credentials
 
 Archflow never stores credentials in its own files. Acceptance test accounts go in

@@ -115,6 +115,22 @@ function write(path, content) {
   writeFileSync(path, content);
 }
 
+/**
+ * Everything an adapter's hooks need at <rootDir>: the hook scripts, the telemetry
+ * library they import from ../lib, the command list telemetry matches prompts
+ * against, plugin.json (version) and scripts/ (doctor, upgrade). One place, so a
+ * new hook is one entry in HOOK_SCRIPTS instead of an edit per host.
+ */
+const HOOK_SCRIPTS = ["check-upgrade.mjs", "check-state.mjs", "guard-git.mjs", "telemetry.mjs"];
+
+function copyHookRuntime(rootDir, commandNames) {
+  for (const f of HOOK_SCRIPTS) cpSync(join(PLUGIN, "hooks", f), join(rootDir, "hooks", f));
+  cpSync(join(PLUGIN, "lib"), join(rootDir, "lib"), { recursive: true });
+  write(join(rootDir, "lib", "commands.json"), JSON.stringify(commandNames) + "\n");
+  cpSync(join(PLUGIN, ".claude-plugin", "plugin.json"), join(rootDir, ".claude-plugin", "plugin.json"));
+  cpSync(join(PLUGIN, "scripts"), join(rootDir, "scripts"), { recursive: true });
+}
+
 function readCommands() {
   return readdirSync(join(PLUGIN, "commands"))
     .filter((f) => f.endsWith(".md"))
@@ -156,13 +172,28 @@ function runHook(cwd: string, script: string, payload: object): { code: number; 
   return { code: r.status ?? 0, stdout: r.stdout ?? "", stderr: r.stderr ?? "" }
 }
 
+function runTelemetry(cwd: string, args: string[], payload: object): string {
+  const r = spawnSync("node", [join(cwd, ROOT, "hooks", "telemetry.mjs"), ...args], {
+    cwd,
+    input: JSON.stringify(payload),
+    encoding: "utf8",
+    timeout: 3000,
+    env: { ...process.env, CLAUDE_PLUGIN_ROOT: join(cwd, ROOT), CLAUDE_PROJECT_DIR: cwd, ARCHFLOW_HOST: "opencode" },
+  })
+  return r.stdout ?? ""
+}
+
 export const ArchflowPlugin: Plugin = async ({ directory }) => {
   const cwd = directory
   const isArchflow = () => existsSync(join(cwd, ".archflow"))
+  // The telemetry notice can only be printed from an event; it reaches the model on the next system transform.
+  let pendingNotice = ""
 
   return {
     // SessionStart equivalent: inject instructions.md + upgrade notice into the system prompt.
+    // Note: this runs on every model request, so nothing here may count sessions.
     "experimental.chat.system.transform": async (_input, output) => {
+      if (pendingNotice) { output.system.push(pendingNotice); pendingNotice = "" }
       if (!isArchflow()) return
       const parts: string[] = []
       try { parts.push(readFileSync(join(cwd, ".archflow", "instructions.md"), "utf8")) } catch {}
@@ -189,6 +220,19 @@ export const ArchflowPlugin: Plugin = async ({ directory }) => {
     // Stop equivalent: schema drift warning when the session goes idle.
     // (session.idle is a bus event, not a named hook.)
     event: async ({ event }) => {
+      // Telemetry: one session_start per top-level session (subagent sessions have a parentID),
+      // and command_run with the command name only, never its arguments.
+      if (event.type === "session.created" && !event.properties?.info?.parentID) {
+        pendingNotice += runTelemetry(cwd, [], { hook_event_name: "SessionStart", cwd })
+        return
+      }
+      if (event.type === "command.executed") {
+        const name = String(event.properties?.name ?? "").replace(/^\\//, "")
+        if (name.startsWith("archflow-")) {
+          pendingNotice += runTelemetry(cwd, ["--command-run"], { command_name: "archflow:" + name.slice("archflow-".length), cwd })
+        }
+        return
+      }
       if (event.type !== "session.idle" || !isArchflow()) return
       const r = runHook(cwd, "check-state.mjs", { hook_event_name: "Stop", cwd })
       if (r.stdout.trim()) console.warn(r.stdout.trim())
@@ -213,22 +257,32 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
 let input = {};
 try { input = JSON.parse(readFileSync(0, "utf8") || "{}"); } catch {}
-const cwd = input.cwd || process.cwd();
+const cwd = input.cwd || input.workspace_roots?.[0] || process.cwd();
 const isArchflow = existsSync(join(cwd, ".archflow"));
 const env = { ...process.env, CLAUDE_PLUGIN_ROOT: root, CLAUDE_PROJECT_DIR: cwd, ARCHFLOW_HOST: "cursor" };
-const run = (script, payload) =>
-  spawnSync("node", [join(here, script)], { cwd, env, input: JSON.stringify(payload), encoding: "utf8", timeout: 6000 });
+const run = (script, payload, args = []) =>
+  spawnSync("node", [join(here, script), ...args], { cwd, env, input: JSON.stringify(payload), encoding: "utf8", timeout: 6000 });
 const out = (o) => { process.stdout.write(JSON.stringify(o)); process.exit(0); };
 
-if (!isArchflow) out({});
-
+// Telemetry runs in every workspace, like the Claude Code plugin; the rest only in Archflow projects.
+if (event === "beforeSubmitPrompt") {
+  // Observation only: always continue, whatever the telemetry script does.
+  run("telemetry.mjs", { prompt: input.prompt, cwd }, ["--prompt"]);
+  out({ continue: true });
+}
 if (event === "sessionStart") {
   const parts = [];
-  try { parts.push(readFileSync(join(cwd, ".archflow", "instructions.md"), "utf8")); } catch {}
-  const r = run("check-upgrade.mjs", { hook_event_name: "SessionStart", cwd });
-  if (r.stdout?.trim()) parts.push(r.stdout.trim());
+  const t = run("telemetry.mjs", { hook_event_name: "SessionStart", cwd });
+  if (t.stdout?.trim()) parts.push(t.stdout.trim());
+  if (isArchflow) {
+    try { parts.push(readFileSync(join(cwd, ".archflow", "instructions.md"), "utf8")); } catch {}
+    const r = run("check-upgrade.mjs", { hook_event_name: "SessionStart", cwd });
+    if (r.stdout?.trim()) parts.push(r.stdout.trim());
+  }
   out(parts.length ? { additional_context: parts.join("\\n\\n") } : {});
 }
+if (!isArchflow) out({});
+
 if (event === "beforeShellExecution") {
   const r = run("guard-git.mjs", { hook_event_name: "PreToolUse", tool_name: "Bash", tool_input: { command: input.command }, cwd });
   if (r.status === 2) {
@@ -337,11 +391,7 @@ const HOSTS = {
       //    seconds. Studio's session hook is dropped. CLAUDE_PLUGIN_ROOT is set
       //    inline so the unmodified scripts find plugin.json.
       const hookRoot = ".codex/archflow";
-      for (const f of ["check-upgrade.mjs", "check-state.mjs", "guard-git.mjs"]) {
-        cpSync(join(PLUGIN, "hooks", f), join(out, hookRoot, "hooks", f));
-      }
-      cpSync(join(PLUGIN, ".claude-plugin", "plugin.json"), join(out, hookRoot, ".claude-plugin", "plugin.json"));
-      cpSync(join(PLUGIN, "scripts"), join(out, hookRoot, "scripts"), { recursive: true });
+      copyHookRuntime(join(out, hookRoot), commands.map((c) => c.name));
       // upgrade_archflow.py / doctor read framework files from <root>/skills/archflow
       link(join(out, ".agents", "skills", "archflow"), join(out, hookRoot, "skills", "archflow"));
       const env = `CLAUDE_PLUGIN_ROOT="$PWD/${hookRoot}" CLAUDE_PROJECT_DIR="$PWD" ARCHFLOW_HOST=codex`;
@@ -350,6 +400,11 @@ const HOSTS = {
           SessionStart: [
             { matcher: "startup|resume", hooks: [{ type: "command", command: "cat .archflow/instructions.md 2>/dev/null || true", statusMessage: "Loading Archflow instructions" }] },
             { matcher: "startup|resume|clear", hooks: [{ type: "command", command: `${env} node ${hookRoot}/hooks/check-upgrade.mjs`, timeout: 6 }] },
+            { matcher: "startup|resume|clear", hooks: [{ type: "command", command: `${env} node ${hookRoot}/hooks/telemetry.mjs`, timeout: 3 }] },
+          ],
+          // Observation only: prints nothing, so it adds no context and never blocks.
+          UserPromptSubmit: [
+            { hooks: [{ type: "command", command: `${env} node ${hookRoot}/hooks/telemetry.mjs --prompt`, timeout: 3 }] },
           ],
           PreToolUse: [
             { matcher: "Bash", hooks: [{ type: "command", command: `${env} node ${hookRoot}/hooks/guard-git.mjs`, timeout: 5 }] },
@@ -408,6 +463,7 @@ const HOSTS = {
           `| Plugin hooks (\`hooks.json\`) | \`.codex/hooks.json\` — same events; needs the \`hooks\` feature (default on) |\n` +
           `| \`SessionStart\` injects \`instructions.md\` | Same hook, plus an AGENTS.md instruction as a fallback |\n` +
           `| \`/archflow:studio\` | Not available — Studio drives the \`claude\` binary |\n` +
+          `| Telemetry: \`UserPromptExpansion\` names the command | \`UserPromptSubmit\` counts a prompt that starts with \`$archflow-<cmd>\` |\n` +
           `| \`memory: user\` agent memory | Not available |\n\n` +
           `The \`.archflow/\` state files, schemas, phases, design systems and stack profiles are identical across hosts, ` +
           `so a project can be worked on from both Claude Code and Codex.\n`,
@@ -442,7 +498,8 @@ const HOSTS = {
       [/\bClaude Code\b/g, "Gemini CLI"],
       [/\$ARGUMENTS/g, "{{args}}"],
       // Gemini only substitutes ${extensionPath} in the manifest and hooks, not in prompts.
-      [/\$\{CLAUDE_PLUGIN_ROOT\}/g, "~/.gemini/extensions/archflow"],
+      // $HOME, not ~: prompts quote the path ("…/scripts/x.py"), and ~ does not expand inside quotes.
+      [/\$\{CLAUDE_PLUGIN_ROOT\}/g, "$HOME/.gemini/extensions/archflow"],
       [/reloaded via hook/g, "injected by the extension's SessionStart hook"],
     ],
     emit(ctx) {
@@ -455,11 +512,13 @@ const HOSTS = {
         if (this.skip.has(c.name)) continue;
         const desc = applyVocab(c.meta.description || `Archflow ${c.name}`, vocab);
         const body = applyVocab(c.body, vocab);
+        // The leading marker lets the BeforeAgent telemetry hook name the command even if
+        // Gemini hands it the expanded prompt rather than the literal /archflow:<name>.
         write(
           join(out, "commands", "archflow", `${c.name}.toml`),
           `# Generated from plugin/commands/${c.name}.md — do not edit.\n` +
             `description = ${tomlString(desc)}\n` +
-            `prompt = ${tomlLiteral(body.trim())}\n`,
+            `prompt = ${tomlLiteral(`<!-- archflow-command: ${c.name} -->\n` + body.trim())}\n`,
         );
       }
 
@@ -481,17 +540,18 @@ const HOSTS = {
 
       // Hooks. Gemini's schema is Claude-shaped but events are renamed and timeout is ms.
       // ${extensionPath} makes CLAUDE_PLUGIN_ROOT resolve; plugin.json is mirrored there.
-      for (const f of ["check-upgrade.mjs", "check-state.mjs", "guard-git.mjs"]) {
-        cpSync(join(PLUGIN, "hooks", f), join(out, "hooks", f));
-      }
-      cpSync(join(PLUGIN, ".claude-plugin", "plugin.json"), join(out, ".claude-plugin", "plugin.json"));
-      cpSync(join(PLUGIN, "scripts"), join(out, "scripts"), { recursive: true });
+      copyHookRuntime(out, commands.map((c) => c.name));
       const env = `CLAUDE_PLUGIN_ROOT="\${extensionPath}" CLAUDE_PROJECT_DIR="\${workspacePath}" ARCHFLOW_HOST=gemini`;
       const hooks = {
         hooks: {
           SessionStart: [
             { matcher: "startup|resume", hooks: [{ name: "archflow-instructions", type: "command", command: `cat "\${workspacePath}/.archflow/instructions.md" 2>/dev/null || true`, timeout: 3000 }] },
             { matcher: "startup|resume|clear", hooks: [{ name: "archflow-check-upgrade", type: "command", command: `${env} node "\${extensionPath}/hooks/check-upgrade.mjs"`, timeout: 6000 }] },
+            { matcher: "startup|resume|clear", hooks: [{ name: "archflow-telemetry", type: "command", command: `${env} node "\${extensionPath}/hooks/telemetry.mjs"`, timeout: 3000 }] },
+          ],
+          // Gemini parses prompt-hook stdout as JSON; the script prints nothing, so answer {} (allow).
+          BeforeAgent: [
+            { hooks: [{ name: "archflow-telemetry-command", type: "command", command: `${env} node "\${extensionPath}/hooks/telemetry.mjs" --prompt; printf '{}'`, timeout: 3000 }] },
           ],
           BeforeTool: [
             { matcher: "run_shell_command", hooks: [{ name: "archflow-git-guard", type: "command", command: `${env} node "\${extensionPath}/hooks/guard-git.mjs"`, timeout: 5000 }] },
@@ -539,6 +599,7 @@ const HOSTS = {
           `| \`/archflow:<cmd>\` | \`/archflow:<cmd>\` (identical; TOML commands under \`commands/archflow/\`) |\n` +
           `| \`agents/*.md\` sub-agents | \`agents/*.md\` (\`kind: local\`) — sub-agents are a preview feature |\n` +
           `| \`PreToolUse\` / \`Stop\` hooks | \`BeforeTool\` / \`AfterAgent\` hooks (timeouts in ms) |\n` +
+          `| Telemetry: \`UserPromptExpansion\` names the command | \`BeforeAgent\` counts a prompt that starts with \`/archflow:<cmd>\` or the command's marker line |\n` +
           `| \`/archflow:studio\` | Not available |\n` +
           `| \`memory: user\` | Not available |\n\n` +
           `Note: Gemini CLI's extension install location is per-user (\`~/.gemini/extensions\`), not per-project. Use \`gemini extensions disable archflow --scope workspace\` in repos that don't use it.\n`,
@@ -607,11 +668,7 @@ const HOSTS = {
 
       // Hooks become a plugin. It shells out to the unmodified hook scripts with a
       // Claude-shaped stdin payload so they need no host branching.
-      for (const f of ["check-upgrade.mjs", "check-state.mjs", "guard-git.mjs"]) {
-        cpSync(join(PLUGIN, "hooks", f), join(out, ".opencode", "archflow", "hooks", f));
-      }
-      cpSync(join(PLUGIN, ".claude-plugin", "plugin.json"), join(out, ".opencode", "archflow", ".claude-plugin", "plugin.json"));
-      cpSync(join(PLUGIN, "scripts"), join(out, ".opencode", "archflow", "scripts"), { recursive: true });
+      copyHookRuntime(join(out, ".opencode", "archflow"), commands.map((c) => c.name));
       link(join(out, ".opencode", "skills", "archflow"), join(out, ".opencode", "archflow", "skills", "archflow"));
       write(join(out, ".opencode", "plugins", "archflow.ts"), OPENCODE_PLUGIN);
 
@@ -636,7 +693,8 @@ const HOSTS = {
           `## What is different on OpenCode\n\n| Claude Code | OpenCode |\n|---|---|\n` +
           `| \`/archflow:<cmd>\` | \`/archflow-<cmd>\` (OpenCode has no colon namespaces) |\n` +
           `| \`agents/*.md\` sub-agents | \`.opencode/agents/*.md\` with \`mode: subagent\` |\n` +
-          `| Plugin hooks | \`.opencode/plugins/archflow.ts\` (\`tool.execute.before\`, system-prompt transform, \`session.idle\`) |\n` +
+          `| Telemetry: \`UserPromptExpansion\` names the command | \`command.executed\` names the command |\n` +
+          `| Plugin hooks | \`.opencode/plugins/archflow.ts\` (\`tool.execute.before\`, system-prompt transform, \`session.created\`, \`command.executed\`, \`session.idle\`) |\n` +
           `| \`/archflow:studio\` | Not available |\n` +
           `| \`memory: user\` | Not available |\n\n` +
           `Known limitation: OpenCode plugin hooks do not currently fire for tool calls made *inside* subagents (anomalyco/opencode#5894), so the git guard only covers the primary agent. The approval gates remain the real control.\n`,
@@ -694,10 +752,8 @@ const HOSTS = {
       }
       // Scripts + a mirrored root so ${CLAUDE_PLUGIN_ROOT} paths resolve
       const root = ".agents/archflow";
-      cpSync(join(PLUGIN, "scripts"), join(out, root, "scripts"), { recursive: true });
-      cpSync(join(PLUGIN, ".claude-plugin", "plugin.json"), join(out, root, ".claude-plugin", "plugin.json"));
-      // No session hooks here, so AGENTS.md asks the agent to run the upgrade check itself.
-      cpSync(join(PLUGIN, "hooks", "check-upgrade.mjs"), join(out, root, "hooks", "check-upgrade.mjs"));
+      // No session hooks here, so AGENTS.md asks the agent to run the session-start scripts itself.
+      copyHookRuntime(join(out, root), commands.map((c) => c.name));
       link(join(out, ".agents", "skills", "archflow"), join(out, root, "skills", "archflow"));
 
       const cmdList = commands.filter((c) => !this.skip.has(c.name))
@@ -707,8 +763,9 @@ const HOSTS = {
         `<!-- archflow:start (managed by Archflow ${manifest.version}; merge into AGENTS.md) -->\n# Archflow\n\n` +
           `This project is managed by Archflow, a phase-based development workflow. State lives in \`.archflow/\`.\n\n` +
           `**At the start of every session, read \`.archflow/instructions.md\` before doing anything else.** ` +
-          `Then run \`ARCHFLOW_HOST=generic node .agents/archflow/hooks/check-upgrade.mjs\` and relay anything it prints: ` +
-          `it is the upgrade check other hosts run automatically at session start.\n\n` +
+          `Then run \`ARCHFLOW_HOST=generic node .agents/archflow/hooks/check-upgrade.mjs\` and ` +
+          `\`ARCHFLOW_HOST=generic node .agents/archflow/hooks/telemetry.mjs </dev/null\`, and relay anything either prints: ` +
+          `they are the upgrade check and usage telemetry other hosts run automatically at session start.\n\n` +
           `Archflow actions are skills under \`.agents/skills/\`. Run one when the user asks for it by name:\n\n${cmdList}\n\n` +
           `Specialised roles are skills named \`archflow-agent-<role>\`. When a phase delegates to a role, load that skill and perform the role yourself, one role at a time. ` +
           `Phase 3 runs \`ui-engineer\` then \`api-engineer\` serially against the same API contract.\n\n` +
@@ -720,7 +777,7 @@ const HOSTS = {
           `This is the lowest-common-denominator package: \`AGENTS.md\` + Agent Skills (agentskills.io). It works in any host that reads those, ` +
           `including Cline, Roo, Kilo, Windsurf, Zed, Amp and Copilot/Codex/OpenCode/Cursor without their native adapters.\n\n` +
           `## Install\n\n**One command:** \`npx archflow install --host ${ctx.host}\` from your project root does every step below, and re-running it upgrades in place. By hand:\n\n1. Copy \`.agents/\` into your project root.\n2. Merge \`AGENTS.archflow.md\` into \`AGENTS.md\`.\n3. Install the git guard: \`sh .agents/archflow/scripts/archflow-install-git-guard.sh\`\n4. Ask your agent to run \`$archflow-init\` or \`$archflow-onboard\`.\n\n` +
-          `## What you give up\n\n- No sub-agents: roles run serially inside the main context (bigger context use, slower Phase 3).\n- No lifecycle hooks: instructions load via AGENTS.md, and the upgrade check runs because AGENTS.md asks the agent to run it, not because the host does.\n- The git guard is a real \`pre-push\` hook, so it also protects you from your own terminal.\n`,
+          `## What you give up\n\n- No sub-agents: roles run serially inside the main context (bigger context use, slower Phase 3).\n- No lifecycle hooks: instructions load via AGENTS.md, and the upgrade check and session telemetry run because AGENTS.md asks the agent to run them, not because the host does. Per-command telemetry is not available.\n- The git guard is a real \`pre-push\` hook, so it also protects you from your own terminal.\n`,
       );
     },
   },
@@ -773,15 +830,14 @@ const HOSTS = {
       // Hooks: Cursor speaks its own JSON on stdin/stdout, so a thin bridge
       // translates to the Claude-shaped payload the core scripts expect.
       const root = ".cursor/archflow";
-      for (const f of ["check-upgrade.mjs", "check-state.mjs", "guard-git.mjs"]) cpSync(join(PLUGIN, "hooks", f), join(out, root, "hooks", f));
-      cpSync(join(PLUGIN, ".claude-plugin", "plugin.json"), join(out, root, ".claude-plugin", "plugin.json"));
-      cpSync(join(PLUGIN, "scripts"), join(out, root, "scripts"), { recursive: true });
+      copyHookRuntime(join(out, root), commands.map((c) => c.name));
       link(join(C, "skills", "archflow"), join(out, root, "skills", "archflow"));
       write(join(out, root, "hooks", "cursor-bridge.mjs"), CURSOR_BRIDGE);
       write(join(C, "hooks.json"), JSON.stringify({
         version: 1,
         hooks: {
           sessionStart: [{ command: `node ${root}/hooks/cursor-bridge.mjs sessionStart`, timeout: 8 }],
+          beforeSubmitPrompt: [{ command: `node ${root}/hooks/cursor-bridge.mjs beforeSubmitPrompt`, timeout: 5 }],
           beforeShellExecution: [{ command: `node ${root}/hooks/cursor-bridge.mjs beforeShellExecution`, timeout: 5 }],
           stop: [{ command: `node ${root}/hooks/cursor-bridge.mjs stop`, timeout: 5 }],
         },
@@ -809,8 +865,9 @@ const HOSTS = {
           `## What is different on Cursor\n\n| Claude Code | Cursor |\n|---|---|\n` +
           `| \`/archflow:<cmd>\` | \`/archflow-<cmd>\` (\`.cursor/commands/\`) |\n` +
           `| \`agents/*.md\` sub-agents | \`.cursor/agents/*.md\` (\`model: inherit\`; reviewers \`readonly: true\`) |\n` +
-          `| Plugin hooks | \`.cursor/hooks.json\` (\`sessionStart\` / \`beforeShellExecution\` / \`stop\`) via a small bridge script |\n` +
+          `| Plugin hooks | \`.cursor/hooks.json\` (\`sessionStart\` / \`beforeSubmitPrompt\` / \`beforeShellExecution\` / \`stop\`) via a small bridge script |\n` +
           `| \`CLAUDE.md\` section | \`.cursor/rules/archflow.mdc\` (\`alwaysApply\`) |\n` +
+          `| Telemetry: \`UserPromptExpansion\` names the command | \`beforeSubmitPrompt\` counts a prompt that starts with \`/archflow-<cmd>\` |\n` +
           `| \`/archflow:studio\` | Not available |\n` +
           `| \`memory: user\` | Not available |\n\nProject hooks also run in Cursor cloud agents.\n`);
     },
@@ -862,9 +919,7 @@ const HOSTS = {
           `---\nname: ${a.name}\ndescription: ${JSON.stringify(desc)}\n${readOnly ? 'tools: ["read", "search", "shell"]\n' : ""}disable-model-invocation: true\n---\n\n` + body + "\n");
       }
       const root = ".github/archflow";
-      for (const f of ["check-upgrade.mjs", "check-state.mjs", "guard-git.mjs"]) cpSync(join(PLUGIN, "hooks", f), join(out, root, "hooks", f));
-      cpSync(join(PLUGIN, ".claude-plugin", "plugin.json"), join(out, root, ".claude-plugin", "plugin.json"));
-      cpSync(join(PLUGIN, "scripts"), join(out, root, "scripts"), { recursive: true });
+      copyHookRuntime(join(out, root), commands.map((c) => c.name));
       link(join(G, "skills", "archflow"), join(out, root, "skills", "archflow"));
       const env = { CLAUDE_PLUGIN_ROOT: root, CLAUDE_PROJECT_DIR: ".", ARCHFLOW_HOST: "copilot" };
       // PascalCase event names => VS-Code/Claude-compatible snake_case payloads.
@@ -874,6 +929,11 @@ const HOSTS = {
           SessionStart: [
             { type: "command", bash: "cat .archflow/instructions.md 2>/dev/null || true", cwd: ".", timeoutSec: 3 },
             { type: "command", bash: `node ${root}/hooks/check-upgrade.mjs`, cwd: ".", env, timeoutSec: 6 },
+            { type: "command", bash: `node ${root}/hooks/telemetry.mjs`, cwd: ".", env, timeoutSec: 3 },
+          ],
+          // Output of a command-type prompt hook is dropped by Copilot: observation only.
+          UserPromptSubmit: [
+            { type: "command", bash: `node ${root}/hooks/telemetry.mjs --prompt`, cwd: ".", env, timeoutSec: 3 },
           ],
           PreToolUse: [
             { type: "command", bash: `node ${root}/hooks/guard-git.mjs`, cwd: ".", env, timeoutSec: 5 },
@@ -899,6 +959,7 @@ const HOSTS = {
           `| \`/archflow:<cmd>\` | \`archflow-<cmd>\` skills (\`.github/skills/\`), invoked by name |\n` +
           `| \`agents/*.md\` sub-agents | \`.github/agents/*.agent.md\` custom agents (\`disable-model-invocation: true\`, so only Archflow dispatches them) |\n` +
           `| Plugin hooks | \`.github/hooks/archflow.json\` using PascalCase events, which give Claude-compatible payloads |\n` +
+          `| Telemetry: \`UserPromptExpansion\` names the command | \`UserPromptSubmit\` counts a prompt that starts with \`/archflow-<cmd>\`. Loading the Claude plugin directly should report session starts only, as \`host: claude\` (Copilot lists no \`UserPromptExpansion\` event) |\n` +
           `| \`/archflow:studio\` | Not available |\n` +
           `| \`memory: user\` | Not available |\n`);
     },

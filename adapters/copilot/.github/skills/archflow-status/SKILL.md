@@ -77,4 +77,7 @@ Archflow — Phase-Based Development Workflow
 
   /archflow-studio        Open Archflow Studio, a local web workspace over these files
                           (beta — stop | status | port <n>)
+
+  /archflow-telemetry     Show or change anonymous usage telemetry (on by default — off
+                          opts out)
 ```

@@ -11,22 +11,32 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
 let input = {};
 try { input = JSON.parse(readFileSync(0, "utf8") || "{}"); } catch {}
-const cwd = input.cwd || process.cwd();
+const cwd = input.cwd || input.workspace_roots?.[0] || process.cwd();
 const isArchflow = existsSync(join(cwd, ".archflow"));
 const env = { ...process.env, CLAUDE_PLUGIN_ROOT: root, CLAUDE_PROJECT_DIR: cwd, ARCHFLOW_HOST: "cursor" };
-const run = (script, payload) =>
-  spawnSync("node", [join(here, script)], { cwd, env, input: JSON.stringify(payload), encoding: "utf8", timeout: 6000 });
+const run = (script, payload, args = []) =>
+  spawnSync("node", [join(here, script), ...args], { cwd, env, input: JSON.stringify(payload), encoding: "utf8", timeout: 6000 });
 const out = (o) => { process.stdout.write(JSON.stringify(o)); process.exit(0); };
 
-if (!isArchflow) out({});
-
+// Telemetry runs in every workspace, like the Claude Code plugin; the rest only in Archflow projects.
+if (event === "beforeSubmitPrompt") {
+  // Observation only: always continue, whatever the telemetry script does.
+  run("telemetry.mjs", { prompt: input.prompt, cwd }, ["--prompt"]);
+  out({ continue: true });
+}
 if (event === "sessionStart") {
   const parts = [];
-  try { parts.push(readFileSync(join(cwd, ".archflow", "instructions.md"), "utf8")); } catch {}
-  const r = run("check-upgrade.mjs", { hook_event_name: "SessionStart", cwd });
-  if (r.stdout?.trim()) parts.push(r.stdout.trim());
+  const t = run("telemetry.mjs", { hook_event_name: "SessionStart", cwd });
+  if (t.stdout?.trim()) parts.push(t.stdout.trim());
+  if (isArchflow) {
+    try { parts.push(readFileSync(join(cwd, ".archflow", "instructions.md"), "utf8")); } catch {}
+    const r = run("check-upgrade.mjs", { hook_event_name: "SessionStart", cwd });
+    if (r.stdout?.trim()) parts.push(r.stdout.trim());
+  }
   out(parts.length ? { additional_context: parts.join("\n\n") } : {});
 }
+if (!isArchflow) out({});
+
 if (event === "beforeShellExecution") {
   const r = run("guard-git.mjs", { hook_event_name: "PreToolUse", tool_name: "Bash", tool_input: { command: input.command }, cwd });
   if (r.status === 2) {

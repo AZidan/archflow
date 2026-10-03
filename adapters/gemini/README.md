@@ -20,6 +20,7 @@ Restart Gemini CLI, then run `/archflow:init` or `/archflow:onboard`. Node.js 18
 | `/archflow:<cmd>` | `/archflow:<cmd>` (identical; TOML commands under `commands/archflow/`) |
 | `agents/*.md` sub-agents | `agents/*.md` (`kind: local`) — sub-agents are a preview feature |
 | `PreToolUse` / `Stop` hooks | `BeforeTool` / `AfterAgent` hooks (timeouts in ms) |
+| Telemetry: `UserPromptExpansion` names the command | `BeforeAgent` counts a prompt that starts with `/archflow:<cmd>` or the command's marker line |
 | `/archflow:studio` | Not available |
 | `memory: user` | Not available |
 

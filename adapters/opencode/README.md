@@ -18,7 +18,8 @@ Node.js 18+ (or Bun) is required for the plugin hooks.
 |---|---|
 | `/archflow:<cmd>` | `/archflow-<cmd>` (OpenCode has no colon namespaces) |
 | `agents/*.md` sub-agents | `.opencode/agents/*.md` with `mode: subagent` |
-| Plugin hooks | `.opencode/plugins/archflow.ts` (`tool.execute.before`, system-prompt transform, `session.idle`) |
+| Telemetry: `UserPromptExpansion` names the command | `command.executed` names the command |
+| Plugin hooks | `.opencode/plugins/archflow.ts` (`tool.execute.before`, system-prompt transform, `session.created`, `command.executed`, `session.idle`) |
 | `/archflow:studio` | Not available |
 | `memory: user` | Not available |
 

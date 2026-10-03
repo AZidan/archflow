@@ -16,5 +16,5 @@ This is the lowest-common-denominator package: `AGENTS.md` + Agent Skills (agent
 ## What you give up
 
 - No sub-agents: roles run serially inside the main context (bigger context use, slower Phase 3).
-- No lifecycle hooks: instructions load via AGENTS.md, and the upgrade check runs because AGENTS.md asks the agent to run it, not because the host does.
+- No lifecycle hooks: instructions load via AGENTS.md, and the upgrade check and session telemetry run because AGENTS.md asks the agent to run them, not because the host does. Per-command telemetry is not available.
 - The git guard is a real `pre-push` hook, so it also protects you from your own terminal.

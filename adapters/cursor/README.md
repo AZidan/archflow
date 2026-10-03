@@ -18,8 +18,9 @@ Node.js 18+ is required for the hooks.
 |---|---|
 | `/archflow:<cmd>` | `/archflow-<cmd>` (`.cursor/commands/`) |
 | `agents/*.md` sub-agents | `.cursor/agents/*.md` (`model: inherit`; reviewers `readonly: true`) |
-| Plugin hooks | `.cursor/hooks.json` (`sessionStart` / `beforeShellExecution` / `stop`) via a small bridge script |
+| Plugin hooks | `.cursor/hooks.json` (`sessionStart` / `beforeSubmitPrompt` / `beforeShellExecution` / `stop`) via a small bridge script |
 | `CLAUDE.md` section | `.cursor/rules/archflow.mdc` (`alwaysApply`) |
+| Telemetry: `UserPromptExpansion` names the command | `beforeSubmitPrompt` counts a prompt that starts with `/archflow-<cmd>` |
 | `/archflow:studio` | Not available |
 | `memory: user` | Not available |
 

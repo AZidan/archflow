@@ -31,22 +31,23 @@ Every Archflow action is a namespaced slash command — there is no argument-sty
 /archflow:issue [story-id|defer ...] → Record a defect on a story in the active release, or defer a minor one
 /archflow:doctor [--validate|--fix]  → Environment + project health check; --fix repairs upgrade drift
 /archflow:studio [stop|status|port n] → Local web workspace over the same files; onboards and migrates from the UI (beta)
+/archflow:telemetry [on|off]         → Show or change anonymous usage telemetry (on by default)
 ```
 
-Command bodies live in `~/.gemini/extensions/archflow/commands/<name>.md`. When you need to run one from
+Command bodies live in `$HOME/.gemini/extensions/archflow/commands/<name>.md`. When you need to run one from
 inside another flow (e.g. onboarding calls setup-mcp), read that file and follow it inline.
 
 ## Framework files (shipped with the plugin)
 
-- `~/.gemini/extensions/archflow/skills/archflow/instructions.md` — agent-neutral base instructions
-- `~/.gemini/extensions/archflow/skills/archflow/phases/` — per-phase instruction files
-- `~/.gemini/extensions/archflow/skills/archflow/schemas/` — roadmap / release / backlog / history schemas
-- `~/.gemini/extensions/archflow/skills/archflow/workflow.md` — git branching strategy
-- `~/.gemini/extensions/archflow/skills/archflow/base-dsl-structure.yaml` — DSL template for design artifacts
-- `~/.gemini/extensions/archflow/skills/archflow/mcp-registry.yaml` — curated MCP server registry
-- `~/.gemini/extensions/archflow/skills/archflow/design-systems/` — design-system reference files, one plain
+- `$HOME/.gemini/extensions/archflow/skills/archflow/instructions.md` — agent-neutral base instructions
+- `$HOME/.gemini/extensions/archflow/skills/archflow/phases/` — per-phase instruction files
+- `$HOME/.gemini/extensions/archflow/skills/archflow/schemas/` — roadmap / release / backlog / history schemas
+- `$HOME/.gemini/extensions/archflow/skills/archflow/workflow.md` — git branching strategy
+- `$HOME/.gemini/extensions/archflow/skills/archflow/base-dsl-structure.yaml` — DSL template for design artifacts
+- `$HOME/.gemini/extensions/archflow/skills/archflow/mcp-registry.yaml` — curated MCP server registry
+- `$HOME/.gemini/extensions/archflow/skills/archflow/design-systems/` — design-system reference files, one plain
   markdown file per system (not skills, not commands — loaded by explicit path only)
-- `~/.gemini/extensions/archflow/scripts/migrate.py` — v1.0 → v2.0 migration engine
+- `$HOME/.gemini/extensions/archflow/scripts/migrate.py` — v1.0 → v2.0 migration engine
 
 `init` / `onboard` copy `instructions.md`, `phases/`, `schemas/`, `design-systems/`, and
 `workflow.md` into the project's `.archflow/`. Paths beginning with `.archflow/` are always
@@ -55,7 +56,7 @@ inside another flow (e.g. onboarding calls setup-mcp), read that file and follow
 ## When this skill is invoked directly
 
 If the user runs this skill on its own (`/archflow:archflow`), behave exactly like
-`/archflow:status`: read and follow `~/.gemini/extensions/archflow/commands/status.md`.
+`/archflow:status`: read and follow `$HOME/.gemini/extensions/archflow/commands/status.md`.
 
 ## Working in an Archflow project
 

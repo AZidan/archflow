@@ -28,5 +28,6 @@ Node.js 18+ is required for the hooks. The same `.github/` tree is read by VS Co
 | `/archflow:<cmd>` | `archflow-<cmd>` skills (`.github/skills/`), invoked by name |
 | `agents/*.md` sub-agents | `.github/agents/*.agent.md` custom agents (`disable-model-invocation: true`, so only Archflow dispatches them) |
 | Plugin hooks | `.github/hooks/archflow.json` using PascalCase events, which give Claude-compatible payloads |
+| Telemetry: `UserPromptExpansion` names the command | `UserPromptSubmit` counts a prompt that starts with `/archflow-<cmd>`. Loading the Claude plugin directly should report session starts only, as `host: claude` (Copilot lists no `UserPromptExpansion` event) |
 | `/archflow:studio` | Not available |
 | `memory: user` | Not available |

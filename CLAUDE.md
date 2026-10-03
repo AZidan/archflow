@@ -37,6 +37,7 @@ Then load the current phase: read `.archflow/current-phase.yaml` → `phase_file
 - `/archflow:doctor [--validate] [--fix]` — check environment + project state; `--fix` repairs drift
   between the project and an upgraded plugin
 - `/archflow:studio [stop|status|port <n>]` — open Archflow Studio, a local web workspace (beta)
+- `/archflow:telemetry [on|off]` — show or change anonymous usage telemetry (on by default)
 - `/archflow:setup-mcp [tool]` — connect an external tool via MCP
 
 All commands are namespaced (`/archflow:<name>`) and live in `plugin/commands/*.md`. There is no

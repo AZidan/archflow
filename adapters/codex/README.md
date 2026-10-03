@@ -23,6 +23,7 @@ Node.js 18+ is required for the hooks.
 | Plugin hooks (`hooks.json`) | `.codex/hooks.json` — same events; needs the `hooks` feature (default on) |
 | `SessionStart` injects `instructions.md` | Same hook, plus an AGENTS.md instruction as a fallback |
 | `/archflow:studio` | Not available — Studio drives the `claude` binary |
+| Telemetry: `UserPromptExpansion` names the command | `UserPromptSubmit` counts a prompt that starts with `$archflow-<cmd>` |
 | `memory: user` agent memory | Not available |
 
 The `.archflow/` state files, schemas, phases, design systems and stack profiles are identical across hosts, so a project can be worked on from both Claude Code and Codex.

@@ -220,8 +220,13 @@ assistant. Nothing you type in Studio lands back in your terminal. If no session
 falls back to its own `claude` process and says so.
 
 **Local, and only local.** Binds to `127.0.0.1` with an origin allowlist covering the WebSocket
-upgrade. No cloud service, no telemetry, no account. Your code and your Claude credentials never
-leave the machine.
+upgrade. No cloud service and no account. Your code and your Claude credentials never leave the
+machine. The coding-agent sessions Studio drives — Claude Code or any other supported host — send
+the same anonymous usage telemetry as any other session (see [What Archflow runs on your
+machine](#what-archflow-runs-on-your-machine)). Studio itself sends its own anonymous events too
+(which views are opened, by route template only, and which actions run); on a host without a native
+adapter, a command copied from Studio and pasted into that host's own session is reported by that
+host, not by Studio.
 
 The server is detached on purpose, so it outlives the session that started it and you can leave it
 open beside your work.
@@ -344,6 +349,7 @@ Every command is namespaced `/archflow:<name>`. You'll use three of them regular
 | `/archflow:release` | Inspect and manage releases (`new`, `start`, `ship`) |
 | `/archflow:mode` | Show or switch ceremony mode (`quick` \| `full`) |
 | `/archflow:autopilot` | Build the release's queued stories unattended on one branch |
+| `/archflow:telemetry` | Show or change anonymous usage telemetry (on by default; `off` opts out) |
 
 Run `/archflow:status` any time you've lost the thread: it reports where the project stands and what's sensible to do next.
 
@@ -441,6 +447,7 @@ archflow/
 │   │   ├── issue.md                 # /archflow:issue
 │   │   ├── doctor.md                # /archflow:doctor
 │   │   ├── studio.md                # /archflow:studio
+│   │   ├── telemetry.md             # /archflow:telemetry
 │   │   └── setup-mcp.md             # /archflow:setup-mcp
 │   ├── scripts/migrate.py           # v1.0 → v2.0 migration engine (used by /archflow:migrate)
 │   ├── server/server.mjs            # Archflow Studio server bundle (built elsewhere, see below)
@@ -583,6 +590,14 @@ Archflow drives your coding agent, Claude Code or one of the other hosts, so eve
   while an unattended `/archflow:autopilot` run is live. In any other repo it exits immediately and
   changes nothing. A `Stop` hook warns when state files have drifted from their schemas. Both fail
   open, so a bug in a guard can never break your session.
+- **Anonymous usage telemetry, on by default.** On every host and in `npx archflow install`,
+  Archflow sends session starts, which Archflow commands run, and the host, project type, version,
+  phase and mode, with a random id generated on your machine. It never sends project names, file
+  paths, file contents, prompts or command arguments. The first run says so once. Turn it off with
+  `/archflow:telemetry off` (your host's spelling of it) or `npx archflow telemetry off`, or set
+  `DO_NOT_TRACK=1`. It is off in CI. Turning it off with the command sends one last event recording
+  the opt-out, and nothing after; `DO_NOT_TRACK` and CI send nothing at all. The setting lives in
+  `~/.archflow/config.json` and applies to every project and every host.
 
 External code it can install is listed under [Supply chain](#supply-chain), and nothing there
 installs without asking you first.

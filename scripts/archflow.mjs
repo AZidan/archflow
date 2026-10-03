@@ -11,7 +11,8 @@
  *   npx archflow install                      # detect hosts, install for each
  *   npx archflow install --host codex,cursor  # explicit hosts
  *   npx archflow install --dry-run            # show the plan only
- *   npx archflow                              # same as `install`, the only command today
+ *   npx archflow                              # same as `install`, the default command
+ *   npx archflow telemetry [on|off]           # show, or change, anonymous usage telemetry (on by default)
  *   npx archflowai ...                        # alias package, identical
  *
  * Options:
@@ -47,6 +48,7 @@ import { createInterface } from "node:readline";
 import { homedir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isEnabled, loadConfig, recordNoticeShown, setConsent } from "../plugin/lib/telemetry.mjs";
 
 const PKG = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = "AZidan/archflow";
@@ -191,7 +193,7 @@ process.stdout.on("error", (e) => { if (e.code === "EPIPE") process.exit(0); thr
 
 function parseArgs(argv) {
   const o = { hosts: [], dir: process.cwd(), dryRun: false, guard: true, yes: false, marketplace: MARKETPLACE_REPO, version: null, bundled: false };
-  if (argv[0] === "install") argv = argv.slice(1); // the default and, today, only command
+  if (argv[0] === "install") argv = argv.slice(1); // the default install command (telemetry is handled before this)
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--host") o.hosts.push(...argv[++i].split(",").map((s) => s.trim()).filter(Boolean));
@@ -219,6 +221,19 @@ async function confirm(question) {
   const answer = await new Promise((res) => rl.question(`${question} [Y/n] `, res));
   rl.close();
   return !/^n/i.test(answer.trim());
+}
+
+/**
+ * Telemetry is on by default. The first time this installer (or the
+ * SessionStart hook, for Claude Code users who never run it directly) sees no
+ * ~/.archflow/config.json yet, it prints a one-time notice — not a question —
+ * and starts sending. Both write the same config file, so the notice shows
+ * once per machine, not once per project.
+ */
+function maybeNoticeTelemetry(dry) {
+  if (dry || hasSeenNotice(loadConfig()) || !isEnabled()) return;
+  log(NOTICE + "Turn it off any time: npx archflow telemetry off\n");
+  recordNoticeShown();
 }
 
 /**
@@ -461,10 +476,23 @@ function installGemini(dry) {
   return [`copy  ${dst} (Gemini extension)`];
 }
 
+/** `archflow telemetry [on|off]` — status with no argument, otherwise change it. */
+function runTelemetry(arg) {
+  if (arg === "on" || arg === "off") {
+    const { sentOptOut } = setConsent(arg === "on", { via: "cli", host: "cli", archflow_version: VERSION });
+    log(arg === "on" ? "Anonymous usage telemetry is now ON." : `${OPT_OUT_CONFIRMATION}${sentOptOut ? OPT_OUT_SENT_NOTE : ""}`);
+    return;
+  }
+  if (arg) { console.error(`Unknown telemetry option: ${arg}. Try "on" or "off".`); process.exit(2); }
+  const config = loadConfig();
+  log(`Anonymous usage telemetry is ${isEnabled(config) ? "ON" : "OFF"} (on by default; \`archflow telemetry off\` to opt out).`);
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 async function main() {
+  if (process.argv[2] === "telemetry") { runTelemetry(process.argv[3]); return; }
   const opts = parseArgs(process.argv.slice(2));
   const project = opts.dir;
   if (!existsSync(project) || !statSync(project).isDirectory()) {
@@ -494,6 +522,7 @@ async function main() {
     log(`Archflow ${VERSION} (${SRC.origin}) — hosts: ${hosts.join(", ")}\nProject: ${project}\n`);
   }
   if (opts.dryRun) log("DRY RUN — nothing will be written.\n");
+  maybeNoticeTelemetry(opts.dryRun);
 
   const nextSteps = [];
   const blocks = [];
@@ -540,6 +569,8 @@ async function main() {
   log("\nNext:");
   for (const [label, steps] of nextSteps) for (const s of steps) log(`  ${label}: ${s}`);
   log("\nRe-run this command after upgrading Archflow; it updates in place and never deletes your files.");
+
+  if (!opts.dryRun) capture("cli_install", { host: "cli", archflow_version: VERSION, installed_hosts: hosts, source: SRC.origin });
 }
 
 main().catch((err) => { console.error(`archflow: ${err?.message ?? err}`); process.exit(1); });

@@ -1,6 +1,7 @@
 # Generated from plugin/commands/onboard.md — do not edit.
 description = "Set up Archflow in an EXISTING codebase — audit code, import context, pick the phase"
 prompt = '''
+<!-- archflow-command: onboard -->
 # /archflow:onboard — Existing Codebase Onboarding Wizard
 
 > **Before you start:** run `/archflow:doctor` to see what is installed and what is
@@ -148,7 +149,7 @@ Copy them from the plugin? [Yes / Skip]
   (This is non-destructive — existing files are never overwritten.)
 ```
 
-- **Yes** — copy each missing file from `~/.gemini/extensions/archflow/skills/archflow/` to `.archflow/`. Create subdirectories (`phases/`, `schemas/`, `design-systems/`, `design-systems/examples/`) if needed. NEVER overwrite existing files.
+- **Yes** — copy each missing file from `$HOME/.gemini/extensions/archflow/skills/archflow/` to `.archflow/`. Create subdirectories (`phases/`, `schemas/`, `design-systems/`, `design-systems/examples/`) if needed. NEVER overwrite existing files.
 - **Skip** — continue without copying
 
 ### No design system chosen (if `.archflow/design-system.yaml` is missing and the project has a UI)
@@ -160,7 +161,7 @@ every screen is a fresh guess at component names, colours and spacing.
 
 Set it now? [Yes / Later]
 ```
-- **Yes** — read `~/.gemini/extensions/archflow/commands/design.md` and follow **Step 3 — `pick`** inline.
+- **Yes** — read `$HOME/.gemini/extensions/archflow/commands/design.md` and follow **Step 3 — `pick`** inline.
 - **Later** — continue; Phase 2 will ask before the first wireframe.
 
 ### Final line
@@ -227,7 +228,7 @@ All user input gathered in one pass. No heavy analysis, no agent dispatch.
 
 **Actions:**
 1. **Detect the stack.** Read and follow
-   `~/.gemini/extensions/archflow/skills/archflow/stack-detection.md` — the evidence sources, the
+   `$HOME/.gemini/extensions/archflow/skills/archflow/stack-detection.md` — the evidence sources, the
    field-by-field mapping, and the rule that anything the evidence does not support is written
    `null`. It is defined there once because `/archflow:doctor --fix` runs the same detection, and
    two copies would drift into two different answers about the same repo.
@@ -302,7 +303,7 @@ definition; this is the operative summary so nobody has to fetch a security rule
    claude mcp list
    ```
 2. If NOT configured:
-   - Run `/archflow:setup-mcp [tool]` inline (load `~/.gemini/extensions/archflow/commands/setup-mcp.md`)
+   - Run `/archflow:setup-mcp [tool]` inline (load `$HOME/.gemini/extensions/archflow/commands/setup-mcp.md`)
    - If MCP setup requires restart: save progress to `.onboard-progress.yaml`, instruct user to restart Gemini CLI, then run `/archflow:onboard` again
 3. Once MCP is available, collect links:
    ```
@@ -369,7 +370,7 @@ Every screen, wireframe and UI review from here on will follow this system.
 
 - **Use this** — record `design_system`, `platform`, `library` in `.onboard-progress.yaml`.
 - **Pick another** (and whenever nothing was detected) — read
-  `~/.gemini/extensions/archflow/commands/design.md` and follow **Step 3 — `pick`** inline. It filters the
+  `$HOME/.gemini/extensions/archflow/commands/design.md` and follow **Step 3 — `pick`** inline. It filters the
   catalogue by platform compatibility, shows each system's section 1, and handles the
   "Custom / match my brand" path including the tokens file.
 - **No UI** — record `design_system: null` and write no `design-system.yaml`.
