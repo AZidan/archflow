@@ -309,7 +309,7 @@ stories:
   - id: S9-04
     title: "Studio-first site repositioning"
     priority: High
-    status: review
+    status: done
     gates: {needs_design: false, needs_contract: false}
     assigned: ui-engineer
     description: >-
@@ -326,10 +326,10 @@ stories:
       keep or drop the ordering? (Q4) the proof numbers — 5 production codebases, 250+ stories, 6
       months, "Studio ships Studio: 8 releases and 71 stories" — are they current?
     acceptance_criteria:
-      - {text: "Homepage hero leads with Studio", met: false}
-      - {text: "Studio guide matches current Studio behavior", met: false}
-      - {text: "Page states which hosts Studio supports, consistent with the CHANGELOG", met: false}
-      - {text: "Page passes the archflow-marketing guardrails (no pricing hints, no total command count, one-argument marketplace command, install command present)", met: false}
+      - {text: "Homepage hero leads with Studio", met: true}
+      - {text: "Studio guide matches current Studio behavior", met: true}
+      - {text: "Page states which hosts Studio supports, consistent with the CHANGELOG", met: true}
+      - {text: "Page passes the archflow-marketing guardrails (no pricing hints, no total command count, one-argument marketplace command, install command present)", met: true}
     subtasks:
       - {text: "Rewrite docs/index.html", completed: true}
       - {text: "Update docs/guides/studio.md", completed: true}
