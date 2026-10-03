@@ -121,7 +121,7 @@ stories:
   - id: S7-04
     title: "build-adapters HOOK_SCRIPTS helper"
     priority: Medium
-    status: in_progress
+    status: review
     gates: {needs_design: false, needs_contract: false}
     assigned: devops-engineer
     description: >-
