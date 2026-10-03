@@ -258,7 +258,7 @@ stories:
   - id: S7-05
     title: "Gemini $HOME path and Cursor workspace-root fixes"
     priority: High
-    status: in_progress
+    status: review
     gates: {needs_design: false, needs_contract: false}
     assigned: api-engineer
     description: >-
