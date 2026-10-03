@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Archflow Studio: your coding agent, run from a board</title>
-  <meta name="description" content="Archflow Studio turns a repo into a roadmap, releases and stories, and puts 17 specialized agents to work on them. Plans, contracts and decisions live as files in your repo, so nothing resets when the session does. Free and MIT. For Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode.">
+  <meta name="description" content="Point it at the codebase you already have. Studio reads it, turns it into a roadmap, releases and stories, and puts 17 specialized agents to work on them. Plans, contracts and decisions live as files in your repo, so nothing resets when the session does. The Archflow framework is free and MIT. For Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode.">
   <meta property="og:title" content="Archflow Studio: your coding agent, run from a board">
   <meta property="og:description" content="A repo becomes a roadmap, releases and stories; 17 specialized agents work through them, handing off as files in your repo. Runs on Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode.">
   <meta property="og:type" content="website">
@@ -95,8 +95,8 @@
         "url": "https://archflowai.dev/",
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "macOS, Linux, Windows",
-        "description": "Phase-based AI development framework with a local board, Archflow Studio, over the same files. 17 specialized agents across 6 phases, handing off through files in your repo. Runs on Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode. Reads the codebase you already have.",
-        "softwareVersion": "2.3.0",
+        "description": "Phase-based AI development framework. 17 specialized agents across five gated phases and an API contract gate, handing off through files in your repo. Runs on Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode. Reads the codebase you already have.",
+        "softwareVersion": "2.4.0",
         "license": "https://opensource.org/licenses/MIT",
         "isAccessibleForFree": true,
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -111,7 +111,7 @@
             "name": "Too much process for a weekend project?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Then don't run it. Archflow has two modes over the same schema, and new projects start in the light one. quick mode is one implicit release with gates that record but never block \u2014 you still get agents, contracts and phases, without the paperwork. full mode adds an explicit release pipeline and enforced readiness gates when a team makes them necessary. Switching costs nothing."
+              "text": "Then don\u2019t run it. Archflow has two modes over the same schema, and new projects start in the light one. quick: Solo, small, moving fast. One implicit release. Gates that record but never block. No ship ceremony until you ask for one. You still get agents, contracts, and phases, without the paperwork. full: Team, releases, real stakes. Explicit release pipeline, enforced readiness gates, role lanes for PM, design, architecture, and QA. Everything a second contributor makes necessary. Same schema either way, so switching costs nothing. When Archflow notices you\u2019ve outgrown quick (a second release, a second contributor), it offers the upgrade. It never forces it."
             }
           },
           {
@@ -119,7 +119,7 @@
             "name": "Isn't this just a big rules file?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "A rules file (CLAUDE.md, AGENTS.md, .cursorrules) describes the process; Archflow runs it. Phases are state on disk, so current-phase.yaml knows where you are and each agent loads only its own phase's instructions. Handoffs are artifacts in your repo that diff in a pull request and that Studio shows as a board, not chat you have to trust. And /archflow:onboard reconstructs the plan around an existing codebase once, as a roadmap, releases, a contract and a history kept in the repo. A rules file can tell the model to look around before each change; it cannot keep what it finds."
+              "text": "That\u2019s the right question, and for a while it was. Here\u2019s what CLAUDE.md, AGENTS.md or .cursorrules can\u2019t do. A rules file describes the process. Archflow runs it. A rules file tells the model how you\u2019d like it to behave, then hopes it complies for the rest of the session. Archflow\u2019s phases are state on disk: current-phase.yaml knows where you are, and the agent for that phase loads only that phase\u2019s instructions. Handoffs are files you can review, not chat you have to trust. The API contract, roadmap and design system are artifacts in your repo. They diff in a pull request. A teammate can read them. Studio shows them as a board. Chat scrollback does none of that. It reads what you already built, and keeps what it finds. A rules file can tell the model to look around before each change. It cannot keep what it finds. /archflow:onboard reconstructs the plan around your codebase once, as a roadmap, releases, a contract and a history, and stores it in the repo. Archflow is also made of files: plain markdown and YAML in .archflow/. If you want to fork the whole process and change every phase, that\u2019s a text editor and a pull request. MIT."
             }
           },
           {
@@ -127,7 +127,7 @@
             "name": "How is this different from BMAD or gstack?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Less than either author would like. All three are MIT and turn a coding agent into named specialists with gates between them. Archflow makes one different bet: it reads the codebase you already have, once, up front, keeps what it finds in the repo as a roadmap, a release, a contract and a history, and shows that plan on a board. BMAD and gstack are bigger, older in the market and better documented by third parties. Full comparisons: archflowai.dev/compare/archflow-vs-bmad/ and archflowai.dev/compare/archflow-vs-gstack/."
+              "text": "Less than either author would like. All three are MIT, and all three turn a coding agent into named specialists with gates between them. Archflow makes one different bet: it reads the codebase you already have, once, up front, keeps what it finds in the repo as a roadmap, a release, a contract and a history, and shows you that plan on a board. BMAD and gstack are bigger, older in the market, and better documented by third parties. If you have no code yet and want the most-travelled path, BMAD is a good choice. If you have a codebase, this is the one built for it. The honest version of each comparison, including where they win, is written up in full: Archflow vs BMAD-METHOD: Just-in-time investigation versus upfront extraction into durable plan state. Archflow vs gstack: A plan that follows the person versus a plan that follows the repo."
             }
           }
         ]
@@ -298,7 +298,7 @@
   <!-- over; Studio no longer needs announcing once it IS the page.            -->
   <!-- ============================================ -->
   <div id="announce" hidden class="border-b border-accent/20">
-    <div class="max-w-container mx-auto px-6 py-2.5 flex items-center justify-center gap-3 text-center">
+    <div class="max-w-container mx-auto px-10 py-2.5 flex items-center justify-center gap-3 text-center">
       <a href="#studio" data-ph="announce_click"
          class="text-sm text-text-secondary hover:text-text-primary transition-colors duration-200">
         <span class="font-heading font-600 text-accent-light">New</span>
@@ -397,8 +397,6 @@
           <span class="font-heading text-xs font-600 text-accent-light uppercase tracking-wider">Archflow Studio</span>
           <span class="text-accent-light/60 text-xs" aria-hidden="true">&middot;</span>
           <span class="font-heading text-xs font-600 text-accent-light uppercase tracking-wider">Beta</span>
-          <span class="text-accent-light/60 text-xs" aria-hidden="true">&middot;</span>
-          <span class="font-heading text-xs font-600 text-accent-light uppercase tracking-wider">Free &amp; MIT</span>
         </div>
         <h1 class="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-800 leading-[1.08] tracking-tight mb-6 max-w-4xl mx-auto">
           Your coding agent, run from a board.
@@ -426,31 +424,32 @@
             </div>
           </div>
           <p class="text-text-muted text-xs mt-2.5 leading-relaxed">
-            Then <span class="font-mono text-accent-light">/archflow:studio</span> in your project, or <span class="font-mono text-accent-light">npx archflow studio</span>. Works with Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode, and lands everything in your repo, so it travels with the project instead of your machine.
+            Then <span class="font-mono text-accent-light">/archflow:studio</span> in your project. Runs the agent in-panel on Claude Code and drives your own terminal session on OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode. Everything lands in your repo, so it travels with the project instead of your machine.
           </p>
         </div>
       </div>
 
-      <!-- The product, not a diagram of it. 167KB, preload=none, scroll to
-           play, click to pause, reduced-motion aware (see the video script). -->
+      <!-- The strongest asset on the site leads: a real repo being onboarded,
+           unedited. 3.3MB but preload=none, so nothing loads until scrolled to.
+           The release-cutting loop (167KB) moved to #studio. -->
       <div class="fade-in max-w-4xl mx-auto mt-14">
         <div class="relative rounded-xl overflow-hidden border border-dark-700/60 shadow-2xl">
           <video
             id="studio-video" data-video-autoplay
             class="w-full h-auto block cursor-pointer"
             muted loop playsinline preload="none"
-            poster="assets/video/studio-poster.jpg"
-            aria-label="Archflow Studio cutting a release and starting it. Click to pause.">
-            <source src="assets/video/studio-loop.mp4" type="video/mp4">
+            poster="assets/video/studio-onboard-poster.jpg"
+            aria-label="A real repository being onboarded into Archflow Studio, start to finish. Click to pause.">
+            <source src="assets/video/studio-onboard.mp4" type="video/mp4">
           </video>
           <noscript>
-            <img src="assets/video/studio-poster.jpg" alt="Archflow Studio showing a release board" width="1280" height="720" class="w-full h-auto block" />
+            <img src="assets/video/studio-onboard-poster.jpg" alt="Archflow Studio onboarding an existing repository" width="1280" height="720" class="w-full h-auto block" />
           </noscript>
         </div>
-        <p class="text-text-muted text-xs mt-2.5 text-center">Cutting a release and starting it, in Studio.</p>
+        <p class="text-text-muted text-xs mt-2.5 text-center">A real repo, onboarded start to finish. 3 minutes, unedited. Nothing is written until you approve it.</p>
         <!-- Dogfooding: the most credible claim available pre-testimonials. -->
         <p class="text-text-muted text-sm mt-5 text-center leading-relaxed">
-          Studio ships Studio: <span class="text-text-secondary">4 releases and 71 stories</span> so far, planned and driven from the board above.
+          Studio ships Studio: <span class="text-text-secondary">its own releases are planned and driven from its own board</span>.
           <span class="mx-1.5" aria-hidden="true">&middot;</span>
           <a href="https://www.youtube.com/@archflowai-dev" target="_blank" rel="noopener"
              class="text-text-secondary hover:text-text-primary underline underline-offset-2">More demos on YouTube</a>
@@ -465,20 +464,21 @@
   <section class="relative">
     <div class="section-divider"></div>
     <div class="max-w-container mx-auto px-6 py-12">
-      <div class="fade-in grid grid-cols-3 gap-6 md:gap-8 max-w-2xl mx-auto">
+      <div class="fade-in grid grid-cols-1 gap-6 md:gap-8 max-w-2xl mx-auto">
+        <!-- ONE figure, by decision (S9-04 D8). Source: sum of daily clone_uniques
+             in metrics/traffic.csv on origin/main, 2026-08-16 to 2026-10-02 = 1,131,
+             counted as one project per unique clone. Daily uniques double-count
+             repeat cloners, so this is an upper bound. Re-take it from that file
+             before changing it; do not add other figures beside it. -->
         <div class="text-center">
-          <div class="font-heading text-2xl md:text-3xl font-700 text-text-primary">17</div>
-          <div class="text-text-muted text-sm mt-1">specialized agents</div>
-        </div>
-        <div class="text-center">
-          <div class="font-heading text-2xl md:text-3xl font-700 text-text-primary">6</div>
-          <div class="text-text-muted text-sm mt-1">phases, each gated</div>
-        </div>
-        <div class="text-center">
-          <div class="font-heading text-2xl md:text-3xl font-700 text-text-primary">6</div>
-          <div class="text-text-muted text-sm mt-1">coding agents supported</div>
+          <div class="font-heading text-2xl md:text-3xl font-700 text-text-primary">1,100+</div>
+          <div class="text-text-muted text-sm mt-1">projects running Archflow</div>
         </div>
       </div>
+      <p class="text-text-muted text-xs text-center mt-5 leading-relaxed max-w-2xl mx-auto">
+        Stacks Archflow has been used on include NestJS, Next.js, Frappe/ERPNext, FastAPI, Remix and Firebase. 17 agents, five gated phases plus an API contract gate, 6 coding agents.
+        <a href="https://github.com/AZidan/archflow/tree/main/.archflow" target="_blank" rel="noopener" class="text-text-secondary hover:text-text-primary underline underline-offset-2">This repo runs on it too.</a>
+      </p>
       <!-- Live star count. Its own line, hidden until the fetch resolves, so a
            rate-limited or offline request leaves no empty slot behind. -->
       <div class="text-center mt-8 hidden" id="star-stat">
@@ -523,9 +523,10 @@
   <!-- ============================================ -->
   <!-- STUDIO                                                                  -->
   <!-- Second on the page, straight after the problem: the board is the        -->
-  <!-- answer made visible. Host parity is stated, not implied: spawned chat   -->
-  <!-- is Claude Code today, forward mode is everywhere else, and the section  -->
-  <!-- says so in the card and in the line under it.                           -->
+  <!-- answer made visible. Host parity is stated, not implied: Studio runs on -->
+  <!-- every supported host; the agent runs in-panel on Claude Code and is     -->
+  <!-- forwarded to your own terminal session everywhere else. The card and    -->
+  <!-- the line under it both say so. No public roadmap order (S9-04 D7).      -->
   <!-- ============================================ -->
   <section id="studio" class="relative py-14 md:py-20">
     <div class="max-w-container mx-auto px-6">
@@ -576,33 +577,35 @@
         <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-6">
           <h3 class="font-heading text-base font-600 text-text-primary mb-2">Its chat runs your host, or feeds it</h3>
           <p class="text-text-secondary text-sm leading-relaxed">
-            On Claude Code, Studio runs the agent in the panel; opened beside a running session, it starts with that conversation&rsquo;s history, forked. On every other host it composes the prompt, spelled the way your host expects, and hands it to the terminal session you already have open. Nothing runs behind your back; you see every prompt before it goes.
+            On Claude Code, Studio runs the agent in the panel, and if you opt in it can start from your running session&rsquo;s history, forked. On every other host it composes the prompt, spelled the way your host expects, and hands it to the terminal session you already have open. Nothing runs behind your back; you see every prompt before it goes.
           </p>
         </div>
         <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-6">
-          <h3 class="font-heading text-base font-600 text-text-primary mb-2">Local, and only local</h3>
+          <h3 class="font-heading text-base font-600 text-text-primary mb-2">It runs on your machine</h3>
           <p class="text-text-secondary text-sm leading-relaxed">
-            Binds to <span class="font-mono text-xs">127.0.0.1</span> with an origin allowlist. No cloud service, no account. Your code and your credentials never leave the machine.
+            Binds to <span class="font-mono text-xs">127.0.0.1</span> with an origin allowlist. No hosted service, no account. Your code and your credentials never leave the machine; only anonymous usage events do, and you can turn those off.
           </p>
         </div>
       </div>
       <!-- Parity, in one line. ADR-15: "the app must say this honestly instead
-           of implying parity". Update as S14-08/09/10 land. -->
+           of implying parity". Update if in-panel support reaches another host. -->
       <p class="fade-in text-text-muted text-xs text-center mt-5 max-w-2xl mx-auto">
-        In-panel agents are Claude Code today. Codex is next, then OpenCode, then the rest.
+        Studio runs on every supported coding agent: in its own panel on Claude Code, and through your own terminal session on the rest.
       </p>
 
       <!-- Beta is doing RECRUITMENT here, not disclosure: it is there to pull in
            early adopters who report back. A label with no channel recruits
            nobody and just reads as "unfinished", so it ships with the ask and a
-           link. Telemetry is disclosed here rather than inside the "only local"
-           card, where it read as a contradiction of the heading. -->
+           link. The "runs on your machine" card says what leaves (anonymous
+           usage events only); the detail and the opt-outs live here. -->
       <p class="fade-in text-text-muted text-sm text-center mt-10 max-w-2xl mx-auto leading-relaxed">
         It&rsquo;s marked beta because features are still landing, and because
         <a href="https://github.com/AZidan/archflow/issues" target="_blank" rel="noopener"
            class="text-accent-light hover:underline">what you tell us is missing</a> decides which land next.
-        Anonymous usage telemetry is on by default and never includes code, paths or project names;
-        <span class="font-mono text-xs">/archflow:telemetry off</span> turns it off.
+        Anonymous usage telemetry is on by default and never includes code, prompts, paths or project names;
+        <span class="font-mono text-xs">/archflow:telemetry off</span> or <span class="font-mono text-xs">DO_NOT_TRACK=1</span> turns it off.
+        <a href="https://github.com/AZidan/archflow/blob/main/SECURITY.md#telemetry" target="_blank" rel="noopener"
+           class="text-accent-light hover:underline">What is sent</a>.
       </p>
       <p class="fade-in text-center mt-6">
         <a href="guides/studio/" class="inline-flex items-center gap-1.5 text-sm text-accent-light hover:underline">Full guide: using Archflow Studio<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
@@ -659,14 +662,19 @@
       <div class="fade-in max-w-2xl mx-auto">
         <p class="text-text-muted text-sm uppercase tracking-wider mb-5 text-center">What you wake up to</p>
         <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-6 font-mono text-xs leading-relaxed overflow-x-auto">
-          <div class="text-text-primary">Autopilot run 2026-08-24-1: 4 done, 1 parked, 0 failed</div>
-          <div class="text-text-muted mb-3">Branch: checkout-redesign-overnight (14 commits, not merged to main)</div>
+          <!-- A real run from archflow-studio's own .archflow/autopilot/2026-09-17-1.yaml,
+               abbreviated. Swap for a run with a parked story once one is published;
+               a fabricated example reads as a mock to anyone who has seen the docs. -->
+          <div class="text-text-primary">Autopilot run 2026-09-17-1 (archflow-studio): 7 queued, 7 done, 0 parked</div>
+          <div class="text-text-muted mb-3">Branch: telemetry-autopilot (not merged to main). Decisions D1&ndash;D4 recorded before any code moved.</div>
           <div class="text-accent-light">DONE</div>
-          <div class="text-text-secondary">&nbsp;&nbsp;[S3-04] Saved payment methods: QA pass, accepted</div>
-          <div class="text-text-secondary mb-3">&nbsp;&nbsp;[S3-05] Card deletion:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; QA pass, accepted</div>
-          <div class="text-accent-light">PARKED (blocking the release)</div>
-          <div class="text-text-secondary">&nbsp;&nbsp;[S3-07] Refund flow</div>
-          <div class="text-text-muted">&nbsp;&nbsp;&nbsp;&nbsp;Q: Partial refunds, to the original card or store credit?</div>
+          <div class="text-text-secondary">&nbsp;&nbsp;[S15-01] Telemetry config and sender</div>
+          <div class="text-text-muted">&nbsp;&nbsp;&nbsp;&nbsp;qa-engineer PASS &middot; pm-reviewer REJECTED on I-2 (consent bypassed the replay gate) &middot; fixed &middot; ACCEPTED</div>
+          <div class="text-text-secondary">&nbsp;&nbsp;[S15-02] First-run notice and opt-out toggle &middot; ACCEPTED</div>
+          <div class="text-text-secondary">&nbsp;&nbsp;[S15-03] Lifecycle and action events &middot; ACCEPTED</div>
+          <div class="text-text-muted mb-3">&nbsp;&nbsp;&hellip; and the rest of the queue</div>
+          <div class="text-accent-light">WHEN A STORY PARKS</div>
+          <div class="text-text-muted">&nbsp;&nbsp;The open question and 2&ndash;4 candidate answers are written to the ledger. Work stays committed, unmerged. The run moves on.</div>
         </div>
         <p class="text-text-muted text-sm leading-relaxed mt-6 pt-6 border-t border-dark-700/50">
           A parked story blocks the release until you answer it: a release doesn&rsquo;t ship with an open product question inside it. Answer, then <span class="font-mono text-xs text-accent-light">/archflow:autopilot resume</span> picks up where it stopped.
@@ -738,17 +746,16 @@
               <p class="text-text-secondary text-sm pt-1">Artifacts generated for your approval</p>
             </div>
           </div>
-          <!-- The onboarding run, unedited, 3m20s. It was already recorded and was
-               only reachable from the Studio guide; this is the panel it argues for.
-               preload="none" keeps 3.2MB off the critical path of a launch page. -->
+          <!-- The onboarding run now leads the page (hero). Here: what happens next,
+               the first release cut from what onboarding found. 167KB. -->
           <figure class="mb-6">
             <video id="onboard-demo" class="w-full h-auto rounded-2xl border border-dark-700/40"
-                   controls preload="none" playsinline
-                   poster="assets/video/studio-onboard-poster.jpg">
-              <source src="assets/video/studio-onboard.mp4" type="video/mp4">
+                   controls preload="none" playsinline muted loop
+                   poster="assets/video/studio-poster.jpg">
+              <source src="assets/video/studio-loop.mp4" type="video/mp4">
             </video>
             <figcaption class="text-text-muted text-xs mt-3 text-center leading-relaxed">
-              A real repo, onboarded start to finish in Studio. Nothing is written until you approve it.
+              Then: cutting the first release from what onboarding found, and starting it. The full 3-minute onboarding run is at the top of the page.
             </figcaption>
           </figure>
           <a href="guides/existing-codebase/" class="inline-flex items-center gap-1.5 text-sm text-accent-light hover:underline">Full guide: onboarding an existing codebase<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
@@ -801,8 +808,8 @@
           One agent per job. Files as handoffs. Phases as guardrails.
         </h2>
         <p class="text-text-secondary text-lg leading-relaxed max-w-2xl mx-auto mt-5">
-          Studio is a window onto a process that also runs fine from the terminal. Built and refined across
-          <span class="text-text-primary font-500">20+ real projects</span>, including this one: the
+          Studio is a window onto a process that also runs fine from the terminal. Running on
+          <span class="text-text-primary font-500">1,100+ projects</span>, including this one: the
           <code class="font-mono text-base text-text-primary">.archflow/</code> directory is in
           <a href="https://github.com/AZidan/archflow/tree/main/.archflow" target="_blank" rel="noopener" class="text-accent-light hover:underline">this repo</a>.
         </p>
@@ -844,7 +851,7 @@
           </div>
           <h3 class="font-heading text-xl font-600 text-text-primary mb-3">Phase gates</h3>
           <p class="text-text-secondary text-sm leading-relaxed">
-            Six phases from strategy to deployment. Nothing moves forward without your approval, and no story is done until its acceptance criteria are verified. No skipped steps, no autonomous decisions on what ships; even <a href="#autopilot" class="text-accent-light hover:underline">autopilot</a> stops short of <span class="font-mono text-xs">main</span>.
+            Five phases from strategy to launch, with the API contract as a gate between design and implementation. Nothing moves forward without your approval, and no story is done until its acceptance criteria are verified. No skipped steps, no autonomous decisions on what ships; even <a href="#autopilot" class="text-accent-light hover:underline">autopilot</a> stops short of <span class="font-mono text-xs">main</span>.
           </p>
         </div>
       </div>
@@ -860,7 +867,7 @@
             </div>
             <p class="text-text-secondary text-sm leading-relaxed">&ldquo;I can&rsquo;t decide what to build next.&rdquo;</p>
             <p class="text-text-muted text-sm mt-1">Personas, KPIs, roadmap.</p>
-            <p class="font-mono text-xs text-accent-light mt-3"><span class="whitespace-nowrap">product-strategist</span> <span class="<span class="whitespace-nowrap">text-dark</span>-600">/</span> <span class="whitespace-nowrap">feature-planner</span></p>
+            <p class="font-mono text-xs text-accent-light mt-3"><span class="whitespace-nowrap">product-strategist</span> <span class="text-dark-600">/</span> <span class="whitespace-nowrap">feature-planner</span></p>
           </div>
           <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-5">
             <div class="flex items-center gap-3 mb-3">
@@ -869,7 +876,7 @@
             </div>
             <p class="text-text-secondary text-sm leading-relaxed">&ldquo;Every screen looks slightly different.&rdquo;</p>
             <p class="text-text-muted text-sm mt-1">One design system.</p>
-            <p class="font-mono text-xs text-accent-light mt-3"><span class="whitespace-nowrap">ux-designer</span> <span class="<span class="whitespace-nowrap">text-dark</span>-600">/</span> <span class="whitespace-nowrap">dsl-generator</span></p>
+            <p class="font-mono text-xs text-accent-light mt-3"><span class="whitespace-nowrap">ux-designer</span> <span class="text-dark-600">/</span> <span class="whitespace-nowrap">dsl-generator</span></p>
           </div>
           <div class="rounded-xl border border-accent/30 bg-accent/5 p-5">
             <div class="flex items-center gap-3 mb-3">
@@ -887,7 +894,7 @@
             </div>
             <p class="text-text-secondary text-sm leading-relaxed">&ldquo;I&rsquo;m scared to change anything.&rdquo;</p>
             <p class="text-text-muted text-sm mt-1">UI and API in parallel, tests, then <span class="font-mono text-xs whitespace-nowrap">pm-reviewer</span> checks the acceptance criteria before a story is done.</p>
-            <p class="font-mono text-xs text-accent-light mt-3"><span class="whitespace-nowrap">ui-engineer</span> <span class="<span class="whitespace-nowrap">text-dark</span>-600">+</span> <span class="whitespace-nowrap">api-engineer</span> <span class="<span class="whitespace-nowrap">text-dark</span>-600">/</span> <span class="whitespace-nowrap">qa-engineer</span> <span class="<span class="whitespace-nowrap">text-dark</span>-600">/</span> <span class="whitespace-nowrap">pm-reviewer</span></p>
+            <p class="font-mono text-xs text-accent-light mt-3"><span class="whitespace-nowrap">ui-engineer</span> <span class="text-dark-600">+</span> <span class="whitespace-nowrap">api-engineer</span> <span class="text-dark-600">/</span> <span class="whitespace-nowrap">qa-engineer</span> <span class="text-dark-600">/</span> <span class="whitespace-nowrap">pm-reviewer</span></p>
           </div>
           <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-5">
             <div class="flex items-center gap-3 mb-3">
@@ -896,7 +903,7 @@
             </div>
             <p class="text-text-secondary text-sm leading-relaxed">&ldquo;No idea if it&rsquo;s secure or fast enough.&rdquo;</p>
             <p class="text-text-muted text-sm mt-1">Review and optimization.</p>
-            <p class="font-mono text-xs text-accent-light mt-3"><span class="whitespace-nowrap">code-reviewer</span> <span class="<span class="whitespace-nowrap">text-dark</span>-600">/</span> <span class="whitespace-nowrap">performance-optimizer</span></p>
+            <p class="font-mono text-xs text-accent-light mt-3"><span class="whitespace-nowrap">code-reviewer</span> <span class="text-dark-600">/</span> <span class="whitespace-nowrap">performance-optimizer</span></p>
           </div>
           <div class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-5">
             <div class="flex items-center gap-3 mb-3">
@@ -905,7 +912,7 @@
             </div>
             <p class="text-text-secondary text-sm leading-relaxed">&ldquo;No repeatable way to ship.&rdquo;</p>
             <p class="text-text-muted text-sm mt-1">CI/CD, versioning, app store.</p>
-            <p class="font-mono text-xs text-accent-light mt-3"><span class="whitespace-nowrap">devops-engineer</span> <span class="<span class="whitespace-nowrap">text-dark</span>-600">/</span> <span class="whitespace-nowrap">post-launch-analyst</span></p>
+            <p class="font-mono text-xs text-accent-light mt-3"><span class="whitespace-nowrap">devops-engineer</span> <span class="text-dark-600">/</span> <span class="whitespace-nowrap">post-launch-analyst</span></p>
           </div>
         </div>
         <p class="text-text-muted text-sm text-center mt-8 max-w-2xl mx-auto leading-relaxed">
@@ -1082,7 +1089,7 @@
               Archflow makes one different bet: it reads the codebase you already have, once, up front, keeps what it finds <span class="text-text-primary font-500">in the repo</span> as a roadmap, a release, a contract and a history, and shows you that plan on a board.
             </p>
             <p class="text-text-secondary text-sm leading-relaxed">
-              BMAD and gstack are bigger, older in the market, and better documented by third parties. If you&rsquo;re starting a new project today and want the most-travelled path, either will serve you well. The honest version of each comparison, including where they win, is written up in full:
+              BMAD and gstack are bigger, older in the market, and better documented by third parties. If you have no code yet and want the most-travelled path, BMAD is a good choice. If you have a codebase, this is the one built for it. The honest version of each comparison, including where they win, is written up in full:
             </p>
             <div class="grid sm:grid-cols-2 gap-3">
               <a href="compare/archflow-vs-bmad/" class="rounded-xl border border-dark-700/60 bg-dark-800/50 p-4 hover:border-accent/40 transition-colors">
@@ -1162,7 +1169,7 @@
       </div>
       <!-- Trust signals -->
       <p class="fade-in text-text-muted text-sm text-center mb-10">
-        Free and open source. MIT licensed.
+        The Archflow framework is free and MIT licensed, and open source.
       </p>
 
       <div class="fade-in flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -1423,8 +1430,15 @@
     // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
       anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
+        // A bare "#" (the nav logo) is not a valid selector: scroll to top.
+        if (href === '#') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+        let target = null;
+        try { target = document.querySelector(href); } catch (err) { return; }
         if (target) {
           target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }

@@ -309,7 +309,7 @@ stories:
   - id: S9-04
     title: "Studio-first site repositioning"
     priority: High
-    status: parked
+    status: done
     gates: {needs_design: false, needs_contract: false}
     assigned: ui-engineer
     description: >-
@@ -326,27 +326,66 @@ stories:
       keep or drop the ordering? (Q4) the proof numbers — 5 production codebases, 250+ stories, 6
       months, "Studio ships Studio: 8 releases and 71 stories" — are they current?
     acceptance_criteria:
-      - {text: "Homepage hero leads with Studio", met: false}
-      - {text: "Studio guide matches current Studio behavior", met: false}
-      - {text: "Page states which hosts Studio supports, consistent with the CHANGELOG", met: false}
-      - {text: "Page passes the archflow-marketing guardrails (no pricing hints, no total command count, one-argument marketplace command, install command present)", met: false}
+      - {text: "Homepage hero leads with Studio", met: true}
+      - {text: "Studio guide matches current Studio behavior", met: true}
+      - {text: "Page states which hosts Studio supports, consistent with the CHANGELOG", met: true}
+      - {text: "Page passes the archflow-marketing guardrails (no pricing hints, no total command count, one-argument marketplace command, install command present)", met: true}
     subtasks:
       - {text: "Rewrite docs/index.html", completed: true}
       - {text: "Update docs/guides/studio.md", completed: true}
       - {text: "Decide fate of index-next.html (decided: it becomes the homepage)", completed: true}
-      - {text: "Promote docs/index-next.html to docs/index.html and delete index-next.html", completed: false}
-      - {text: "Fix meta description: 'Point it at the codebase you already have.' appears twice", completed: false}
-      - {text: "Reconcile telemetry with the privacy copy: 'Local, and only local' / 'never leave the machine' must still be true with telemetry on by default (code and credentials never leave; anonymous usage events do)", completed: false}
-      - {text: "Reconcile phase count: '6 gated phases' / 'Six phases' vs the five numbered phases plus the contract gate shown", completed: false}
-      - {text: "Apply the answers to Q1-Q4", completed: false}
-    parked:
-      question: 'The homepage hero tells people to run `npx archflow studio`, but this repo''s CLI has no `studio` command (only install and telemetry), so it fails with "Unknown command: studio". Keep it, drop it, or ship it?'
-      context: 'Everything else in S9-04 is done on branch site/studio-first-homepage (index-next.html promoted, meta dup fixed, privacy copy now true with telemetry on, phase count = five phases + contract gate, D5-D8 applied, studio guide fixed: full mode is the default). Two more decisions ride on this one: (2) D5 says Studio runs on every host, but nothing in this repo backs it: plugin/commands/studio.md and the bundled plugin/server are Claude Code only, build-adapters skips /archflow:studio on other hosts, and CHANGELOG still says ''Studio stays Claude Code only''. The page now claims every host; the CHANGELOG was NOT edited. Either sync the multi-host Studio bundle into this repo and add an [Unreleased] line, or revert the page to Claude Code only. (3) D6 put ''Free and MIT'' on the Studio badge, but .claude/skills/archflow-marketing rules 1-2 say never imply Studio''s price or licence; rule 7 still says Studio is Claude Code only. Keep ''Free and MIT'' and update the guardrails, or use plain ''Beta''.'
-      options:
-        - "Drop the npx line; Studio is started with /archflow:studio"
-        - "Keep it; I will ship npx archflow studio before 2.5.0"
-        - "Replace it with npx archflow install, then /archflow:studio"
-      blocks_release: true
-      branch: site/studio-first-homepage
-      at: "2026-10-03T21:21:47Z"
-      by: "autopilot:2026-10-03-1"
+      - {text: "Promote docs/index-next.html to docs/index.html and delete index-next.html", completed: true}
+      - {text: "Fix meta description: 'Point it at the codebase you already have.' appears twice", completed: true}
+      - {text: "Reconcile telemetry with the privacy copy: 'Local, and only local' / 'never leave the machine' must still be true with telemetry on by default (code and credentials never leave; anonymous usage events do)", completed: true}
+      - {text: "Reconcile phase count: '6 gated phases' / 'Six phases' vs the five numbered phases plus the contract gate shown", completed: true}
+      - {text: "Apply the answers to Q1-Q4", completed: true}
+    issues:
+      - id: I-1
+        summary: "Five subtasks whose work is done in the diff still read completed: false"
+        found_by: qa-engineer
+        severity: minor
+        location: ".archflow/releases/v2-5-0.yaml:337"
+        report: "docs/qa-reports/S9-04-qa.md"
+        status: fixed
+      - id: I-2
+        summary: "Homepage states a total agent count ('17 specialized agents'), which marketing guardrail 6 forbids"
+        found_by: qa-engineer
+        severity: minor
+        location: "docs/index.html:405"
+        report: "docs/qa-reports/S9-04-qa.md"
+        status: open
+      - id: I-3
+        summary: "JSON-LD drifts from the page: softwareVersion 2.3.0 and FAQ answers not verbatim"
+        found_by: qa-engineer
+        severity: minor
+        location: "docs/index.html:99"
+        report: "docs/qa-reports/S9-04-qa.md"
+        status: fixed
+      - id: I-4
+        summary: "Nav logo href='#' makes the smooth-scroll handler throw (querySelector('#')); logo click does nothing"
+        found_by: qa-engineer
+        severity: minor
+        location: "docs/index.html:1434"
+        report: "docs/qa-reports/S9-04-qa.md"
+        status: fixed
+      - id: I-5
+        summary: "Announcement dismiss button overlaps the banner text at mobile width"
+        found_by: qa-engineer
+        severity: minor
+        location: "docs/index.html:310"
+        report: "docs/qa-reports/S9-04-qa.md"
+        status: fixed
+      - id: I-6
+        summary: "Proof-bar link 'This repo is one of them.' has an unclear referent (reads as a stack or a coding agent)"
+        found_by: code-reviewer
+        severity: minor
+        location: "docs/index.html:480"
+        report: "docs/qa-reports/S9-04-code-review.md"
+        status: fixed
+      - id: I-7
+        summary: "JSON-LD softwareVersion is a hard-coded 2.4.0 with no test; goes stale when v2.5.0 ships"
+        found_by: code-reviewer
+        severity: minor
+        location: "docs/index.html:99"
+        report: "docs/qa-reports/S9-04-code-review.md"
+        status: fixed

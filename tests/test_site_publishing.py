@@ -162,3 +162,17 @@ def test_the_bare_argument_form_is_never_documented():
     for path in (README, INDEX):
         hit = pattern.search(path.read_text())
         assert not hit, f"{path.name} documents the retired argument form: {hit.group(0)!r}"
+
+
+def test_homepage_structured_data_version_matches_the_plugin():
+    """softwareVersion in the homepage JSON-LD is typed by hand and drifted before."""
+    import json
+    import re
+
+    html = (DOCS / "index.html").read_text()
+    versions = re.findall(r'"softwareVersion"\s*:\s*"([^"]+)"', html)
+    plugin = json.loads((REPO / "plugin" / ".claude-plugin" / "plugin.json").read_text())["version"]
+    assert versions, "homepage JSON-LD has no softwareVersion"
+    assert set(versions) == {plugin}, (
+        f"homepage softwareVersion {versions} != plugin.json {plugin}; bump docs/index.html with the release"
+    )

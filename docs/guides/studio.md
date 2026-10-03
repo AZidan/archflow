@@ -128,13 +128,20 @@ activity, and todo lists rendered as cards rather than as text.
 When an agent needs a decision, it asks in the panel and you answer inline: the question renders as
 a card with real options, not as a wall of prose you have to reply to in sentences.
 
-**Companion mode.** Open Studio from a running Claude Code session and its chat starts with *that
-conversation's history*, on a branch (`claude --resume <id> --fork-session`). You don't re-explain
-the project to a second assistant. Nothing you type in Studio lands back in your terminal, and
-Studio says so itself.
+**Full mode is the default.** On Claude Code, Studio's chat runs its own `claude` process,
+unrelated to the terminal session you started it from. `/archflow:studio status` reports the mode.
 
-If the session context is missing or more than 12 hours old, Studio falls back to **full mode**: its
-own `claude` process, unrelated to your terminal. That is a stated degrade, not a failure, and the
+**Companion mode is opt-in.** Set `STUDIO_MODE=companion` in your Claude Code session *before*
+running `/archflow:studio`, and Studio's chat starts with *that conversation's history*, on a branch
+(`claude --resume <id> --fork-session`). You don't re-explain the project to a second assistant.
+Nothing you type in Studio lands back in your terminal, and Studio says so itself.
+
+```bash
+export STUDIO_MODE=companion
+```
+
+If you opted in but the session context is missing, malformed or more than 12 hours old, Studio
+falls back to full mode. That is a stated degrade, not a failure, and the `[mode]` line in the
 startup log says which mode it picked and why.
 
 Two sessions that each want their own Studio need `STUDIO_SESSION_CONTEXT` set to a different path
@@ -142,24 +149,37 @@ each, since the handoff file is one per machine and the most recently started se
 
 ---
 
+## Hosts
+
+Studio runs on every supported coding agent: Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor,
+Gemini CLI and OpenCode. On Claude Code the agent runs in Studio's own chat panel. On the others,
+Studio composes the prompt, spelled the way that host expects, and hands it to the terminal session
+you already have open, so you see every prompt before it goes. You choose which host Studio drives
+from inside Studio.
+
+---
+
 ## Privacy
 
 Studio binds to `127.0.0.1` and enforces an origin allowlist that covers the WebSocket upgrade, so
-a hostile page in another tab cannot reach it. There is no cloud service and no account. Your code
-and your Claude credentials never leave the machine, and exposing it beyond loopback is not
-supported.
+a hostile page in another tab cannot reach it. There is no hosted service and no account, and
+exposing it beyond loopback is not supported. Your code and your credentials never leave the
+machine. The only thing that does is the anonymous usage telemetry below, and you can turn it off.
 
 The coding-agent sessions Studio drives — Claude Code or any other supported host — send Archflow's
 anonymous usage telemetry like any other session: which `/archflow:*` commands run, the host,
 version, phase and mode. Never project names, paths, file contents or command arguments.
-`/archflow:telemetry off` turns it off everywhere. On a host with no native adapter, a command you
-copy from Studio and paste into that host's own session is reported by that host, not by Studio —
-Studio never sends the copied text itself, only that a copy happened and which command it was.
+`/archflow:telemetry off`, `npx archflow telemetry off` or `DO_NOT_TRACK=1` turns it off everywhere.
+On a host with no native chat channel, a command you copy from Studio and paste into that host's own
+session is reported by that host, not by Studio — Studio never sends the copied text itself, only
+that a copy happened and which command it was.
 
 Studio also sends its own anonymous events, through the same machine-wide setting: when it starts
-and which mode it's in, when a view is opened (as its route template only — never a project path,
-story id, or release name), and when you run an onboard, migrate or ship action from its UI, or copy
-a command to paste elsewhere. Nothing rendered on screen is ever captured.
+and opens a project, when a view is opened (as its route template only — never a project path,
+story id, or release name), when you run an onboard, migrate or cut-a-release action from its UI or
+copy a command to paste elsewhere, and when you change which host it drives. Nothing rendered on
+screen is ever captured. [`SECURITY.md`](https://github.com/AZidan/archflow/blob/main/SECURITY.md#telemetry)
+lists every event and field.
 
 ---
 
@@ -177,8 +197,9 @@ The `[mode]` line near the top says which chat mode it resolved and, if it degra
 the port it tells you what, and suggests `/archflow:studio port 3457`.
 
 **A Studio from an earlier session.** It gets adopted rather than replaced, which is the idempotent
-case working. Its chat is still wired to whichever session owned the context file when it started;
-`/api/chat/session` says which.
+case working. In full mode its chat is its own `claude`. If that earlier session had opted into
+companion mode, its chat is still wired to whichever session owned the context file when it
+started; `/api/chat/session` says which.
 
 **The board is read-only.** The project is still on the v1.0 schema. Take the migration the banner
 offers.
