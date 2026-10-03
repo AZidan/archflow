@@ -153,9 +153,9 @@ def test_on_while_disabled_by_the_environment_says_it_stays_off(home, project, v
 
 @pytest.mark.parametrize("args", [[], ["status"]])
 def test_cli_status_suggests_the_other_setting_when_it_can_take_effect(home, args):
-    assert "`archflow telemetry off` to turn it off" in cli(home, *args).stdout
+    assert "`npx archflow telemetry off` to turn it off" in cli(home, *args).stdout
     cli(home, "off")
-    assert "`archflow telemetry on` to turn it on" in cli(home, *args).stdout, "off by choice: `on` works"
+    assert "`npx archflow telemetry on` to turn it on" in cli(home, *args).stdout, "off by choice: `on` works"
 
 
 # --------------------------------------------------------------------------

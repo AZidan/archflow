@@ -169,15 +169,15 @@ stories:
   - id: S8-06
     title: "/archflow:telemetry and npx archflow telemetry"
     priority: High
-    status: review
+    status: done
     gates: {needs_design: false, needs_contract: false}
     assigned: api-engineer
     description: >-
       Opt-out/in command on every host. Opting out sends one final telemetry_opted_out event and
       nothing after; opting in sends telemetry_opted_in. DECISION (user, 2026-09-23): build as scoped.
     acceptance_criteria:
-      - {text: "/archflow:telemetry [on|off] works on every host", met: false}
-      - {text: "After opt-out no further events are sent", met: false}
+      - {text: "/archflow:telemetry [on|off] works on every host", met: true}
+      - {text: "After opt-out no further events are sent", met: true}
     subtasks:
       - {text: "plugin/commands/telemetry.md", completed: true}
       - {text: "Adapter telemetry commands/skills", completed: true}
@@ -203,6 +203,13 @@ stories:
         severity: minor
         location: "CHANGELOG.md:27"
         report: "docs/qa-reports/S8-06-code-review.md"
+        status: fixed
+      - id: I-4
+        summary: "CLI status hint says `archflow telemetry off|on`, which is not on PATH for an npx user (documented form is `npx archflow telemetry`)"
+        found_by: pm-reviewer
+        severity: minor
+        location: "scripts/archflow.mjs:496"
+        report: "docs/acceptance-reports/S8-06-review.md"
         status: fixed
   - id: S7-04
     title: "build-adapters HOOK_SCRIPTS helper"

@@ -493,7 +493,7 @@ function runTelemetry(arg) {
   // Same line as /archflow:telemetry's --status: on/off, and since when (or which variable disabled it).
   // While an environment variable disables it, `on` cannot take effect, so suggest nothing.
   const on = isEnabled(config);
-  const hint = disabledByEnv() ? "" : ` \`archflow telemetry ${on ? "off" : "on"}\` to turn it ${on ? "off" : "on"}.`;
+  const hint = disabledByEnv() ? "" : ` \`npx archflow telemetry ${on ? "off" : "on"}\` to turn it ${on ? "off" : "on"}.`;
   log(`Anonymous usage telemetry: ${statusLine(config)}.${hint}`);
 }
 
