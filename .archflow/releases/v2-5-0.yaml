@@ -375,3 +375,17 @@ stories:
         location: "docs/index.html:310"
         report: "docs/qa-reports/S9-04-qa.md"
         status: fixed
+      - id: I-6
+        summary: "Proof-bar link 'This repo is one of them.' has an unclear referent (reads as a stack or a coding agent)"
+        found_by: code-reviewer
+        severity: minor
+        location: "docs/index.html:480"
+        report: "docs/qa-reports/S9-04-code-review.md"
+        status: fixed
+      - id: I-7
+        summary: "JSON-LD softwareVersion is a hard-coded 2.4.0 with no test; goes stale when v2.5.0 ships"
+        found_by: code-reviewer
+        severity: minor
+        location: "docs/index.html:99"
+        report: "docs/qa-reports/S9-04-code-review.md"
+        status: fixed
