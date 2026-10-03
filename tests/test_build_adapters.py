@@ -74,6 +74,71 @@ def test_every_host_ships_the_full_hook_runtime():
             assert (root / "lib" / lib.name).is_file(), f"adapters/{host}: lib/{lib.name} missing"
 
 
+# Where each host runs its hook scripts: the generated files (under adapters/<host>/) whose
+# combined text must name every HOOK_SCRIPTS entry, and where in build-adapters.mjs to wire one.
+HOOK_WIRING = {
+    "codex": ([".codex/hooks.json"], "the `hooks` object in HOSTS.codex.emit"),
+    "gemini": (["hooks/hooks.json"], "the `hooks` object in HOSTS.gemini.emit"),
+    "copilot": ([".github/hooks/archflow.json"], "the archflow.json hooks in HOSTS.copilot.emit"),
+    "cursor": (
+        [".cursor/hooks.json", ".cursor/archflow/hooks/cursor-bridge.mjs"],
+        "the CURSOR_BRIDGE script (and .cursor/hooks.json in HOSTS.cursor.emit for a new event)",
+    ),
+    "opencode": ([".opencode/plugins/archflow.ts"], "the OPENCODE_PLUGIN script"),
+    "generic": (["AGENTS.archflow.md"], "the session-start instructions in HOSTS.generic.emit"),
+}
+
+# (host, script) pairs a host deliberately does not run. One-line reason each.
+NOT_WIRED = {
+    ("generic", "check-state.mjs"): "no lifecycle hooks, so there is no Stop event to run it on",
+    ("generic", "guard-git.mjs"): "replaced by a real git pre-push hook (archflow-install-git-guard.sh)",
+}
+
+
+def _names(text, script):
+    return re.search(r"(?<![\w.-])" + re.escape(script) + r"(?![\w.-])", text) is not None
+
+
+def test_every_hook_script_is_wired_on_every_host():
+    """Copying a hook is automatic; running it is a per-host edit this test asks for."""
+    scripts, _ = _hook_lists()
+    assert set(HOOK_WIRING) == set(_hosts()), "HOOK_WIRING must name every host in HOSTS"
+    stale = [k for k in NOT_WIRED if k[0] not in HOOK_WIRING or k[1] not in scripts]
+    assert not stale, f"NOT_WIRED entries for unknown hosts or scripts: {stale}"
+
+    unwired = []
+    for host, (files, where) in HOOK_WIRING.items():
+        text = ""
+        for rel in files:
+            path = ADAPTERS / host / rel
+            assert path.is_file(), f"adapters/{host}/{rel} is missing; regenerate the adapters"
+            text += path.read_text()
+        for script in scripts:
+            if (host, script) not in NOT_WIRED and not _names(text, script):
+                unwired.append(
+                    f"{host}: {script} is copied but never run; wire it in {where} "
+                    f"(scripts/build-adapters.mjs, generated as adapters/{host}/{files[-1]}), "
+                    f"or add ({host!r}, {script!r}) to NOT_WIRED with a reason"
+                )
+    assert not unwired, "\n".join(unwired)
+
+
+def test_cursor_events_route_through_the_bridge():
+    hooks = json.loads((ADAPTERS / "cursor" / ".cursor" / "hooks.json").read_text())["hooks"]
+    for event, handlers in hooks.items():
+        for h in handlers:
+            assert "cursor-bridge.mjs" in h["command"], f"cursor {event} bypasses the bridge: {h}"
+
+
+def test_generic_names_the_session_start_scripts():
+    text = (ADAPTERS / "generic" / "AGENTS.archflow.md").read_text()
+    for script in ("check-upgrade.mjs", "telemetry.mjs"):
+        assert _names(text, script), (
+            f"generic: AGENTS.archflow.md no longer asks the agent to run {script}; "
+            "fix the session-start instructions in HOSTS.generic.emit (scripts/build-adapters.mjs)"
+        )
+
+
 def test_hook_scripts_are_copied_only_by_the_helper():
     """A per-host cpSync of a hook script is the drift S7-04 removed."""
     src = BUILD.read_text()

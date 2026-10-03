@@ -123,8 +123,12 @@ function write(path, content) {
  * new hook is one entry in HOOK_SCRIPTS instead of an edit per host.
  *
  * Every plugin/hooks/*.mjs must be in exactly one of these two lists; tests/test_build_adapters.py
- * fails otherwise, so a new hook cannot be silently left out of the adapters. Wiring a hook
- * into a host's own hooks file (event names, matchers, timeouts) stays per-host by nature.
+ * fails otherwise, so a new hook cannot be silently left out of the adapters.
+ *
+ * One HOOK_SCRIPTS entry copies the hook into every adapter. Wiring it to an event is a
+ * per-host edit, because each host's event model differs (Codex/Gemini/Copilot hooks files,
+ * the Cursor bridge, the OpenCode plugin, the generic AGENTS.md). test_build_adapters.py
+ * fails and lists each host that still needs that edit, and the file to change.
  */
 const HOOK_SCRIPTS = ["check-upgrade.mjs", "check-state.mjs", "guard-git.mjs", "telemetry.mjs"];
 /** Hooks that only make sense on Claude Code and ship in no adapter. */

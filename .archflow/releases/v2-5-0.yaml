@@ -132,7 +132,15 @@ stories:
       - {text: "build-adapters.mjs --check passes", met: false}
     subtasks:
       - {text: "Introduce HOOK_SCRIPTS helper", completed: true}
-      - {text: "Regenerate adapters", completed: false}
+      - {text: "Regenerate adapters", completed: true}
+    issues:
+      - id: I-1
+        summary: "A HOOK_SCRIPTS entry ships a new hook to every adapter but does not wire it into any host's event table, so AC1 overstates; untested"
+        found_by: qa-engineer
+        severity: minor
+        location: "scripts/build-adapters.mjs:123"
+        report: "docs/qa-reports/S7-04-qa.md"
+        status: fixed
   - id: S7-05
     title: "Gemini $HOME path and Cursor workspace-root fixes"
     priority: High
