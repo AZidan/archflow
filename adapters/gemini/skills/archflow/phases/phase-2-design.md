@@ -26,7 +26,7 @@ Read `.archflow/design-system.yaml`.
   `styled-dsl.yaml` comes from its `## Component vocabulary` table; `theme.yaml` is built on the
   scales in its `## Layout, spacing, and type scale` section, inside the constraints in `## Rules`.
 - **Missing, and the project has a UI** — STOP. The choice was deferred at init. Read
-  `$HOME/.gemini/extensions/archflow/commands/design.md` and follow **Step 3 — `pick`** inline, write
+  `$HOME/.gemini/extensions/archflow/commands/archflow/design.toml` and follow **Step 3 — `pick`** inline, write
   `.archflow/design-system.yaml`, and only then continue. Do not guess a system and do not invent
   one per screen.
 - **`backend_only`** — this whole phase is not applicable.
