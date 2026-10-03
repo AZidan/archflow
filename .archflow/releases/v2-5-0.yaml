@@ -121,15 +121,15 @@ stories:
   - id: S7-04
     title: "build-adapters HOOK_SCRIPTS helper"
     priority: Medium
-    status: review
+    status: done
     gates: {needs_design: false, needs_contract: false}
     assigned: devops-engineer
     description: >-
       build-adapters.mjs copies the hook runtime through one helper, so a new hook is one entry in
       HOOK_SCRIPTS. DECISION (user, 2026-09-23): build as scoped.
     acceptance_criteria:
-      - {text: "Adding a hook requires only a HOOK_SCRIPTS entry", met: false}
-      - {text: "build-adapters.mjs --check passes", met: false}
+      - {text: "Adding a hook requires only a HOOK_SCRIPTS entry", met: true}
+      - {text: "build-adapters.mjs --check passes", met: true}
     subtasks:
       - {text: "Introduce HOOK_SCRIPTS helper", completed: true}
       - {text: "Regenerate adapters", completed: true}
