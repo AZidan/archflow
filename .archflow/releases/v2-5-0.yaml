@@ -117,6 +117,34 @@ stories:
         location: "SECURITY.md:97"
         report: "docs/qa-reports/S8-05-qa.md"
         status: fixed
+      - id: I-3
+        summary: "When Copilot loads the Claude plugin directly (ARCHFLOW_HOST unset), the notice is still printed as plain text and marked shown machine-wide, the case I-1 named but the fix left open"
+        found_by: code-reviewer
+        severity: blocking
+        location: "plugin/hooks/telemetry.mjs:125"
+        report: "docs/qa-reports/S8-05-code-review.md"
+        status: fixed
+      - id: I-4
+        summary: "An unparseable or non-object ~/.archflow/config.json is read as defaults: a saved opt-out is ignored, events are sent and the file is overwritten; a `null` file crashes --status/--enable and the CLI install"
+        found_by: code-reviewer
+        severity: minor
+        location: "plugin/lib/telemetry.mjs:107"
+        report: "docs/qa-reports/S8-05-code-review.md"
+        status: fixed
+      - id: I-5
+        summary: "A non-UUID distinctId already in config.json is never re-minted, so every event goes out with distinct_id null and is lost"
+        found_by: code-reviewer
+        severity: minor
+        location: "plugin/lib/telemetry.mjs:208"
+        report: "docs/qa-reports/S8-05-code-review.md"
+        status: fixed
+      - id: I-6
+        summary: "The test module docstring names a `no_network` fixture that does not exist"
+        found_by: code-reviewer
+        severity: minor
+        location: "tests/test_telemetry.py:6"
+        report: "docs/qa-reports/S8-05-code-review.md"
+        status: fixed
   - id: S8-06
     title: "/archflow:telemetry and npx archflow telemetry"
     priority: High

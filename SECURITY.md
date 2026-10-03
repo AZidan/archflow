@@ -118,7 +118,8 @@ Turning it off with the command sends one final event, `telemetry_opted_out`, so
 counted. It carries the host, the Archflow version, where the change was made and how many days
 after the first-run notice. Nothing is sent after it. Turning telemetry back on sends
 `telemetry_opted_in`. The environment variables send nothing, not even that final event. The choice is stored in
-`~/.archflow/config.json` and applies to every project on the machine. Events are sent from a
+`~/.archflow/config.json` and applies to every project on the machine. If that file exists but cannot be
+read, telemetry stays off and Archflow leaves the file as it is. Events are sent from a
 short-lived background process, so a network failure never affects a session.
 
 **Archflow Studio sends its own events too**, through this same `~/.archflow/config.json` setting

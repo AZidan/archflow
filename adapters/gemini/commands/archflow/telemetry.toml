@@ -21,7 +21,8 @@ contents, or anything from `project-context.md`.
 ```bash
 node "$HOME/.gemini/extensions/archflow/hooks/telemetry.mjs" --status
 ```
-Report it plainly: "on" or "off", and since when.
+Report it plainly: "on" or "off", and since when. If it says the config file could not be read,
+relay that: telemetry stays off and nothing is changed until the user fixes or deletes the file.
 
 ## Change it
 ```bash

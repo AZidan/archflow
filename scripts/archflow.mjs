@@ -48,7 +48,7 @@ import { createInterface } from "node:readline";
 import { homedir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isEnabled, loadConfig, recordNoticeShown, setConsent } from "../plugin/lib/telemetry.mjs";
+import { CONFIG_UNREADABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isConfigUnreadable, isEnabled, loadConfig, recordNoticeShown, setConsent } from "../plugin/lib/telemetry.mjs";
 
 const PKG = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = "AZidan/archflow";
@@ -231,7 +231,9 @@ async function confirm(question) {
  * once per machine, not once per project.
  */
 function maybeNoticeTelemetry(dry) {
-  if (dry || hasSeenNotice(loadConfig()) || !isEnabled()) return;
+  const config = loadConfig();
+  if (isConfigUnreadable(config)) { log(`note  ${CONFIG_UNREADABLE_NOTE}\n`); return; }
+  if (dry || hasSeenNotice(config) || !isEnabled(config)) return;
   log(NOTICE + "Turn it off any time: npx archflow telemetry off\n");
   recordNoticeShown();
 }
@@ -479,12 +481,14 @@ function installGemini(dry) {
 /** `archflow telemetry [on|off]` — status with no argument, otherwise change it. */
 function runTelemetry(arg) {
   if (arg === "on" || arg === "off") {
-    const { sentOptOut } = setConsent(arg === "on", { via: "cli", host: "cli", archflow_version: VERSION });
+    const { sentOptOut, unreadable } = setConsent(arg === "on", { via: "cli", host: "cli", archflow_version: VERSION });
+    if (unreadable) { log(`Nothing was changed. ${CONFIG_UNREADABLE_NOTE}`); return; }
     log(arg === "on" ? "Anonymous usage telemetry is now ON." : `${OPT_OUT_CONFIRMATION}${sentOptOut ? OPT_OUT_SENT_NOTE : ""}`);
     return;
   }
   if (arg) { console.error(`Unknown telemetry option: ${arg}. Try "on" or "off".`); process.exit(2); }
   const config = loadConfig();
+  if (isConfigUnreadable(config)) { log(`Anonymous usage telemetry is OFF for now: ${CONFIG_UNREADABLE_NOTE}`); return; }
   log(`Anonymous usage telemetry is ${isEnabled(config) ? "ON" : "OFF"} (on by default; \`archflow telemetry off\` to opt out).`);
 }
 

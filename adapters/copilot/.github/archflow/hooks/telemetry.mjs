@@ -26,7 +26,7 @@
 import { existsSync, readFileSync, readdirSync, writeSync } from "node:fs";
 import { join } from "node:path";
 import { isatty } from "node:tty";
-import { NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isEnabled, loadConfig, recordNoticeShown, setConsent } from "../lib/telemetry.mjs";
+import { CONFIG_UNREADABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isConfigUnreadable, isEnabled, loadConfig, recordNoticeShown, setConsent } from "../lib/telemetry.mjs";
 
 const OPT_OUT_LINE = "Tell the user this once, and that /archflow:telemetry off turns it off.\n";
 
@@ -114,6 +114,20 @@ export function commandFromName(name, known) {
 }
 
 /**
+ * Which host's output rules apply. Every adapter sets ARCHFLOW_HOST. Unset means
+ * the Claude Code plugin, but Copilot CLI can load that plugin directly and drops
+ * plain-text SessionStart output, so "claude" is claimed only when Claude Code's
+ * own markers are present: it writes CLAUDECODE=1 and CLAUDE_CODE_ENTRYPOINT into
+ * every subprocess it spawns, hooks included. Either one is enough, so a future
+ * Claude Code that drops one still gets the notice. With neither, the host is
+ * unknown and the notice stays pending.
+ */
+function noticeHost() {
+  if (process.env.ARCHFLOW_HOST) return process.env.ARCHFLOW_HOST;
+  return process.env.CLAUDECODE || process.env.CLAUDE_CODE_ENTRYPOINT ? "claude" : null;
+}
+
+/**
  * The notice in the shape each host's hook actually surfaces to the model, or null
  * for a host whose format is unknown. Plain stdout reaches the model on Claude Code
  * and Codex, through the Cursor bridge (which wraps it as additional_context) and
@@ -122,7 +136,7 @@ export function commandFromName(name, known) {
  * reads `additionalContext`; Gemini wants JSON on stdout with
  * `hookSpecificOutput.additionalContext`.
  */
-export function formatNotice(text, host = process.env.ARCHFLOW_HOST || "claude", hookEvent = "SessionStart") {
+export function formatNotice(text, host = noticeHost(), hookEvent = "SessionStart") {
   if (["claude", "codex", "cursor", "opencode", "generic"].includes(host)) return text;
   if (host === "copilot") return JSON.stringify({ additionalContext: text });
   if (host === "gemini") return JSON.stringify({ hookSpecificOutput: { hookEventName: hookEvent, additionalContext: text } });
@@ -150,6 +164,10 @@ const arg = process.argv[2];
 
 if (arg === "--status") {
   const config = loadConfig();
+  if (isConfigUnreadable(config)) {
+    process.stdout.write(`off (${CONFIG_UNREADABLE_NOTE})\n`);
+    process.exit(0);
+  }
   process.stdout.write(`${isEnabled(config) ? "on" : "off"}${config.noticeShownAt ? ` (since ${config.noticeShownAt})` : " (default)"}\n`);
   process.exit(0);
 }
@@ -157,7 +175,11 @@ if (arg === "--status") {
 if (arg === "--enable" || arg === "--disable") {
   const on = arg === "--enable";
   const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || join(process.env.CLAUDE_PROJECT_DIR || process.cwd(), "plugin");
-  const { sentOptOut } = setConsent(on, { via: "command", archflow_version: pluginVersion(pluginRoot) });
+  const { sentOptOut, unreadable } = setConsent(on, { via: "command", archflow_version: pluginVersion(pluginRoot) });
+  if (unreadable) {
+    process.stdout.write(`Nothing was changed. ${CONFIG_UNREADABLE_NOTE}\n`);
+    process.exit(0);
+  }
   process.stdout.write(on ? "Anonymous usage telemetry is now ON.\n" : `${OPT_OUT_CONFIRMATION}${sentOptOut ? OPT_OUT_SENT_NOTE : ""}\n`);
   process.exit(0);
 }

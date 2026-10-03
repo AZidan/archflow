@@ -3,7 +3,8 @@
 Nothing here reaches PostHog. Every run sets ARCHFLOW_TELEMETRY_SINK, which makes
 capture() append the payload to a local file instead of spawning the sender, and
 points HOME and ARCHFLOW_CONFIG_DIR at a temp dir so the real ~/.archflow is never
-read or written. `no_network` additionally asserts the sender was never spawned.
+read or written. test_capture_never_spawns_the_sender_when_the_sink_is_set checks
+that the sink really replaces the network: with it set, the sender is never spawned.
 
 What is checked is the documented contract in SECURITY.md "## Telemetry": the
 events, the properties each may carry, the opt-out variables, the default and
@@ -66,7 +67,11 @@ def project(tmp_path):
 
 
 def base_env(home, **extra):
-    """A clean env: nothing inherited that could disable telemetry or name a Studio/host."""
+    """A clean env: nothing inherited that could disable telemetry or name a Studio/host.
+
+    CLAUDECODE=1 stands in for the marker Claude Code writes into every hook process, so an
+    unset ARCHFLOW_HOST reads as Claude Code. Pass CLAUDECODE=None to drop it (a host that
+    loads the Claude plugin without being Claude Code, such as Copilot)."""
     env = {
         k: v
         for k, v in os.environ.items()
@@ -77,8 +82,13 @@ def base_env(home, **extra):
         HOME=str(home),
         ARCHFLOW_CONFIG_DIR=str(home / ".archflow"),
         ARCHFLOW_TELEMETRY_SINK=str(home / "sink.jsonl"),
+        CLAUDECODE="1",
     )
-    env.update({k: str(v) for k, v in extra.items()})
+    for k, v in extra.items():
+        if v is None:
+            env.pop(k, None)
+        else:
+            env[k] = str(v)
     return env
 
 
@@ -489,6 +499,104 @@ def test_prompt_hook_never_marks_the_notice_shown(home, project):
     hook(home, project, ["--prompt"], {"cwd": str(project), "prompt": "/archflow-status"},
          root=ADAPTER_ROOTS["copilot"], ARCHFLOW_HOST="copilot")
     assert "noticeShownAt" not in config(home)
+
+
+def test_copilot_loading_the_claude_plugin_directly_keeps_the_notice_pending(home, project):
+    """No ARCHFLOW_HOST and no Claude Code markers: the format is unknown, so print nothing and
+    do not record the notice as shown (Copilot would drop plain text)."""
+    out = hook(home, project, CLAUDECODE=None, CLAUDE_CODE_ENTRYPOINT=None).stdout
+    assert out == ""
+    assert "noticeShownAt" not in config(home)
+    assert [e["event"] for e in sent(home)] == ["session_start"]
+    assert sent(home)[0]["properties"]["entrypoint"] is None
+
+
+@pytest.mark.parametrize("marker", [{"CLAUDECODE": "1"}, {"CLAUDE_CODE_ENTRYPOINT": "cli", "CLAUDECODE": None}])
+def test_either_claude_code_marker_is_enough_for_the_plain_notice(home, project, marker):
+    out = hook(home, project, **marker).stdout
+    assert out.startswith("Archflow sends anonymous usage telemetry")
+    assert "noticeShownAt" in config(home)
+
+
+# --------------------------------------------------------------------------
+# A config.json that cannot be read
+# --------------------------------------------------------------------------
+
+BAD_CONFIGS = ["{not json", "null", "[]", '"on"', "42", ""]
+
+
+def write_config(home, text):
+    (home / ".archflow").mkdir(exist_ok=True)
+    path = home / ".archflow" / "config.json"
+    path.write_text(text)
+    return path
+
+
+@pytest.mark.parametrize("text", BAD_CONFIGS)
+def test_unreadable_config_disables_telemetry_and_is_never_overwritten(home, project, text):
+    path = write_config(home, text)
+    out = hook(home, project).stdout
+    hook(home, project, ["--command-run"], {"cwd": str(project), "command_name": "archflow:status"})
+    hook(home, project, ["--prompt"], {"cwd": str(project), "prompt": "/archflow-status"},
+         root=ADAPTER_ROOTS["cursor"], ARCHFLOW_HOST="cursor")
+    assert sent(home) == []
+    assert out == "", "no notice while the config is unreadable"
+    assert path.read_text() == text, "the unreadable file must be left exactly as it was"
+
+
+@pytest.mark.parametrize("text", BAD_CONFIGS)
+def test_status_says_the_config_is_unreadable(home, project, text):
+    write_config(home, text)
+    out = hook(home, project, ["--status"]).stdout
+    assert out.startswith("off") and "could not be read" in out
+
+
+@pytest.mark.parametrize("flag", ["--enable", "--disable"])
+def test_consent_change_with_unreadable_config_changes_nothing(home, project, flag):
+    path = write_config(home, "null")
+    out = hook(home, project, [flag]).stdout
+    assert "Nothing was changed" in out and "could not be read" in out
+    assert path.read_text() == "null"
+    assert sent(home) == []
+
+
+@pytest.mark.parametrize("args", [["telemetry"], ["telemetry", "off"], ["telemetry", "on"]])
+def test_cli_telemetry_with_unreadable_config(home, args):
+    path = write_config(home, "null")
+    proc = subprocess.run(["node", str(CLI), *args], capture_output=True, text=True, timeout=30, env=base_env(home))
+    assert proc.returncode == 0, proc.stderr
+    assert "could not be read" in proc.stdout
+    assert path.read_text() == "null"
+    assert sent(home) == []
+
+
+def test_cli_install_with_unreadable_config_succeeds_and_sends_nothing(home, tmp_path):
+    path = write_config(home, "null")
+    target = tmp_path / "proj"
+    target.mkdir()
+    proc = subprocess.run(
+        ["node", str(CLI), "install", "--bundled", "--host", "codex", "--yes", "--no-guard", "--dir", str(target)],
+        capture_output=True, text=True, timeout=60, env=base_env(home),
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "could not be read" in proc.stdout
+    assert sent(home) == []
+    assert path.read_text() == "null"
+
+
+# --------------------------------------------------------------------------
+# A malformed stored id is replaced
+# --------------------------------------------------------------------------
+
+@pytest.mark.parametrize("bad_id", ["anonymous", SECRET, "", 42])
+def test_invalid_stored_distinct_id_is_replaced(home, project, bad_id):
+    write_config(home, json.dumps({"distinctId": bad_id, "noticeShownAt": "2026-01-01T00:00:00.000Z"}))
+    hook(home, project)
+    hook(home, project)
+    ids = [e["properties"]["distinct_id"] for e in sent(home)]
+    assert len(ids) == 2 and ids[0] == ids[1] and UUID.match(ids[0])
+    assert config(home)["distinctId"] == ids[0]
+    assert_no_leak(sent(home), SECRET)
 
 
 def test_security_md_documents_every_named_property():

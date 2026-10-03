@@ -57,9 +57,10 @@ const oneOf = (list, fallback = null) => (v) => {
 };
 const matching = (re, fallback = null) => (v) => (typeof v === "string" && re.test(v) ? v : (v == null ? null : fallback));
 const bool = (v) => v === true;
+const isUuid = (v) => typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 
 const COMMON = {
-  distinct_id: matching(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+  distinct_id: (v) => (isUuid(v) ? v : null),
   archflow_version: matching(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/),
   host: oneOf(HOSTS, "other"),
   entrypoint: matching(/^[a-z0-9][a-z0-9_.-]{0,39}$/i, "other"),
@@ -104,15 +105,42 @@ export function allowedProperties(event, properties) {
   return out;
 }
 
+/**
+ * Marks a config.json that exists but is not a JSON object (corrupt, truncated,
+ * `null`, an array). Such a file may hold an opt-out we cannot read, so for that
+ * run telemetry is OFF and the file is never overwritten; the user fixes or
+ * deletes it. A missing file is simply the defaults.
+ */
+const UNREADABLE = Symbol("unreadable config");
+
 export function loadConfig() {
+  let text;
   try {
-    return JSON.parse(readFileSync(CONFIG_PATH, "utf8"));
-  } catch {
-    return {};
+    text = readFileSync(CONFIG_PATH, "utf8");
+  } catch (e) {
+    if (e?.code === "ENOENT") return {};
+    return { [UNREADABLE]: true };
   }
+  try {
+    const config = JSON.parse(text);
+    if (config && typeof config === "object" && !Array.isArray(config)) return config;
+  } catch {
+    // fall through
+  }
+  return { [UNREADABLE]: true };
 }
 
+export function isConfigUnreadable(config = loadConfig()) {
+  return Boolean(config?.[UNREADABLE]);
+}
+
+export const CONFIG_UNREADABLE_NOTE =
+  `${CONFIG_PATH} could not be read, so anonymous usage telemetry is off and that file was left as is. ` +
+  "Fix or delete it to choose again.";
+
 function saveConfig(config) {
+  // Never replace a file we could not read: it may hold the user's opt-out.
+  if (isConfigUnreadable(config) || isConfigUnreadable(loadConfig())) return;
   try {
     mkdirSync(CONFIG_DIR, { recursive: true });
     // Atomic: hooks, the CLI and Studio can all write this file at once.
@@ -131,20 +159,20 @@ function envDisabled() {
 }
 
 export function hasSeenNotice(config = loadConfig()) {
-  return typeof config.noticeShownAt === "string";
+  return typeof config?.noticeShownAt === "string";
 }
 
 export function isEnabled(config = loadConfig()) {
-  if (envDisabled()) return false;
+  if (envDisabled() || !config || isConfigUnreadable(config)) return false;
   return config.telemetryEnabled !== false;
 }
 
 /** Call only from code that has just printed NOTICE. */
 export function recordNoticeShown() {
   const config = loadConfig();
-  if (hasSeenNotice(config)) return config;
+  if (hasSeenNotice(config) || isConfigUnreadable(config)) return config;
   config.noticeShownAt = new Date().toISOString();
-  if (!config.distinctId) config.distinctId = randomUUID();
+  if (!isUuid(config.distinctId)) config.distinctId = randomUUID();
   saveConfig(config);
   return config;
 }
@@ -159,6 +187,8 @@ export function recordNoticeShown() {
  */
 export function setConsent(enabled, { via = null, archflow_version = null, host } = {}) {
   const config = loadConfig();
+  // Unreadable config: change nothing and send nothing; the caller tells the user.
+  if (isConfigUnreadable(config)) return { config, sentOptOut: false, unreadable: true };
   const wasEnabled = isEnabled(config);
   const props = {
     ...(host ? { host } : {}),
@@ -205,8 +235,9 @@ export function runtimeContext() {
  * hook can fire before any session-start hook), so no event is ever sent
  * without one.
  */
+/** A missing or malformed stored id is replaced, so no event goes out with distinct_id null. */
 function ensureDistinctId(config) {
-  if (!config.distinctId) {
+  if (!isUuid(config.distinctId)) {
     config.distinctId = randomUUID();
     saveConfig(config);
   }
