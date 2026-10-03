@@ -12,7 +12,7 @@ stories:
   - id: S8-07
     title: "Record telemetry policy: on by default (opt-out), framework-wide"
     priority: Critical
-    status: review
+    status: done
     gates: {needs_design: false, needs_contract: false}
     assigned: api-engineer
     description: >-
@@ -23,13 +23,13 @@ stories:
       to it do not land on this repo's run branch. Write the ADR there, leave it uncommitted for the
       user, and say so in the report. Runs before S8-05.
     acceptance_criteria:
-      - {text: "A new ADR records opt-out, framework-wide telemetry (scope, event allow-list, DO_NOT_TRACK/CI disable, notice, opt-out command) and marks ADR 003 superseded", met: false}
-      - {text: "SECURITY.md states that anonymous telemetry is on by default, what is sent, what is never sent, and how to turn it off", met: false}
-      - {text: "CHANGELOG [Unreleased] describes the same default and opt-out", met: false}
+      - {text: "A new ADR records opt-out, framework-wide telemetry (scope, event allow-list, DO_NOT_TRACK/CI disable, notice, opt-out command) and marks ADR 003 superseded", met: true}
+      - {text: "SECURITY.md states that anonymous telemetry is on by default, what is sent, what is never sent, and how to turn it off", met: true}
+      - {text: "CHANGELOG [Unreleased] describes the same default and opt-out", met: true}
     subtasks:
-      - {text: "Write superseding ADR in docs/internal/decisions/ (uncommitted, other repo)", completed: false}
-      - {text: "Set ADR 003 status to Superseded", completed: false}
-      - {text: "Align SECURITY.md and CHANGELOG", completed: false}
+      - {text: "Write superseding ADR in docs/internal/decisions/ (uncommitted, other repo)", completed: true}
+      - {text: "Set ADR 003 status to Superseded", completed: true}
+      - {text: "Align SECURITY.md and CHANGELOG", completed: true}
     issues:
       - id: I-1
         summary: "SECURITY.md/CHANGELOG list fewer event properties than ADR 005 and the code, and imply cli_install carries project type/phase/mode"
@@ -72,6 +72,13 @@ stories:
         severity: minor
         location: "docs/internal/decisions/005-framework-telemetry-opt-out.md:98"
         report: "docs/qa-reports/S8-07-code-review.md"
+        status: fixed
+      - id: I-7
+        summary: "Public gstack comparison page still lists Archflow telemetry as 'None', contradicting the on-by-default policy"
+        found_by: pm-reviewer
+        severity: minor
+        location: "docs/compare/archflow-vs-gstack.md:232"
+        report: "docs/acceptance-reports/S8-07-review.md"
         status: fixed
   - id: S8-05
     title: "Framework-wide anonymous telemetry"
