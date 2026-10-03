@@ -12,7 +12,7 @@
  *   npx archflow install --host codex,cursor  # explicit hosts
  *   npx archflow install --dry-run            # show the plan only
  *   npx archflow                              # same as `install`, the default command
- *   npx archflow telemetry [on|off]           # show, or change, anonymous usage telemetry (on by default)
+ *   npx archflow telemetry [on|off|status]    # show, or change, anonymous usage telemetry (on by default)
  *   npx archflowai ...                        # alias package, identical
  *
  * Options:
@@ -48,7 +48,7 @@ import { createInterface } from "node:readline";
 import { homedir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CONFIG_UNREADABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isConfigUnreadable, isEnabled, loadConfig, recordNoticeShown, setConsent } from "../plugin/lib/telemetry.mjs";
+import { CONFIG_UNREADABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isConfigUnreadable, isEnabled, loadConfig, recordNoticeShown, setConsent, statusLine } from "../plugin/lib/telemetry.mjs";
 
 const PKG = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = "AZidan/archflow";
@@ -478,7 +478,7 @@ function installGemini(dry) {
   return [`copy  ${dst} (Gemini extension)`];
 }
 
-/** `archflow telemetry [on|off]` — status with no argument, otherwise change it. */
+/** `archflow telemetry [on|off|status]` — status with no argument (or `status`), otherwise change it. */
 function runTelemetry(arg) {
   if (arg === "on" || arg === "off") {
     const { sentOptOut, unreadable } = setConsent(arg === "on", { via: "cli", host: "cli", archflow_version: VERSION });
@@ -486,10 +486,12 @@ function runTelemetry(arg) {
     log(arg === "on" ? "Anonymous usage telemetry is now ON." : `${OPT_OUT_CONFIRMATION}${sentOptOut ? OPT_OUT_SENT_NOTE : ""}`);
     return;
   }
-  if (arg) { console.error(`Unknown telemetry option: ${arg}. Try "on" or "off".`); process.exit(2); }
+  if (arg && arg !== "status") { console.error(`Unknown telemetry option: ${arg}. Try "on", "off" or "status".`); process.exit(2); }
   const config = loadConfig();
   if (isConfigUnreadable(config)) { log(`Anonymous usage telemetry is OFF for now: ${CONFIG_UNREADABLE_NOTE}`); return; }
-  log(`Anonymous usage telemetry is ${isEnabled(config) ? "ON" : "OFF"} (on by default; \`archflow telemetry off\` to opt out).`);
+  // Same line as /archflow:telemetry's --status: on/off, and since when (or which variable disabled it).
+  const on = isEnabled(config);
+  log(`Anonymous usage telemetry: ${statusLine(config)}. \`archflow telemetry ${on ? "off" : "on"}\` to turn it ${on ? "off" : "on"}.`);
 }
 
 // ---------------------------------------------------------------------------

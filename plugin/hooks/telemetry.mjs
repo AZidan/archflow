@@ -11,7 +11,8 @@
  *                   /archflow-x or $archflow-x against the shipped command list,
  *                   and sends just that name. Prints nothing, because on some
  *                   hosts prompt-hook stdout becomes model context or must be JSON.
- *   --status | --enable | --disable   used by /archflow:telemetry
+ *   --status | --enable | --disable [--host <name>]   used by /archflow:telemetry (each
+ *                   adapter's copy passes its own --host, since no hook sets ARCHFLOW_HOST there)
  *
  * The one-time notice is printed by session start or --command-run, in the
  * format the host surfaces (plain text, or JSON on Copilot and Gemini; see
@@ -27,7 +28,7 @@ import { existsSync, readFileSync, readdirSync, writeSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isatty } from "node:tty";
-import { CONFIG_UNREADABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isConfigUnreadable, isEnabled, loadConfig, optOutLine, recordNoticeShown, setConsent } from "../lib/telemetry.mjs";
+import { CONFIG_UNREADABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isEnabled, loadConfig, optOutLine, recordNoticeShown, setConsent, statusLine } from "../lib/telemetry.mjs";
 
 /**
  * This hook's own install root: plugin/ for the Claude Code plugin, <host>/archflow/
@@ -176,19 +177,18 @@ function showNoticeOnce() {
 const arg = process.argv[2];
 
 if (arg === "--status") {
-  const config = loadConfig();
-  if (isConfigUnreadable(config)) {
-    process.stdout.write(`off (${CONFIG_UNREADABLE_NOTE})\n`);
-    process.exit(0);
-  }
-  process.stdout.write(`${isEnabled(config) ? "on" : "off"}${config.noticeShownAt ? ` (since ${config.noticeShownAt})` : " (default)"}\n`);
+  process.stdout.write(`${statusLine()}\n`);
   process.exit(0);
 }
 
 if (arg === "--enable" || arg === "--disable") {
   const on = arg === "--enable";
   const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || HOOK_ROOT;
-  const { sentOptOut, unreadable } = setConsent(on, { via: "command", archflow_version: pluginVersion(pluginRoot) });
+  // Each adapter's telemetry command passes `--host <name>`: an agent runs it outside any hook,
+  // where ARCHFLOW_HOST is unset. The allow-list in capture() still checks the value.
+  const hostAt = process.argv.indexOf("--host");
+  const host = hostAt > 2 ? process.argv[hostAt + 1] : undefined;
+  const { sentOptOut, unreadable } = setConsent(on, { via: "command", archflow_version: pluginVersion(pluginRoot), host });
   if (unreadable) {
     process.stdout.write(`Nothing was changed. ${CONFIG_UNREADABLE_NOTE}\n`);
     process.exit(0);

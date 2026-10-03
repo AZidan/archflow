@@ -114,7 +114,8 @@ has no hooks, so it reports a session start only when the agent runs the script 
 Turn it off with `/archflow:telemetry off`, `npx archflow telemetry off`, `DO_NOT_TRACK=1` or
 `ARCHFLOW_TELEMETRY_DISABLED=1`. It is off whenever `CI` is set. For all three variables, an empty value or `0`, `false`,
 `no` or `off` counts as unset, so `CI=false` leaves telemetry on. `/archflow:telemetry` or
-`npx archflow telemetry` with no argument shows the current setting.
+`npx archflow telemetry` with no argument (or `npx archflow telemetry status`) shows the current
+setting and since when it has held, or which variable has turned it off.
 
 Turning it off with the command sends one final event, `telemetry_opted_out`, so opt-outs can be
 counted. It carries the host, the Archflow version, where the change was made and how many days

@@ -24,11 +24,12 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   `command.executed` event name the command directly. Codex, Copilot, Cursor and Gemini read the
   prompt locally and count it only when it starts with an Archflow command. The generic
   AGENTS.md package reports session starts only, when the agent runs the script AGENTS.md names.
-- `/archflow:telemetry [on|off]` and `npx archflow telemetry [on|off]` to opt out, on every host.
+- `/archflow:telemetry [on|off]` and `npx archflow telemetry [on|off|status]` to opt out, on every host.
   Opting out sends one final `telemetry_opted_out` event and nothing after; opting back in sends
   `telemetry_opted_in`. `DO_NOT_TRACK`, `CI` and `ARCHFLOW_TELEMETRY_DISABLED` also turn it off,
   and send nothing. The choice is stored in `~/.archflow/config.json` and applies to every project
-  on the machine.
+  on the machine. With no argument it shows the setting and since when: the last time it was
+  turned on or off, else when the notice was shown.
 - `scripts/build-adapters.mjs` copies the hook runtime through one helper, so a new hook is one
   entry in `HOOK_SCRIPTS` rather than an edit per host.
 

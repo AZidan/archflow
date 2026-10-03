@@ -175,8 +175,13 @@ function saveConfig(config) {
 
 const set = (v) => Boolean(v) && !/^(0|false|no|off)$/i.test(String(v).trim());
 
+/** The environment variable that turns telemetry off for this process, or null. */
+export function disabledByEnv() {
+  return ["ARCHFLOW_TELEMETRY_DISABLED", "DO_NOT_TRACK", "CI"].find((k) => set(process.env[k])) || null;
+}
+
 function envDisabled() {
-  return set(process.env.ARCHFLOW_TELEMETRY_DISABLED) || set(process.env.DO_NOT_TRACK) || set(process.env.CI);
+  return disabledByEnv() !== null;
 }
 
 export function hasSeenNotice(config = loadConfig()) {
@@ -223,11 +228,28 @@ export function setConsent(enabled, { via = null, archflow_version = null, host 
   ensureDistinctId(config);
   const optedOut = !enabled && wasEnabled && Boolean(POSTHOG_API_KEY);
   if (optedOut) capture("telemetry_opted_out", props);
+  const now = new Date().toISOString();
+  // When the stored choice last changed, so status can say "off since" the opt-out rather than
+  // since the notice. Repeating the current choice leaves it alone; noticeShownAt keeps its meaning.
+  if ((config.telemetryEnabled !== false) !== Boolean(enabled)) config.consentChangedAt = now;
   config.telemetryEnabled = Boolean(enabled);
-  config.noticeShownAt ||= new Date().toISOString();
+  config.noticeShownAt ||= now;
   saveConfig(config);
   if (enabled && !wasEnabled) capture("telemetry_opted_in", props);
   return { config, sentOptOut: optedOut };
+}
+
+/**
+ * One line for `--status` and `archflow telemetry`: "on" or "off", and why or since when.
+ * An environment variable wins over the stored choice, so it is named rather than a date.
+ */
+export function statusLine(config = loadConfig()) {
+  if (isConfigUnreadable(config)) return `off (${CONFIG_UNREADABLE_NOTE})`;
+  const byEnv = disabledByEnv();
+  if (byEnv) return `off (${byEnv} is set in the environment; nothing is sent while it is)`;
+  const state = isEnabled(config) ? "on" : "off";
+  const since = typeof config.consentChangedAt === "string" ? config.consentChangedAt : config.noticeShownAt;
+  return `${state}${typeof since === "string" ? ` (since ${since})` : " (default)"}`;
 }
 
 export const OPT_OUT_CONFIRMATION = "Anonymous usage telemetry is now OFF.";
