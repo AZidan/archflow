@@ -102,6 +102,21 @@ stories:
       - {text: "Per-host command detection", completed: true}
       - {text: "Verify the default is on (opt-out) on every host", completed: false}
       - {text: "Tests for event allow-list", completed: false}
+    issues:
+      - id: I-1
+        summary: "Copilot discards plain-text SessionStart stdout, yet the notice is marked shown machine-wide, so a Copilot-first user never sees it"
+        found_by: qa-engineer
+        severity: blocking
+        location: "plugin/hooks/telemetry.mjs:115"
+        report: "docs/qa-reports/S8-05-qa.md"
+        status: fixed
+      - id: I-2
+        summary: "SECURITY.md says the first run prints the notice, but on prompt-hook hosts a command_run can be sent before it"
+        found_by: qa-engineer
+        severity: minor
+        location: "SECURITY.md:97"
+        report: "docs/qa-reports/S8-05-qa.md"
+        status: fixed
   - id: S8-06
     title: "/archflow:telemetry and npx archflow telemetry"
     priority: High

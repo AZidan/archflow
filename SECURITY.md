@@ -93,9 +93,15 @@ generated on your machine, the Archflow version, the host, the host's entrypoint
 it is a Studio demo recording (`studio_capture`). Session and command events add whether the folder
 is an Archflow project, its project type, phase and mode, and either how the session started
 (`session_source`) or how the command was recognised (`detected_by`). `cli_install` adds which hosts
-were installed and where the files came from (the npm package or a release tag). It never sends project names, file paths, file
-contents, prompts or command arguments. The first run prints a one-time notice saying so and how to
-turn it off; it is a notice, not a question.
+were installed and where the files came from (the npm package or a release tag). Every event also sets `$process_person_profile: false`, a PostHog
+processing flag that stops PostHog building a person profile; it carries no user data. It never
+sends project names, file paths, file contents, prompts or command arguments.
+
+A one-time notice says so and how to turn it off; it is a notice, not a question. `npx archflow
+install` prints it in your terminal. In a coding-agent session the first session start (or, on
+Claude Code and OpenCode, the first Archflow command) gives it to the agent, which is asked to relay
+it to you. On Codex, Copilot, Cursor and Gemini, a command typed before any session start has run on
+the machine can send one `command_run` before the notice appears.
 
 How a command is recognised differs by host. Claude Code and OpenCode report the command name
 directly. On Codex, Copilot, Cursor and Gemini a prompt-submit hook reads your prompt **on your

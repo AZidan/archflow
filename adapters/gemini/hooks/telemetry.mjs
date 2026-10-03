@@ -13,8 +13,9 @@
  *                   hosts prompt-hook stdout becomes model context or must be JSON.
  *   --status | --enable | --disable   used by /archflow:telemetry
  *
- * The one-time notice is printed by session start or --command-run, whose
- * plain stdout reaches the model, and marked shown only after printing. Every
+ * The one-time notice is printed by session start or --command-run, in the
+ * format the host surfaces (plain text, or JSON on Copilot and Gemini; see
+ * formatNotice), and marked shown only after it was written. Every
  * property is checked against the allow-list in ../lib/telemetry.mjs, which
  * drops unknown keys and turns an unrecognised project_type, phase, mode or
  * session_source into null (or "other").
@@ -22,7 +23,7 @@
  * FAIL-OPEN and FAST: no network in this process, exits 0 on every path.
  */
 
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeSync } from "node:fs";
 import { join } from "node:path";
 import { isatty } from "node:tty";
 import { NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isEnabled, loadConfig, recordNoticeShown, setConsent } from "../lib/telemetry.mjs";
@@ -112,9 +113,36 @@ export function commandFromName(name, known) {
   return `archflow:${m[1]}`;
 }
 
+/**
+ * The notice in the shape each host's hook actually surfaces to the model, or null
+ * for a host whose format is unknown. Plain stdout reaches the model on Claude Code
+ * and Codex, through the Cursor bridge (which wraps it as additional_context) and
+ * the OpenCode plugin (which pushes it into the system prompt), and to the agent
+ * that runs the script on generic. Copilot drops non-JSON SessionStart output and
+ * reads `additionalContext`; Gemini wants JSON on stdout with
+ * `hookSpecificOutput.additionalContext`.
+ */
+export function formatNotice(text, host = process.env.ARCHFLOW_HOST || "claude", hookEvent = "SessionStart") {
+  if (["claude", "codex", "cursor", "opencode", "generic"].includes(host)) return text;
+  if (host === "copilot") return JSON.stringify({ additionalContext: text });
+  if (host === "gemini") return JSON.stringify({ hookSpecificOutput: { hookEventName: hookEvent, additionalContext: text } });
+  return null;
+}
+
+/**
+ * Print the one-time notice, and mark it shown only once it has been written in a
+ * format this host surfaces. On an unknown host nothing is printed and the notice
+ * stays pending, so a later session on a known host still shows it.
+ */
 function showNoticeOnce() {
   if (hasSeenNotice(loadConfig()) || !isEnabled()) return;
-  process.stdout.write(NOTICE + OPT_OUT_LINE);
+  const out = formatNotice(NOTICE + OPT_OUT_LINE);
+  if (out === null) return;
+  try {
+    writeSync(1, out);
+  } catch {
+    return; // not emitted, so not shown
+  }
   recordNoticeShown();
 }
 

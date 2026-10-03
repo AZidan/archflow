@@ -421,6 +421,86 @@ def test_command_hook_prints_the_notice_when_it_runs_first(home, project):
 
 
 # --------------------------------------------------------------------------
+# The notice in the shape each host surfaces, marked shown only when emitted
+# --------------------------------------------------------------------------
+
+def _session_start_output(home, project, host):
+    root = ADAPTER_ROOTS.get(host, PLUGIN)
+    return hook(home, project, payload={"cwd": str(project), "source": "startup"}, root=root, ARCHFLOW_HOST=host).stdout
+
+
+def test_copilot_session_start_notice_is_json_additional_context(home, project):
+    out = _session_start_output(home, project, "copilot")
+    doc = json.loads(out)  # Copilot drops non-JSON SessionStart output
+    assert set(doc) == {"additionalContext"}
+    assert "anonymous usage telemetry" in doc["additionalContext"]
+    assert "/archflow:telemetry off" in doc["additionalContext"]
+    assert "noticeShownAt" in config(home)
+
+
+def test_gemini_session_start_notice_is_hook_specific_json(home, project):
+    doc = json.loads(_session_start_output(home, project, "gemini"))
+    assert doc["hookSpecificOutput"]["hookEventName"] == "SessionStart"
+    assert "anonymous usage telemetry" in doc["hookSpecificOutput"]["additionalContext"]
+    assert "noticeShownAt" in config(home)
+
+
+@pytest.mark.parametrize("host", ["claude", "codex", "cursor", "opencode", "generic"])
+def test_plain_text_hosts_get_the_notice_as_text(home, project, host):
+    out = _session_start_output(home, project, host)
+    assert out.startswith("Archflow sends anonymous usage telemetry")
+    assert "noticeShownAt" in config(home)
+
+
+def test_copilot_prints_nothing_once_the_notice_was_shown(home, project):
+    _session_start_output(home, project, "copilot")
+    assert _session_start_output(home, project, "copilot") == ""
+
+
+def test_notice_not_marked_shown_when_host_format_is_unknown(home, project):
+    """An unrecognised host gets no output, so the notice must stay pending, not be recorded."""
+    out = hook(home, project, ARCHFLOW_HOST="some-new-host").stdout
+    assert out == ""
+    assert "noticeShownAt" not in config(home)
+    # The event itself is still sent (host masked), and a later known host shows the notice.
+    assert sent(home)[0]["properties"]["host"] == "other"
+    assert "anonymous usage telemetry" in _session_start_output(home, project, "copilot")
+    assert "noticeShownAt" in config(home)
+
+
+def test_notice_not_marked_shown_when_stdout_cannot_be_written(home, project):
+    """stdout is a pipe nobody reads (EPIPE): nothing was emitted, so nothing is recorded."""
+    r, w = os.pipe()
+    os.close(r)
+    try:
+        proc = subprocess.run(
+            ["node", str(HOOK)], input=json.dumps({"cwd": str(project)}).encode(), stdout=w,
+            stderr=subprocess.PIPE, cwd=str(project), timeout=15,
+            env=base_env(home, CLAUDE_PLUGIN_ROOT=PLUGIN),
+        )
+    finally:
+        os.close(w)
+    assert proc.returncode == 0, proc.stderr
+    assert "noticeShownAt" not in config(home)
+    assert len(sent(home)) == 1, "the event still goes out; only the notice stays pending"
+
+
+def test_prompt_hook_never_marks_the_notice_shown(home, project):
+    hook(home, project, ["--prompt"], {"cwd": str(project), "prompt": "/archflow-status"},
+         root=ADAPTER_ROOTS["copilot"], ARCHFLOW_HOST="copilot")
+    assert "noticeShownAt" not in config(home)
+
+
+def test_security_md_documents_every_named_property():
+    """The payload in SECURITY.md is complete: each property it names literally, plus the PostHog flag."""
+    text = (REPO / "SECURITY.md").read_text()
+    section = text[text.index("## Telemetry"):text.index("## Credentials")]
+    for name in ("via_studio", "studio_capture", "session_source", "detected_by", "$process_person_profile",
+                 "session_start", "command_run", "cli_install", "telemetry_opted_out", "telemetry_opted_in"):
+        assert name in section, f"SECURITY.md telemetry section does not name {name}"
+
+
+# --------------------------------------------------------------------------
 # The id is minted on the first event, whichever hook sends it
 # --------------------------------------------------------------------------
 
