@@ -83,7 +83,7 @@ stories:
   - id: S8-05
     title: "Framework-wide anonymous telemetry"
     priority: Critical
-    status: in_progress
+    status: review
     gates: {needs_design: false, needs_contract: false}
     assigned: api-engineer
     description: >-
