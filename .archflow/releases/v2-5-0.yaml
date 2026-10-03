@@ -309,7 +309,7 @@ stories:
   - id: S9-04
     title: "Studio-first site repositioning"
     priority: High
-    status: in_progress
+    status: parked
     gates: {needs_design: false, needs_contract: false}
     assigned: ui-engineer
     description: >-
@@ -339,3 +339,14 @@ stories:
       - {text: "Reconcile telemetry with the privacy copy: 'Local, and only local' / 'never leave the machine' must still be true with telemetry on by default (code and credentials never leave; anonymous usage events do)", completed: false}
       - {text: "Reconcile phase count: '6 gated phases' / 'Six phases' vs the five numbered phases plus the contract gate shown", completed: false}
       - {text: "Apply the answers to Q1-Q4", completed: false}
+    parked:
+      question: 'The homepage hero tells people to run `npx archflow studio`, but this repo''s CLI has no `studio` command (only install and telemetry), so it fails with "Unknown command: studio". Keep it, drop it, or ship it?'
+      context: 'Everything else in S9-04 is done on branch site/studio-first-homepage (index-next.html promoted, meta dup fixed, privacy copy now true with telemetry on, phase count = five phases + contract gate, D5-D8 applied, studio guide fixed: full mode is the default). Two more decisions ride on this one: (2) D5 says Studio runs on every host, but nothing in this repo backs it: plugin/commands/studio.md and the bundled plugin/server are Claude Code only, build-adapters skips /archflow:studio on other hosts, and CHANGELOG still says ''Studio stays Claude Code only''. The page now claims every host; the CHANGELOG was NOT edited. Either sync the multi-host Studio bundle into this repo and add an [Unreleased] line, or revert the page to Claude Code only. (3) D6 put ''Free and MIT'' on the Studio badge, but .claude/skills/archflow-marketing rules 1-2 say never imply Studio''s price or licence; rule 7 still says Studio is Claude Code only. Keep ''Free and MIT'' and update the guardrails, or use plain ''Beta''.'
+      options:
+        - "Drop the npx line; Studio is started with /archflow:studio"
+        - "Keep it; I will ship npx archflow studio before 2.5.0"
+        - "Replace it with npx archflow install, then /archflow:studio"
+      blocks_release: true
+      branch: site/studio-first-homepage
+      at: "2026-10-03T21:21:47Z"
+      by: "autopilot:2026-10-03-1"
