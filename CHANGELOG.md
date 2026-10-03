@@ -45,9 +45,11 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   such as before a shell command, and then as the shell's directory. So session start, prompt and
   stop hooks fell back to whatever directory the hook ran in, and a shell in a subdirectory of the
   project, as in a monorepo, skipped the git guard, letting a force push to `main` through. The
-  bridge now uses the nearest directory above `cwd` that is an Archflow project. Without one, it
-  uses the first workspace root that is an Archflow project, else the first workspace root. A shell
-  in a workspace root that is not an Archflow project is left alone.
+  bridge now uses the nearest directory at or above `cwd`, up to its workspace root, that is an
+  Archflow project. A shell in a workspace root that is not an Archflow project is left alone,
+  even when that root sits inside an Archflow project. A `cwd` outside every workspace root is
+  walked up without that limit. Without a `cwd`, or when that finds no project, it uses the first
+  workspace root that is an Archflow project, else the first workspace root.
 - On Cursor, the stop hook's warning about `.archflow/` files that no longer match their schemas
   was never shown, because the bridge relayed only stdout and the warning is written to stderr.
   The bridge now relays both.

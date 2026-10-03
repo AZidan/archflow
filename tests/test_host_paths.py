@@ -311,8 +311,11 @@ def test_the_tilde_form_really_would_have_failed(gemini_home, tmp_path):
 # beforeShellExecution carries it. Project hooks run with the project root as their process cwd.
 #
 # Project choice, as the bridge implements it:
-#   1. with a cwd, the nearest ancestor of it (or itself) that has .archflow/, so a shell in a
-#      monorepo subdirectory is still inside the project and the git guard still applies;
+#   1. with a cwd, the nearest directory from it up to its workspace root (inclusive) that has
+#      .archflow/, so a shell in a monorepo subdirectory is still inside the project and the git
+#      guard still applies. The walk never leaves the workspace root, so a repo opened as the
+#      workspace is judged on its own even if it sits inside an Archflow project. Only a cwd
+#      outside every root is walked up without a bound;
 #   2. with a cwd inside a workspace root that is not an Archflow project (and no Archflow
 #      ancestor), that root: the command runs in a repo that never opted in, so it is a plain
 #      workspace and the guard stays out, even if another root is an Archflow project;
@@ -523,6 +526,36 @@ def test_shell_in_a_non_archflow_root_is_a_plain_workspace(cursor_env, tmp_path)
     for roots in ([project, tools], [tools, project]):
         _, out = bridge("beforeShellExecution", shell_payload(roots, tools), home, elsewhere, project / ".cursor")
         assert out == {}, f"roots={roots}: {out}"
+
+
+def test_a_non_archflow_workspace_nested_in_an_archflow_project_is_left_alone(cursor_env, tmp_path):
+    # outer-app is an Archflow project on main. vendor/lib is its own repo, with no .archflow/, and
+    # is what the user opened in Cursor. The walk stops at that root, so the outer project's guard
+    # does not judge a push in vendor/lib, matching sessionStart for the same workspace.
+    home, elsewhere = cursor_env
+    outer = make_project(tmp_path / "outer-app")
+    lib = outer / "vendor" / "lib"
+    (lib / ".git").mkdir(parents=True)
+    (lib / ".git" / "HEAD").write_text("ref: refs/heads/main\n")
+    for cwd in (lib, lib / "src"):
+        cwd.mkdir(exist_ok=True)
+        _, out = bridge("beforeShellExecution", shell_payload([lib], cwd), home, elsewhere, outer / ".cursor")
+        assert out == {}, f"cwd={cwd}: {out}"
+    _, start = bridge("sessionStart", cursor_payload("sessionStart", [lib], **EVENT_FIELDS["sessionStart"]),
+                      home, elsewhere, outer / ".cursor")
+    assert "ARCHFLOW-INSTRUCTIONS" not in json.dumps(start)
+
+
+def test_shell_outside_every_root_walks_up_without_a_bound(cursor_env, tmp_path):
+    # The terminal is in a subdirectory of an Archflow project that is not a workspace root.
+    home, elsewhere = cursor_env
+    root = make_project(tmp_path / "shop-api", branch="feature-x")
+    there = make_project(tmp_path / "billing-api")
+    sub = there / "packages" / "web"
+    sub.mkdir(parents=True)
+    _, out = bridge("beforeShellExecution", shell_payload([root], sub), home, elsewhere, root / ".cursor")
+    assert out["permission"] == "deny"
+    assert "billing-api" in out["agent_message"]
 
 
 def test_shell_outside_every_root_falls_back_to_the_archflow_root(cursor_env, tmp_path):

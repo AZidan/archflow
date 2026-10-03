@@ -258,7 +258,7 @@ stories:
   - id: S7-05
     title: "Gemini $HOME path and Cursor workspace-root fixes"
     priority: High
-    status: review
+    status: done
     gates: {needs_design: false, needs_contract: false}
     assigned: api-engineer
     description: >-
@@ -270,12 +270,12 @@ stories:
       install the adapter into ~/.gemini or any other global host config. The live on-host check of
       both is the user's, after the run; do not park the story for it.
     acceptance_criteria:
-      - {text: "Gemini /archflow:doctor resolves the plugin path (automated test; live check by user)", met: false}
-      - {text: "Cursor hooks find the project without cwd (automated test; live check by user)", met: false}
+      - {text: "Gemini /archflow:doctor resolves the plugin path (automated test; live check by user)", met: true}
+      - {text: "Cursor hooks find the project without cwd (automated test; live check by user)", met: true}
     subtasks:
       - {text: "Fix Gemini command paths", completed: true}
       - {text: "Cursor bridge fallback", completed: true}
-      - {text: "Automated tests for both fixes", completed: false}
+      - {text: "Automated tests for both fixes", completed: true}
       - {text: "Live verification on Gemini CLI and Cursor (user, after the run)", completed: false}
     issues:
       - id: I-1
@@ -298,6 +298,13 @@ stories:
         severity: minor
         location: "plugin/commands/migrate.md:30"
         report: "docs/qa-reports/S7-05-code-review.md"
+        status: fixed
+      - id: I-4
+        summary: "Cursor bridge's ancestor walk climbs past the workspace root: a non-Archflow repo nested in an Archflow project gets the git guard (naming the outer project), contradicting the CHANGELOG's 'left alone' and Claude Code's behaviour"
+        found_by: pm-reviewer
+        severity: minor
+        location: "scripts/build-adapters.mjs:288"
+        report: "docs/acceptance-reports/S7-05-review.md"
         status: fixed
   - id: S9-04
     title: "Studio-first site repositioning"

@@ -285,15 +285,18 @@ const roots = Array.isArray(input.workspace_roots)
 function projectDir() {
   const at = typeof input.cwd === "string" && input.cwd ? resolve(input.cwd) : null;
   if (at) {
-    // 1. The nearest ancestor of cwd (or cwd itself) that is an Archflow project.
+    // The workspace root cwd is in (the innermost, if roots nest). The walk stops there: a repo
+    // opened as the workspace is judged on its own, even when it sits inside an Archflow project.
+    const bound = roots.filter((r) => inside(at, r)).sort((a, b) => b.length - a.length)[0];
+    // 1. The nearest directory from cwd up to that root (or, outside every root, up to the
+    //    filesystem root) that is an Archflow project.
     for (let d = at; ; d = dirname(d)) {
       if (isProject(d)) return d;
-      if (dirname(d) === d) break;
+      if (d === bound || dirname(d) === d) break;
     }
     // 2. cwd inside a workspace root that is not an Archflow project: the command is about that
     //    repo, which never opted in, so it is treated as a plain workspace.
-    const home = roots.find((r) => inside(at, r));
-    if (home) return home;
+    if (bound) return bound;
   }
   // 3. No cwd, or cwd outside every root: the first Archflow root, else the first root.
   return roots.find(isProject) || roots[0] || at || process.cwd();
