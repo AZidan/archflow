@@ -169,19 +169,48 @@ stories:
   - id: S8-06
     title: "/archflow:telemetry and npx archflow telemetry"
     priority: High
-    status: in_progress
+    status: done
     gates: {needs_design: false, needs_contract: false}
     assigned: api-engineer
     description: >-
       Opt-out/in command on every host. Opting out sends one final telemetry_opted_out event and
       nothing after; opting in sends telemetry_opted_in. DECISION (user, 2026-09-23): build as scoped.
     acceptance_criteria:
-      - {text: "/archflow:telemetry [on|off] works on every host", met: false}
-      - {text: "After opt-out no further events are sent", met: false}
+      - {text: "/archflow:telemetry [on|off] works on every host", met: true}
+      - {text: "After opt-out no further events are sent", met: true}
     subtasks:
       - {text: "plugin/commands/telemetry.md", completed: true}
       - {text: "Adapter telemetry commands/skills", completed: true}
-      - {text: "CLI telemetry subcommand tests", completed: false}
+      - {text: "CLI telemetry subcommand tests", completed: true}
+    issues:
+      - id: I-1
+        summary: "While DO_NOT_TRACK/CI/ARCHFLOW_TELEMETRY_DISABLED is set, `npx archflow telemetry` advises `archflow telemetry on`, and `on` (CLI and every host command) prints 'now ON' though nothing will be sent"
+        found_by: qa-engineer
+        severity: minor
+        location: "scripts/archflow.mjs:494"
+        report: "docs/qa-reports/S8-06-qa.md"
+        status: fixed
+      - id: I-2
+        summary: "An opt-out whose config write fails (saveConfig swallows errors) still prints 'now OFF … nothing else will be sent' after sending telemetry_opted_out, and later events keep sending"
+        found_by: code-reviewer
+        severity: blocking
+        location: "plugin/lib/telemetry.mjs:230"
+        report: "docs/qa-reports/S8-06-code-review.md"
+        status: fixed
+      - id: I-3
+        summary: "CHANGELOG still says /archflow:telemetry [on|off], and the command's bad-argument reply omits status"
+        found_by: code-reviewer
+        severity: minor
+        location: "CHANGELOG.md:27"
+        report: "docs/qa-reports/S8-06-code-review.md"
+        status: fixed
+      - id: I-4
+        summary: "CLI status hint says `archflow telemetry off|on`, which is not on PATH for an npx user (documented form is `npx archflow telemetry`)"
+        found_by: pm-reviewer
+        severity: minor
+        location: "scripts/archflow.mjs:496"
+        report: "docs/acceptance-reports/S8-06-review.md"
+        status: fixed
   - id: S7-04
     title: "build-adapters HOOK_SCRIPTS helper"
     priority: Medium

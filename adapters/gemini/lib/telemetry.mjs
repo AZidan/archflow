@@ -19,7 +19,7 @@
  * a command fails or a hook blocks a session.
  */
 
-import { appendFileSync, mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { randomUUID } from "node:crypto";
@@ -159,24 +159,36 @@ export const CONFIG_UNREADABLE_NOTE =
   `${CONFIG_PATH} could not be read, so anonymous usage telemetry is off and that file was left as is. ` +
   "Fix or delete it to choose again.";
 
+/** true once the file is written; false if it was left alone (unreadable) or the write failed. */
 function saveConfig(config) {
   // Never replace a file we could not read: it may hold the user's opt-out.
-  if (isConfigUnreadable(config) || isConfigUnreadable(loadConfig())) return;
+  if (isConfigUnreadable(config) || isConfigUnreadable(loadConfig())) return false;
+  const tmp = `${CONFIG_PATH}.${process.pid}.tmp`;
   try {
     mkdirSync(CONFIG_DIR, { recursive: true });
     // Atomic: hooks, the CLI and Studio can all write this file at once.
-    const tmp = `${CONFIG_PATH}.${process.pid}.tmp`;
     writeFileSync(tmp, JSON.stringify(config, null, 2) + "\n");
     renameSync(tmp, CONFIG_PATH);
+    return true;
   } catch {
-    // best-effort: a choice that fails to persist just re-shows the notice next time
+    // Callers that only record the notice or the id treat this as best-effort (the notice is
+    // re-shown next time). setConsent does not: an unsaved choice must not be reported as made.
+    try { rmSync(tmp, { force: true }); } catch { /* nothing to clean up */ }
+    return false;
   }
 }
 
+export const CONFIG_UNWRITABLE_NOTE = `Nothing was changed: could not write ${CONFIG_PATH}.`;
+
 const set = (v) => Boolean(v) && !/^(0|false|no|off)$/i.test(String(v).trim());
 
+/** The environment variable that turns telemetry off for this process, or null. */
+export function disabledByEnv() {
+  return ["ARCHFLOW_TELEMETRY_DISABLED", "DO_NOT_TRACK", "CI"].find((k) => set(process.env[k])) || null;
+}
+
 function envDisabled() {
-  return set(process.env.ARCHFLOW_TELEMETRY_DISABLED) || set(process.env.DO_NOT_TRACK) || set(process.env.CI);
+  return disabledByEnv() !== null;
 }
 
 export function hasSeenNotice(config = loadConfig()) {
@@ -200,8 +212,10 @@ export function recordNoticeShown() {
 
 /**
  * An explicit on/off choice. A real change sends exactly one event, so opt-outs
- * can be counted: telemetry_opted_out is captured BEFORE the setting is saved
- * (the last event this machine sends), telemetry_opted_in AFTER. Neither is sent
+ * can be counted. The choice is saved FIRST and an event goes out only once it
+ * has persisted: telemetry_opted_out (the last event this machine sends) is sent
+ * despite the stored "off" it follows, telemetry_opted_in once "on" is stored.
+ * If the save fails nothing is sent and `saved: false` tells the caller to say so. Neither is sent
  * when nothing changed, or when DO_NOT_TRACK / CI / ARCHFLOW_TELEMETRY_DISABLED
  * is set, because those mean send nothing at all. `via` says where the change
  * was made (command, cli, studio).
@@ -220,17 +234,47 @@ export function setConsent(enabled, { via = null, archflow_version = null, host 
       : null,
   };
   // Mint the id first, so an opt-out that is someone's very first action is still one distinct person.
-  ensureDistinctId(config);
-  const optedOut = !enabled && wasEnabled && Boolean(POSTHOG_API_KEY);
-  if (optedOut) capture("telemetry_opted_out", props);
+  if (!isUuid(config.distinctId)) config.distinctId = randomUUID();
+  const now = new Date().toISOString();
+  // When the stored choice last changed, so status can say "off since" the opt-out rather than
+  // since the notice. Repeating the current choice leaves it alone; noticeShownAt keeps its meaning.
+  if ((config.telemetryEnabled !== false) !== Boolean(enabled)) config.consentChangedAt = now;
   config.telemetryEnabled = Boolean(enabled);
-  config.noticeShownAt ||= new Date().toISOString();
-  saveConfig(config);
+  config.noticeShownAt ||= now;
+  if (!saveConfig(config)) return { config: loadConfig(), sentOptOut: false, saved: false };
+  // wasEnabled already folds in the env variables and an unreadable file, so this is the
+  // stored-choice check capture() would make, taken before "off" was written.
+  const sentOptOut = !enabled && wasEnabled && Boolean(POSTHOG_API_KEY);
+  if (sentOptOut) emit("telemetry_opted_out", props, config);
   if (enabled && !wasEnabled) capture("telemetry_opted_in", props);
-  return { config, sentOptOut: optedOut };
+  return { config, sentOptOut, saved: true };
+}
+
+/**
+ * One line for `--status` and `archflow telemetry`: "on" or "off", and why or since when.
+ * An environment variable wins over the stored choice, so it is named rather than a date.
+ */
+export function statusLine(config = loadConfig()) {
+  if (isConfigUnreadable(config)) return `off (${CONFIG_UNREADABLE_NOTE})`;
+  const byEnv = disabledByEnv();
+  if (byEnv) return `off (${byEnv} is set in the environment; nothing is sent while it is)`;
+  const state = isEnabled(config) ? "on" : "off";
+  const since = typeof config.consentChangedAt === "string" ? config.consentChangedAt : config.noticeShownAt;
+  return `${state}${typeof since === "string" ? ` (since ${since})` : " (default)"}`;
 }
 
 export const OPT_OUT_CONFIRMATION = "Anonymous usage telemetry is now OFF.";
+
+/**
+ * What `on` prints, from the CLI and every host's command. While an environment variable
+ * disables telemetry the choice is still saved, but nothing is sent, so say so and name it.
+ */
+export function optInConfirmation() {
+  const byEnv = disabledByEnv();
+  return byEnv
+    ? `Your choice (on) is saved, but anonymous usage telemetry stays OFF while ${byEnv} is set; nothing is sent.`
+    : "Anonymous usage telemetry is now ON.";
+}
 export const OPT_OUT_SENT_NOTE = " One final event recorded the opt-out; nothing else will be sent.";
 
 /**
@@ -269,6 +313,12 @@ function ensureDistinctId(config) {
 export function capture(event, properties = {}) {
   const config = loadConfig();
   if (!isEnabled(config) || !POSTHOG_API_KEY) return;
+  emit(event, properties, config);
+}
+
+/** Build and send one event. Only capture() and setConsent's opt-out call this, after their checks. */
+function emit(event, properties, config) {
+  if (!POSTHOG_API_KEY) return;
   const props = allowedProperties(event, {
     ...runtimeContext(),
     ...properties,

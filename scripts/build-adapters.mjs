@@ -1009,7 +1009,10 @@ for (const host of targets) {
   }
   const out = check ? join(OUT, `.${host}.check`) : join(OUT, host);
   rmSync(out, { recursive: true, force: true });
-  def.emit({ out, vocab: def.vocab, commands, agents, host });
+  // The telemetry command runs its script outside any hook, so ARCHFLOW_HOST is unset there; pass
+  // the host on the command line instead, so an opt-out or opt-in is attributed to this host.
+  const vocab = [...def.vocab, [/(\/hooks\/telemetry\.mjs") --(enable|disable)\b/g, `$1 --$2 --host ${host}`]];
+  def.emit({ out, vocab, commands, agents, host });
 
   if (check) {
     const live = join(OUT, host);
