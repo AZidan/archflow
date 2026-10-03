@@ -18,7 +18,8 @@ REPO = Path(__file__).resolve().parents[1]
 DOCS = REPO / "docs"
 
 # The complete published surface. Adding to it is a deliberate act.
-PUBLISHED_MD = {"guides"}
+# compare/ holds the BMAD and gstack comparison pages, linked from the homepage.
+PUBLISHED_MD = {"guides", "compare"}
 
 
 def excludes():
@@ -67,7 +68,12 @@ def test_internal_docs_are_not_tracked_by_default():
     else under docs/internal/ stays out of git.
     """
     gitignore = (REPO / ".gitignore").read_text()
-    assert "docs/internal/*" in gitignore, "docs/internal/ is not ignored by default"
+    # docs/internal is a symlink into the archflow-internal repo, so the ignore rule
+    # names the link itself (`docs/internal`); `docs/internal/*` would not match it.
+    ignore_lines = {l.strip() for l in gitignore.splitlines()}
+    assert ignore_lines & {"docs/internal", "docs/internal/", "docs/internal/*"}, (
+        "docs/internal/ is not ignored by default"
+    )
     exceptions = [l.strip() for l in gitignore.splitlines() if l.strip().startswith("!docs/internal/")]
     assert len(exceptions) <= 5, (
         f"{len(exceptions)} exceptions to the internal-docs ignore. Each one is a file that "

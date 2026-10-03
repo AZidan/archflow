@@ -77,7 +77,7 @@ decisions:
     answer: "All telemetry tests stub the network; no test may send an event to the real PostHog host."
     applies_to: ["S8-05", "S8-06"]
 queue:
-  - {story_id: PRE-EXISTING-FAILURE, title: "Fix 2 failing tests in tests/test_site_publishing.py", order: 1, state: pending}
+  - {story_id: PRE-EXISTING-FAILURE, title: "Fix 2 failing tests in tests/test_site_publishing.py", order: 1, state: done, branch: v2.5.0-autopilot, commits: 1, review_risk: low, finished_at: "2026-10-03T16:09:39Z"}
   - {story_id: S8-07, title: "Record telemetry policy: on by default (opt-out), framework-wide", order: 2, state: pending}
   - {story_id: S7-04, title: "build-adapters HOOK_SCRIPTS helper", order: 3, state: pending}
   - {story_id: S8-05, title: "Framework-wide anonymous telemetry", order: 4, state: pending}
@@ -86,3 +86,4 @@ queue:
   - {story_id: S9-04, title: "Studio-first site repositioning", order: 7, state: pending}
 events:
   - {at: "2026-10-03T16:08:03Z", event: started, detail: "queue order: pre-existing failures, then dependency (S8-07 before S8-05; S7-04 helper before telemetry adapters; S8-07 policy before S9-04 privacy copy), then priority, then id"}
+  - {at: "2026-10-03T16:09:39Z", story: PRE-EXISTING-FAILURE, event: merged, detail: "compare/ added to PUBLISHED_MD; gitignore guard accepts the docs/internal symlink rule; autopilot/ ledgers excluded from mirror checks (test + CI). Suite 288 passed."}

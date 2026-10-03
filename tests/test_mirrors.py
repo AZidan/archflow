@@ -23,6 +23,7 @@ DOGFOOD_ONLY = {
     "project-context.md",
     "current-feature.yaml",
     "releases",
+    "autopilot",
 }
 
 

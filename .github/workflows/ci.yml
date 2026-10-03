@@ -78,7 +78,7 @@ jobs:
         run: >-
           diff -r -x SKILL.md -x mcp-registry.yaml -x .DS_Store
           -x current-phase.yaml -x project-settings.yaml -x roadmap.yaml -x backlog.yaml
-          -x history.yaml -x project-context.md -x current-feature.yaml -x releases
+          -x history.yaml -x project-context.md -x current-feature.yaml -x releases -x autopilot
           .archflow plugin/skills/archflow
 
       - name: Host adapters match the plugin
