@@ -17,7 +17,8 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   decision. Sessions send `session_start` and
   Archflow commands send `command_run` with the command name only; `npx archflow install` sends
   `cli_install`. Session and command events carry host, entrypoint, Studio, project type,
-  version, phase and mode; `cli_install` carries the version and the installed hosts. None carries
+  version, phase and mode; `cli_install` carries the version, the installed hosts and the install
+  source. None carries
   project names, paths, contents, prompts or arguments (full list in `SECURITY.md`). A one-time notice announces it.
 - How commands are detected: Claude Code's `UserPromptExpansion` hook and OpenCode's
   `command.executed` event name the command directly. Codex, Copilot, Cursor and Gemini read the

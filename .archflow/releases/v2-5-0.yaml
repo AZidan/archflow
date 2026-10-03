@@ -45,6 +45,34 @@ stories:
         location: "SECURITY.md:4"
         report: "docs/qa-reports/S8-07-qa.md"
         status: fixed
+      - id: I-3
+        summary: "SECURITY.md says cli_install carries 'only' hosts and source, but every event also sends entrypoint, via_studio, studio_capture; studio_capture is undocumented"
+        found_by: code-reviewer
+        severity: blocking
+        location: "SECURITY.md:94"
+        report: "docs/qa-reports/S8-07-code-review.md"
+        status: fixed
+      - id: I-4
+        summary: "SECURITY.md 'sends no project data anywhere' contradicts project_type/phase/mode/has_project in the payload"
+        found_by: code-reviewer
+        severity: minor
+        location: "SECURITY.md:4"
+        report: "docs/qa-reports/S8-07-code-review.md"
+        status: fixed
+      - id: I-5
+        summary: "SECURITY.md says telemetry is off whenever CI is set, but CI/DO_NOT_TRACK of 0/false/no/off leave it on"
+        found_by: code-reviewer
+        severity: minor
+        location: "SECURITY.md:106"
+        report: "docs/qa-reports/S8-07-code-review.md"
+        status: fixed
+      - id: I-6
+        summary: "ADR 005 says only notice-printing code records noticeShownAt, but setConsent also sets it"
+        found_by: code-reviewer
+        severity: minor
+        location: "docs/internal/decisions/005-framework-telemetry-opt-out.md:98"
+        report: "docs/qa-reports/S8-07-code-review.md"
+        status: fixed
   - id: S8-05
     title: "Framework-wide anonymous telemetry"
     priority: Critical
