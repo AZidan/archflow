@@ -12,7 +12,7 @@ stories:
   - id: S8-07
     title: "Record telemetry policy: on by default (opt-out), framework-wide"
     priority: Critical
-    status: ready
+    status: in_progress
     gates: {needs_design: false, needs_contract: false}
     assigned: api-engineer
     description: >-
