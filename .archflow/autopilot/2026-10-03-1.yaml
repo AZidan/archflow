@@ -1,0 +1,88 @@
+run_id: "2026-10-03-1"
+started_at: "2026-10-03T16:08:03Z"
+status: running
+base_branch: v2.5.0
+run_branch: v2.5.0-autopilot
+release: v2-5-0
+mode_at_start: full   # run borrows quick-mode gate semantics; mode is NOT switched
+parked_policy: blocks_release
+envelope:
+  merge_to_run_branch: true
+  merge_to_main: false
+  open_pr: false
+  run_qa: true
+  run_acceptance: true
+stop_conditions:
+  max_consecutive_parks: 2
+  max_qa_retries: 2
+decisions:
+  - id: D1
+    question: "Stop condition?"
+    answer: "Run the whole queue"
+    applies_to: ["all"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D2
+    question: "Parked stories — block the release or flag as open questions?"
+    answer: "Block the release until resolved"
+    applies_to: ["all"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D3
+    question: "Run branch?"
+    answer: "v2.5.0-autopilot, cut from v2.5.0"
+    applies_to: ["all"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D4
+    question: "The 2 pre-existing failures in tests/test_site_publishing.py?"
+    answer: >-
+      Fix them in this repo, inside the run, as PRE-EXISTING-FAILURE (queue item 1). Resolved from
+      artifacts: docs/compare/ pages are deliberately published (linked from docs/index.html since
+      commit f7ef778), so add "compare" to PUBLISHED_MD rather than hiding them. docs/internal is a
+      symlink into archflow-internal and is already untracked; make the gitignore guard accept the
+      pattern that actually ignores it (keep docs/internal content out of git). Do not touch
+      archflow-internal for this.
+    applies_to: ["PRE-EXISTING-FAILURE"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D5
+    question: "S9-04 Q1 — is multi-host Studio shipped?"
+    answer: >-
+      Yes, Studio runs on every supported host. Keep the banner and the hero host list; fix the
+      contradicting line ("In-panel agents are Claude Code today. Codex is next, then OpenCode, then
+      the rest.", index-next.html ~L602). The CHANGELOG 2.4.0 entry is historical; the page must be
+      consistent with the multi-host claim.
+    applies_to: ["S9-04"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D6
+    question: "S9-04 Q2 — 'Free while in beta' wording?"
+    answer: "Replace with 'Free and MIT' (hero badge and meta description). No pricing hints."
+    applies_to: ["S9-04"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D7
+    question: "S9-04 Q3 — 'Codex is next, then OpenCode, then the rest' ordering?"
+    answer: "Drop the ordering; say more agents are coming. No public sequence commitment."
+    applies_to: ["S9-04"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D8
+    question: "S9-04 Q4 — proof numbers?"
+    answer: >-
+      Update from metrics instead: use unique cloners, phrased as projects (1 project per unique
+      clone). Sum of daily clone_uniques in metrics/traffic.csv on origin/main (2026-08-16 →
+      2026-10-02) = 1,131 → "running on 1,100+ projects". Replace the "5 production codebases /
+      250+ stories / 6 months / 8 releases and 71 stories" proof figures with this one number where
+      they act as proof; do not invent other figures. Note in the report: daily uniques double-count
+      repeat cloners, so this is an upper bound.
+    applies_to: ["S9-04"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D9
+    question: "Telemetry tests and the real PostHog key (agent decision, not asked)"
+    answer: "All telemetry tests stub the network; no test may send an event to the real PostHog host."
+    applies_to: ["S8-05", "S8-06"]
+queue:
+  - {story_id: PRE-EXISTING-FAILURE, title: "Fix 2 failing tests in tests/test_site_publishing.py", order: 1, state: pending}
+  - {story_id: S8-07, title: "Record telemetry policy: on by default (opt-out), framework-wide", order: 2, state: pending}
+  - {story_id: S7-04, title: "build-adapters HOOK_SCRIPTS helper", order: 3, state: pending}
+  - {story_id: S8-05, title: "Framework-wide anonymous telemetry", order: 4, state: pending}
+  - {story_id: S8-06, title: "/archflow:telemetry and npx archflow telemetry", order: 5, state: pending}
+  - {story_id: S7-05, title: "Gemini $HOME path and Cursor workspace-root fixes", order: 6, state: pending}
+  - {story_id: S9-04, title: "Studio-first site repositioning", order: 7, state: pending}
+events:
+  - {at: "2026-10-03T16:08:03Z", event: started, detail: "queue order: pre-existing failures, then dependency (S8-07 before S8-05; S7-04 helper before telemetry adapters; S8-07 policy before S9-04 privacy copy), then priority, then id"}
