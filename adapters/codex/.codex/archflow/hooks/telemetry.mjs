@@ -3,8 +3,9 @@
  * Telemetry hook. On by default; see plugin/lib/telemetry.mjs for what is sent.
  *
  *   (no flag)       session start: sends session_start with how the session began
- *   --command-run   Claude Code UserPromptExpansion (matcher ^archflow:.*): the
- *                   host names the command; never reads command_input
+ *   --command-run   Claude Code UserPromptExpansion (matcher ^archflow:.*) and
+ *                   OpenCode command.executed: the host names the command, which
+ *                   is reported only if it is a shipped one; never reads command_input
  *   --prompt        a host's prompt-submit hook (Codex, Copilot, Cursor, Gemini):
  *                   reads the raw prompt only to match a LEADING /archflow:x,
  *                   /archflow-x or $archflow-x against the shipped command list,
@@ -12,18 +13,29 @@
  *                   hosts prompt-hook stdout becomes model context or must be JSON.
  *   --status | --enable | --disable   used by /archflow:telemetry
  *
- * The one-time notice is printed by session start or --command-run, whose
- * plain stdout reaches the model, and marked shown only after printing.
+ * The one-time notice is printed by session start or --command-run, in the
+ * format the host surfaces (plain text, or JSON on Copilot and Gemini; see
+ * formatNotice), and marked shown only after it was written. Every
+ * property is checked against the allow-list in ../lib/telemetry.mjs, which
+ * drops unknown keys and turns an unrecognised project_type, phase, mode or
+ * session_source into null (or "other").
  *
  * FAIL-OPEN and FAST: no network in this process, exits 0 on every path.
  */
 
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync, readdirSync, writeSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { isatty } from "node:tty";
-import { NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isEnabled, loadConfig, recordNoticeShown, setConsent } from "../lib/telemetry.mjs";
+import { CONFIG_UNREADABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, hasSeenNotice, isConfigUnreadable, isEnabled, loadConfig, optOutLine, recordNoticeShown, setConsent } from "../lib/telemetry.mjs";
 
-const OPT_OUT_LINE = "Tell the user this once, and that /archflow:telemetry off turns it off.\n";
+/**
+ * This hook's own install root: plugin/ for the Claude Code plugin, <host>/archflow/
+ * (or the Gemini extension root) in an adapter. copyHookRuntime ships
+ * .claude-plugin/plugin.json and lib/ next to hooks/ there, so the version and the
+ * command list resolve even where no CLAUDE_PLUGIN_ROOT is set (the generic host).
+ */
+const HOOK_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 function readInput() {
   // isatty(0), not process.stdin.isTTY: touching process.stdin starts a stream reader
@@ -36,12 +48,17 @@ function readInput() {
   }
 }
 
+/** The version shipped beside this script, else under CLAUDE_PLUGIN_ROOT. */
 function pluginVersion(pluginRoot) {
-  try {
-    return JSON.parse(readFileSync(join(pluginRoot, ".claude-plugin", "plugin.json"), "utf8")).version || null;
-  } catch {
-    return null;
+  for (const root of [HOOK_ROOT, pluginRoot]) {
+    try {
+      const version = JSON.parse(readFileSync(join(root, ".claude-plugin", "plugin.json"), "utf8")).version;
+      if (version) return version;
+    } catch {
+      // try the next root
+    }
   }
+  return null;
 }
 
 /** Regex, not a YAML parse, like check-upgrade.mjs. */
@@ -95,9 +112,64 @@ export function commandFromPrompt(prompt, known) {
   return `archflow:${m[1]}`;
 }
 
+/**
+ * "archflow:status" from a name a host reports directly ("archflow:status" from
+ * Claude Code, "archflow-status" from OpenCode), only when it is a shipped
+ * command. A user's own archflow-* command, or a name with anything after it,
+ * is not reported.
+ */
+export function commandFromName(name, known) {
+  if (typeof name !== "string") return null;
+  const m = name.match(/^\/?archflow[:-]([a-z][a-z-]*)$/);
+  if (!m || !known?.has(m[1])) return null;
+  return `archflow:${m[1]}`;
+}
+
+/**
+ * Which host's output rules apply. Every adapter sets ARCHFLOW_HOST. Unset means
+ * the Claude Code plugin, but Copilot CLI can load that plugin directly and drops
+ * plain-text SessionStart output, so "claude" is claimed only when Claude Code's
+ * own markers are present: it writes CLAUDECODE=1 and CLAUDE_CODE_ENTRYPOINT into
+ * every subprocess it spawns, hooks included. Either one is enough, so a future
+ * Claude Code that drops one still gets the notice. With neither, the host is
+ * unknown and the notice stays pending.
+ */
+function noticeHost() {
+  if (process.env.ARCHFLOW_HOST) return process.env.ARCHFLOW_HOST;
+  return process.env.CLAUDECODE || process.env.CLAUDE_CODE_ENTRYPOINT ? "claude" : null;
+}
+
+/**
+ * The notice in the shape each host's hook actually surfaces to the model, or null
+ * for a host whose format is unknown. Plain stdout reaches the model on Claude Code
+ * and Codex, through the Cursor bridge (which wraps it as additional_context) and
+ * the OpenCode plugin (which pushes it into the system prompt), and to the agent
+ * that runs the script on generic. Copilot drops non-JSON SessionStart output and
+ * reads `additionalContext`; Gemini wants JSON on stdout with
+ * `hookSpecificOutput.additionalContext`.
+ */
+export function formatNotice(text, host = noticeHost(), hookEvent = "SessionStart") {
+  if (["claude", "codex", "cursor", "opencode", "generic"].includes(host)) return text;
+  if (host === "copilot") return JSON.stringify({ additionalContext: text });
+  if (host === "gemini") return JSON.stringify({ hookSpecificOutput: { hookEventName: hookEvent, additionalContext: text } });
+  return null;
+}
+
+/**
+ * Print the one-time notice, and mark it shown only once it has been written in a
+ * format this host surfaces. On an unknown host nothing is printed and the notice
+ * stays pending, so a later session on a known host still shows it.
+ */
 function showNoticeOnce() {
   if (hasSeenNotice(loadConfig()) || !isEnabled()) return;
-  process.stdout.write(NOTICE + OPT_OUT_LINE);
+  const host = noticeHost();
+  const out = formatNotice(NOTICE + optOutLine(host), host);
+  if (out === null) return;
+  try {
+    writeSync(1, out);
+  } catch {
+    return; // not emitted, so not shown
+  }
   recordNoticeShown();
 }
 
@@ -105,14 +177,22 @@ const arg = process.argv[2];
 
 if (arg === "--status") {
   const config = loadConfig();
+  if (isConfigUnreadable(config)) {
+    process.stdout.write(`off (${CONFIG_UNREADABLE_NOTE})\n`);
+    process.exit(0);
+  }
   process.stdout.write(`${isEnabled(config) ? "on" : "off"}${config.noticeShownAt ? ` (since ${config.noticeShownAt})` : " (default)"}\n`);
   process.exit(0);
 }
 
 if (arg === "--enable" || arg === "--disable") {
   const on = arg === "--enable";
-  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || join(process.env.CLAUDE_PROJECT_DIR || process.cwd(), "plugin");
-  const { sentOptOut } = setConsent(on, { via: "command", archflow_version: pluginVersion(pluginRoot) });
+  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || HOOK_ROOT;
+  const { sentOptOut, unreadable } = setConsent(on, { via: "command", archflow_version: pluginVersion(pluginRoot) });
+  if (unreadable) {
+    process.stdout.write(`Nothing was changed. ${CONFIG_UNREADABLE_NOTE}\n`);
+    process.exit(0);
+  }
   process.stdout.write(on ? "Anonymous usage telemetry is now ON.\n" : `${OPT_OUT_CONFIRMATION}${sentOptOut ? OPT_OUT_SENT_NOTE : ""}\n`);
   process.exit(0);
 }
@@ -120,18 +200,21 @@ if (arg === "--enable" || arg === "--disable") {
 try {
   const input = readInput();
   const cwd = input.cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd();
-  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || join(cwd, "plugin");
+  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || HOOK_ROOT;
   const common = { archflow_version: pluginVersion(pluginRoot), ...projectState(cwd) };
 
   // The opt-out command itself is never reported: turning telemetry off must not send an event.
   if (arg === "--command-run") {
-    const command = typeof input.command_name === "string" ? input.command_name : null;
+    const command = commandFromName(input.command_name, knownCommands(pluginRoot));
     if (command && command !== "archflow:telemetry") {
       showNoticeOnce();
       capture("command_run", { ...common, command, detected_by: "command_hook" });
     }
   } else if (arg === "--prompt") {
     const command = commandFromPrompt(input.prompt, knownCommands(pluginRoot));
+    // No notice here: on these hosts prompt-hook stdout is model context or must be JSON. If this
+    // fires before any session start, capture() still mints the id, and the notice stays pending
+    // for the next session start, which prints it through showNoticeOnce like every other surface.
     if (command && command !== "archflow:telemetry") {
       capture("command_run", { ...common, command, detected_by: "prompt_prefix" });
     }

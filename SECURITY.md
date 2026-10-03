@@ -93,9 +93,17 @@ generated on your machine, the Archflow version, the host, the host's entrypoint
 it is a Studio demo recording (`studio_capture`). Session and command events add whether the folder
 is an Archflow project, its project type, phase and mode, and either how the session started
 (`session_source`) or how the command was recognised (`detected_by`). `cli_install` adds which hosts
-were installed and where the files came from (the npm package or a release tag). It never sends project names, file paths, file
-contents, prompts or command arguments. The first run prints a one-time notice saying so and how to
-turn it off; it is a notice, not a question.
+were installed and where the files came from (the npm package or a release tag). Every event also sets `$process_person_profile: false`, a PostHog
+processing flag that stops PostHog building a person profile; it carries no user data. It never
+sends project names, file paths, file contents, prompts or command arguments.
+
+A one-time notice says so and how to turn it off; it is a notice, not a question. `npx archflow
+install` prints it in your terminal. In a coding-agent session the first session start (or, on
+Claude Code and OpenCode, the first Archflow command) gives it to the agent, which is asked to relay
+it to you. On Codex, Copilot, Cursor and Gemini, a command typed before any session start has run on
+the machine can send one `command_run` before the notice appears. When Copilot CLI loads the Claude Code plugin directly
+rather than the Copilot adapter, session events are sent but the notice cannot be shown there; it
+still appears in the first session on any other host.
 
 How a command is recognised differs by host. Claude Code and OpenCode report the command name
 directly. On Codex, Copilot, Cursor and Gemini a prompt-submit hook reads your prompt **on your
@@ -112,7 +120,8 @@ Turning it off with the command sends one final event, `telemetry_opted_out`, so
 counted. It carries the host, the Archflow version, where the change was made and how many days
 after the first-run notice. Nothing is sent after it. Turning telemetry back on sends
 `telemetry_opted_in`. The environment variables send nothing, not even that final event. The choice is stored in
-`~/.archflow/config.json` and applies to every project on the machine. Events are sent from a
+`~/.archflow/config.json` and applies to every project on the machine. If that file exists but cannot be
+read, telemetry stays off and Archflow leaves the file as it is. Events are sent from a
 short-lived background process, so a network failure never affects a session.
 
 **Archflow Studio sends its own events too**, through this same `~/.archflow/config.json` setting

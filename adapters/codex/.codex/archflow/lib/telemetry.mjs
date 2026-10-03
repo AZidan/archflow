@@ -9,16 +9,17 @@
  * choice lives in ~/.archflow/config.json, shared by every project on the
  * machine.
  *
- * WHAT IS SENT: an event name, non-identifying properties (host, entrypoint,
- * archflow version, phase, mode, command name) and a random id generated
- * locally. Never a project name, a file path, file contents, command
+ * WHAT IS SENT: exactly EVENT_PROPERTIES below, enforced in capture(): an event
+ * name, non-identifying properties (host, entrypoint, Studio flags, archflow
+ * version, project type, phase, mode, command name) and a random id generated
+ * locally. Never a project name, a file path, file contents, a prompt, command
  * arguments, or anything from .archflow/project-context.md.
  *
  * FAIL-OPEN: any error here is swallowed. Telemetry must never be the reason
  * a command fails or a hook blocks a session.
  */
 
-import { mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { randomUUID } from "node:crypto";
@@ -30,18 +31,137 @@ export const CONFIG_DIR = process.env.ARCHFLOW_CONFIG_DIR || join(homedir(), ".a
 export const CONFIG_PATH = join(CONFIG_DIR, "config.json");
 
 export const NOTICE =
-  "Archflow collects anonymous usage telemetry by default: which Archflow commands run, the host,\n" +
-  "version, phase and mode. Never project names, file paths, file contents or command arguments.\n";
+  "Archflow sends anonymous usage telemetry by default: which Archflow commands run, the host and its\n" +
+  "entrypoint, whether Studio launched it, the Archflow version, the project type, phase and mode, and\n" +
+  "for an install, the hosts installed and where from. Never project names, file paths, file contents,\n" +
+  "prompts or command arguments.\n";
 
-export function loadConfig() {
-  try {
-    return JSON.parse(readFileSync(CONFIG_PATH, "utf8"));
-  } catch {
-    return {};
-  }
+/**
+ * How the user turns telemetry off on each host, as that host invokes the command
+ * (adapters/<host>: Codex and generic run skills as $archflow-<cmd>; Copilot, Cursor
+ * and OpenCode use /archflow-<cmd>; Gemini nests commands as /archflow:<cmd>). Any
+ * other host gets the CLI, which works everywhere.
+ */
+export const OPT_OUT_COMMANDS = {
+  claude: "/archflow:telemetry off",
+  gemini: "/archflow:telemetry off",
+  codex: "$archflow-telemetry off",
+  generic: "$archflow-telemetry off",
+  copilot: "/archflow-telemetry off",
+  cursor: "/archflow-telemetry off",
+  opencode: "/archflow-telemetry off",
+};
+
+export function optOutLine(host) {
+  const command = Object.prototype.hasOwnProperty.call(OPT_OUT_COMMANDS, host) ? OPT_OUT_COMMANDS[host] : "npx archflow telemetry off";
+  return `Tell the user this once, and that ${command} turns it off.\n`;
 }
 
+/*
+ * THE ALLOW-LIST. capture() sends only the events named here, only the properties
+ * listed for each, and only values that pass the property's check. Anything else
+ * is dropped before the payload is built, so a caller cannot leak a field by
+ * passing it, and a hand-edited YAML value (a project name typed as `mode:`)
+ * cannot ride along. Keep this identical to SECURITY.md "## Telemetry".
+ */
+export const HOSTS = ["claude", "codex", "copilot", "cursor", "gemini", "opencode", "generic", "cli", "studio"];
+export const PROJECT_TYPES = ["fullstack", "frontend_only", "backend_only", "mobile"];
+export const MODES = ["quick", "full"];
+/** .archflow/schemas/current-phase-schema.yaml `phase` enum, as strings. */
+export const PHASES = ["1", "2", "2.25", "2.5", "3", "4", "5", "6"];
+/** SessionStart `source` values the hosts send (Copilot says "new" for a fresh session). */
+export const SESSION_SOURCES = ["startup", "resume", "clear", "compact", "new"];
+
+const oneOf = (list, fallback = null) => (v) => {
+  const s = typeof v === "number" ? String(v) : v;
+  return typeof s === "string" && list.includes(s) ? s : (v == null ? null : fallback);
+};
+const matching = (re, fallback = null) => (v) => (typeof v === "string" && re.test(v) ? v : (v == null ? null : fallback));
+const bool = (v) => v === true;
+const isUuid = (v) => typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+
+const COMMON = {
+  distinct_id: (v) => (isUuid(v) ? v : null),
+  archflow_version: matching(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/),
+  host: oneOf(HOSTS, "other"),
+  entrypoint: matching(/^[a-z0-9][a-z0-9_.-]{0,39}$/i, "other"),
+  via_studio: bool,
+  studio_capture: bool,
+};
+const PROJECT = {
+  has_project: bool,
+  project_type: oneOf(PROJECT_TYPES),
+  phase: oneOf(PHASES),
+  mode: oneOf(MODES),
+};
+const CONSENT = {
+  via: oneOf(["command", "cli", "studio"], "other"),
+  days_since_notice: (v) => (Number.isInteger(v) && v >= 0 ? v : null),
+};
+
+export const EVENT_PROPERTIES = {
+  session_start: { ...COMMON, ...PROJECT, session_source: oneOf(SESSION_SOURCES, "other") },
+  command_run: {
+    ...COMMON,
+    ...PROJECT,
+    command: matching(/^archflow:[a-z][a-z-]{0,40}$/),
+    detected_by: oneOf(["command_hook", "prompt_prefix"], "other"),
+  },
+  cli_install: {
+    ...COMMON,
+    installed_hosts: (v) => (Array.isArray(v) ? v.filter((h) => HOSTS.includes(h)) : []),
+    source: matching(/^(?:bundled with this package|release \d+\.\d+\.\d+, (?:cached|downloaded))$/, "other"),
+  },
+  telemetry_opted_out: { ...COMMON, ...CONSENT },
+  telemetry_opted_in: { ...COMMON, ...CONSENT },
+};
+
+/** The properties an event may carry, each checked; null for an event not on the list. */
+export function allowedProperties(event, properties) {
+  const checks = Object.prototype.hasOwnProperty.call(EVENT_PROPERTIES, event) ? EVENT_PROPERTIES[event] : null;
+  if (!checks) return null;
+  const out = {};
+  for (const [key, check] of Object.entries(checks)) out[key] = check(properties[key]);
+  if (out.command === null && event === "command_run") return null; // a command event with no valid name says nothing
+  return out;
+}
+
+/**
+ * Marks a config.json that exists but is not a JSON object (corrupt, truncated,
+ * `null`, an array). Such a file may hold an opt-out we cannot read, so for that
+ * run telemetry is OFF and the file is never overwritten; the user fixes or
+ * deletes it. A missing file is simply the defaults.
+ */
+const UNREADABLE = Symbol("unreadable config");
+
+export function loadConfig() {
+  let text;
+  try {
+    text = readFileSync(CONFIG_PATH, "utf8");
+  } catch (e) {
+    if (e?.code === "ENOENT") return {};
+    return { [UNREADABLE]: true };
+  }
+  try {
+    const config = JSON.parse(text);
+    if (config && typeof config === "object" && !Array.isArray(config)) return config;
+  } catch {
+    // fall through
+  }
+  return { [UNREADABLE]: true };
+}
+
+export function isConfigUnreadable(config = loadConfig()) {
+  return Boolean(config?.[UNREADABLE]);
+}
+
+export const CONFIG_UNREADABLE_NOTE =
+  `${CONFIG_PATH} could not be read, so anonymous usage telemetry is off and that file was left as is. ` +
+  "Fix or delete it to choose again.";
+
 function saveConfig(config) {
+  // Never replace a file we could not read: it may hold the user's opt-out.
+  if (isConfigUnreadable(config) || isConfigUnreadable(loadConfig())) return;
   try {
     mkdirSync(CONFIG_DIR, { recursive: true });
     // Atomic: hooks, the CLI and Studio can all write this file at once.
@@ -60,20 +180,20 @@ function envDisabled() {
 }
 
 export function hasSeenNotice(config = loadConfig()) {
-  return typeof config.noticeShownAt === "string";
+  return typeof config?.noticeShownAt === "string";
 }
 
 export function isEnabled(config = loadConfig()) {
-  if (envDisabled()) return false;
+  if (envDisabled() || !config || isConfigUnreadable(config)) return false;
   return config.telemetryEnabled !== false;
 }
 
 /** Call only from code that has just printed NOTICE. */
 export function recordNoticeShown() {
   const config = loadConfig();
-  if (hasSeenNotice(config)) return config;
+  if (hasSeenNotice(config) || isConfigUnreadable(config)) return config;
   config.noticeShownAt = new Date().toISOString();
-  if (!config.distinctId) config.distinctId = randomUUID();
+  if (!isUuid(config.distinctId)) config.distinctId = randomUUID();
   saveConfig(config);
   return config;
 }
@@ -88,6 +208,8 @@ export function recordNoticeShown() {
  */
 export function setConsent(enabled, { via = null, archflow_version = null, host } = {}) {
   const config = loadConfig();
+  // Unreadable config: change nothing and send nothing; the caller tells the user.
+  if (isConfigUnreadable(config)) return { config, sentOptOut: false, unreadable: true };
   const wasEnabled = isEnabled(config);
   const props = {
     ...(host ? { host } : {}),
@@ -98,10 +220,7 @@ export function setConsent(enabled, { via = null, archflow_version = null, host 
       : null,
   };
   // Mint the id first, so an opt-out that is someone's very first action is still one distinct person.
-  if (!config.distinctId) {
-    config.distinctId = randomUUID();
-    saveConfig(config);
-  }
+  ensureDistinctId(config);
   const optedOut = !enabled && wasEnabled && Boolean(POSTHOG_API_KEY);
   if (optedOut) capture("telemetry_opted_out", props);
   config.telemetryEnabled = Boolean(enabled);
@@ -132,21 +251,46 @@ export function runtimeContext() {
   };
 }
 
+/**
+ * The random id, minted on first use by whichever surface runs first (a prompt
+ * hook can fire before any session-start hook), so no event is ever sent
+ * without one.
+ */
+/** A missing or malformed stored id is replaced, so no event goes out with distinct_id null. */
+function ensureDistinctId(config) {
+  if (!isUuid(config.distinctId)) {
+    config.distinctId = randomUUID();
+    saveConfig(config);
+  }
+  return config.distinctId;
+}
+
 /** Fire an event without blocking: a detached child does the HTTPS POST. */
 export function capture(event, properties = {}) {
   const config = loadConfig();
   if (!isEnabled(config) || !POSTHOG_API_KEY) return;
+  const props = allowedProperties(event, {
+    ...runtimeContext(),
+    ...properties,
+    distinct_id: ensureDistinctId(config),
+  });
+  if (!props) return;
   const payload = {
     api_key: POSTHOG_API_KEY,
     event,
-    properties: {
-      ...runtimeContext(),
-      ...properties,
-      distinct_id: config.distinctId || "anonymous",
-      $process_person_profile: false,
-    },
+    properties: { ...props, $process_person_profile: false },
     timestamp: new Date().toISOString(),
   };
+  // Test seam: write the payload to a local file instead of sending it. tests/test_telemetry.py
+  // sets this so no test ever reaches PostHog.
+  if (process.env.ARCHFLOW_TELEMETRY_SINK) {
+    try {
+      appendFileSync(process.env.ARCHFLOW_TELEMETRY_SINK, JSON.stringify(payload) + "\n");
+    } catch {
+      // best-effort
+    }
+    return;
+  }
   try {
     const child = spawn(
       process.execPath,

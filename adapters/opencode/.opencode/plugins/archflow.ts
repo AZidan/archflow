@@ -67,7 +67,8 @@ export const ArchflowPlugin: Plugin = async ({ directory }) => {
     // (session.idle is a bus event, not a named hook.)
     event: async ({ event }) => {
       // Telemetry: one session_start per top-level session (subagent sessions have a parentID),
-      // and command_run with the command name only, never its arguments.
+      // and command_run with the command name only, never its arguments. telemetry.mjs reports the
+      // name only if lib/commands.json lists it, so a user's own archflow-* command is not counted.
       if (event.type === "session.created" && !event.properties?.info?.parentID) {
         pendingNotice += runTelemetry(cwd, [], { hook_event_name: "SessionStart", cwd })
         return
