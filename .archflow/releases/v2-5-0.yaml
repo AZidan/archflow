@@ -309,7 +309,7 @@ stories:
   - id: S9-04
     title: "Studio-first site repositioning"
     priority: High
-    status: in_progress
+    status: review
     gates: {needs_design: false, needs_contract: false}
     assigned: ui-engineer
     description: >-
