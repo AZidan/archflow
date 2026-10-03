@@ -76,6 +76,21 @@ decisions:
     question: "Telemetry tests and the real PostHog key (agent decision, not asked)"
     answer: "All telemetry tests stub the network; no test may send an event to the real PostHog host."
     applies_to: ["S8-05", "S8-06"]
+  - id: D10
+    question: "S9-04 parked: the hero's npx archflow studio does not exist in this repo"
+    answer: "Replace it with npx archflow install, then /archflow:studio"
+    applies_to: ["S9-04"]
+    asked_at: "2026-10-03T23:31:43Z"
+  - id: D11
+    question: "S9-04: multi-host Studio claim vs this repo's Claude-only Studio and CHANGELOG"
+    answer: "Keep the every-host claim on the page; do NOT edit the CHANGELOG. The user syncs the Studio build and CHANGELOG before shipping."
+    applies_to: ["S9-04"]
+    asked_at: "2026-10-03T23:31:43Z"
+  - id: D12
+    question: "S9-04: 'Free and MIT' on the Studio badge vs marketing guardrails"
+    answer: "Studio badge says 'Beta' only; 'Free and MIT' belongs to the framework. Supersedes D6 for the Studio badge. Guardrails unchanged."
+    applies_to: ["S9-04"]
+    asked_at: "2026-10-03T23:31:43Z"
 queue:
   - {story_id: PRE-EXISTING-FAILURE, title: "Fix 2 failing tests in tests/test_site_publishing.py", order: 1, state: done, branch: v2.5.0-autopilot, commits: 1, review_risk: low, finished_at: "2026-10-03T16:09:39Z"}
   - {story_id: S8-07, title: "Record telemetry policy: on by default (opt-out), framework-wide", order: 2, state: done, branch: telemetry/policy-adr, commits: 6, review_risk: medium, finished_at: "2026-10-03T16:25:02Z"}
@@ -83,7 +98,7 @@ queue:
   - {story_id: S8-05, title: "Framework-wide anonymous telemetry", order: 4, state: done, branch: telemetry/framework-events, started_at: "2026-10-03T18:53:50Z", commits: 5, review_risk: high, finished_at: "2026-10-03T19:47:49Z"}
   - {story_id: S8-06, title: "/archflow:telemetry and npx archflow telemetry", order: 5, state: done, branch: telemetry/opt-out-command, started_at: "2026-10-03T19:48:00Z", commits: 5, review_risk: high, finished_at: "2026-10-03T20:28:17Z"}
   - {story_id: S7-05, title: "Gemini $HOME path and Cursor workspace-root fixes", order: 6, state: done, branch: adapters/gemini-cursor-fixes, started_at: "2026-10-03T20:28:27Z", commits: 5, review_risk: high, finished_at: "2026-10-03T21:09:18Z"}
-  - {story_id: S9-04, title: "Studio-first site repositioning", order: 7, state: in_progress, branch: site/studio-first-homepage, started_at: "2026-10-03T21:09:35Z"}
+  - {story_id: S9-04, title: "Studio-first site repositioning", order: 7, state: in_progress, branch: site/studio-first-homepage, started_at: "2026-10-03T21:09:35Z", review_risk: medium}
 events:
   - {at: "2026-10-03T16:08:03Z", event: started, detail: "queue order: pre-existing failures, then dependency (S8-07 before S8-05; S7-04 helper before telemetry adapters; S8-07 policy before S9-04 privacy copy), then priority, then id"}
   - {at: "2026-10-03T16:09:39Z", story: PRE-EXISTING-FAILURE, event: merged, detail: "compare/ added to PUBLISHED_MD; gitignore guard accepts the docs/internal symlink rule; autopilot/ ledgers excluded from mirror checks (test + CI). Suite 288 passed."}
@@ -96,3 +111,6 @@ events:
   - {at: "2026-10-03T19:47:49Z", story: S8-05, event: merged, detail: "ACCEPTED. QA I-1(blocking)/I-2, code-review I-3(blocking)..I-6, pm I-7/I-8 fixed. I-9 (minor) OPEN for user decision: Copilot loading the Claude plugin directly sends session events but cannot show the notice; documented in SECURITY.md; options: send nothing until notice shown / dual-format notice / keep documented gap. Also out of scope, report it: Copilot+Gemini plain-text SessionStart entries (cat instructions.md, check-upgrade) are dropped by those hosts. Suite 448."}
   - {at: "2026-10-03T20:28:17Z", story: S8-06, event: merged, detail: "ACCEPTED. QA I-1, code-review I-2(blocking: opt-out not persisted but reported)/I-3, pm I-4 fixed. Suite 505."}
   - {at: "2026-10-03T21:09:18Z", story: S7-05, event: merged, detail: "ACCEPTED. code-review I-1 (blocking: Cursor git guard skipped from project subdirectory) + I-2/I-3, pm I-4 fixed. Extra fixes: Cursor root preference, stop stderr relay, Gemini command refs, quoted migrate path. Live Gemini/Cursor checks remain the user's (subtask left open). Out of scope, report: Codex/Copilot/Cursor/OpenCode/generic reference <root>/commands/<name>.md files they don't ship. Suite 720."}
+  - {at: "2026-10-03T21:21:47Z", story: S9-04, event: parked, detail: "npx archflow studio missing; multi-host Studio not in repo/CHANGELOG; Free and MIT vs guardrails. WIP pushed on site/studio-first-homepage, not merged."}
+  - {at: "2026-10-03T21:21:59Z", event: stopped, detail: "Queue exhausted: 6 done (incl. PRE-EXISTING-FAILURE), 1 parked, 0 failed."}
+  - {at: "2026-10-03T23:31:43Z", story: S9-04, event: started, detail: "Resumed by the user with D10-D12 answered; run reopened (status running)."}
