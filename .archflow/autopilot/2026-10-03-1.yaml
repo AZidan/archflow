@@ -81,7 +81,7 @@ queue:
   - {story_id: S8-07, title: "Record telemetry policy: on by default (opt-out), framework-wide", order: 2, state: done, branch: telemetry/policy-adr, commits: 6, review_risk: medium, finished_at: "2026-10-03T16:25:02Z"}
   - {story_id: S7-04, title: "build-adapters HOOK_SCRIPTS helper", order: 3, state: done, branch: adapters/hook-scripts-helper, commits: 5, review_risk: low, finished_at: "2026-10-03T16:43:14Z"}
   - {story_id: S8-05, title: "Framework-wide anonymous telemetry", order: 4, state: done, branch: telemetry/framework-events, started_at: "2026-10-03T18:53:50Z", commits: 5, review_risk: high, finished_at: "2026-10-03T19:47:49Z"}
-  - {story_id: S8-06, title: "/archflow:telemetry and npx archflow telemetry", order: 5, state: in_progress, branch: telemetry/opt-out-command, started_at: "2026-10-03T19:48:00Z"}
+  - {story_id: S8-06, title: "/archflow:telemetry and npx archflow telemetry", order: 5, state: done, branch: telemetry/opt-out-command, started_at: "2026-10-03T19:48:00Z", commits: 5, review_risk: high, finished_at: "2026-10-03T20:28:17Z"}
   - {story_id: S7-05, title: "Gemini $HOME path and Cursor workspace-root fixes", order: 6, state: pending}
   - {story_id: S9-04, title: "Studio-first site repositioning", order: 7, state: pending}
 events:
@@ -94,3 +94,4 @@ events:
   - {at: "2026-10-03T16:43:14Z", event: stopped, detail: "Paused by the user after S7-04. Status left running so /archflow:autopilot resume continues at S8-05 (see the S8-05/S8-06 carry-over notes above)."}
   - {at: "2026-10-03T18:53:50Z", event: started, detail: "Resumed by the user; branch HEAD 361527e matches origin; no parked stories to re-ask."}
   - {at: "2026-10-03T19:47:49Z", story: S8-05, event: merged, detail: "ACCEPTED. QA I-1(blocking)/I-2, code-review I-3(blocking)..I-6, pm I-7/I-8 fixed. I-9 (minor) OPEN for user decision: Copilot loading the Claude plugin directly sends session events but cannot show the notice; documented in SECURITY.md; options: send nothing until notice shown / dual-format notice / keep documented gap. Also out of scope, report it: Copilot+Gemini plain-text SessionStart entries (cat instructions.md, check-upgrade) are dropped by those hosts. Suite 448."}
+  - {at: "2026-10-03T20:28:17Z", story: S8-06, event: merged, detail: "ACCEPTED. QA I-1, code-review I-2(blocking: opt-out not persisted but reported)/I-3, pm I-4 fixed. Suite 505."}
