@@ -78,7 +78,7 @@ decisions:
     applies_to: ["S8-05", "S8-06"]
 queue:
   - {story_id: PRE-EXISTING-FAILURE, title: "Fix 2 failing tests in tests/test_site_publishing.py", order: 1, state: done, branch: v2.5.0-autopilot, commits: 1, review_risk: low, finished_at: "2026-10-03T16:09:39Z"}
-  - {story_id: S8-07, title: "Record telemetry policy: on by default (opt-out), framework-wide", order: 2, state: pending}
+  - {story_id: S8-07, title: "Record telemetry policy: on by default (opt-out), framework-wide", order: 2, state: done, branch: telemetry/policy-adr, commits: 6, review_risk: medium, finished_at: "2026-10-03T16:25:02Z"}
   - {story_id: S7-04, title: "build-adapters HOOK_SCRIPTS helper", order: 3, state: pending}
   - {story_id: S8-05, title: "Framework-wide anonymous telemetry", order: 4, state: pending}
   - {story_id: S8-06, title: "/archflow:telemetry and npx archflow telemetry", order: 5, state: pending}
@@ -87,3 +87,6 @@ queue:
 events:
   - {at: "2026-10-03T16:08:03Z", event: started, detail: "queue order: pre-existing failures, then dependency (S8-07 before S8-05; S7-04 helper before telemetry adapters; S8-07 policy before S9-04 privacy copy), then priority, then id"}
   - {at: "2026-10-03T16:09:39Z", story: PRE-EXISTING-FAILURE, event: merged, detail: "compare/ added to PUBLISHED_MD; gitignore guard accepts the docs/internal symlink rule; autopilot/ ledgers excluded from mirror checks (test + CI). Suite 288 passed."}
+  - {at: "2026-10-03T16:25:02Z", story: S8-07, event: merged, detail: "ACCEPTED. QA I-1/I-2, code-review I-3..I-6, pm I-7 all fixed. ADR 005 + ADR 003 status left UNCOMMITTED in archflow-internal (report this)."}
+  - {at: "2026-10-03T16:25:02Z", story: S8-05, event: started, detail: "CARRY-OVER for S8-05 from S8-07 reviews: (a) no allow-list enforcement/tests; (b) project_type/phase/mode/session_source sent unvalidated — validate against enums; (c) OpenCode reports any archflow-* command without checking the shipped list; (d) notice text in plugin/lib/telemetry.mjs omits project type, entrypoint, Studio; (e) prompt hooks firing before session_start send distinct_id 'anonymous' and no notice."}
+  - {at: "2026-10-03T16:25:02Z", story: S8-06, event: started, detail: "CARRY-OVER for S8-06: telemetry.md says notice fires when config.json is missing, code checks noticeShownAt; --status after opt-out shows 'since' notice time, not opt-out time."}
