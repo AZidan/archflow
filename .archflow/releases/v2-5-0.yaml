@@ -169,7 +169,7 @@ stories:
   - id: S8-06
     title: "/archflow:telemetry and npx archflow telemetry"
     priority: High
-    status: in_progress
+    status: review
     gates: {needs_design: false, needs_contract: false}
     assigned: api-engineer
     description: >-
