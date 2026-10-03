@@ -145,9 +145,21 @@ each, since the handoff file is one per machine and the most recently started se
 ## Privacy
 
 Studio binds to `127.0.0.1` and enforces an origin allowlist that covers the WebSocket upgrade, so
-a hostile page in another tab cannot reach it. There is no cloud service, no telemetry and no
-account. Your code and your Claude credentials never leave the machine, and exposing it beyond
-loopback is not supported.
+a hostile page in another tab cannot reach it. There is no cloud service and no account. Your code
+and your Claude credentials never leave the machine, and exposing it beyond loopback is not
+supported.
+
+The coding-agent sessions Studio drives — Claude Code or any other supported host — send Archflow's
+anonymous usage telemetry like any other session: which `/archflow:*` commands run, the host,
+version, phase and mode. Never project names, paths, file contents or command arguments.
+`/archflow:telemetry off` turns it off everywhere. On a host with no native adapter, a command you
+copy from Studio and paste into that host's own session is reported by that host, not by Studio —
+Studio never sends the copied text itself, only that a copy happened and which command it was.
+
+Studio also sends its own anonymous events, through the same machine-wide setting: when it starts
+and which mode it's in, when a view is opened (as its route template only — never a project path,
+story id, or release name), and when you run an onboard, migrate or ship action from its UI, or copy
+a command to paste elsewhere. Nothing rendered on screen is ever captured.
 
 ---
 
