@@ -83,7 +83,7 @@ queue:
   - {story_id: S8-05, title: "Framework-wide anonymous telemetry", order: 4, state: done, branch: telemetry/framework-events, started_at: "2026-10-03T18:53:50Z", commits: 5, review_risk: high, finished_at: "2026-10-03T19:47:49Z"}
   - {story_id: S8-06, title: "/archflow:telemetry and npx archflow telemetry", order: 5, state: done, branch: telemetry/opt-out-command, started_at: "2026-10-03T19:48:00Z", commits: 5, review_risk: high, finished_at: "2026-10-03T20:28:17Z"}
   - {story_id: S7-05, title: "Gemini $HOME path and Cursor workspace-root fixes", order: 6, state: done, branch: adapters/gemini-cursor-fixes, started_at: "2026-10-03T20:28:27Z", commits: 5, review_risk: high, finished_at: "2026-10-03T21:09:18Z"}
-  - {story_id: S9-04, title: "Studio-first site repositioning", order: 7, state: pending}
+  - {story_id: S9-04, title: "Studio-first site repositioning", order: 7, state: in_progress, branch: site/studio-first-homepage, started_at: "2026-10-03T21:09:35Z"}
 events:
   - {at: "2026-10-03T16:08:03Z", event: started, detail: "queue order: pre-existing failures, then dependency (S8-07 before S8-05; S7-04 helper before telemetry adapters; S8-07 policy before S9-04 privacy copy), then priority, then id"}
   - {at: "2026-10-03T16:09:39Z", story: PRE-EXISTING-FAILURE, event: merged, detail: "compare/ added to PUBLISHED_MD; gitignore guard accepts the docs/internal symlink rule; autopilot/ ledgers excluded from mirror checks (test + CI). Suite 288 passed."}
