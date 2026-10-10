@@ -734,6 +734,34 @@ stories:
         location: "plugin/commands/autopilot.md:438"
         report: "docs/qa-reports/S5-02-qa.md"
         status: fixed
+      - id: I-34
+        summary: "A follow-on cut from a non-run branch (e.g. main after merge) leaves that branch showing the story parked; resume there re-asks it with no pointer to the follow-on (its queue item is no longer parked), so a second answer builds it again"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/autopilot.md:442"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
+      - id: I-35
+        summary: "resume on a parked story's WIP task branch (the branch the report names) cuts the follow-on from the task branch, so it lacks every story the run finished after the park and its release file diverges from the run branch"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/autopilot.md:424"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
+      - id: I-36
+        summary: "'the kept ledger whose run_branch is the current branch' is ambiguous once a follow-on ran on that branch (source and follow-on share it): which ledger's decisions carry over is unspecified, and the pointer prints one line per run for the same branch"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/autopilot.md:415"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
+      - id: I-37
+        summary: "/archflow:status counts parked stories on the current checkout only and has no pointer line, so on base_branch after a run it gives no parked-story advice at all while resume would name the run branch"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/status.md:34"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"
