@@ -403,13 +403,13 @@ stories:
       I"; help answers "what can I do". Added 2026-10-10, mid-release, after the other six v2-5-0 stories
       were done.
     acceptance_criteria:
-      - {text: "plugin/commands/help.md lists every command in plugin/commands/ with a one-line usage note, plus a short primer on how Archflow works", met: false}
-      - {text: "/archflow:status no longer prints the command list; it ends with the suggested next command(s) and a pointer to /archflow:help", met: false}
-      - {text: "A test checks that help lists exactly the commands in plugin/commands/, so the list cannot drift", met: false}
-      - {text: "Every place that lists commands includes help: CLAUDE.md, README.md, instructions.md, reference.md, SKILL.md (mirrored in .archflow/), docs guides, site", met: false}
-      - {text: "Gemini adapters regenerate with help.toml and build-adapters.mjs --check passes", met: false}
-      - {text: "Telemetry's command allowlist (plugin/lib/telemetry.mjs) recognises help, if it keeps one", met: false}
-      - {text: "CHANGELOG has an entry for the change", met: false}
+      - {text: "plugin/commands/help.md lists every command in plugin/commands/ with a one-line usage note, plus a short primer on how Archflow works", met: true}
+      - {text: "/archflow:status no longer prints the command list; it ends with the suggested next command(s) and a pointer to /archflow:help", met: true}
+      - {text: "A test checks that help lists exactly the commands in plugin/commands/, so the list cannot drift", met: true}
+      - {text: "Every place that lists commands includes help: CLAUDE.md, README.md, instructions.md, reference.md, SKILL.md (mirrored in .archflow/), docs guides, site", met: true}
+      - {text: "Gemini adapters regenerate with help.toml and build-adapters.mjs --check passes", met: true}
+      - {text: "Telemetry's command allowlist (plugin/lib/telemetry.mjs) recognises help, if it keeps one", met: true}
+      - {text: "CHANGELOG has an entry for the change", met: true}
     subtasks:
       - {text: "Write plugin/commands/help.md (command list + how-Archflow-works primer)", completed: true}
       - {text: "Trim plugin/commands/status.md: drop Step 2 command list, end with next step + pointer to help", completed: true}
@@ -467,3 +467,10 @@ stories:
         location: "plugin/skills/archflow/instructions.md:46"
         report: "docs/qa-reports/S2-06-code-review.md"
         status: fixed
+      - id: I-8
+        summary: "help primer says only 2.25 and 2.5 are skipped when they do not apply; Phase 2 is also wholly N/A for backend_only"
+        found_by: pm-reviewer
+        severity: minor
+        location: "plugin/commands/help.md:65"
+        report: "docs/acceptance-reports/S2-06-review.md"
+        status: open
