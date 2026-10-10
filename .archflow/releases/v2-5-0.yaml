@@ -480,7 +480,7 @@ stories:
   - id: S5-02
     title: "Resume parked work after an autopilot run finishes"
     priority: High
-    status: spec_ready
+    status: in_progress
     gates: {needs_design: false, needs_contract: false}
     assigned: api-engineer
     description: >-

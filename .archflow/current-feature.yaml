@@ -1,36 +1,26 @@
-story_id: "S2-06"
-story_title: "/archflow:help command; status drops the command list"
-epic_id: "E2"
-branch: "archflow-help"
-status: complete
+story_id: "S5-02"
+story_title: "Resume parked work after an autopilot run finishes"
+epic_id: "E5"
+branch: "autopilot-resume"
+status: in_progress
 subtasks:
-  - text: "Write plugin/commands/help.md (command list + how-Archflow-works primer)"
-    completed: true
-    branch: "help/help-command"
+  - text: "Decide and document how resume treats a finished run with parked stories (autopilot.md)"
+    completed: false
+    branch: "resume/finished-runs"
     started_at: "2026-10-10"
-    completed_at: "2026-10-10"
-  - text: "Trim plugin/commands/status.md: drop Step 2 command list, end with next step + pointer to help"
-    completed: true
-    branch: "help/help-command"
+    completed_at: null
+  - text: "Fix the end-of-run report's Next line"
+    completed: false
+    branch: "resume/finished-runs"
     started_at: "2026-10-10"
-    completed_at: "2026-10-10"
-  - text: "Add a test that help.md lists exactly the commands in plugin/commands/"
-    completed: true
-    branch: "help/help-command"
+    completed_at: null
+  - text: "Align status.md's parked case (plugin/commands/status.md) and regenerate adapters"
+    completed: false
+    branch: "resume/finished-runs"
     started_at: "2026-10-10"
-    completed_at: "2026-10-10"
-  - text: "Add help to every command list (CLAUDE.md, README.md, instructions/reference/SKILL mirrored in .archflow/, docs guides, site)"
-    completed: true
-    branch: "help/help-command"
+    completed_at: null
+  - text: "Tests + CHANGELOG"
+    completed: false
+    branch: "resume/finished-runs"
     started_at: "2026-10-10"
-    completed_at: "2026-10-10"
-  - text: "Regenerate adapters; build-adapters.mjs --check passes"
-    completed: true
-    branch: "help/help-command"
-    started_at: "2026-10-10"
-    completed_at: "2026-10-10"
-  - text: "Telemetry allowlist + CHANGELOG entry"
-    completed: true
-    branch: "help/help-command"
-    started_at: "2026-10-10"
-    completed_at: "2026-10-10"
+    completed_at: null
