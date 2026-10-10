@@ -292,8 +292,12 @@ Next: /archflow:autopilot resume — asks the parked questions, then builds the 
 ```
 
 The `Next:` line must name a command that works on this run after it is `finished`, and after it
-is `aborted`, since `abort` prints this same report. With parked stories it is the line above:
-`resume` picks up the still-parked stories of a finished or aborted run (see *Subcommands*).
+is `aborted`, since `abort` prints this same report. Choose it from the run branch's release file
+at the end of the run, not from what this run parked: a follow-on that builds only the answered
+stories parks nothing new, yet a story left unanswered is still parked there. If any story is still
+`status: parked` in `.archflow/releases/{active_release}.yaml` on `{run-branch}` (counted as
+`resume` counts *Parked stories*, minus any it says were picked up), it is the line above: `resume`
+picks up the still-parked stories of a finished or aborted run (see *Subcommands*).
 With nothing parked, write `Next: review {run-branch} and merge it yourself` instead — there is
 nothing for `resume` to pick up, and it would say so.
 

@@ -1302,3 +1302,68 @@ def test_i45_aborted_follow_on_whose_run_branch_still_exists_does_not_hide_the_s
     _commit(repo, "finished instead")
     _git(repo, "checkout", "-q", "main")
     assert _picked_up(repo) == [("B", rid, branch)] and _resume(repo) == ("nothing",)
+
+
+# ---- I-46: Step 4's Next: line reads the run branch's release file, not what this run parked ----
+
+def _step4_next(repo, run_branch):
+    """Step 4's Next: rule as modelled: any story still parked in the release file on the run branch
+    (counted as resume counts them, minus picked-up ones) -> the resume line; else review-and-merge."""
+    resume_line = [l for l in report_block().splitlines() if l.startswith("Next:")][0]
+    review = re.search(r"With nothing parked, write `(Next:[^`]*)`",
+                       re.sub(r"\s+", " ", report_block())).group(1)
+    back = _current(repo)
+    _git(repo, "checkout", "-q", run_branch)
+    parked = _parked_here(repo)
+    _git(repo, "checkout", "-q", back)
+    return resume_line if parked else review.replace("{run-branch}", run_branch)
+
+
+def test_i46_step4_next_rule_reads_the_run_branchs_release_file():
+    step4 = re.sub(r"\s+", " ", report_block())
+    assert "not from what this run parked" in step4
+    assert ("If any story is still `status: parked` in `.archflow/releases/{active_release}.yaml` "
+            "on `{run-branch}`") in step4
+    assert "minus any it says were picked up" in step4
+
+
+def test_i46_partial_answer_follow_on_parks_nothing_and_its_report_still_names_resume(tmp_path):
+    """The run parks B and C. On the run branch the user answers only B; the follow-on builds B and
+    parks nothing. C is still parked (and blocking) there, so the report's Next: names resume, and
+    resume on that branch asks C."""
+    repo = tmp_path
+    _replay(repo, {"A": "done", "B": "parked", "C": "parked"})
+    _git(repo, "checkout", "-q", RUN)
+    assert _resume(repo) == ("follow-on", ["B", "C"])
+    branch, new, _, source = _follow_on(repo, ["B"], "2026-10-11-1")
+    assert (branch, new, source) == (RUN, False, "2026-10-10-1")
+    _follow_on_builds(repo, "2026-10-11-1", branch, source, "B", new)
+    child = _read(repo, ".archflow/autopilot/2026-10-11-1.yaml")
+    assert all(q["state"] != "parked" for q in child["queue"]), "this run parked nothing"
+    assert _read(repo, REL)["stories"]["C"]["status"] == "parked"
+    nxt = _step4_next(repo, RUN)
+    assert nxt.startswith("Next:") and RESUME in nxt
+    assert _resume(repo) == ("follow-on", ["C"])
+
+
+def test_i46_follow_on_answering_every_parked_story_reports_review_and_merge(tmp_path):
+    """Contrast: every parked story answered and built -> nothing parked on the run branch, so the
+    Next: line is review-and-merge, and resume has nothing to pick up."""
+    repo = tmp_path
+    _replay(repo, {"A": "done", "B": "parked"})
+    _git(repo, "checkout", "-q", RUN)
+    _follow_on_builds(repo, "2026-10-11-1", RUN, "2026-10-10-1", "B", False)
+    assert _step4_next(repo, RUN) == f"Next: review {RUN} and merge it yourself"
+    assert _resume(repo) == ("nothing",)
+
+
+# ---- I-48: status case 3 counts parked stories as resume does ---------------------------------
+
+def test_i48_status_counts_parked_stories_as_resume_does_minus_picked_up():
+    """status case 3's count must stay resume's: the current checkout's active release file only,
+    minus any resume says were picked up (resume's *Parked stories* rule)."""
+    status = re.sub(r"\s+", " ", status_parked_case())
+    rule = re.sub(r"\s+", " ", resume_rule())
+    assert ("Count parked stories as resume does: the active release file on this checkout only, "
+            "minus any it says were picked up.") in status
+    assert "`{story} was picked up by {run-id} on {run_branch}.`" in rule

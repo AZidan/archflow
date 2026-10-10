@@ -824,7 +824,7 @@ stories:
         severity: minor
         location: "plugin/commands/autopilot.md:297"
         report: "docs/acceptance-reports/S5-02-review.md"
-        status: open
+        status: fixed
       - id: I-47
         summary: "Plain /archflow:autopilot started from base_branch after a run re-queues that run's parked story as ready (its park lives only on the unmerged run branch) and rebuilds it from scratch beside its existing WIP branch; Step 1 gives no pointer like resume's (pre-existing, outside S5-02's ACs)"
         found_by: pm-reviewer
@@ -839,7 +839,7 @@ stories:
         severity: minor
         location: "plugin/commands/status.md:36"
         report: "docs/acceptance-reports/S5-02-review.md"
-        status: open
+        status: fixed
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"
