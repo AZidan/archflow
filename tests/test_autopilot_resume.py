@@ -4,10 +4,11 @@ A run that empties its queue is set `finished`, yet its report told the user to
 answer the parked questions and then run `resume`, which only read `preflight` /
 `running` ledgers. Parked stories left by a finished run had no way back.
 
-The fix: `resume` falls back to the newest FINISHED or ABORTED run (of the active
-release) that still has parked stories and starts a follow-on run over them
-(`resumes: <run-id>`), leaving that ledger untouched. An aborted run's queue is never
-continued, and a run with nothing still parked is never restarted.
+The fix: `resume` asks every story still parked in the active release file on the
+current branch, whichever finished or aborted run parked it, and builds the answered
+ones in a follow-on run (`resumes: <run-id>`), leaving the old ledgers untouched. An
+aborted run's queue is never continued, and a run with nothing still parked is never
+restarted.
 
 The behaviour lives in markdown, so the tests pin the documented contract — the
 report, the resume rule and /archflow:status must agree — and check that the
@@ -17,10 +18,12 @@ follow-on run correctly.
 
 import json
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 REPO = Path(__file__).resolve().parents[1]
@@ -121,7 +124,7 @@ def test_a_finished_run_without_parked_stories_is_not_resurrected():
 
 
 def test_an_aborted_run_stays_aborted_but_its_parked_stories_come_back():
-    """I-1: abort prints the Step 4 report, whose Next: line names resume.
+    """abort prints the Step 4 report, whose Next: line names resume.
 
     The aborted ledger is a record and keeps its status; only its still-parked stories return.
     """
@@ -133,7 +136,7 @@ def test_an_aborted_run_stays_aborted_but_its_parked_stories_come_back():
 
 
 def test_resume_only_considers_the_active_release():
-    """I-2: a parked story in a shipped/archived release is never edited by resume."""
+    """A parked story in a shipped/archived release is never edited by resume."""
     rule = re.sub(r"\s+", " ", resume_rule())
     assert re.search(r"`release`[^.]*`active_release`", rule)
     assert re.search(r"`status: parked` in `\.archflow/releases/\{active_release\}\.yaml`", rule)
@@ -141,7 +144,7 @@ def test_resume_only_considers_the_active_release():
 
 
 def test_resume_checks_prerequisites_before_writing_state():
-    """I-2: resume writes a ledger and a release file, so the preflight checks come first."""
+    """resume writes a ledger and a release file, so the preflight checks come first."""
     rule = re.sub(r"\s+", " ", resume_rule())
     i = rule.index("Prerequisites")
     assert i < rule.index("Write a new ledger")
@@ -149,11 +152,10 @@ def test_resume_checks_prerequisites_before_writing_state():
 
 
 def test_a_planned_run_never_silently_outranks_parked_stories():
-    """I-3: a never-started --plan ledger and parked stories both present -> ask, never default."""
+    """A never-started --plan ledger and parked stories both present -> ask, never default."""
     rule = re.sub(r"\s+", " ", resume_rule())
     assert re.search(r"`preflight` ledger and parked stories both → ask", rule)
     assert "Never default" in rule
-    assert "one to pick up" in re.sub(r"\s+", " ", status_parked_case())
 
 
 def test_answered_story_leaves_parked_via_in_progress():
@@ -287,21 +289,21 @@ def test_follow_on_from_an_aborted_run_arms_the_guard(tmp_path):
 
 
 # --------------------------------------------------------------------------
-# Fix pass 5: I-20 (no stale `preflight` copy on base_branch, and the planned-run guard),
-# I-21 (a remote-only base_branch counts as existing), I-22 (no undefined conflict rule)
+# Git harness (shared with test_autopilot_resume_qa.py)
 # --------------------------------------------------------------------------
-
-import shutil
-
-import pytest
-
 
 def _flat(text):
     return re.sub(r"\s+", " ", text)
 
 
 def _git(repo, *args, check=True):
-    return subprocess.run(["git", *args], cwd=repo, check=check, capture_output=True, text=True)
+    """stdout when `check`, else the CompletedProcess (for return codes)."""
+    r = subprocess.run(["git", *args], cwd=repo, check=check, capture_output=True, text=True)
+    return r.stdout if check else r
+
+
+def _ok(repo, *args):
+    return _git(repo, *args, check=False).returncode == 0
 
 
 def _repo(path, branch="main"):
@@ -314,7 +316,7 @@ def _repo(path, branch="main"):
     return path
 
 
-def _commit(repo, msg, files):
+def _commit_files(repo, msg, files):
     for rel, data in files.items():
         p = repo / rel
         p.parent.mkdir(parents=True, exist_ok=True)
@@ -323,9 +325,9 @@ def _commit(repo, msg, files):
     _git(repo, "commit", "-qm", msg)
 
 
-def _ledgers_on(repo, branch):
-    return _git(repo, "ls-tree", "--name-only", branch, ".archflow/autopilot/").stdout.split()
-
+# --------------------------------------------------------------------------
+# Where autopilot commits, and the planned-run guard
+# --------------------------------------------------------------------------
 
 def plan_section():
     return _flat(AUTOPILOT.read_text().split("### 2c.", 1)[1].split("### Where", 1)[0])
@@ -343,31 +345,21 @@ def test_a_run_that_starts_now_cuts_its_run_branch_before_writing_the_ledger():
     assert plan.index("Check out `base_branch`") < plan.index("cuts its run branch") \
         < plan.index("create `.archflow/autopilot/{run-id}.yaml`")
     assert "Commit the ledger alone on the run branch" in plan
-    assert "No copy of a started run's ledger is committed on `base_branch`" in plan
-    assert "This is the only ledger autopilot commits on `base_branch`" in plan
+    assert "no copy of a started run's ledger is ever left on `base_branch`" in commit_rule_text()
+
+
+def test_the_planned_run_start_is_stated_once():
+    """The `--plan` start transition lives in *Where autopilot commits*; the others refer to it."""
+    body = AUTOPILOT.read_text()
+    assert body.count("chore(autopilot): start") == 1
+    assert "chore(autopilot): start" in commit_rule_text()
+    assert "*Starting a planned run*" in preflight_bullet()
 
 
 def test_step_3_cuts_the_run_branch_only_when_it_does_not_exist_yet():
     step3 = _flat(AUTOPILOT.read_text().split("## Step 3", 1)[1].split("```", 1)[0])
     assert "only when the run branch does not exist yet" in step3
     assert "by Step 2c for a run that starts now" in step3
-
-
-def test_replay_a_started_run_leaves_no_ledger_on_base_branch(tmp_path):
-    """I-20 as git: Step 2c as now written. Once the run branch is gone, nothing on base_branch
-    can be mistaken for a planned run."""
-    repo = _repo(tmp_path / "w")
-    _commit(repo, "init", {"README": "x"})
-    _git(repo, "checkout", "-qb", "r1")                       # base_branch
-    _git(repo, "checkout", "-qb", "r1-autopilot")             # 2c cuts the run branch first
-    led = ".archflow/autopilot/2026-10-10-1.yaml"
-    base = {"run_id": "2026-10-10-1", "base_branch": "r1", "run_branch": "r1-autopilot"}
-    for status in ("preflight", "running", "finished"):
-        _commit(repo, status, {led: dict(base, status=status)})
-    _git(repo, "checkout", "-q", "r1")
-    _git(repo, "branch", "-qD", "r1-autopilot")               # deleted unmerged
-    for b in _git(repo, "for-each-ref", "--format=%(refname:short)", "refs/heads").stdout.split():
-        assert _ledgers_on(repo, b) == [], f"{b} still holds a ledger copy resume could restart"
 
 
 def _guard_commands():
@@ -396,9 +388,9 @@ def planned(tmp_path):
     seed = _repo(tmp_path / "seed")
     origin = tmp_path / "origin.git"
     _git(tmp_path, "init", "-q", "--bare", "-b", "main", str(origin))
-    _commit(seed, "init", {"README": "x"})
+    _commit_files(seed, "init", {"README": "x"})
     _git(seed, "checkout", "-qb", "r1")
-    _commit(seed, "chore(autopilot): plan 2026-10-10-1", {".archflow/autopilot/2026-10-10-1.yaml": {
+    _commit_files(seed, "chore(autopilot): plan 2026-10-10-1", {".archflow/autopilot/2026-10-10-1.yaml": {
         "run_id": "2026-10-10-1", "status": "preflight", "base_branch": "r1", "run_branch": "r1-autopilot"}})
     _git(seed, "remote", "add", "origin", str(origin))
     _git(seed, "push", "-q", "origin", "main", "r1")
@@ -451,7 +443,7 @@ def test_base_branch_bullet_reserves_base_branch_for_plan_ledgers():
 
 
 def test_remote_only_base_branch_counts_as_existing_and_is_tracked(tmp_path):
-    """I-21: origin/{base_branch} exists, no local branch, HEAD has moved on. Following the
+    """origin/{base_branch} exists, no local branch, HEAD has moved on. Following the
     documented checks, the local branch tracks origin; it is never cut from HEAD."""
     rule = commit_rule_text()
     assert "exists neither as a local branch nor as `origin/{base_branch}`" in rule
@@ -466,25 +458,25 @@ def test_remote_only_base_branch_counts_as_existing_and_is_tracked(tmp_path):
     origin = tmp_path / "origin.git"
     _git(tmp_path, "init", "-q", "--bare", "-b", "main", str(origin))
     seed = _repo(tmp_path / "seed")
-    _commit(seed, "init", {"README": "x"})
+    _commit_files(seed, "init", {"README": "x"})
     _git(seed, "checkout", "-qb", "r1")
-    _commit(seed, "on r1", {"r1.txt": "r1"})
+    _commit_files(seed, "on r1", {"r1.txt": "r1"})
     _git(seed, "remote", "add", "origin", str(origin))
     _git(seed, "push", "-q", "origin", "main", "r1")
     work = tmp_path / "work"
     _git(tmp_path, "clone", "-q", "-b", "main", str(origin), str(work))
     _git(work, "config", "user.email", "qa@example.com"); _git(work, "config", "user.name", "qa")
-    _commit(work, "local only", {"main.txt": "m"})
+    _commit_files(work, "local only", {"main.txt": "m"})
 
-    exists = [_git(work, "show-ref", "--verify", "--quiet", r, check=False).returncode == 0 for r in checks]
+    exists = [_ok(work, "show-ref", "--verify", "--quiet", r) for r in checks]
     assert exists == [False, True], "a remote-only base_branch must count as existing"
     _git(work, *track.replace("{base_branch}", "r1").split()[1:])
-    assert _git(work, "rev-parse", "r1").stdout == _git(work, "rev-parse", "origin/r1").stdout
-    assert _git(work, "rev-parse", "--abbrev-ref", "r1@{upstream}").stdout.strip() == "origin/r1"
+    assert _git(work, "rev-parse", "r1") == _git(work, "rev-parse", "origin/r1")
+    assert _git(work, "rev-parse", "--abbrev-ref", "r1@{upstream}").strip() == "origin/r1"
 
 
 def test_no_undefined_release_file_conflict_rule():
-    """I-22: the only conflict rule left names its side."""
+    """The only conflict rule left names its side."""
     body = _flat(AUTOPILOT.read_text())
     assert "side written last" not in body
     assert "taking the run branch's release file on a conflict there" in body

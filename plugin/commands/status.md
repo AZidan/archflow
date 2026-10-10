@@ -31,16 +31,12 @@ one that applies, and add a second only if it is independent of the first.
 1. state looks inconsistent → `/archflow:doctor`
 2. an open blocking issue → fix it on that story first (`/archflow:issue {story-id}` lists them).
    It stops the story reaching `done`
-3. a `parked` story → print each one's `parked.question`, then `/archflow:autopilot resume`, which
-   asks every story parked in the active release on this checkout and builds the ones answered, whether the runs
-   that parked them are still open, have finished, or were aborted. Count parked stories the way
-   resume does: `status: parked` in the release file on the current checkout only. Resume also
-   names any other local run branch whose run parked a story, since that work may be there and not
-   here: check that branch out and run resume there. If an interrupted `running` run is also
-   waiting, resume continues it first while its run branch exists (if the branch is gone,
-   resume stops and points at `/archflow:autopilot abort`), and the parked questions wait for the
-   next resume. If a planned `--plan` run is also waiting, resume asks which one to pick up. A
-   parked story blocks shipping the release by default
+3. a `parked` story, or a line `resume` would print under its *Other run branches* rule → print
+   each parked story's `parked.question` and those lines, then `/archflow:autopilot resume`. Count
+   parked stories as resume does: the active release file on this checkout only, minus any it says
+   were picked up. Resume asks the questions and builds the stories answered, whether the run that
+   parked them is still open, has finished, or was aborted. Its own rules cover a run that is also
+   waiting. A parked story blocks shipping the release by default
 4. a story `in_progress` → carry on building it on its branch; it goes to `review` when every
    subtask is complete
 5. a story in `review` → finish its gate: qa-engineer, then pm-reviewer, then the user's approval

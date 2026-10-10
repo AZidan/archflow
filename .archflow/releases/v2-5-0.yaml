@@ -740,77 +740,77 @@ stories:
         severity: minor
         location: "plugin/commands/autopilot.md:442"
         report: "docs/qa-reports/S5-02-qa.md"
-        status: open
+        status: fixed
       - id: I-35
         summary: "resume on a parked story's WIP task branch (the branch the report names) cuts the follow-on from the task branch, so it lacks every story the run finished after the park and its release file diverges from the run branch"
         found_by: qa-engineer
         severity: minor
         location: "plugin/commands/autopilot.md:424"
         report: "docs/qa-reports/S5-02-qa.md"
-        status: open
+        status: fixed
       - id: I-36
         summary: "'the kept ledger whose run_branch is the current branch' is ambiguous once a follow-on ran on that branch (source and follow-on share it): which ledger's decisions carry over is unspecified, and the pointer prints one line per run for the same branch"
         found_by: qa-engineer
         severity: minor
         location: "plugin/commands/autopilot.md:415"
         report: "docs/qa-reports/S5-02-qa.md"
-        status: open
+        status: fixed
       - id: I-37
         summary: "/archflow:status counts parked stories on the current checkout only and has no pointer line, so on base_branch after a run it gives no parked-story advice at all while resume would name the run branch"
         found_by: qa-engineer
         severity: minor
         location: "plugin/commands/status.md:34"
         report: "docs/qa-reports/S5-02-qa.md"
-        status: open
+        status: fixed
       - id: I-38
         summary: "Schema `resumes` accepts a list of several run ids or a bare string for 'older follow-ons' that never shipped (the field is new in this story); multi-source leftover, tested by test_follow_on_run_from_two_sources_validates"
         found_by: code-reviewer
         severity: minor
         location: ".archflow/schemas/autopilot-schema.yaml:62"
         report: "docs/qa-reports/S5-02-code-review.md"
-        status: open
+        status: fixed
       - id: I-39
         summary: "base_branch rules contradict: 'the only ledger autopilot commits on base_branch' vs the leftover 'writes for a merged-and-deleted run land on base_branch'; abort names base_branch only for a never-started --plan run, not the gone-branch run rule 1 sends to abort"
         found_by: code-reviewer
         severity: minor
         location: "plugin/commands/autopilot.md:138"
         report: "docs/qa-reports/S5-02-code-review.md"
-        status: open
+        status: fixed
       - id: I-40
         summary: "resume's choice never says which ledger wins when several are preflight or running (e.g. two --plan runs); abort says 'newest', resume says nothing"
         found_by: code-reviewer
         severity: minor
         location: "plugin/commands/autopilot.md:369"
         report: "docs/qa-reports/S5-02-code-review.md"
-        status: open
+        status: fixed
       - id: I-41
         summary: "A follow-on with no source run asks Step 2a (incl. the run-branch question) but then names the branch {base_branch}-autopilot-{run-id} with base_branch undefined"
         found_by: code-reviewer
         severity: minor
         location: "plugin/commands/autopilot.md:420"
         report: "docs/qa-reports/S5-02-code-review.md"
-        status: open
+        status: fixed
       - id: I-42
         summary: "Other-run-branches pointer is permanent: ledgers are never edited, so a run whose parked story a follow-on later built still points at its run branch from every other branch and resume never says 'Nothing to resume.'"
         found_by: code-reviewer
         severity: minor
         location: "plugin/commands/autopilot.md:442"
         report: "docs/qa-reports/S5-02-code-review.md"
-        status: open
+        status: fixed
       - id: I-43
         summary: "Test suite maintainability: a tautological replay test, a Python re-implementation of the spec whose ~25 replay tests no doc edit can fail, fix-pass-ordered sections with stale commit docstrings, duplicate git harnesses, phrase-exact pins"
         found_by: code-reviewer
         severity: minor
         location: "tests/test_autopilot_resume_qa.py:415"
         report: "docs/qa-reports/S5-02-code-review.md"
-        status: open
+        status: fixed
       - id: I-44
         summary: "autopilot.md states the --plan start transition four times and the no-copy-on-base rule twice (drift already produced I-39); status.md case 3 is one ten-line sentence restating resume's precedence"
         found_by: code-reviewer
         severity: minor
         location: "plugin/commands/autopilot.md:114"
         report: "docs/qa-reports/S5-02-code-review.md"
-        status: open
+        status: fixed
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"
