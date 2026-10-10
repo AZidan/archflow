@@ -811,6 +811,13 @@ stories:
         location: "plugin/commands/autopilot.md:114"
         report: "docs/qa-reports/S5-02-code-review.md"
         status: fixed
+      - id: I-45
+        summary: "The picked-up skip does not check that the follow-on's run branch still exists or reached the story: a follow-on whose run branch was deleted unmerged (then aborted as resume instructs) hides the story on every other branch as 'picked up' by a run that no longer exists, so it is never asked again and no pointer names it"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/autopilot.md:363"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"
