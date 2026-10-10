@@ -53,6 +53,14 @@ epics:
         priority: Medium
         status: backlog
         description: "Fixture repos (brownfield, prototype, monorepo) scoring reconciliation accuracy and gap-report precision in CI (proposed)."
+  - id: E5
+    stories:
+      - id: S5-03
+        title: "A fresh autopilot run respects parked stories on other run branches"
+        priority: Medium
+        status: backlog
+        target: autopilot
+        description: "Deferred from S5-02 I-47: /archflow:autopilot started on base_branch after a run re-queues that run's parked story as ready (its park lives only on the unmerged run branch) and rebuilds it beside its WIP branch. Step 1 should point at the run branch, as resume and status do."
   - id: E6
     stories:
       - id: S6-02

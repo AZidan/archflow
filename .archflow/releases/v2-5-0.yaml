@@ -831,7 +831,8 @@ stories:
         severity: minor
         location: "plugin/commands/autopilot.md:47"
         report: "docs/acceptance-reports/S5-02-review.md"
-        status: open
+        status: deferred
+        deferred_to: S5-03
       - id: I-48
         summary: "No test pins status.md case 3's 'minus any it says were picked up' clause: rewriting it leaves all 110 S5-02 tests green, so status can drift from resume's picked-up rule unnoticed"
         found_by: pm-reviewer
