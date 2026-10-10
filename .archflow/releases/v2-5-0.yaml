@@ -502,6 +502,35 @@ stories:
       - {text: "Fix the end-of-run report's Next line", completed: true}
       - {text: "Align status.md's parked case (plugin/commands/status.md) and regenerate adapters", completed: true}
       - {text: "Tests + CHANGELOG", completed: true}
+    issues:
+      - id: I-1
+        summary: "Aborted run with parked stories is a dead end: abort's Step 4 Next: line and status case 3 both send the user to resume, which refuses aborted runs"
+        found_by: qa-engineer
+        severity: blocking
+        location: "plugin/commands/autopilot.md:250"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
+      - id: I-2
+        summary: "Follow-on resume never checks the finished ledger's release is still the active release, nor which release file 'still parked' is read from"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/autopilot.md:296"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
+      - id: I-3
+        summary: "A stale preflight ledger outranks a finished run's parked stories, so status's parked advice can start an unrelated planned run and skip the question"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/autopilot.md:292"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
+      - id: I-4
+        summary: "Landing page still gives the old two-step 'Answer, then /archflow:autopilot resume' wording"
+        found_by: qa-engineer
+        severity: minor
+        location: "docs/index.html:680"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"
