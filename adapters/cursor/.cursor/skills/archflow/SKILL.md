@@ -17,6 +17,7 @@ Every Archflow action is a namespaced slash command — there is no argument-sty
 
 ```
 /archflow-status                    → Where the project stands: phase, mode, active release, what's next
+/archflow-help [command]            → Every command with a one-line usage note, and how Archflow works
 /archflow-init                      → Set up a NEW, empty project (creates .archflow/, Phase 1)
 /archflow-onboard                   → Set up an EXISTING codebase (audit, import context, pick phase)
 /archflow-migrate                   → Upgrade a v1.0 archflow-onboarded project (sprints) → v2.0 (releases); dry-run then apply

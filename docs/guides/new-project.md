@@ -82,6 +82,7 @@ on-demand work like internationalization.
 
 ```
 /archflow:status           # where am I, what's next
+/archflow:help             # every command, and how Archflow works
 /archflow:feature          # add a story
 /archflow:groom S2-11      # detail a stub when it's next up
 /archflow:feature S2-11    # pull it into the release, branch, build

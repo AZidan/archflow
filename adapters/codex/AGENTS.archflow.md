@@ -13,6 +13,7 @@ Archflow actions are skills. Invoke them explicitly with `$`:
 - `$archflow-doctor` — Check the environment and project state — what Archflow needs, what is missing, and how to fix it
 - `$archflow-feature` — Add a story (name or description), or pull a backlog story into the active release
 - `$archflow-groom` — Detail or refine a story: acceptance criteria, subtasks, gates. Works on a backlog stub or a story already in a release
+- `$archflow-help` — Every Archflow command with a one-line usage note, and a short primer on how Archflow works
 - `$archflow-init` — Set up Archflow in a NEW, empty project — creates .archflow/ and starts at Phase 1
 - `$archflow-issue` — Record a defect against a story in the active release, list what is open, or defer a minor one to the backlog
 - `$archflow-migrate` — Upgrade a v1.0 archflow-onboarded project (sprints) to schema v2.0 (releases) — dry-run first, then apply

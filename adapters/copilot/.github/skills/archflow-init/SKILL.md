@@ -59,7 +59,7 @@ Archflow is already initialized in this project.
 Current phase: [N] ([Phase Name])
 Project type: [type]
 
-Run /archflow-status to see available commands.
+Run /archflow-status to see what to run next, or /archflow-help for every command.
 ```
 Done — exit the command.
 
@@ -293,7 +293,8 @@ This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based
   `.archflow/design-systems/{design_system}.md` before producing any UI output
 
 Commands:
-- `/archflow-status` — Show status and available commands
+- `/archflow-status` — Show where the project stands and what to run next
+- `/archflow-help` — Every command, and how Archflow works
 - `/archflow-feature` — Start a new feature from the roadmap
 - `/archflow-design` — Show or change the project's design system
 ```
@@ -311,7 +312,8 @@ This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based
   `.archflow/design-systems/{design_system}.md` before producing any UI output
 
 Commands:
-- `/archflow-status` — Show status and available commands
+- `/archflow-status` — Show where the project stands and what to run next
+- `/archflow-help` — Every command, and how Archflow works
 - `/archflow-feature` — Start a new feature from the roadmap
 - `/archflow-design` — Show or change the project's design system
 ```

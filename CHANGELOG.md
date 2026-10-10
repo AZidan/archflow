@@ -33,6 +33,16 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   changed or sent and the command says so.
 - `scripts/build-adapters.mjs` copies the hook runtime through one helper, so a new hook is one
   entry in `HOOK_SCRIPTS` rather than an edit per host.
+- `/archflow:help`: every command with a one-line usage note, and a short primer on how Archflow
+  works (phases, releases, the story pipeline, gates, modes and a typical flow). `/archflow:help
+  <command>` prints just that command's line. Generated for every host adapter. A test checks that
+  it lists exactly the files in `plugin/commands/`, so the reference cannot drift.
+
+### Changed
+
+- `/archflow:status` no longer prints the command list. It reports where the project stands, ends
+  with the command or two to run next, and points at `/archflow:help` for everything else. Status
+  answers "where am I"; help answers "what can I do".
 
 ### Fixed
 

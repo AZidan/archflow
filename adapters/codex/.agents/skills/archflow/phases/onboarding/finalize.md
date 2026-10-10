@@ -153,7 +153,8 @@ This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based
   `.archflow/design-systems/{design_system}.md` before producing any UI output
 
 Commands:
-- `$archflow-status` — Show status and available commands
+- `$archflow-status` — Show where the project stands and what to run next
+- `$archflow-help` — Every command, and how Archflow works
 - `$archflow-feature` — Start a new feature from the roadmap
 ```
 

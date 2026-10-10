@@ -22,7 +22,8 @@ Then load the current phase: read `.archflow/current-phase.yaml` → `phase_file
 `.archflow/phases/phase-{current}-{name}.md`.
 
 ## Commands
-- `/archflow:status` — status + available commands
+- `/archflow:status` — where the project stands, and what to run next
+- `/archflow:help` — every command with a one-line usage note, and how Archflow works
 - `/archflow:init` / `/archflow:onboard` — set up a new / existing project
 - `/archflow:migrate` — upgrade a v1.0 project to schema v2.0
 - `/archflow:mode [quick|full]` — show/switch ceremony mode

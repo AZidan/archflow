@@ -100,6 +100,7 @@ On a v1.0 project it will point you at `/archflow:migrate` rather than half-upgr
 
 ```
 /archflow:status           # confirm the phase it picked
+/archflow:help             # every command, and how Archflow works
 /archflow:feature          # add work
 /archflow:groom S2-11      # detail a stub before building it
 ```

@@ -335,6 +335,7 @@ Every command is namespaced `/archflow:<name>`. You'll use three of them regular
 | Command | What it does |
 |---------|-------------|
 | `/archflow:status` | Current phase, active release, progress, and what to run next |
+| `/archflow:help` | Every command with a one-line usage note, and how Archflow works |
 | `/archflow:feature` | Add a story: to the backlog, or straight into the active release with a branch |
 | `/archflow:groom` | Detail or refine a story: a backlog stub into `ready`, or one already in a release with its gates re-derived |
 | `/archflow:contract` | The API contract architecture, or one story's endpoints |
@@ -351,7 +352,7 @@ Every command is namespaced `/archflow:<name>`. You'll use three of them regular
 | `/archflow:autopilot` | Build the release's queued stories unattended on one branch |
 | `/archflow:telemetry` | Show or change anonymous usage telemetry (on by default; `off` opts out) |
 
-Run `/archflow:status` any time you've lost the thread: it reports where the project stands and what's sensible to do next.
+Run `/archflow:status` any time you've lost the thread: it reports where the project stands and what's sensible to do next. Run `/archflow:help` for every command and a short primer on how Archflow works.
 
 ---
 
@@ -434,6 +435,7 @@ archflow/
 │   ├── agents/                      # 17 specialized agent definitions (the ONLY agents tree)
 │   ├── commands/                    # Slash commands (namespaced /archflow:<name>)
 │   │   ├── status.md                # /archflow:status
+│   │   ├── help.md                  # /archflow:help
 │   │   ├── init.md                  # /archflow:init
 │   │   ├── onboard.md               # /archflow:onboard
 │   │   ├── migrate.md               # /archflow:migrate
