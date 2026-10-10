@@ -30,17 +30,26 @@ Edge cases:
 ## Step 2 — Next step
 
 End with the command (or two) that moves the project forward from where it stands, each with one
-line on why. Read it off the state above, for example:
-- no release started, or the active release has no stories → `$archflow-feature` (add a story) or
-  `$archflow-release new`
-- a backlog stub is next up but not detailed → `$archflow-groom {story-id}`
-- a `ready` story → `$archflow-feature {story-id}` to branch and build it; several queued →
-  `$archflow-autopilot`
-- a story waiting on its design or contract gate → `$archflow-design {story-id}` or
-  `$archflow-contract {story-id}`
-- an open blocking issue → fix it on that story before anything else
-- every story in the active release `done` → `$archflow-release ship`
-- state looks inconsistent → `$archflow-doctor`
+line on why. Read it off the state above. The cases are in priority order: suggest from the first
+one that applies, and add a second only if it is independent of the first.
+1. state looks inconsistent → `$archflow-doctor`
+2. an open blocking issue → fix it on that story first (`$archflow-issue {story-id}` lists them).
+   It stops the story reaching `done`
+3. a `parked` story → print its `parked.question` and ask the user to answer it, then
+   `$archflow-autopilot resume`. A parked story blocks shipping the release by default
+4. a story `in_progress` → carry on building it on its branch; it goes to `review` when every
+   subtask is complete
+5. a story in `review` → finish its gate: qa-engineer, then pm-reviewer, then the user's approval
+6. a story waiting on its design or contract gate → `$archflow-design {story-id}` or
+   `$archflow-contract {story-id}`
+7. a `ready` story → `$archflow-feature {story-id}` to branch and build it; several queued →
+   `$archflow-autopilot`
+8. a backlog stub is next up but not detailed → `$archflow-groom {story-id}`
+9. the active release has no stories → `$archflow-feature` (add a story). In `full` mode with no
+   release in progress, `$archflow-release new` (or `$archflow-release start {slug}` for one
+   already planned). `quick` mode has a single implicit release, so never suggest `release new`
+   there
+10. every story in the active release `done` → `$archflow-release ship`
 
 Do not print the command list. Close with this line, as is:
 

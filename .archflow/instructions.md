@@ -42,8 +42,9 @@ A story lives in exactly ONE place. Move it, never copy it. Schemas are in `.arc
 `status` · `help` · `init` · `onboard` · `migrate` · `doctor` · `mode` · `release` · `feature` ·
 `groom` · `design` · `contract` · `issue` · `autopilot` · `setup-mcp` · `studio` · `telemetry`
 
-All namespaced as `/archflow:<name>`. Run `/archflow:status` for what to do next,
-`/archflow:help` for every command, or `/archflow:doctor` when something looks wrong. There is no `/archflow <sub>` argument form.
+All namespaced as `/archflow:<name>`. Run `/archflow:status` for what to do next, `/archflow:help`
+for every command, or `/archflow:doctor` when something looks wrong. There is no `/archflow <sub>`
+argument form.
 
 ## Rules that bind every action
 

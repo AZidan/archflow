@@ -81,7 +81,7 @@ For existing codebases, use the full onboarding wizard which analyzes
 your code, imports context from external tools, and determines the
 correct development phase.
 ```
-Then load and follow `.opencode/archflow/commands/onboard.md`.
+Then load and follow `.opencode/commands/archflow-onboard.md`.
 
 ---
 
@@ -248,7 +248,7 @@ Skip this step entirely if the user says the project has no UI (a library, a CLI
 service). Write no `design-system.yaml` in that case.
 
 1. **Ask the platform**, then run the picker. Both live in one place: read
-   `.opencode/archflow/commands/design.md` and follow **Step 3 — `pick`** inline. It asks the
+   `.opencode/commands/archflow-design.md` and follow **Step 3 — `pick`** inline. It asks the
    platform, filters `.archflow/design-systems/*.md` by that platform's compatibility (frontmatter
    `platforms` map — a hard gate, so e.g. Liquid Glass is never offered for a web target), shows
    each surviving file's section 1 as the option text, always offers

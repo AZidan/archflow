@@ -424,46 +424,46 @@ stories:
         severity: minor
         location: "plugin/commands/help.md:52 (rendered into adapters/*/…/archflow-help, adapters/gemini/commands/archflow/help.toml)"
         report: "docs/qa-reports/S2-06-qa.md"
-        status: open
+        status: fixed
       - id: I-2
         summary: "help's per-command pointer resolves to a non-existent path on codex/copilot/generic/cursor/opencode (<host>/archflow/commands/<name>.md is never generated)"
         found_by: qa-engineer
         severity: minor
         location: "plugin/commands/help.md:10 (rewritten by scripts/build-adapters.mjs CLAUDE_PLUGIN_ROOT vocab, e.g. :391)"
         report: "docs/qa-reports/S2-06-qa.md"
-        status: open
+        status: fixed
       - id: I-3
         summary: "help.md takes an optional <command> argument but declares no argument-hint, so the picker does not show it"
         found_by: qa-engineer
         severity: minor
         location: "plugin/commands/help.md:1-3"
         report: "docs/qa-reports/S2-06-qa.md"
-        status: open
+        status: fixed
       - id: I-4
         summary: "help primer says autopilot 'never merges'; it merges task branches into the run branch and only never merges to main"
         found_by: code-reviewer
         severity: minor
         location: "plugin/commands/help.md:78"
         report: "docs/qa-reports/S2-06-code-review.md"
-        status: open
+        status: fixed
       - id: I-5
         summary: "status next-step list has no case for in_progress/review/parked stories, lists the 'before anything else' blocking case fifth, and suggests release new in quick mode"
         found_by: code-reviewer
         severity: minor
         location: "plugin/commands/status.md:28-39"
         report: "docs/qa-reports/S2-06-code-review.md"
-        status: open
+        status: fixed
       - id: I-6
         summary: "status trim test only fails if status names all 17 commands, so a re-added partial command list passes"
         found_by: code-reviewer
         severity: minor
         location: "tests/test_command_registration.py:106"
         report: "docs/qa-reports/S2-06-code-review.md"
-        status: open
+        status: fixed
       - id: I-7
         summary: "instructions.md Commands paragraph reflowed to ~130 columns, breaking the file's ~100-column wrap (mirrored and in all adapters)"
         found_by: code-reviewer
         severity: minor
         location: "plugin/skills/archflow/instructions.md:46"
         report: "docs/qa-reports/S2-06-code-review.md"
-        status: open
+        status: fixed

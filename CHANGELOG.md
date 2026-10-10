@@ -51,6 +51,13 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 - Gemini commands, agents and skills that tell the model to follow another command, such as
   `/archflow:init` handing off to onboard, pointed at `commands/<name>.md`, which the Gemini
   extension does not ship. They now point at `commands/archflow/<name>.toml`.
+- The same pointers were dead on Codex, Copilot, Cursor, OpenCode and the generic package too:
+  they named `<host>/archflow/commands/<name>.md`, which no adapter generates. They now point at
+  the file each host really ships the command as, such as `.agents/skills/archflow-groom/SKILL.md`
+  on Codex or `.cursor/commands/archflow-groom.md` on Cursor. A test checks that every path built
+  from the plugin root, in every adapter, exists.
+- `/archflow:help` on every host but Claude Code listed `studio`, which those hosts do not ship.
+  Each host's help now lists exactly the commands that host has.
 - The Cursor hook bridge found the project from `cwd`, which Cursor sends only with some events,
   such as before a shell command, and then as the shell's directory. So session start, prompt and
   stop hooks fell back to whatever directory the hook ran in, and a shell in a subdirectory of the

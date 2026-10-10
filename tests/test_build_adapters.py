@@ -207,3 +207,83 @@ def test_adapters_match_the_plugin():
     assert proc.returncode == 0, (
         "adapters/ is stale; run: node scripts/build-adapters.mjs\n" + proc.stdout + proc.stderr
     )
+
+
+# --------------------------------------------------------------------------
+# ${CLAUDE_PLUGIN_ROOT} paths resolve on every host
+# --------------------------------------------------------------------------
+
+# What each host's vocab turns ${CLAUDE_PLUGIN_ROOT} into, and where a command file lands. A host
+# has exactly two rewrites of that variable (commandPathRule, then the root), so every path derived
+# from it starts with one of these two prefixes. Gemini's root is the installed extension; inside
+# the package it is the adapter's own top level.
+PLUGIN_ROOTS = {
+    "codex": (".codex/archflow", r"\.agents/skills/archflow-(?:[a-z-]+|<name>)/SKILL\.md"),
+    "generic": (".agents/archflow", r"\.agents/skills/archflow-(?:[a-z-]+|<name>)/SKILL\.md"),
+    "copilot": (".github/archflow", r"\.github/skills/archflow-(?:[a-z-]+|<name>)/SKILL\.md"),
+    "cursor": (".cursor/archflow", r"\.cursor/commands/archflow-(?:[a-z-]+|<name>)\.md"),
+    "opencode": (".opencode/archflow", r"\.opencode/commands/archflow-(?:[a-z-]+|<name>)\.md"),
+    "gemini": ("$HOME/.gemini/extensions/archflow", None),
+}
+PROSE = {".md", ".toml", ".mdc", ".yaml", ".yml", ".json", ".ts"}
+
+
+def _generated_text(host):
+    """(relative path, text) for every generated text file, not following the in-adapter symlinks
+    (they point back at the skill tree, which is scanned once on its own)."""
+    root = ADAPTERS / host
+    for path in sorted(root.rglob("*")):
+        if path.suffix not in PROSE or not path.is_file():
+            continue
+        if any((root / p).is_symlink() for p in path.relative_to(root).parents):
+            continue
+        yield path.relative_to(root), path.read_text()
+
+
+def _derived_paths(host, text):
+    prefix, command = PLUGIN_ROOTS[host]
+    patterns = [re.escape(prefix) + r"(?:/[^\s`\"'(),;*]*)?"]
+    if command:
+        patterns.append(command)
+    for pattern in patterns:
+        for m in re.finditer(pattern, text):
+            yield m.group(0).rstrip(".:")
+
+
+def _resolve(host, path):
+    prefix, _ = PLUGIN_ROOTS[host]
+    path = path.replace("<name>", "help")
+    if host == "gemini":
+        path = path[len(prefix):].lstrip("/")
+    return ADAPTERS / host / path
+
+
+def test_every_plugin_root_host_is_covered():
+    assert sorted(PLUGIN_ROOTS) == sorted(_hosts()), "add the new host to PLUGIN_ROOTS"
+
+
+def test_every_plugin_root_path_resolves_in_its_adapter():
+    """S2-06 I-2: ${CLAUDE_PLUGIN_ROOT}/commands/<n>.md used to become <host>/archflow/commands/<n>.md,
+    which no adapter generates (commands ship in each host's own layout). Every path derived from the
+    plugin root, in every generated file, must name a file or directory the adapter really has."""
+    dead = []
+    for host in sorted(PLUGIN_ROOTS):
+        seen = 0
+        for rel, text in _generated_text(host):
+            for path in _derived_paths(host, text):
+                seen += 1
+                if not _resolve(host, path).exists():
+                    dead.append(f"adapters/{host}/{rel}: {path}")
+        assert seen, f"found no plugin-root paths in adapters/{host}; is PLUGIN_ROOTS stale?"
+    assert not dead, "plugin-root paths that point at nothing:\n" + "\n".join(sorted(set(dead)))
+
+
+def test_no_generated_prompt_keeps_the_claude_only_root():
+    """${CLAUDE_PLUGIN_ROOT} is set only for Claude Code plugins. A prompt that still carries it
+    tells the host's model to read a path it cannot resolve."""
+    left = []
+    for host in sorted(PLUGIN_ROOTS):
+        for rel, text in _generated_text(host):
+            if rel.suffix in {".md", ".toml", ".mdc"} and "${CLAUDE_PLUGIN_ROOT}" in text:
+                left.append(f"adapters/{host}/{rel}")
+    assert not left, "unrewritten ${CLAUDE_PLUGIN_ROOT}:\n" + "\n".join(left)

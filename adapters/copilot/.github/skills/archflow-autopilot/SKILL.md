@@ -97,7 +97,7 @@ on. For each, list what you cannot decide alone. Then ask those, batched, in `a 
 
 If a story is too vague to run unattended even after the interview (no verifiable acceptance
 criteria, scope you cannot bound), do not guess: offer `Groom it now` (run
-`.github/archflow/commands/groom.md` inline — the user is still here) / `Drop it from this run`.
+`.github/skills/archflow-groom/SKILL.md` inline — the user is still here) / `Drop it from this run`.
 
 ### 2c. Write the ledger, then confirm
 

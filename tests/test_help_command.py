@@ -93,6 +93,51 @@ def test_every_adapter_ships_help(host):
     assert "/archflow:help" not in body or host == "gemini", f"{host} help kept Claude Code invocation syntax"
 
 
+# What each host ships, read off the generated files, and how a command is invoked there.
+HOST_COMMANDS = {
+    "codex": (lambda r: [d.name for d in (r / ".agents" / "skills").glob("archflow-*")], r"\$archflow-"),
+    "generic": (lambda r: [d.name for d in (r / ".agents" / "skills").glob("archflow-*")
+                           if not d.name.startswith("archflow-agent-")], r"\$archflow-"),
+    "copilot": (lambda r: [d.name for d in (r / ".github" / "skills").glob("archflow-*")], r"/archflow-"),
+    "cursor": (lambda r: [f.stem for f in (r / ".cursor" / "commands").glob("archflow-*.md")], r"/archflow-"),
+    "opencode": (lambda r: [f.stem for f in (r / ".opencode" / "commands").glob("archflow-*.md")], r"/archflow-"),
+    "gemini": (lambda r: ["archflow-" + f.stem for f in (r / "commands" / "archflow").glob("*.toml")], r"/archflow:"),
+}
+
+
+def host_help_list(host):
+    """The commands a host's help prints: line-anchored entries in its fenced command block, the
+    same rule test_command_registration.help_command_list() applies to the plugin's help.md."""
+    body = HELP_FILES[host].read_text()
+    section = body[body.index("## Commands"):body.index("## How Archflow works")]
+    block = section[section.index("```"):section.rindex("```")]
+    return re.findall(rf"^\s+{HOST_COMMANDS[host][1]}([a-z][a-z-]*)\s", block, re.M)
+
+
+def test_every_host_command_listing_is_covered():
+    assert sorted(HOST_COMMANDS) == sorted(HELP_FILES) == sorted(ADAPTER_ROOTS)
+
+
+@pytest.mark.parametrize("host", sorted(HELP_FILES))
+def test_each_adapters_help_lists_exactly_what_that_host_ships(host):
+    """S2-06 I-1: every adapter skips /archflow:studio, so its help must not advertise it. The
+    list holds per host: none missing, none the host does not ship, none twice."""
+    shipped_here = sorted(n[len("archflow-"):] for n in HOST_COMMANDS[host][0](ADAPTERS / host))
+    assert "help" in shipped_here and len(shipped_here) >= 10, f"{host}: command glob found too little"
+    listed = host_help_list(host)
+    assert sorted(listed) == sorted(set(listed)), f"{host} help lists a command twice: {listed}"
+    assert sorted(listed) == shipped_here, (
+        f"{host} help and the commands it ships disagree. "
+        f"Missing from help: {sorted(set(shipped_here) - set(listed))}. "
+        f"In help but not shipped: {sorted(set(listed) - set(shipped_here))}."
+    )
+
+
+def test_the_claude_code_help_still_lists_studio():
+    """The filter is per host: Claude Code ships Studio, so the plugin's own help keeps it."""
+    assert re.search(r"^\s+/archflow:studio\s", (COMMANDS / "help.md").read_text(), re.M)
+
+
 # --------------------------------------------------------------------------
 # Site and docs guides
 # --------------------------------------------------------------------------

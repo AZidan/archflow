@@ -96,16 +96,34 @@ def test_help_explains_how_archflow_works():
         assert concept in primer, f"the help primer does not cover {concept!r}"
 
 
+# status.md names the commands it can suggest as a next step, plus its edge cases: 13 today, its
+# own title included. Raising this is a deliberate edit; a reintroduced command list trips it.
+STATUS_MAX_NAMED = 13
+HELP_POINTER = "All commands, and how Archflow works: /archflow:help"
+
+
 def test_status_drops_the_command_list_and_points_at_help():
     """Status answers "where am I"; help answers "what can I do". Status keeps only the commands
-    it suggests as a next step, so it never carries a second copy of the list."""
+    it suggests as a next step, so it never carries a second copy of the list, whole or partial."""
     import re
     body = (COMMANDS / "status.md").read_text()
     assert "Available commands" not in body
+    fences = re.findall(r"^```[^\n]*\n(.*?)^```", body, re.M | re.S)
+    listed = [line for block in fences for line in block.splitlines()
+              if re.match(r"\s*/archflow:[a-z]", line)]
+    assert not listed, f"status.md has a command list in a code block (help.md owns it): {listed}"
+    bullets = re.findall(r"^\s*(?:[-*]|\d+\.)\s+`?/archflow:([a-z][a-z-]*)", body, re.M)
+    assert not bullets, f"status.md has a bulleted command list (help.md owns it): {bullets}"
     named = set(re.findall(r"/archflow:([a-z][a-z-]*)", body))
-    assert named < set(shipped()), "status.md names every command again; that list lives in help.md"
-    assert body.rstrip().splitlines()[-2].strip() == "All commands, and how Archflow works: /archflow:help", (
-        "status.md must end with the pointer to /archflow:help"
+    assert len(named) <= STATUS_MAX_NAMED, (
+        f"status.md names {len(named)} commands (limit {STATUS_MAX_NAMED}): {sorted(named)}. "
+        "The command list lives in help.md"
+    )
+    assert fences and fences[-1].strip() == HELP_POINTER, (
+        "status.md must close with the pointer to /archflow:help as its last code block"
+    )
+    assert not body[body.rindex(HELP_POINTER):].split("```", 1)[1].strip(), (
+        "nothing may follow the /archflow:help pointer in status.md"
     )
 
 

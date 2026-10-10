@@ -163,7 +163,7 @@ every screen is a fresh guess at component names, colours and spacing.
 
 Set it now? [Yes / Later]
 ```
-- **Yes** — read `.cursor/archflow/commands/design.md` and follow **Step 3 — `pick`** inline.
+- **Yes** — read `.cursor/commands/archflow-design.md` and follow **Step 3 — `pick`** inline.
 - **Later** — continue; Phase 2 will ask before the first wireframe.
 
 ### Final line
@@ -305,7 +305,7 @@ definition; this is the operative summary so nobody has to fetch a security rule
    claude mcp list
    ```
 2. If NOT configured:
-   - Run `/archflow-setup-mcp [tool]` inline (load `.cursor/archflow/commands/setup-mcp.md`)
+   - Run `/archflow-setup-mcp [tool]` inline (load `.cursor/commands/archflow-setup-mcp.md`)
    - If MCP setup requires restart: save progress to `.onboard-progress.yaml`, instruct user to restart Cursor, then run `/archflow-onboard` again
 3. Once MCP is available, collect links:
    ```
@@ -372,7 +372,7 @@ Every screen, wireframe and UI review from here on will follow this system.
 
 - **Use this** — record `design_system`, `platform`, `library` in `.onboard-progress.yaml`.
 - **Pick another** (and whenever nothing was detected) — read
-  `.cursor/archflow/commands/design.md` and follow **Step 3 — `pick`** inline. It filters the
+  `.cursor/commands/archflow-design.md` and follow **Step 3 — `pick`** inline. It filters the
   catalogue by platform compatibility, shows each system's section 1, and handles the
   "Custom / match my brand" path including the tokens file.
 - **No UI** — record `design_system: null` and write no `design-system.yaml`.

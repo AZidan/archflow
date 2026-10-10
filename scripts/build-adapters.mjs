@@ -154,6 +154,46 @@ function readCommands() {
     });
 }
 
+/**
+ * A command's body as one host ships it. help.md lists every plugin command, but a host that
+ * skips one (Studio, everywhere but Claude Code) must not advertise it: drop that command's line
+ * from help's command block, with the usage note continuing beneath it. Throws if a skipped
+ * command has no line there, so a reshaped help.md cannot silently leak it back in.
+ */
+function hostBody(c, skip) {
+  if (c.name !== "help" || !skip.size) return c.body;
+  const start = c.body.indexOf("## Commands");
+  const end = c.body.indexOf("## How Archflow works");
+  if (start < 0 || end < start) throw new Error("help.md: cannot find its ## Commands section");
+  const kept = [];
+  const dropped = new Set();
+  let dropIndent = -1; // indent of the skipped command line being dropped, or -1
+  for (const line of c.body.slice(start, end).split("\n")) {
+    const cmd = line.match(/^(\s+)\/archflow:([a-z][a-z-]*)\s/);
+    const indent = line.length - line.trimStart().length;
+    if (cmd) {
+      dropIndent = skip.has(cmd[2]) ? cmd[1].length : -1;
+      if (dropIndent >= 0) { dropped.add(cmd[2]); continue; }
+    } else if (dropIndent >= 0 && line.trim() && indent > dropIndent) {
+      continue; // the skipped command's usage note, wrapped onto the next line(s)
+    } else {
+      dropIndent = -1;
+    }
+    kept.push(line);
+  }
+  const missing = [...skip].filter((n) => !dropped.has(n));
+  if (missing.length) throw new Error(`help.md: no command line for skipped command(s) ${missing.join(", ")}`);
+  return c.body.slice(0, start) + kept.join("\n") + c.body.slice(end);
+}
+
+/**
+ * Where `${CLAUDE_PLUGIN_ROOT}/commands/<name>.md` lands on a host. Commands are not copied
+ * under the host's plugin root; each host emits them in its own layout, so a pointer to a command
+ * file must be rewritten to that layout, before the generic root rewrite would turn it into a
+ * path that is never generated. `<name>` (a placeholder in prose) is kept as is.
+ */
+const commandPathRule = (to) => [/\$\{CLAUDE_PLUGIN_ROOT\}\/commands\/([a-z-]+|<name>)\.md/g, to];
+
 function readAgents() {
   return readdirSync(join(PLUGIN, "agents"))
     .filter((f) => f.endsWith(".md"))
@@ -388,6 +428,7 @@ const HOSTS = {
       [/Claude Code CLI/g, "Codex CLI"],
       [/\bClaude Code\b/g, "Codex"],
       [/\$ARGUMENTS/g, "the text the user wrote after the skill mention"],
+      commandPathRule(".agents/skills/archflow-$1/SKILL.md"),
       [/\$\{CLAUDE_PLUGIN_ROOT\}/g, ".codex/archflow"],
       // Session-start injection is an AGENTS.md instruction on Codex
       [/reloaded via hook/g, "read at the start of every session (see AGENTS.md)"],
@@ -408,7 +449,7 @@ const HOSTS = {
         const body =
           `---\nname: ${skillName}\ndescription: ${JSON.stringify(desc)}\n---\n\n` +
           `> Invoke with \`$${skillName}\`. Arguments are the text after the mention.${hint}\n\n` +
-          applyVocab(c.body, vocab);
+          applyVocab(hostBody(c, this.skip), vocab);
         write(join(out, ".agents", "skills", skillName, "SKILL.md"), body);
         // Commands are explicit actions; don't let Codex fire them implicitly.
         write(
@@ -547,7 +588,7 @@ const HOSTS = {
       // Gemini only substitutes ${extensionPath} in the manifest and hooks, not in prompts.
       // $HOME, not ~: prompts quote the path ("…/scripts/x.py"), and ~ does not expand inside quotes.
       // Command bodies ship as commands/archflow/<n>.toml here, not commands/<n>.md; the prompt is inside.
-      [/\$\{CLAUDE_PLUGIN_ROOT\}\/commands\/([a-z-]+|<name>)\.md/g, "$HOME/.gemini/extensions/archflow/commands/archflow/$1.toml"],
+      commandPathRule("$HOME/.gemini/extensions/archflow/commands/archflow/$1.toml"),
       [/\$\{CLAUDE_PLUGIN_ROOT\}/g, "$HOME/.gemini/extensions/archflow"],
       [/reloaded via hook/g, "injected by the extension's SessionStart hook"],
     ],
@@ -560,7 +601,7 @@ const HOSTS = {
       for (const c of commands) {
         if (this.skip.has(c.name)) continue;
         const desc = applyVocab(c.meta.description || `Archflow ${c.name}`, vocab);
-        const body = applyVocab(c.body, vocab);
+        const body = applyVocab(hostBody(c, this.skip), vocab);
         // The leading marker lets the BeforeAgent telemetry hook name the command even if
         // Gemini hands it the expanded prompt rather than the literal /archflow:<name>.
         write(
@@ -684,6 +725,7 @@ const HOSTS = {
       [/Claude Code CLI/g, "OpenCode"],
       [/\bClaude Code\b/g, "OpenCode"],
       // $ARGUMENTS is native to OpenCode commands — keep it.
+      commandPathRule(".opencode/commands/archflow-$1.md"),
       [/\$\{CLAUDE_PLUGIN_ROOT\}/g, ".opencode/archflow"],
       [/reloaded via hook/g, "injected by the Archflow plugin at session start"],
     ],
@@ -697,7 +739,7 @@ const HOSTS = {
         const desc = applyVocab(c.meta.description || `Archflow ${c.name}`, vocab);
         write(
           join(out, ".opencode", "commands", `archflow-${c.name}.md`),
-          `---\ndescription: ${JSON.stringify(desc)}\n---\n\n` + applyVocab(c.body, vocab),
+          `---\ndescription: ${JSON.stringify(desc)}\n---\n\n` + applyVocab(hostBody(c, this.skip), vocab),
         );
       }
 
@@ -776,6 +818,7 @@ const HOSTS = {
       [/Claude Code CLI/g, "your coding agent"],
       [/\bClaude Code\b/g, "your coding agent"],
       [/\$ARGUMENTS/g, "the text the user wrote after the skill name"],
+      commandPathRule(".agents/skills/archflow-$1/SKILL.md"),
       [/\$\{CLAUDE_PLUGIN_ROOT\}/g, ".agents/archflow"],
       [/reloaded via hook/g, "read at the start of every session (see AGENTS.md)"],
     ],
@@ -788,7 +831,7 @@ const HOSTS = {
         write(
           join(out, ".agents", "skills", `archflow-${c.name}`, "SKILL.md"),
           `---\nname: archflow-${c.name}\ndescription: ${JSON.stringify(`Use ONLY when the user asks for $archflow-${c.name} or "archflow ${c.name}". ${desc}`)}\n---\n\n` +
-            `> Arguments are the text after the skill name.\n\n` + applyVocab(c.body, vocab),
+            `> Arguments are the text after the skill name.\n\n` + applyVocab(hostBody(c, this.skip), vocab),
         );
       }
       for (const a of agents) {
@@ -854,6 +897,7 @@ const HOSTS = {
       [/Claude Code CLI/g, "Cursor"],
       [/\bClaude Code\b/g, "Cursor"],
       [/\$ARGUMENTS/g, "the text the user wrote after the command"],
+      commandPathRule(".cursor/commands/archflow-$1.md"),
       [/\$\{CLAUDE_PLUGIN_ROOT\}/g, ".cursor/archflow"],
       [/reloaded via hook/g, "injected by the sessionStart hook"],
     ],
@@ -867,7 +911,7 @@ const HOSTS = {
         if (this.skip.has(c.name)) continue;
         const desc = applyVocab(c.meta.description || `Archflow ${c.name}`, vocab);
         write(join(C, "commands", `archflow-${c.name}.md`),
-          `---\nname: archflow-${c.name}\ndescription: ${JSON.stringify(desc)}\n---\n\n` + applyVocab(c.body, vocab));
+          `---\nname: archflow-${c.name}\ndescription: ${JSON.stringify(desc)}\n---\n\n` + applyVocab(hostBody(c, this.skip), vocab));
       }
       for (const a of agents) {
         const desc = applyVocab(a.meta.description || "", vocab);
@@ -945,6 +989,7 @@ const HOSTS = {
       [/Claude Code CLI/g, "Copilot CLI"],
       [/\bClaude Code\b/g, "Copilot"],
       [/\$ARGUMENTS/g, "the text the user wrote after the skill name"],
+      commandPathRule(".github/skills/archflow-$1/SKILL.md"),
       [/\$\{CLAUDE_PLUGIN_ROOT\}/g, ".github/archflow"],
       [/reloaded via hook/g, "injected by the SessionStart hook"],
     ],
@@ -957,7 +1002,7 @@ const HOSTS = {
         const desc = applyVocab(c.meta.description || `Archflow ${c.name}`, vocab);
         write(join(G, "skills", `archflow-${c.name}`, "SKILL.md"),
           `---\nname: archflow-${c.name}\ndescription: ${JSON.stringify(`Use ONLY when the user asks for /archflow-${c.name} or "archflow ${c.name}". ${desc}`)}\n---\n\n` +
-            `> Arguments are the text after the skill name.\n\n` + applyVocab(c.body, vocab));
+            `> Arguments are the text after the skill name.\n\n` + applyVocab(hostBody(c, this.skip), vocab));
       }
       for (const a of agents) {
         const desc = applyVocab(a.meta.description || "", vocab);

@@ -11,7 +11,7 @@ description: "Use ONLY when the user asks for /archflow-help or \"archflow help\
 Print the two sections below to the user as they are. Read nothing and change nothing: this command
 answers "what can I do?", and `/archflow-status` answers "where am I?". If `the text the user wrote after the skill name` names a
 command (e.g. `release`), print only that command's line from the list, then tell the user its full
-instructions are in `.github/archflow/commands/<name>.md`.
+instructions are in `.github/skills/archflow-<name>/SKILL.md`.
 
 ## Commands
 
@@ -53,8 +53,6 @@ Releases and pace
                           (blocker interview first, then silent; one report at the end)
 
 Workspace and settings
-  /archflow-studio        Open Archflow Studio, a local web workspace over the same files
-                          (beta; stop | status | port <n>)
   /archflow-telemetry     Show or change anonymous usage telemetry (on by default;
                           off opts out)
 ```
@@ -79,7 +77,8 @@ Stories    Each story walks its own readiness pipeline, one step at a time:
 Gates      You approve the end of every phase; nothing moves on without you.
            A story is done only when qa-engineer passes and pm-reviewer returns
            ACCEPTED, with no open blocking issue. Merging to main is always yours.
-           /archflow-autopilot asks its questions up front instead, but never merges.
+           /archflow-autopilot asks its questions up front instead, but never merges
+           to main.
 
 Modes      quick: one implicit release, light gates, one lane (solo; the default).
            full:  an explicit release pipeline, enforced gates, role lanes (teams).

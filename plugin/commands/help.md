@@ -1,5 +1,6 @@
 ---
 description: "Every Archflow command with a one-line usage note, and a short primer on how Archflow works"
+argument-hint: "[command]"
 ---
 
 # /archflow:help — Commands and how Archflow works
@@ -75,7 +76,8 @@ Stories    Each story walks its own readiness pipeline, one step at a time:
 Gates      You approve the end of every phase; nothing moves on without you.
            A story is done only when qa-engineer passes and pm-reviewer returns
            ACCEPTED, with no open blocking issue. Merging to main is always yours.
-           /archflow:autopilot asks its questions up front instead, but never merges.
+           /archflow:autopilot asks its questions up front instead, but never merges
+           to main.
 
 Modes      quick: one implicit release, light gates, one lane (solo; the default).
            full:  an explicit release pipeline, enforced gates, role lanes (teams).

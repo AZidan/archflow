@@ -65,7 +65,7 @@ display name (lowercase, kebab, filesystem-safe, unique).
 
 Selected stories are already `ready` (groomed) or still bare stubs:
 - **`ready`** → promote as-is. The detail exists; do not re-elicit it.
-- **`backlog` stub** → groom it first. `.agents/archflow/commands/groom.md` (`$archflow-groom`) is the canonical
+- **`backlog` stub** → groom it first. `.agents/skills/archflow-groom/SKILL.md` (`$archflow-groom`) is the canonical
   description of how a story gets detailed (eliciting ACs, `{text, met}` shape, gate derivation) —
   follow it rather than inventing a second convention. Mode B MAY batch that conversation across the
   selected stubs instead of running it once per story; the written result must be identical.

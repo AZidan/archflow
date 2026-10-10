@@ -35,7 +35,7 @@ $archflow-studio [stop|status|port n] → Local web workspace over the same file
 $archflow-telemetry [on|off|status]  → Show or change anonymous usage telemetry (on by default)
 ```
 
-Command bodies live in `.codex/archflow/commands/<name>.md`. When you need to run one from
+Command bodies live in `.agents/skills/archflow-<name>/SKILL.md`. When you need to run one from
 inside another flow (e.g. onboarding calls setup-mcp), read that file and follow it inline.
 
 ## Framework files (shipped with the plugin)
@@ -57,7 +57,7 @@ inside another flow (e.g. onboarding calls setup-mcp), read that file and follow
 ## When this skill is invoked directly
 
 If the user runs this skill on its own (`$archflow-archflow`), behave exactly like
-`$archflow-status`: read and follow `.codex/archflow/commands/status.md`.
+`$archflow-status`: read and follow `.agents/skills/archflow-status/SKILL.md`.
 
 ## Working in an Archflow project
 
