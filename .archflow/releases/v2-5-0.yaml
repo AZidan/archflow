@@ -491,12 +491,12 @@ stories:
       stories left by a finished run therefore have no sanctioned way back. Status (S2-06, case 3)
       gives the same advice, so it must stay true after this change.
     acceptance_criteria:
-      - {text: "After a run finishes with parked stories, there is one documented command that picks them up once their questions are answered", met: false}
-      - {text: "The end-of-run report's 'Next:' line names a command that actually works for a finished run", met: false}
-      - {text: "/archflow:status's parked-story advice matches the real resume path", met: false}
-      - {text: "A run with no parked stories is not resurrected by resume; aborted runs stay aborted", met: false}
-      - {text: "Tests cover resume on a finished run with parked stories, one without, and an aborted run", met: false}
-      - {text: "CHANGELOG has a Fixed entry", met: false}
+      - {text: "After a run finishes with parked stories, there is one documented command that picks them up once their questions are answered", met: true}
+      - {text: "The end-of-run report's 'Next:' line names a command that actually works for a finished run", met: true}
+      - {text: "/archflow:status's parked-story advice matches the real resume path", met: true}
+      - {text: "A run with no parked stories is not resurrected by resume; aborted runs stay aborted", met: true}
+      - {text: "Tests cover resume on a finished run with parked stories, one without, and an aborted run", met: true}
+      - {text: "CHANGELOG has a Fixed entry", met: true}
     subtasks:
       - {text: "Decide and document how resume treats a finished run with parked stories (autopilot.md)", completed: true}
       - {text: "Fix the end-of-run report's Next line", completed: true}
@@ -818,6 +818,27 @@ stories:
         location: "plugin/commands/autopilot.md:363"
         report: "docs/qa-reports/S5-02-qa.md"
         status: fixed
+      - id: I-46
+        summary: "A follow-on that builds only the answered stories and parks nothing prints 'Next: review {run-branch} and merge it yourself - nothing for resume to pick up', while a story left unanswered is still parked (and blocking) on that branch and resume would ask it"
+        found_by: pm-reviewer
+        severity: minor
+        location: "plugin/commands/autopilot.md:297"
+        report: "docs/acceptance-reports/S5-02-review.md"
+        status: open
+      - id: I-47
+        summary: "Plain /archflow:autopilot started from base_branch after a run re-queues that run's parked story as ready (its park lives only on the unmerged run branch) and rebuilds it from scratch beside its existing WIP branch; Step 1 gives no pointer like resume's (pre-existing, outside S5-02's ACs)"
+        found_by: pm-reviewer
+        severity: minor
+        location: "plugin/commands/autopilot.md:47"
+        report: "docs/acceptance-reports/S5-02-review.md"
+        status: open
+      - id: I-48
+        summary: "No test pins status.md case 3's 'minus any it says were picked up' clause: rewriting it leaves all 110 S5-02 tests green, so status can drift from resume's picked-up rule unnoticed"
+        found_by: pm-reviewer
+        severity: minor
+        location: "plugin/commands/status.md:36"
+        report: "docs/acceptance-reports/S5-02-review.md"
+        status: open
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"

@@ -1,0 +1,5 @@
+resume after run 1 (user answers C only, leaves B): ('follow-on', ['B', 'C'])
+follow-on finished queue: [('C', 'done')]
+follow-on report PARKED section: [] -> Next line per :297 = 'review r1-autopilot and merge it yourself (nothing for resume to pick up)'
+release file on r1-autopilot B = parked
+resume on the same branch now: ('follow-on', ['B'])
