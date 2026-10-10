@@ -393,7 +393,9 @@ stories:
   - id: S2-06
     title: "/archflow:help command; status drops the command list"
     priority: High
-    status: review
+    status: done
+    approved: true
+    approved_at: "2026-10-10"
     gates: {needs_design: false, needs_contract: false}
     assigned: api-engineer
     description: >-
