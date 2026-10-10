@@ -498,10 +498,10 @@ stories:
       - {text: "Tests cover resume on a finished run with parked stories, one without, and an aborted run", met: false}
       - {text: "CHANGELOG has a Fixed entry", met: false}
     subtasks:
-      - {text: "Decide and document how resume treats a finished run with parked stories (autopilot.md)", completed: false}
-      - {text: "Fix the end-of-run report's Next line", completed: false}
-      - {text: "Align status.md's parked case (plugin/commands/status.md) and regenerate adapters", completed: false}
-      - {text: "Tests + CHANGELOG", completed: false}
+      - {text: "Decide and document how resume treats a finished run with parked stories (autopilot.md)", completed: true}
+      - {text: "Fix the end-of-run report's Next line", completed: true}
+      - {text: "Align status.md's parked case (plugin/commands/status.md) and regenerate adapters", completed: true}
+      - {text: "Tests + CHANGELOG", completed: true}
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"

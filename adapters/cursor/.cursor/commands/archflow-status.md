@@ -33,8 +33,9 @@ one that applies, and add a second only if it is independent of the first.
 1. state looks inconsistent → `/archflow-doctor`
 2. an open blocking issue → fix it on that story first (`/archflow-issue {story-id}` lists them).
    It stops the story reaching `done`
-3. a `parked` story → print its `parked.question` and ask the user to answer it, then
-   `/archflow-autopilot resume`. A parked story blocks shipping the release by default
+3. a `parked` story → print its `parked.question`, then `/archflow-autopilot resume`, which asks
+   it and builds the story once answered. It works whether the run that parked the story is still
+   open or has finished. A parked story blocks shipping the release by default
 4. a story `in_progress` → carry on building it on its branch; it goes to `review` when every
    subtask is complete
 5. a story in `review` → finish its gate: qa-engineer, then pm-reviewer, then the user's approval

@@ -46,6 +46,14 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 ### Fixed
 
+- Parked stories left by a finished autopilot run had no way back. The end-of-run report said
+  "answer the parked questions, then `/archflow:autopilot resume`", and `/archflow:status` said the
+  same, but `resume` only read a run that was still `preflight` or `running`, and a run that empties
+  its queue is `finished`. `resume` now falls back to the newest finished run that still has parked
+  stories: it asks their questions and builds the answered ones in a follow-on run, linked by a new
+  `resumes` field in the ledger, on the same run branch. The finished ledger is left as it was. A
+  finished run with nothing parked, and an aborted run, are never resumed. The report's `Next:` line
+  and `/archflow:status` now describe that path.
 - Gemini commands that quote the plugin path, such as `/archflow:doctor`, pointed at
   `"~/.gemini/..."`, which the shell does not expand. They now use `$HOME`.
 - Gemini commands, agents and skills that tell the model to follow another command, such as

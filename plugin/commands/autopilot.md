@@ -21,7 +21,7 @@ the user reviews and merges themselves.
 /archflow:autopilot                    → interview, then run every eligible story in the active release
 /archflow:autopilot S3-04 S3-05        → interview, then run just these stories, in this order
 /archflow:autopilot --plan             → interview + print the queue, write the ledger, then STOP
-/archflow:autopilot resume             → continue the newest unfinished run from its ledger
+/archflow:autopilot resume             → continue an unfinished run, or pick up a finished run's parked stories
 /archflow:autopilot report             → reprint the last run's summary
 /archflow:autopilot abort              → mark the current run aborted and report what was done
 ```
@@ -242,8 +242,13 @@ FAILED
 
 REVIEW FIRST: [S3-04] (touches payment auth)
 Ledger: .archflow/autopilot/{run-id}.yaml
-Next: answer the parked questions, then /archflow:autopilot resume
+Next: /archflow:autopilot resume — asks the parked questions, then builds the stories you answer
 ```
+
+The `Next:` line must name a command that works on this run after it is `finished`. With parked
+stories it is the line above: `resume` picks up a finished run's parked stories (see *Subcommands*).
+With nothing parked, write `Next: review {run-branch} and merge it yourself` instead — there is
+nothing for `resume` to pick up, and it would say so.
 
 List every open `blocking` issue under each FAILED story, read from the release file — with its
 file, line and report path. "QA rejected 3×" is a status; the issue list is something the user can
@@ -281,10 +286,33 @@ may and may not do is fixed here and is not negotiable at runtime.
 
 ## Subcommands
 
-**`resume`** — read the newest ledger whose `status` is `preflight` or `running`. Verify the run
-branch still exists and its HEAD matches the ledger; if it diverged, report and stop rather than
-building on an unknown base. Re-ask (via `AskUserQuestion`) only questions for stories that were
-parked on an unanswered decision, then continue the queue. Do not re-run the whole interview.
+**`resume`** — the one command that brings parked work back, whether the run that parked it is
+still open or has finished. Pick what to resume from `.archflow/autopilot/`, first match wins:
+
+1. **An unfinished run** — the newest ledger whose `status` is `preflight` or `running`. Verify the
+   run branch still exists and its HEAD matches the ledger; if it diverged, report and stop rather
+   than building on an unknown base. Re-ask (via `AskUserQuestion`) only questions for stories that
+   were parked on an unanswered decision, then continue the queue. Do not re-run the whole interview.
+2. **A finished run with parked stories** — otherwise, the newest ledger whose `status` is
+   `finished` and whose `queue[]` holds an item in state `parked` whose story is still
+   `status: parked` in the release file. A finished ledger is a record of what happened: never
+   reopen it, never change its `status`. Start a **follow-on run** instead:
+   - Ask each still-parked story's `parked.question` with its `parked.options`, batched in
+     `AskUserQuestion`. This is also where the user may waive `parked.blocks_release` for a story.
+     Do not re-run the interview: the envelope, stop conditions, `parked_policy` and `decisions[]`
+     carry over from the finished ledger.
+   - A story the user leaves unanswered stays `parked` and is not queued.
+   - Write a new ledger per Step 2c with `resumes: {finished run-id}`, the carried-over decisions
+     plus one new decision per answer, and a queue of the answered stories in their original order,
+     each `pending` with its WIP `branch`. In the release file, clear each answered story's `parked`
+     block and set it back to `in_progress` — that is how a story leaves `parked`.
+   - Build on the finished run's `run_branch` if it still exists (check it out, do not recreate it);
+     if the user has merged and deleted it, cut a new one from `base_branch` as in Step 3. Each story
+     continues on its WIP task branch, not a fresh one. Then Step 3 and Step 4 as for any run.
+3. **Nothing to resume** — in every other case print `Nothing to resume.` with the reason, and stop.
+   A finished run with no parked stories (or whose parked stories have all been resolved since) is
+   done and is not restarted. An `aborted` run is never resumed — aborting was the user saying stop;
+   a new run is `/archflow:autopilot`.
 
 **`report`** — reprint Step 4 from the newest ledger. Read-only.
 
