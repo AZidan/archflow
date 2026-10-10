@@ -442,7 +442,9 @@ def _resume(repo):
         hit = _guard_hit(repo, led["run_branch"])                # not local: same checks as the guard
         if hit:
             return ("refuse", led["run_id"], hit)
-        # gone everywhere: never continued; the choice is made again without it (I-23)
+        # gone everywhere: never continued, and nothing else is chosen in this invocation (I-24):
+        # the user closes it with abort, then runs resume again
+        return ("gone", led["run_id"])
     if preflight and parked:
         return ("ask", preflight[0]["run_id"], parked)
     if preflight:
@@ -691,7 +693,7 @@ def test_started_planned_run_is_not_restarted_once_its_run_branch_is_gone_everyw
         _git(other, "push", "-q", "origin", "main")
     _git(repo, "push", "-q", "origin", f":{RUN}")
     _git(repo, "fetch", "-q", "--prune", "origin"); _git(repo, "branch", "-qD", RUN)
-    assert _resume(repo) == ("nothing",)
+    assert _resume(repo) == ("gone", "2026-10-10-1")       # reported and stopped, never restarted (I-24)
 
 
 # ---- g2: a normal run that dies before Step 3's `running` commit -----------------------------
@@ -737,7 +739,7 @@ def test_interrupted_run_whose_branch_the_user_deleted_is_not_continued_and_abor
     never on main, and resume then has nothing."""
     _start_planned_and_die(tmp_path, ["A", "B"])
     _git(tmp_path, "branch", "-qD", RUN)
-    assert _resume(tmp_path) == ("nothing",)
+    assert _resume(tmp_path) == ("gone", "2026-10-10-1")   # reported and stopped (I-24)
     src, led = _kept(tmp_path)["2026-10-10-1"]
     assert (src, led["status"]) == ("r1", "running")
     target = RUN if _ok(tmp_path, "show-ref", "--verify", "--quiet", f"refs/heads/{RUN}") else led["base_branch"]
@@ -755,8 +757,6 @@ def test_interrupted_run_branch_only_on_origin_is_refused_not_restarted(tmp_path
     assert _resume(repo) == ("refuse", "2026-10-10-1", f"refs/remotes/origin/{RUN}")
 
 
-@pytest.mark.xfail(strict=True, reason="I-24: after a gone `running` run, 're-choose without that "
-                   "ledger' starts an older planned run unattended, without asking")
 def test_gone_running_run_does_not_silently_start_an_older_planned_run(tmp_path):
     """Y was planned (--plan) first, X later; resume started X (the newest), which was interrupted and
     whose branch the user then deleted. The user runs resume expecting X. The running bullet says X

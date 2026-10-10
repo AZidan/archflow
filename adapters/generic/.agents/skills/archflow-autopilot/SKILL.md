@@ -414,8 +414,11 @@ Choose between them, so that `resume` never starts unattended work the user did 
      ledger. With no hit, the run branch is gone (discarded, or merged and deleted), so this
      `running` copy is all that is left of a run that cannot be continued: never continue or
      restart it. Say so in one line (`{run-id}'s run branch {run_branch} no longer exists, not
-     continuing it; $archflow-autopilot abort closes it.`), then make the choice above again
-     without it; with nothing else to resume, that is rule 3.
+     continuing it; $archflow-autopilot abort closes it, then run $archflow-autopilot resume
+     again.`), write nothing, and **stop**. Do not choose another ledger or parked story in the
+     same invocation: an older `--plan` ledger would then be the only candidate and would start
+     unattended, when the user came here for the run that is gone. Once `abort` closes it, the next
+     `resume` makes the choice above normally.
      Otherwise (local, HEAD matching) check it out, re-ask (via `a direct question to the user (wait for the reply before continuing)`) only questions
      for stories that were parked on an unanswered decision, then continue the queue.
    Do not re-run the whole interview in either case.

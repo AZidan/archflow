@@ -670,7 +670,7 @@ stories:
         severity: minor
         location: "plugin/commands/autopilot.md:414"
         report: "docs/qa-reports/S5-02-qa.md"
-        status: open
+        status: fixed
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"
