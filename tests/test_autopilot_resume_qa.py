@@ -1037,3 +1037,34 @@ def test_i27_run_merged_into_main_its_parked_story_is_still_offered_and_never_wr
     assert _follow_on_branch(repo, ["B"], "2026-10-11-1") == ("r1-autopilot-2026-10-11-1", True, [],
                                                               ["2026-10-10-1"])
 
+
+
+# ---- QA re-run after fix pass 8: stale lower-ranked copies outrank a later `parked` (I-29, I-30) --
+
+@pytest.mark.xfail(strict=True, reason="I-29: a pre-run `in_progress` copy on base_branch outranks the run's `parked`")
+def test_i29_story_queued_in_progress_and_parked_by_the_run_is_still_asked(tmp_path):
+    """Step 1 queues `in_progress` stories. One that was `in_progress` on base_branch when the run
+    started and that the run parks is `parked` on the run branch but still `in_progress` on r1, a copy
+    from before the park (an ancestor of it). `parked` < `in_progress`, so resume says
+    "B is in_progress on r1, not asking it." and "Nothing to resume.", and status case 3 does not
+    list it, while the run's report said PARKED B / Next: resume."""
+    repo = tmp_path
+    _init(repo, ["A", "B"])
+    _git(repo, "checkout", "-qb", "r1")
+    d = _read(repo, REL); d["stories"]["B"] = {"status": "in_progress", "started": "by hand"}
+    _write(repo, REL, d); _commit(repo, "B started on r1 before the run")
+    _plan(repo, ["A", "B"])
+    _step3_and_run(repo, {"A": "done", "B": "parked"})
+    assert _resume(repo) == ("follow-on", ["B"]), (_resume(repo), _not_asked(repo))
+
+
+@pytest.mark.xfail(strict=True, reason="I-30: a leftover subtask branch's `in_progress` copy hides a parked story")
+def test_i30_leftover_subtask_branch_cut_before_the_park_does_not_hide_the_story(tmp_path):
+    """workflow.md cuts subtask branches off the task branch after `in_progress` is committed and
+    deletes them only after merging. A story parked mid-subtask can leave one behind; its copy
+    (`in_progress`, an ancestor of the task branch's `parked` commit) outranks the park."""
+    repo = tmp_path
+    _replay(repo, {"A": "done", "B": "parked"})
+    ip = _git(repo, "log", "--format=%H", "--grep", "B in_progress", "t/B").split()[0]
+    _git(repo, "branch", "t/B-1.1-sub", ip)
+    assert _resume(repo) == ("follow-on", ["B"]), (_resume(repo), _not_asked(repo))
