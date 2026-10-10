@@ -470,8 +470,6 @@ def test_replay_of_a_normal_run_commits_off_main_and_resume_finds_the_parked_sto
     assert _scan(tmp_path) == ([], ["B"])
 
 
-@pytest.mark.xfail(strict=True, reason="I-20: a finished run with nothing parked comes back as a "
-                   "planned run once its run branch is gone, from the preflight copy on base_branch")
 def test_a_finished_run_is_not_resurrected_from_the_preflight_copy_on_base_branch(tmp_path):
     """Fix pass 4 commits every new ledger on base_branch as `preflight` (Step 2c). That copy is
     never updated: `running`/`finished`/`aborted` are only written on the run branch. While the run

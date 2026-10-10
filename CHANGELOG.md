@@ -58,11 +58,12 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 - `/archflow:autopilot abort` printed the end-of-run report, whose last step set the run
   `finished`, so an aborted run did not stay `aborted`. `abort` and `report` now skip that write.
 - `/archflow:autopilot resume` on a run planned with `--plan` stopped because the run branch did
-  not exist yet. It now creates the branch and starts the planned run.
+  not exist yet. It now creates the branch and starts the planned run, and refuses if that branch
+  already exists locally or on `origin`.
 - Autopilot left its ledger writes uncommitted (the `--plan` ledger, the closing `finished`,
   `abort`'s `aborted`), so `resume`, which needs a clean tree, stopped on the run's own change.
-  Every ledger and release-file write is now committed, on the run branch or the base branch,
-  never on `main`, and a parked story's state is carried onto the run branch where `resume` looks.
+  Every ledger and release-file write is now committed, on the run branch (or, for a `--plan`
+  ledger, the base branch), never on `main`, and a parked story's state is carried onto the run branch where `resume` looks.
 - Gemini commands that quote the plugin path, such as `/archflow:doctor`, pointed at
   `"~/.gemini/..."`, which the shell does not expand. They now use `$HOME`.
 - Gemini commands, agents and skills that tell the model to follow another command, such as

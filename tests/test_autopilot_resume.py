@@ -284,3 +284,207 @@ def test_follow_on_from_an_aborted_run_arms_the_guard(tmp_path):
         ledger("2026-01-02-1", "running", [DONE], resumes="2026-01-01-1"),
     ])
     assert guard("git push origin main", proj) == 2
+
+
+# --------------------------------------------------------------------------
+# Fix pass 5: I-20 (no stale `preflight` copy on base_branch, and the planned-run guard),
+# I-21 (a remote-only base_branch counts as existing), I-22 (no undefined conflict rule)
+# --------------------------------------------------------------------------
+
+import shutil
+
+import pytest
+
+
+def _flat(text):
+    return re.sub(r"\s+", " ", text)
+
+
+def _git(repo, *args, check=True):
+    return subprocess.run(["git", *args], cwd=repo, check=check, capture_output=True, text=True)
+
+
+def _repo(path, branch="main"):
+    if not shutil.which("git"):
+        pytest.skip("git not on PATH")
+    path.mkdir(parents=True, exist_ok=True)
+    _git(path, "init", "-q", "-b", branch)
+    _git(path, "config", "user.email", "qa@example.com")
+    _git(path, "config", "user.name", "qa")
+    return path
+
+
+def _commit(repo, msg, files):
+    for rel, data in files.items():
+        p = repo / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(data if isinstance(data, str) else yaml.safe_dump(data, sort_keys=False))
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-qm", msg)
+
+
+def _ledgers_on(repo, branch):
+    return _git(repo, "ls-tree", "--name-only", branch, ".archflow/autopilot/").stdout.split()
+
+
+def plan_section():
+    return _flat(AUTOPILOT.read_text().split("### 2c.", 1)[1].split("### Where", 1)[0])
+
+
+def preflight_bullet():
+    rule = _flat(resume_rule())
+    m = re.search(r"A \*\*`preflight`\*\* ledger is a planned run(.*?)A \*\*`running`\*\*", rule)
+    assert m, "rule 1 lost its preflight bullet"
+    return m.group(1)
+
+
+def test_a_run_that_starts_now_cuts_its_run_branch_before_writing_the_ledger():
+    plan = plan_section()
+    assert plan.index("Check out `base_branch`") < plan.index("cuts its run branch") \
+        < plan.index("create `.archflow/autopilot/{run-id}.yaml`")
+    assert "Commit the ledger alone on the run branch" in plan
+    assert "No copy of a started run's ledger is committed on `base_branch`" in plan
+    assert "This is the only ledger autopilot commits on `base_branch`" in plan
+
+
+def test_step_3_cuts_the_run_branch_only_when_it_does_not_exist_yet():
+    step3 = _flat(AUTOPILOT.read_text().split("## Step 3", 1)[1].split("```", 1)[0])
+    assert "only when the run branch does not exist yet" in step3
+    assert "by Step 2c for a run that starts now" in step3
+
+
+def test_replay_a_started_run_leaves_no_ledger_on_base_branch(tmp_path):
+    """I-20 as git: Step 2c as now written. Once the run branch is gone, nothing on base_branch
+    can be mistaken for a planned run."""
+    repo = _repo(tmp_path / "w")
+    _commit(repo, "init", {"README": "x"})
+    _git(repo, "checkout", "-qb", "r1")                       # base_branch
+    _git(repo, "checkout", "-qb", "r1-autopilot")             # 2c cuts the run branch first
+    led = ".archflow/autopilot/2026-10-10-1.yaml"
+    base = {"run_id": "2026-10-10-1", "base_branch": "r1", "run_branch": "r1-autopilot"}
+    for status in ("preflight", "running", "finished"):
+        _commit(repo, status, {led: dict(base, status=status)})
+    _git(repo, "checkout", "-q", "r1")
+    _git(repo, "branch", "-qD", "r1-autopilot")               # deleted unmerged
+    for b in _git(repo, "for-each-ref", "--format=%(refname:short)", "refs/heads").stdout.split():
+        assert _ledgers_on(repo, b) == [], f"{b} still holds a ledger copy resume could restart"
+
+
+def _guard_commands():
+    """The fetch-free and remote checks rule 1's preflight path documents, in order."""
+    cmds = re.findall(r"`(git [^`]*\{run_branch\}[^`]*)`", preflight_bullet())
+    assert [c.split()[1] for c in cmds] == ["show-ref", "show-ref", "ls-remote"], cmds
+    assert "refs/heads/{run_branch}" in cmds[0] and "refs/remotes/origin/{run_branch}" in cmds[1]
+    return cmds
+
+
+def _planned_run_refused(repo, run_branch):
+    return any(_git(repo, *c.replace("{run_branch}", run_branch).split()[1:], check=False).returncode == 0
+               for c in _guard_commands())
+
+
+def test_planned_run_guard_is_documented_before_step_3():
+    bullet = preflight_bullet()
+    assert "**Refuse to start it if its `run_branch` already exists**, locally or on `origin`" in bullet
+    assert bullet.index("Refuse to start it") < bullet.index("go to Step 3")
+    assert "write nothing" in bullet and "and stop" in bullet
+
+
+@pytest.fixture
+def planned(tmp_path):
+    """A --plan ledger on base_branch r1, an origin, and a working clone."""
+    seed = _repo(tmp_path / "seed")
+    origin = tmp_path / "origin.git"
+    _git(tmp_path, "init", "-q", "--bare", "-b", "main", str(origin))
+    _commit(seed, "init", {"README": "x"})
+    _git(seed, "checkout", "-qb", "r1")
+    _commit(seed, "chore(autopilot): plan 2026-10-10-1", {".archflow/autopilot/2026-10-10-1.yaml": {
+        "run_id": "2026-10-10-1", "status": "preflight", "base_branch": "r1", "run_branch": "r1-autopilot"}})
+    _git(seed, "remote", "add", "origin", str(origin))
+    _git(seed, "push", "-q", "origin", "main", "r1")
+    work = tmp_path / "work"
+    _git(tmp_path, "clone", "-q", str(origin), str(work))
+    return origin, seed, work
+
+
+def test_planned_run_with_no_run_branch_anywhere_is_started(planned):
+    _, _, work = planned
+    assert not _planned_run_refused(work, "r1-autopilot")
+
+
+def test_planned_run_refused_when_run_branch_exists_locally(planned):
+    _, _, work = planned
+    _git(work, "branch", "r1-autopilot", "origin/r1")
+    assert _planned_run_refused(work, "r1-autopilot")
+
+
+def test_planned_run_refused_when_run_branch_is_only_on_origin(planned):
+    """Fresh clone: the run started elsewhere and its branch is only origin/r1-autopilot."""
+    origin, seed, _ = planned
+    _git(seed, "checkout", "-qb", "r1-autopilot")
+    _git(seed, "push", "-q", "origin", "r1-autopilot")
+    fresh = origin.parent / "fresh"
+    _git(origin.parent, "clone", "-q", str(origin), str(fresh))
+    assert _git(fresh, "show-ref", "--verify", "--quiet", "refs/heads/r1-autopilot", check=False).returncode
+    assert _planned_run_refused(fresh, "r1-autopilot")
+
+
+def test_planned_run_refused_when_origin_has_the_branch_but_no_tracking_ref_yet(planned):
+    """No fetch since the run started elsewhere: only ls-remote sees it."""
+    _, seed, work = planned
+    _git(seed, "checkout", "-qb", "r1-autopilot")
+    _git(seed, "push", "-q", "origin", "r1-autopilot")
+    assert _git(work, "show-ref", "--verify", "--quiet",
+                "refs/remotes/origin/r1-autopilot", check=False).returncode
+    assert _planned_run_refused(work, "r1-autopilot")
+
+
+def commit_rule_text():
+    body = AUTOPILOT.read_text()
+    return _flat(re.search(r"^### Where autopilot commits\n(.*?)(?=^---|^### )", body, re.S | re.M).group(1))
+
+
+def test_base_branch_bullet_reserves_base_branch_for_plan_ledgers():
+    rule = commit_rule_text()
+    assert "**`base_branch`** for a `--plan` ledger only" in rule
+    assert "Once the run branch exists, the ledger is only ever written there" in rule
+
+
+def test_remote_only_base_branch_counts_as_existing_and_is_tracked(tmp_path):
+    """I-21: origin/{base_branch} exists, no local branch, HEAD has moved on. Following the
+    documented checks, the local branch tracks origin; it is never cut from HEAD."""
+    rule = commit_rule_text()
+    assert "exists neither as a local branch nor as `origin/{base_branch}`" in rule
+    assert "never a new one cut from HEAD" in rule
+    track = re.search(r"`(git checkout --track origin/\{base_branch\})`", rule).group(1)
+    checks = [c.replace("{base_branch}", "r1") for c in
+              re.findall(r"refs/(?:heads|remotes/origin)/\{base_branch\}", rule)]
+    assert checks == ["refs/heads/r1", "refs/remotes/origin/r1"]
+
+    if not shutil.which("git"):
+        pytest.skip("git not on PATH")
+    origin = tmp_path / "origin.git"
+    _git(tmp_path, "init", "-q", "--bare", "-b", "main", str(origin))
+    seed = _repo(tmp_path / "seed")
+    _commit(seed, "init", {"README": "x"})
+    _git(seed, "checkout", "-qb", "r1")
+    _commit(seed, "on r1", {"r1.txt": "r1"})
+    _git(seed, "remote", "add", "origin", str(origin))
+    _git(seed, "push", "-q", "origin", "main", "r1")
+    work = tmp_path / "work"
+    _git(tmp_path, "clone", "-q", "-b", "main", str(origin), str(work))
+    _git(work, "config", "user.email", "qa@example.com"); _git(work, "config", "user.name", "qa")
+    _commit(work, "local only", {"main.txt": "m"})
+
+    exists = [_git(work, "show-ref", "--verify", "--quiet", r, check=False).returncode == 0 for r in checks]
+    assert exists == [False, True], "a remote-only base_branch must count as existing"
+    _git(work, *track.replace("{base_branch}", "r1").split()[1:])
+    assert _git(work, "rev-parse", "r1").stdout == _git(work, "rev-parse", "origin/r1").stdout
+    assert _git(work, "rev-parse", "--abbrev-ref", "r1@{upstream}").stdout.strip() == "origin/r1"
+
+
+def test_no_undefined_release_file_conflict_rule():
+    """I-22: the only conflict rule left names its side."""
+    body = _flat(AUTOPILOT.read_text())
+    assert "side written last" not in body
+    assert "taking the run branch's release file on a conflict there" in body

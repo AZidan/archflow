@@ -642,21 +642,21 @@ stories:
         severity: blocking
         location: "plugin/commands/autopilot.md:101"
         report: "docs/qa-reports/S5-02-qa.md"
-        status: open
+        status: fixed
       - id: I-21
         summary: "'Create base_branch from the current HEAD when it does not exist' does not say whether origin/{base_branch} counts; a local-only check diverges from the remote and Step 3 pull fails silently"
         found_by: qa-engineer
         severity: minor
         location: "plugin/commands/autopilot.md:125"
         report: "docs/qa-reports/S5-02-qa.md"
-        status: open
+        status: fixed
       - id: I-22
         summary: "Release-file merge-conflict rule 'take the copy from the side written last' is undefined (which side, whole file or hunks) and unreachable outside rule 2, which names its side"
         found_by: qa-engineer
         severity: minor
         location: "plugin/commands/autopilot.md:131"
         report: "docs/qa-reports/S5-02-qa.md"
-        status: open
+        status: fixed
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"

@@ -103,16 +103,23 @@ criteria, scope you cannot bound), do not guess: offer `Groom it now` (run
 
 ### 2c. Write the ledger, then confirm
 
-Check out `base_branch` (*Where autopilot commits*, below), then create
-`.archflow/autopilot/{run-id}.yaml` per `autopilot-schema.yaml`
+Check out `base_branch` (*Where autopilot commits*, below). A run that starts now (no `--plan`)
+then cuts its run branch from it with the commands at the top of Step 3, so its ledger is written
+straight onto the run branch. Then create `.archflow/autopilot/{run-id}.yaml` per
+`autopilot-schema.yaml`
 (`run-id` = `{YYYY-MM-DD}-{n}`, from `date -u +%Y-%m-%d` and the next free sequence for that day).
 Record: `base_branch`, `run_branch`, `release`, `mode_at_start`, `envelope`, `stop_conditions`,
 `parked_policy`, every interview answer in `decisions[]`, the ordered `queue[]` as `pending`, and
-`status: preflight`. Commit the ledger alone on `base_branch` (`chore(autopilot): plan {run-id}`).
+`status: preflight`. Commit the ledger alone on the run branch (`chore(autopilot): plan {run-id}`).
+No copy of a started run's ledger is committed on `base_branch`.
 
 Print the queue, the branch, the stop conditions, and the count of recorded decisions — then start
-(Step 3). On `--plan`, stop here instead, with the ledger still `preflight` on `base_branch`;
-`$archflow-autopilot resume` starts it later.
+(Step 3).
+
+On `--plan` there is no run branch yet. Commit the ledger alone on `base_branch` instead (same
+message), print the same summary, and stop, with the ledger still `preflight` on `base_branch`;
+`$archflow-autopilot resume` starts it later. This is the only ledger autopilot commits on
+`base_branch`.
 
 ### Where autopilot commits
 
@@ -124,17 +131,21 @@ travels with the run: `resume` needs a clean tree, and its branch scan reads com
   branch when the story leaves that branch: by the merge on ACCEPTED, or, for a parked or failed
   story, by checking out the run branch and committing the task branch's copy of the release file
   (`git checkout {task-branch} -- .archflow/releases/{active_release}.yaml`). Stories run one at a
-  time, so that copy differs from the run branch's only in this story. The ledger itself is only
-  ever written on the run branch.
-- **`base_branch`** before the run branch exists (Step 2c), or once it has been merged and deleted.
-  Step 3 cuts the run branch from `base_branch`, so the ledger goes with it. Only Step 2c may
-  create `base_branch`, from the current HEAD, when it does not exist yet.
+  time, so that copy differs from the run branch's only in this story. Once the run branch
+  exists, the ledger is only ever written there.
+- **`base_branch`** for a `--plan` ledger only: it waits there, `preflight`, until `resume` starts
+  it, and Step 3 cuts the run branch from `base_branch` so the ledger goes with it. A run that
+  starts now has its run branch cut in Step 2c before its ledger is written, so no copy of its
+  ledger is ever left on `base_branch`. Writes for a run whose run branch has been merged and
+  deleted also land on `base_branch`. Only Step 2c may create `base_branch`, and only when it
+  exists neither as a local branch nor as `origin/{base_branch}` (fetch-free:
+  `git show-ref --verify --quiet refs/heads/{base_branch}`, then the same for
+  `refs/remotes/origin/{base_branch}`); then it is cut from the current HEAD. If only
+  `origin/{base_branch}` exists, create the local branch tracking it
+  (`git checkout --track origin/{base_branch}`), never a new one cut from HEAD.
 - **Never `main`.** If `base_branch` would be `main`, HALT before writing anything. A command that
   writes to an earlier run (`resume`, `abort`) checks out that run's `run_branch`, else its
   `base_branch`, before writing; if neither exists, it commits nothing and tells the user.
-
-A merge between the run branch and a task branch that conflicts only in the release file is
-resolved by taking the copy from the side written last; it is not a stop condition.
 
 **The ledger is not optional bookkeeping.** A multi-hour run will compact its context, possibly
 several times. After compaction the ledger is the only thing that still knows what the user answered,
@@ -144,7 +155,9 @@ what shipped, and what was parked. Re-read it at the top of every story.
 
 ## Step 3 — The run (unattended, no user present)
 
-Create the run branch once, from the base branch:
+The run branch is cut once, from the base branch: by Step 2c for a run that starts now, or here
+for a `--plan` run that `resume` starts (its ledger comes along from `base_branch`). Run these
+commands only when the run branch does not exist yet:
 ```bash
 git checkout {base-branch} && git pull origin {base-branch} 2>/dev/null || true
 git checkout -b {run-branch}
@@ -374,10 +387,17 @@ Choose between them, so that `resume` never starts unattended work the user did 
 - Only one of the two → that rule. Neither → rule 3.
 
 1. **Continue an unfinished run.**
-   - A **`preflight`** ledger is a planned run that never started, so it has no run branch yet:
-     do not look for one. Check out `base_branch` first, where Step 2c committed the ledger, and
-     go to Step 3, which cuts the run branch from it, sets the ledger `running` there, and runs
-     the queue.
+   - A **`preflight`** ledger is a planned run (`--plan`) that never started, so it has no run
+     branch yet. **Refuse to start it if its `run_branch` already exists**, locally or on `origin`:
+     a planned run whose branch exists has already started somewhere, and this `preflight` copy is
+     stale. Check fetch-free first, `git show-ref --verify --quiet refs/heads/{run_branch}` and
+     `git show-ref --verify --quiet refs/remotes/origin/{run_branch}`, then, if an `origin` remote
+     is configured, `git ls-remote --exit-code --heads origin {run_branch}` (an unreachable remote
+     leaves the two ref checks standing). On any hit, write nothing, tell the user which ref exists
+     (`{run_branch} already exists as {ref}: {run-id} has already started, not starting it
+     again.`), and stop. Otherwise check out `base_branch` first, where Step 2c committed the
+     ledger, and go to Step 3, which cuts the run branch from it, sets the ledger `running` there,
+     and runs the queue.
    - A **`running`** ledger: verify the run branch still exists and its HEAD matches the ledger;
      if it is missing or diverged, report and stop rather than building on an unknown base. Check
      it out, re-ask (via `a direct question to the user (wait for the reply before continuing)`) only questions for stories that were parked on an
