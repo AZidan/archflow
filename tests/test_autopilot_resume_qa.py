@@ -232,10 +232,9 @@ def test_schema_says_finished_and_aborted_parked_stories_can_be_picked_up(status
 
 
 # --------------------------------------------------------------------------
-# Re-run after fix pass 2 (6ad86a4): I-12, I-13, I-14 (strict xfail until fixed)
+# Re-run after fix pass 2 (6ad86a4): I-12, I-13, I-14 (fixed in fix pass 3)
 # --------------------------------------------------------------------------
 
-@pytest.mark.xfail(strict=True, reason="I-12: terminal ledger writes are never committed")
 def test_terminal_ledger_writes_are_committed():
     """I-12: Step 4's closing write, abort's `aborted` write and --plan's `preflight` ledger are
     left uncommitted. resume HALTs on a dirty tree, and the cross-branch scan (I-7) reads the last
@@ -248,7 +247,6 @@ def test_terminal_ledger_writes_are_committed():
     assert re.search(r"--plan`.{0,200}[Cc]ommit", plan), plan
 
 
-@pytest.mark.xfail(strict=True, reason="I-13: branch scan short-circuits on any current candidate")
 def test_branch_scan_does_not_stop_at_the_first_checkout_with_a_candidate():
     """I-13: 'If it holds no candidate, scan ... every local branch' lets a preflight ledger on
     the current branch hide a finished run's parked stories on its run branch, so the
@@ -257,9 +255,43 @@ def test_branch_scan_does_not_stop_at_the_first_checkout_with_a_candidate():
     assert "If it holds no candidate, scan" not in rule
 
 
-@pytest.mark.xfail(strict=True, reason="I-14: no stop when the re-read drops every answer")
 def test_follow_on_stops_when_the_reread_drops_every_answer():
     rule = re.sub(r"\s+", " ", resume_rule())
     m = re.search(r"drop from the answers any story no longer `status: parked`\.(.{0,250})", rule)
     assert m
     assert re.search(r"[Nn]one (left|remain)|no answers? (left|remain)|stop", m.group(1)), m.group(1)
+
+
+def test_terminal_ledger_commits_name_the_branch_they_land_on():
+    """I-12: each terminal write is committed on the branch the scan will read it from, and with
+    the ledger alone (never sweeping in anything else)."""
+    closing = _closing_write().split("Two callers", 1)[0]
+    abort = re.sub(r"\s+", " ", subcommand("abort")).split("print Step 4", 1)[0]
+    plan = re.sub(r"\s+", " ", AUTOPILOT.read_text().split("### 2c.", 1)[1].split("---", 1)[0])
+    assert "ledger alone on the run branch" in closing, closing
+    assert "ledger alone on the branch it lives on" in abort and "run branch" in abort, abort
+    assert re.search(r"--plan`.{0,120}ledger alone on the current branch", plan), plan
+
+
+def test_branch_scan_dedups_one_run_across_branches():
+    """I-13: one run seen on several branches is kept once, by a stated rule, before choosing."""
+    rule = re.sub(r"\s+", " ", resume_rule())
+    assert "always, from the committed `.archflow/` of every local branch" in rule
+    assert "Keep one copy per `run_id`" in rule and "most advanced `status`" in rule
+    assert rule.index("Keep one copy per `run_id`") < rule.index("Choose between them")
+
+
+def test_waiver_path_rereads_and_stops_when_nothing_is_still_parked():
+    """I-14: the waiver path re-reads on the source branch and commits nothing if every waived
+    story was resolved since."""
+    rule = re.sub(r"\s+", " ", resume_rule())
+    m = re.search(r"Nothing answered, some waived\*\* → (.*?)(?= - \*\*)", rule)
+    assert m and "re-read the release file" in m.group(1) and "commit nothing" in m.group(1)
+
+
+def test_envelope_must_not_rule_admits_the_resume_waiver():
+    """QA wording note: MUST NOT must not literally forbid the waiver MAY allows."""
+    body = AUTOPILOT.read_text()
+    must_not = re.sub(r"\s+", " ", body.split("**MUST NOT", 1)[1].split("## Subcommands", 1)[0])
+    assert "Touch any story outside its queue," not in must_not
+    assert "waiver" in must_not

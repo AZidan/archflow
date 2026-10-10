@@ -105,7 +105,10 @@ Record: `base_branch`, `run_branch`, `release`, `mode_at_start`, `envelope`, `st
 `parked_policy`, every interview answer in `decisions[]`, and the ordered `queue[]` as `pending`.
 
 Print the queue, the branch, the stop conditions, and the count of recorded decisions — then start.
-On `--plan`, leave `status: preflight` and stop here; `/archflow-autopilot resume` starts it later.
+On `--plan`, leave `status: preflight`, commit the ledger alone on the current branch
+(`chore(autopilot): plan {run-id}`), and stop here; `/archflow-autopilot resume` starts it later.
+Every ledger status write is committed as it is made, like the rest of the run's state: `resume`
+needs a clean tree, and its branch scan reads committed ledgers only.
 
 **The ledger is not optional bookkeeping.** A multi-hour run will compact its context, possibly
 several times. After compaction the ledger is the only thing that still knows what the user answered,
@@ -259,10 +262,11 @@ start from. Read them from `issues[]`, never from what this session remembers.
 Order DONE by review risk, riskiest first — this is the only ordering signal the user gets before
 reading a night's worth of diff.
 
-Then close the run: set `status: finished` and `finished_at` in the ledger, and stop. Two callers
-print this report without closing a run, and both skip that write:
-- **`abort`** has already set `status: aborted` and `finished_at`. Leave both as they are: the run
-  stays `aborted`, never `finished`.
+Then close the run: set `status: finished` and `finished_at` in the ledger, commit the ledger alone
+on the run branch (`chore(autopilot): finish {run-id}`), push it, and stop. Two callers print this
+report without closing a run, and both skip that write:
+- **`abort`** has already set and committed `status: aborted` and `finished_at`. Leave both as they
+  are: the run stays `aborted`, never `finished`.
 - **`report`** is read-only. It writes nothing to the ledger or anywhere else.
 
 ---
@@ -276,15 +280,16 @@ may and may not do is fixed here and is not negotiable at runtime.
 - Create subtask / task branches; commit; push.
 - Merge subtask → task → **the run branch**.
 - Run `qa-engineer` and `pm-reviewer`, and fix its own failures.
-- Update `.archflow/releases/{active_release}.yaml` — **only for stories in its queue**, plus the
-  `blocks_release` waiver the user gives in person when `resume` asks a parked question (rule 2).
+- Update `.archflow/releases/{active_release}.yaml` for stories in its queue, and record on a
+  parked story the `blocks_release` waiver the user gives in person when `resume` asks its
+  question (rule 2). No other story is ever touched.
 - Update `.archflow/current-feature.yaml`, `.archflow/current-phase.yaml → current_feature`, and its
   own ledger.
 
 **MUST NOT, ever, in any mode:**
 - Merge to `main`, push to `main`, or open a pull request.
 - Force-push, rebase a shared branch, delete a branch it did not create, or `git stash` the user's work.
-- Touch any story outside its queue, any other release file, or `backlog.yaml`.
+- Touch any other story (beyond recording that waiver), any other release file, or `backlog.yaml`.
 - Promote a backlog stub, cut or ship a release, or change `mode`.
 - Resolve a product decision the user did not answer in the interview → **park**.
 - Spend money, provision infrastructure, deploy, or run a destructive/irreversible operation
@@ -312,14 +317,19 @@ Then look in `.archflow/autopilot/` for two candidates:
 
 **Where the scan reads.** A run commits its ledger and its stories' `parked` state on the run
 branch, so a user who reviewed the run and switched back to `base_branch` without merging it does
-not have them in the working tree. Scan the current checkout first. If it holds no candidate, scan
-the committed `.archflow/` of every local branch, without checking anything out:
+not have them in the working tree. Gather ledgers from the current checkout first and then, always,
+from the committed `.archflow/` of every local branch, without checking anything out:
 `git for-each-ref --format='%(refname:short)' refs/heads`, then for each branch
-`git ls-tree --name-only {branch} .archflow/autopilot/` and `git show {branch}:{path}` for the
-ledgers, and the release file from the same branch as the ledger. Use the newest candidate found,
-and remember the branch it was read from (the **source branch**). Tell the user in one line when
-it came from a branch other than the current one: `Found {run-id} on {branch}.` The scan is
-read-only, and the rules below check out a branch before they write anything.
+`git ls-tree --name-only {branch} .archflow/autopilot/` and `git show {branch}:{path}`. Never stop
+at the first place that holds a candidate: the choice below needs every candidate.
+
+One run can appear on several branches (its run branch, and `base_branch` once merged). Keep one
+copy per `run_id`: the one with the most advanced `status` (`preflight` < `running` < `finished` or
+`aborted`); on a tie, the copy on the ledger's own `run_branch`, else the current checkout's. The
+branch that copy came from is the run's **source branch**; read the release file from that same
+branch. Only then sort the kept ledgers into the two candidates. Tell the user in one line when a
+chosen candidate came from a branch other than the current one: `Found {run-id} on {branch}.` The
+scan is read-only, and the rules below check out a branch before they write anything.
 
 Choose between them, so that `resume` never starts unattended work the user did not pick:
 
@@ -355,13 +365,16 @@ Choose between them, so that `resume` never starts unattended work the user did 
    - **Nothing answered and nothing waived** → stop: check out nothing, write no ledger, change
      nothing.
    - **Nothing answered, some waived** → write no ledger. Check out the source branch if it is not
-     the current one, set `parked.blocks_release: false` on each waived story in
-     `.archflow/releases/{active_release}.yaml` (it stays `parked`), commit only that file, and
-     stop. The waiver is the user's decision, made while present, which autopilot only records.
+     the current one, re-read the release file there, and set `parked.blocks_release: false` on
+     each waived story still `status: parked` (it stays `parked`). Commit only that file, and stop.
+     If none of them is still parked, commit nothing and tell the user they were resolved since.
+     The waiver is the user's decision, made while present, which autopilot only records.
    - **Some answered** → check out the run branch **first, before writing anything**: the source
      run's `run_branch` if it still exists (do not recreate it); if the user has merged and deleted
-     it, cut a new one from `base_branch` as in Step 3. Re-read the release file there and drop
-     from the answers any story no longer `status: parked`. Then, on that branch:
+     it, check out `base_branch`, from which a new run branch is cut as in Step 3 once there is
+     something to run. Re-read the release file there and drop from the answers any story no
+     longer `status: parked`. If none remain, stop: write no ledger, cut no branch, commit nothing, and name the stories
+     that were resolved since. Otherwise, on the run branch (cut now if needed):
      - Write a new ledger per Step 2c with `resumes: {source run-id}`, `release: {active_release}`,
        the carried-over decisions plus one new decision per answer, and a queue of the answered
        stories in their original order, each `pending` with its WIP `branch`.
@@ -382,8 +395,10 @@ Choose between them, so that `resume` never starts unattended work the user did 
 **`report`** — reprint Step 4 from the newest ledger. Read-only: skip Step 4's closing status
 write.
 
-**`abort`** — set `status: aborted`, `finished_at`, then print Step 4, skipping its closing status
-write so the ledger stays `aborted`. Leaves every branch and commit intact; aborting is
+**`abort`** — set `status: aborted` and `finished_at`, and commit the ledger alone on the branch it
+lives on (the run branch; for a `--plan` run that never started, the branch it was planned on):
+`chore(autopilot): abort {run-id}`. Then print Step 4, skipping its closing status write so the
+ledger stays `aborted`. Leaves every branch and commit intact; aborting is
 bookkeeping, never cleanup. The aborted run's queue is never continued,
 but its parked stories stay parked, and `resume` picks them up in a follow-on run (rule 2), so the
 report's `Next:` line is the same as for a finished run.

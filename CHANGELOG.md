@@ -66,6 +66,16 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   now describe that path.
 - `/archflow:autopilot abort` printed the end-of-run report, whose last step set the run
   `finished`, so an aborted run did not stay `aborted`. `abort` and `report` now skip that write.
+- Autopilot left three ledger writes uncommitted: the closing `finished`, `abort`'s `aborted`, and
+  the `preflight` ledger written by `--plan`. `resume` needs a clean tree, so following the report's
+  `Next:` line stopped on the run's own change, and setting it aside left the committed ledger at
+  `running`, which `resume` then continued, even for an aborted run. Each of these writes is now
+  committed on the branch the ledger lives on.
+- `/archflow:autopilot resume` looked at other branches only when the current checkout had nothing
+  to resume, so a `--plan` ledger there could hide parked stories on an unmerged run branch and
+  start the planned run unasked. It now always reads every local branch, keeps one copy of each run,
+  and then chooses. If every answered or waived story turns out to be resolved already, it now stops
+  without writing anything.
 - `/archflow:autopilot resume` on a run planned with `--plan` stopped because the run branch did
   not exist yet. It now creates the branch and starts the planned run.
 - Gemini commands that quote the plugin path, such as `/archflow:doctor`, pointed at
