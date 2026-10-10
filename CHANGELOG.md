@@ -49,18 +49,16 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 - Parked stories left by a finished autopilot run had no way back. The end-of-run report and
   `/archflow:status` said to answer them and run `/archflow:autopilot resume`, but `resume` only
   read a run still `preflight` or `running`, and a run that empties its queue is `finished`.
-  `resume` now asks every parked story in the active release, whichever finished or aborted runs
-  parked it. It reads the release file on the current checkout and every local branch, ignores a
-  copy that another branch has already moved past, and skips a story that is `in_progress`,
-  `review` or `done` on the copies left. It records any `blocks_release` waiver and builds the
-  answered stories of one source run in a follow-on run, written `running` from the start, whose
-  `resumes` ledger field names that run. The follow-on builds on the source run's branch while it
-  exists, else on a new `{base_branch}-autopilot-{run-id}` branch when `base_branch` has the park.
-  When the answers span several runs, `resume` asks which one to build and asks the rest again
-  next time. Old ledgers are left as they were, a run with nothing
-  still parked is never restarted, and an aborted run's queue is never continued. If a `--plan` run
-  is also waiting, `resume` asks which one to pick up. The report's `Next:` line, `/archflow:status`
-  and the landing page now describe that path.
+  `resume` now asks every story parked in the active release file on the current branch, whichever
+  finished or aborted runs parked it, records any `blocks_release` waiver, and builds the answered
+  stories in one follow-on run, written `running` from the start, whose `resumes` ledger field
+  names its source run. The follow-on builds on the current branch when it is a run branch, else
+  on a new `{base_branch}-autopilot-{run-id}` branch cut from it, and never commits on `main`.
+  `resume` also names any other local run branch whose run parked a story, so work parked there
+  is not lost. Old ledgers are left as they were, a run with nothing still parked is never
+  restarted, and an aborted run's queue is never continued. If a `--plan` run is also waiting,
+  `resume` asks which one to pick up. The report's `Next:` line, `/archflow:status` and the
+  landing page now describe that path.
 - `/archflow:autopilot abort` printed the end-of-run report, whose last step set the run
   `finished`, so an aborted run did not stay `aborted`. `abort` and `report` now skip that write.
 - `/archflow:autopilot resume` on a run planned with `--plan` stopped because the run branch did

@@ -36,12 +36,12 @@ one that applies, and add a second only if it is independent of the first.
 2. an open blocking issue → fix it on that story first (`/archflow-issue {story-id}` lists them).
    It stops the story reaching `done`
 3. a `parked` story → print each one's `parked.question`, then `/archflow-autopilot resume`, which
-   asks every parked story in the active release and builds the ones answered, whether the runs
+   asks every story parked in the active release on this checkout and builds the ones answered, whether the runs
    that parked them are still open, have finished, or were aborted. Count parked stories the way
-   resume does: across the release file on the current checkout and every local branch, less the
-   copies superseded by a later one, a story `in_progress`, `review` or `done` on any copy is not
-   parked. If an interrupted `running` run is
-   also waiting, resume continues it first while its run branch exists (if the branch is gone,
+   resume does: `status: parked` in the release file on the current checkout only. Resume also
+   names any other local run branch whose run parked a story, since that work may be there and not
+   here: check that branch out and run resume there. If an interrupted `running` run is also
+   waiting, resume continues it first while its run branch exists (if the branch is gone,
    resume stops and points at `/archflow-autopilot abort`), and the parked questions wait for the
    next resume. If a planned `--plan` run is also waiting, resume asks which one to pick up. A
    parked story blocks shipping the release by default
