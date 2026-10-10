@@ -2,25 +2,25 @@ story_id: "S5-02"
 story_title: "Resume parked work after an autopilot run finishes"
 epic_id: "E5"
 branch: "autopilot-resume"
-status: in_progress
+status: complete
 subtasks:
   - text: "Decide and document how resume treats a finished run with parked stories (autopilot.md)"
-    completed: false
+    completed: true
     branch: "resume/finished-runs"
     started_at: "2026-10-10"
-    completed_at: null
+    completed_at: "2026-10-11"
   - text: "Fix the end-of-run report's Next line"
-    completed: false
+    completed: true
     branch: "resume/finished-runs"
     started_at: "2026-10-10"
-    completed_at: null
+    completed_at: "2026-10-11"
   - text: "Align status.md's parked case (plugin/commands/status.md) and regenerate adapters"
-    completed: false
+    completed: true
     branch: "resume/finished-runs"
     started_at: "2026-10-10"
-    completed_at: null
+    completed_at: "2026-10-11"
   - text: "Tests + CHANGELOG"
-    completed: false
+    completed: true
     branch: "resume/finished-runs"
     started_at: "2026-10-10"
-    completed_at: null
+    completed_at: "2026-10-11"
