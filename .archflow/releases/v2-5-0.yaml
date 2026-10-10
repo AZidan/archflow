@@ -531,6 +531,13 @@ stories:
         location: "docs/index.html:680"
         report: "docs/qa-reports/S5-02-qa.md"
         status: fixed
+      - id: I-5
+        summary: "Status case 3 says resume asks the parked question, but with an interrupted running ledger present resume continues that run and the question waits for the next resume"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/status.md:34"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"

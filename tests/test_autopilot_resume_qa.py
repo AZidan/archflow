@@ -106,3 +106,41 @@ def test_abort_report_next_line_names_a_command_that_works_for_an_aborted_run():
     # "resume" Next: line. Today neither holds.
     assert not (aborted_refused and abort_prints_step4 and parked_next_is_resume
                 and not aborted_carve_out)
+
+
+# --------------------------------------------------------------------------
+# Re-run after the fix pass (aed55f7)
+# --------------------------------------------------------------------------
+
+def test_abort_hands_its_parked_stories_to_resume_rule_2():
+    """I-1, positively: the previous test passes once the refusal phrase is gone; this one checks
+    that abort and rule 2 actually point at each other."""
+    abort = re.sub(r"\s+", " ", subcommand("abort"))
+    rule = re.sub(r"\s+", " ", resume_rule())
+    assert "`resume` picks them up in a follow-on run (rule 2)" in abort
+    assert "Pick up parked stories from a finished or aborted run" in rule
+    # the aborted record itself is never reopened
+    assert "never reopen it, never change its `status`, never edit it" in rule
+
+
+def test_follow_on_with_no_answers_writes_nothing():
+    rule = re.sub(r"\s+", " ", resume_rule())
+    assert "If nothing was answered, stop: write no ledger and change nothing" in rule
+
+
+def test_parked_stories_of_another_release_are_named_not_edited():
+    rule = re.sub(r"\s+", " ", resume_rule())
+    assert "belong to a release that is no longer the active one, name them" in rule
+    assert "change nothing" in rule
+
+
+@pytest.mark.xfail(strict=True, reason=(
+    "S5-02 I-5: with an interrupted `running` ledger present, resume continues that run and "
+    "parked stories from another run 'wait for the next resume', but status case 3 still says "
+    "resume asks the parked question, naming only the --plan exception. Remove this xfail once "
+    "status case 3 (or resume) covers the running-ledger case."))
+def test_status_parked_advice_covers_an_interrupted_running_run():
+    rule = re.sub(r"\s+", " ", resume_rule())
+    status = re.sub(r"\s+", " ", status_parked_case())
+    assert "they wait for the next `resume`" in rule  # the precedence resume documents
+    assert re.search(r"interrupted|`running`|still running|unfinished run", status), status
