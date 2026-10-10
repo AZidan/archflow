@@ -601,6 +601,13 @@ stories:
         location: "plugin/commands/autopilot.md:362"
         report: "docs/qa-reports/S5-02-qa.md"
         status: fixed
+      - id: I-15
+        summary: "--plan commits the preflight ledger on the current branch (possibly main) and rule 1 never carries it to base_branch, so a planned run whose planning branch differs from base_branch starts on a run branch with no ledger"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/autopilot.md:107"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"

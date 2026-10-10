@@ -295,3 +295,20 @@ def test_envelope_must_not_rule_admits_the_resume_waiver():
     must_not = re.sub(r"\s+", " ", body.split("**MUST NOT", 1)[1].split("## Subcommands", 1)[0])
     assert "Touch any story outside its queue," not in must_not
     assert "waiver" in must_not
+
+
+# --------------------------------------------------------------------------
+# Re-run after fix pass 3 (96ea739): I-15 (strict xfail until fixed)
+# --------------------------------------------------------------------------
+
+@pytest.mark.xfail(strict=True, reason="I-15: a committed preflight ledger does not reach base_branch")
+def test_planned_run_ledger_reaches_the_run_branch():
+    """I-15: --plan now commits the preflight ledger on the CURRENT branch, but Step 3 cuts the run
+    branch from `base_branch`. When the two differ (e.g. planned on main, base = release slug), the
+    committed ledger is left behind on the planning branch; before 96ea739 the untracked file rode
+    along on checkout. Rule 1's preflight path must say on which branch `running` is written and
+    how the ledger reaches the run branch (or --plan must commit it on `base_branch`)."""
+    rule = re.sub(r"\s+", " ", resume_rule())
+    m = re.search(r"A \*\*`preflight`\*\* ledger is a planned run(.*?)A \*\*`running`\*\*", rule)
+    assert m, "rule 1 lost its preflight bullet"
+    assert re.search(r"source branch|planned on|base_branch`? (?:first|before)", m.group(1)), m.group(1)
