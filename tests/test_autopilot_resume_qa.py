@@ -229,3 +229,37 @@ def test_schema_says_finished_and_aborted_parked_stories_can_be_picked_up(status
         m = re.search(rf"{status} — (.*?)(?= \w+ +—|$)", desc)
         assert m, (path, status)
         assert "never" in m.group(1) and "follow-on run" in m.group(1), (path, m.group(1))
+
+
+# --------------------------------------------------------------------------
+# Re-run after fix pass 2 (6ad86a4): I-12, I-13, I-14 (strict xfail until fixed)
+# --------------------------------------------------------------------------
+
+@pytest.mark.xfail(strict=True, reason="I-12: terminal ledger writes are never committed")
+def test_terminal_ledger_writes_are_committed():
+    """I-12: Step 4's closing write, abort's `aborted` write and --plan's `preflight` ledger are
+    left uncommitted. resume HALTs on a dirty tree, and the cross-branch scan (I-7) reads the last
+    COMMITTED ledger, which still says `running` - so a stashed `aborted` reads as resumable."""
+    closing = _closing_write()
+    abort = re.sub(r"\s+", " ", subcommand("abort"))
+    plan = re.sub(r"\s+", " ", AUTOPILOT.read_text().split("### 2c.", 1)[1].split("---", 1)[0])
+    assert re.search(r"[Cc]ommit", closing.split("Two callers", 1)[0]), closing
+    assert re.search(r"[Cc]ommit", abort.split("print Step 4", 1)[0]), abort
+    assert re.search(r"--plan`.{0,200}[Cc]ommit", plan), plan
+
+
+@pytest.mark.xfail(strict=True, reason="I-13: branch scan short-circuits on any current candidate")
+def test_branch_scan_does_not_stop_at_the_first_checkout_with_a_candidate():
+    """I-13: 'If it holds no candidate, scan ... every local branch' lets a preflight ledger on
+    the current branch hide a finished run's parked stories on its run branch, so the
+    preflight-vs-parked question is never asked and the planned run starts (regresses I-3)."""
+    rule = re.sub(r"\s+", " ", resume_rule())
+    assert "If it holds no candidate, scan" not in rule
+
+
+@pytest.mark.xfail(strict=True, reason="I-14: no stop when the re-read drops every answer")
+def test_follow_on_stops_when_the_reread_drops_every_answer():
+    rule = re.sub(r"\s+", " ", resume_rule())
+    m = re.search(r"drop from the answers any story no longer `status: parked`\.(.{0,250})", rule)
+    assert m
+    assert re.search(r"[Nn]one (left|remain)|no answers? (left|remain)|stop", m.group(1)), m.group(1)

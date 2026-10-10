@@ -580,6 +580,27 @@ stories:
         location: "plugin/commands/autopilot.md:317"
         report: "docs/qa-reports/S5-02-code-review.md"
         status: fixed
+      - id: I-12
+        summary: "Step 4's closing write, abort's write and the --plan ledger are never committed: resume HALTs on the dirty tree, and the branch scan reads a stale committed `running`"
+        found_by: qa-engineer
+        severity: blocking
+        location: "plugin/commands/autopilot.md:261"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
+      - id: I-13
+        summary: "Resume's branch scan stops at the current checkout when it holds any candidate, so a preflight ledger there hides parked stories on a run branch and starts unasked (regresses I-3)"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/autopilot.md:314"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
+      - id: I-14
+        summary: "Rule 2 has no stop when the re-read on the run branch drops every answer; an empty follow-on ledger is written and run"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/autopilot.md:362"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"
