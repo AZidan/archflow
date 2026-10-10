@@ -442,20 +442,31 @@ STORY_RANK = {s: i for i, s in enumerate(
 
 
 def _combined(repo):
-    """Rule 2's combine as written (fix pass 8): every copy of the active release file (current
-    checkout first, then every local branch), one copy per story: the most advanced status; on a
-    tie, the branch that committed the file last, then the current checkout's (then scan order).
-    Returns {story: (status, branch, story_dict)}."""
+    """Rule 2's combine as written (fix pass 9): every copy of the active release file (current
+    checkout first, then every local branch). First drop each superseded copy: its branch's last
+    commit to the file is an ancestor of another copy's branch whose own last commit differs (I-29,
+    I-30); branches sharing a last commit hold one copy; two copies that would drop each other both
+    stay. Then one copy per story: the most advanced status; on a tie, the branch that committed the
+    file last, then the current checkout's (then scan order). Returns {story: (status, branch, story_dict)}."""
     current = _git(repo, "rev-parse", "--abbrev-ref", "HEAD").strip()
     branches = [current] + [b for b in _git(repo, "for-each-ref", "--format=%(refname:short)",
                                             "refs/heads").split() if b != current]
-    best = {}
+    copies = {}
     for b in branches:
         r = _git(repo, "show", f"{b}:{REL}", check=False)
         if r.returncode:
             continue
-        ct = int(_git(repo, "log", "-1", "--format=%ct", b, "--", REL).strip() or 0)
-        for s, story in (yaml.safe_load(r.stdout).get("stories") or {}).items():
+        sha, ct = _git(repo, "log", "-1", "--format=%H %ct", b, "--", REL).split()
+        copies[b] = (sha, int(ct), yaml.safe_load(r.stdout).get("stories") or {})
+
+    def drops(x, y):                                              # y supersedes x
+        return copies[x][0] != copies[y][0] and _ok(repo, "merge-base", "--is-ancestor", copies[x][0], y)
+
+    live = [b for b in copies if not any(drops(b, o) and not drops(o, b) for o in copies if o != b)]
+    best = {}
+    for b in live:
+        _, ct, stories = copies[b]
+        for s, story in stories.items():
             key = (STORY_RANK.get(story["status"], -1), ct, b == current)
             if s not in best or key > best[s][0]:
                 best[s] = (key, story["status"], b, story)
@@ -500,19 +511,33 @@ def _local(repo, branch):
     return _ok(repo, "show-ref", "--verify", "--quiet", f"refs/heads/{branch}")
 
 
-def _follow_on_branch(repo, answered, run_id):
-    """Rule 2 'Some answered': (run_branch, cut_new, unmerged source run branches to ask about,
-    resumes). One shared, still-local source run_branch -> build on it; otherwise cut
-    {base_branch}-autopilot-{run_id} from the newest source's base_branch."""
-    srcs = [_source_run(repo, s) for s in answered]
-    resumes = sorted({l["run_id"] for l in srcs if l}, key=_rid_key)
-    rbs = {l["run_branch"] for l in srcs if l}
-    if all(srcs) and len(rbs) == 1 and _local(repo, next(iter(rbs))):
-        return next(iter(rbs)), False, [], resumes
-    base = max((l for l in srcs if l), key=lambda l: _rid_key(l["run_id"]))["base_branch"]
-    unmerged = [rb for rb in sorted(rbs) if _local(repo, rb)
-                and not _ok(repo, "merge-base", "--is-ancestor", rb, base)]
-    return f"{base}-autopilot-{run_id}", True, unmerged, resumes
+def _base_parked(repo, base, story):
+    r = _git(repo, "show", f"{base}:{REL}", check=False)
+    return not r.returncode and \
+        (yaml.safe_load(r.stdout)["stories"].get(story) or {}).get("status") == "parked"
+
+
+def _follow_on_groups(repo, answered, run_id):
+    """Rule 2 'Some answered' (fix pass 9, I-31): group the answered stories by source run. A group
+    builds on its source run_branch if still local, else on a new {base_branch}-autopilot-{run_id}
+    cut from base_branch, and then only stories parked on base_branch's copy; the rest are named
+    and left parked. Returns ([(run_branch, cut_new, stories, resumes)], [left parked]); with
+    several groups the user picks one, and the others are asked again next resume."""
+    groups, skipped = {}, []
+    for s in answered:
+        src = _source_run(repo, s)
+        groups.setdefault(src["run_id"] if src else None, (src, []))[1].append(s)
+    out = []
+    for rid, (src, stories) in groups.items():
+        if src and _local(repo, src["run_branch"]):
+            out.append((src["run_branch"], False, stories, [rid]))
+            continue
+        base = src["base_branch"] if src else "r1"                # no source run: Step 2a's answer
+        keep = [s for s in stories if _base_parked(repo, base, s)]
+        skipped += [s for s in stories if s not in keep]
+        if keep:
+            out.append((f"{base}-autopilot-{run_id}", True, keep, [rid] if rid else []))
+    return out, skipped
 
 
 def _waive(repo, story):
@@ -692,7 +717,7 @@ def test_replay_follow_on_builds_the_answered_story_and_then_resume_has_nothing(
     repo = tmp_path
     _replay(repo, {"A": "done", "B": "parked", "C": "failed"})
     # one source run whose run branch still exists -> build on it (fix pass 8 branch rule)
-    assert _follow_on_branch(repo, ["B"], "2026-10-11-1") == (RUN, False, [], ["2026-10-10-1"])
+    assert _follow_on_groups(repo, ["B"], "2026-10-11-1") == ([(RUN, False, ["B"], ["2026-10-10-1"])], [])
     _git(repo, "checkout", "-q", RUN)                             # first, before writing anything
     assert _read(repo, REL)["stories"]["B"]["status"] == "parked"
     child = ".archflow/autopilot/2026-10-11-1.yaml"
@@ -971,54 +996,58 @@ def test_two_runs_park_b_and_d_resume_asks_both_and_a_waiver_hides_neither(tmp_p
     assert _combined(repo)["D"][1] == RUN2 and _combined(repo)["D"][2]["parked"]["blocks_release"] is False
     assert _offered(repo) == ["B", "D"]                            # what status case 3 counts
     # answering only B: its one source run branch exists -> build on it
-    assert _follow_on_branch(repo, ["B"], "2026-10-11-1") == (RUN, False, [], [ID1])
+    assert _follow_on_groups(repo, ["B"], "2026-10-11-1") == ([(RUN, False, ["B"], [ID1])], [])
     assert _git(repo, "log", "--format=%s", "main").split("\n")[0] == "init"
 
 
-def test_two_runs_follow_on_answering_both_cuts_a_named_branch_and_asks_about_unmerged_work(tmp_path):
+def test_two_runs_follow_on_answering_both_builds_one_run_and_asks_the_other_again(tmp_path):
+    """I-31: answers spanning two source runs whose branches exist -> the user picks one run; only its
+    story is built, on its own run branch; the other stays parked and the next resume asks it."""
     repo = tmp_path
     _two_finished_runs(repo)
     new_id = "2026-10-11-1"
-    NEW = f"r1-autopilot-{new_id}"
-    run_branch, cut, unmerged, resumes = _follow_on_branch(repo, ["B", "D"], new_id)
-    assert (run_branch, cut, resumes) == (NEW, True, [ID1, ID2])
-    assert unmerged == [RUN, RUN2], "unmerged source run branches are named before starting"
-    # the user chose Proceed: cut NEW from base_branch, then one commit before any story work
+    groups, skipped = _follow_on_groups(repo, ["B", "D"], new_id)
+    assert groups == [(RUN, False, ["B"], [ID1]), (RUN2, False, ["D"], [ID2])] and skipped == []
     kept = _kept(repo)
-    _git(repo, "checkout", "-q", "r1"); _git(repo, "checkout", "-qb", NEW)
-    for rid in resumes:                                           # source ledgers carried, unchanged
-        _write(repo, f".archflow/autopilot/{rid}.yaml", kept[rid][1])
+    # the user picks run 2: build D on RUN2, one commit before any story work, no ledgers copied
+    _git(repo, "checkout", "-q", RUN2)
     child = f".archflow/autopilot/{new_id}.yaml"
-    _write(repo, child, {"run_id": new_id, "status": "running", "resumes": resumes,
-                         "base_branch": "r1", "run_branch": NEW, "release": "r1",
-                         "queue": [{"id": s, "state": "pending", "branch": f"t/{s}"} for s in ("B", "D")]})
-    d = _read(repo, REL)
-    for s in ("B", "D"):
-        d["stories"][s] = {"status": "in_progress"}
-    _write(repo, REL, d)
-    assert _commit(repo, "chore(autopilot): plan follow-on") == NEW
+    _write(repo, child, {"run_id": new_id, "status": "running", "resumes": [ID2],
+                         "base_branch": "r1", "run_branch": RUN2, "release": "r1",
+                         "queue": [{"id": "D", "state": "pending", "branch": "t/D"}]})
+    d = _read(repo, REL); d["stories"]["D"] = {"status": "in_progress"}; _write(repo, REL, d)
+    assert _commit(repo, "chore(autopilot): plan follow-on") == RUN2
     assert _resume(repo) == ("continue", new_id)                  # I-26: interrupted here -> rule 1
-    for s in ("B", "D"):                                          # each on its WIP task branch
-        _git(repo, "checkout", "-q", f"t/{s}")
-        _merge_taking(repo, NEW)
-        assert _read(repo, REL)["stories"][s]["status"] == "in_progress"
-        d = _read(repo, REL); d["stories"][s] = {"status": "review"}; _write(repo, REL, d)
-        _commit(repo, f"{s} review")
-        _git(repo, "checkout", "-q", NEW); _git(repo, "merge", "-q", "--no-edit", f"t/{s}")
-        d = _read(repo, REL); d["stories"][s] = {"status": "done"}; _write(repo, REL, d)
-        c = _read(repo, child)
-        for q in c["queue"]:
-            if q["id"] == s:
-                q["state"] = "done"
-        _write(repo, child, c); _commit(repo, f"{s} done")
-    _ledger_set(repo, child, status="finished"); assert _commit(repo, "chore(autopilot): finish") == NEW
+    _git(repo, "checkout", "-q", "t/D")
+    _merge_taking(repo, RUN2)
+    assert _read(repo, REL)["stories"]["D"]["status"] == "in_progress"
+    d = _read(repo, REL); d["stories"]["D"] = {"status": "review"}; _write(repo, REL, d)
+    _commit(repo, "D review")
+    _git(repo, "checkout", "-q", RUN2); _git(repo, "merge", "-q", "--no-edit", "t/D")
+    d = _read(repo, REL); d["stories"]["D"] = {"status": "done"}; _write(repo, REL, d)
+    c = _read(repo, child); c["queue"][0]["state"] = "done"; c["status"] = "finished"; _write(repo, child, c)
+    assert _commit(repo, "chore(autopilot): finish") == RUN2
+    assert not _ok(repo, "show-ref", "--verify", "--quiet", f"refs/heads/r1-autopilot-{new_id}")
     for rid in (ID1, ID2):                                        # sources stay finished records
-        assert _read(repo, f".archflow/autopilot/{rid}.yaml")["status"] == "finished"
         assert yaml.safe_load(_git(repo, "show", f"{kept[rid][0]}:.archflow/autopilot/{rid}.yaml")) == kept[rid][1]
+    assert _read(repo, f".archflow/autopilot/{ID2}.yaml")["status"] == "finished"
     _git(repo, "checkout", "-q", "r1")
-    assert _resume(repo) == ("nothing",)
-    assert _not_asked(repo) == {"B": ("done", NEW), "D": ("done", NEW)}
+    assert _resume(repo) == ("follow-on", ["B"]), "B's answer was not recorded: asked again"
+    assert _combined(repo)["D"][:2] == ("done", RUN2) and _not_asked(repo) == {}   # no copy parks D now
+    assert _follow_on_groups(repo, ["B"], "2026-10-12-1") == ([(RUN, False, ["B"], [ID1])], [])
     assert _git(repo, "log", "--format=%s", "main").split("\n")[0] == "init"
+
+
+def test_run_merged_into_base_and_deleted_gets_a_new_named_branch_from_base(tmp_path):
+    """I-31: the source run branch was merged into base_branch and deleted, so r1 has the park and the
+    run's work: the follow-on cuts {base_branch}-autopilot-{run-id} from r1 for that story only."""
+    repo = tmp_path
+    _replay(repo, {"A": "done", "B": "parked"})
+    _git(repo, "merge", "-q", "--no-ff", "--no-edit", RUN); _git(repo, "branch", "-qD", RUN)
+    assert _resume(repo) == ("follow-on", ["B"])
+    assert _follow_on_groups(repo, ["B"], "2026-10-11-1") == (
+        [("r1-autopilot-2026-10-11-1", True, ["B"], ["2026-10-10-1"])], [])
+    assert (repo / "A.txt").exists(), "base_branch already holds the source run's work"
 
 
 def test_i27_run_merged_into_main_its_parked_story_is_still_offered_and_never_written_on_main(tmp_path):
@@ -1034,14 +1063,13 @@ def test_i27_run_merged_into_main_its_parked_story_is_still_offered_and_never_wr
     assert _waive(repo, "B") is None                              # not parked on r1: commit nothing,
     assert (_git(repo, "rev-parse", "main"), _git(repo, "rev-parse", "r1")) == (main_tip, r1_tip)
     _git(repo, "checkout", "-q", "r1")                            # and say it is parked on main
-    assert _follow_on_branch(repo, ["B"], "2026-10-11-1") == ("r1-autopilot-2026-10-11-1", True, [],
-                                                              ["2026-10-10-1"])
+    # I-31: its run branch is gone and r1 lacks the park -> named and left parked, never built on r1
+    assert _follow_on_groups(repo, ["B"], "2026-10-11-1") == ([], ["B"])
 
 
 
 # ---- QA re-run after fix pass 8: stale lower-ranked copies outrank a later `parked` (I-29, I-30) --
 
-@pytest.mark.xfail(strict=True, reason="I-29: a pre-run `in_progress` copy on base_branch outranks the run's `parked`")
 def test_i29_story_queued_in_progress_and_parked_by_the_run_is_still_asked(tmp_path):
     """Step 1 queues `in_progress` stories. One that was `in_progress` on base_branch when the run
     started and that the run parks is `parked` on the run branch but still `in_progress` on r1, a copy
@@ -1058,7 +1086,6 @@ def test_i29_story_queued_in_progress_and_parked_by_the_run_is_still_asked(tmp_p
     assert _resume(repo) == ("follow-on", ["B"]), (_resume(repo), _not_asked(repo))
 
 
-@pytest.mark.xfail(strict=True, reason="I-30: a leftover subtask branch's `in_progress` copy hides a parked story")
 def test_i30_leftover_subtask_branch_cut_before_the_park_does_not_hide_the_story(tmp_path):
     """workflow.md cuts subtask branches off the task branch after `in_progress` is committed and
     deletes them only after merging. A story parked mid-subtask can leave one behind; its copy

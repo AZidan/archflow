@@ -34,8 +34,9 @@ one that applies, and add a second only if it is independent of the first.
 3. a `parked` story → print each one's `parked.question`, then `/archflow:autopilot resume`, which
    asks every parked story in the active release and builds the ones answered, whether the runs
    that parked them are still open, have finished, or were aborted. Count parked stories the way
-   resume does: across the release file on the current checkout and every local branch, a story
-   `in_progress`, `review` or `done` on any copy is not parked. If an interrupted `running` run is
+   resume does: across the release file on the current checkout and every local branch, less the
+   copies superseded by a later one, a story `in_progress`, `review` or `done` on any copy is not
+   parked. If an interrupted `running` run is
    also waiting, resume continues it first while its run branch exists (if the branch is gone,
    resume stops and points at `/archflow:autopilot abort`), and the parked questions wait for the
    next resume. If a planned `--plan` run is also waiting, resume asks which one to pick up. A

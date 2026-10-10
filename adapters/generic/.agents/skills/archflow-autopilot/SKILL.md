@@ -362,12 +362,18 @@ commits*), which a user back on `base_branch` may not have merged. It gathers:
   the most advanced `status` (`preflight` < `running` < `finished` or `aborted`); on a tie, the
   copy on its own `run_branch`, else the current checkout's. That is the run's **source branch**.
 - **Parked stories**, from every copy of `.archflow/releases/{active_release}.yaml`, the source of
-  truth for story status. Per story id, keep the copy with the most advanced `status`: `backlog` <
+  truth for story status. First drop every **superseded** copy: one whose branch's last commit to
+  that file (`git log -1 --format=%H {branch} -- {file}`) is an ancestor of another copy's branch
+  (`git merge-base --is-ancestor {commit} {other-branch}`) whose own last commit to it differs.
+  That branch already has this copy's change, so its copy is newer whatever the status (a copy from
+  before a park still reads `in_progress`). Branches sharing a last commit hold one copy; the
+  current checkout is a branch like any other; two copies that would drop each other both stay.
+  Then, per story id, keep the remaining copy with the most advanced `status`: `backlog` <
   `spec_ready` < `design_ready` < `contract_ready` < `ready` < `parked` < `in_progress` < `review`
   < `done`; on a tie, the copy whose branch committed that file last (`git log -1 --format=%ct
   {branch} -- {file}`), then the current checkout's. Every story still `status: parked` in
   `.archflow/releases/{active_release}.yaml` after that is **offered**, whichever runs parked it.
-  One that is parked on a copy but further along on another was picked up or resolved there: say
+  One that is parked on a copy but further along on the kept one was picked up or resolved there: say
   `{id} is {status} on {branch}, not asking it.` Autopilot never reads or edits another release
   file.
 
@@ -431,27 +437,24 @@ Choose between them, so that `resume` never starts unattended work the user did 
      `parked.blocks_release: false` (the story stays `parked`), and commit only that file. If the
      story is not `status: parked` there, commit nothing for it and say `{id} is parked on
      {branch}, not on {target}; merge it into {target} to record the waiver.` Then stop.
-   - **Some answered** → a **follow-on run** of the answered stories. Choose its run branch before
-     writing anything. If their source runs share one `run_branch`, build on that `run_branch` if
-     it still exists locally. Otherwise (several, one gone, or a story with no source run) cut a
-     new run branch, `{base_branch}-autopilot-{run-id}` with the follow-on's own `run-id`, from
-     `base_branch` with Step 3's commands; but first, for each source `run_branch` that still
-     exists and is not merged into `base_branch` (`git merge-base --is-ancestor {run_branch}
-     {base_branch}` fails), ask (`a direct question to the user (wait for the reply before continuing)`): `{run_branch} is not merged into
-     {base_branch}; the follow-on run starts without it` → `Proceed` / `Stop, I will merge it
-     first`. Stop changes nothing: unmerged work is never left behind silently.
-     Do not re-run the interview: the envelope, stop conditions, `parked_policy` and `base_branch`
-     carry over from the newest source run's ledger; `decisions[]` are every source run's, oldest
-     run first so a later answer to the same question wins, plus one per new answer. With no source
-     run at all, ask Step 2a's questions instead.
+   - **Some answered** → a **follow-on run** on one run branch, chosen before writing anything.
+     Group the answered stories by source run (those with none form one group). A group builds on
+     its source run's `run_branch` if it still exists locally, else on a new run branch,
+     `{base_branch}-autopilot-{run-id}` with the follow-on's own `run-id`, cut from `base_branch`
+     with Step 3's commands, but only for stories `status: parked` on `base_branch`'s copy. For any
+     other, say `{id}: {run_branch} is gone and {base_branch} lacks its park; merge that work into
+     {base_branch} first.` and leave it parked. With several groups left, ask which to build now
+     (`a direct question to the user (wait for the reply before continuing)`); the others stay `parked` and, their answers unrecorded, are asked again
+     by the next `resume`. None left → record any waivers as above and stop.
+     Do not re-run the interview: the envelope, stop conditions, `parked_policy`, `base_branch` and
+     `decisions[]` carry over from the source run's ledger, plus one decision per new answer. With
+     no source run, ask Step 2a's questions instead.
      Record any waivers as above, then check out the run branch (cut it now if new), and on it:
-     - Write a new ledger per Step 2c, but `status: running` from the start, with `resumes:` the
-       list of source run ids and a queue of the answered stories in release-file order, each
-       `pending` with its WIP `branch`.
+     - Write a new ledger per Step 2c, but `status: running` from the start, with `resumes:
+       [{source run-id}]` (none without a source run) and a queue of the group's answered stories
+       in release-file order, each `pending` with its WIP `branch`.
      - In `.archflow/releases/{active_release}.yaml`, clear each answered story's `parked` block
-       and set it back to `in_progress` (that is how a story leaves `parked`).
-     - On a new run branch, each source run's kept ledger, unchanged, so the only copy there is
-       never a stale `running` one merged in from a WIP branch.
+       (the queued ones only) and set it back to `in_progress` (that is how a story leaves `parked`).
      Commit these together before any story work, so an interrupted follow-on is a `running` run
      for rule 1. Each story continues on its WIP task branch (its source ledger's `queue[].branch`,
      else `parked.branch`, else a new one per Step 3) after merging the run branch into it (taking

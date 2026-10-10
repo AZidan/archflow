@@ -705,21 +705,21 @@ stories:
         severity: blocking
         location: "plugin/commands/autopilot.md:363"
         report: "docs/qa-reports/S5-02-qa.md"
-        status: open
+        status: fixed
       - id: I-30
         summary: "A subtask branch left behind by a park mid-subtask (cut after in_progress was committed) outranks the task branch's parked copy and hides the story from resume"
         found_by: qa-engineer
         severity: minor
         location: "plugin/commands/autopilot.md:363"
         report: "docs/qa-reports/S5-02-qa.md"
-        status: open
+        status: fixed
       - id: I-31
         summary: "Proceed/Stop prompt says the follow-on 'starts without' an unmerged source run branch, but merging the WIP task branches pulls that branch's earlier stories' code into the new run branch while its release file still says they are ready"
         found_by: qa-engineer
         severity: minor
         location: "plugin/commands/autopilot.md:438"
         report: "docs/qa-reports/S5-02-qa.md"
-        status: open
+        status: fixed
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"
