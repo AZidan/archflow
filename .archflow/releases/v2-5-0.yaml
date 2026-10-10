@@ -846,7 +846,7 @@ stories:
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"
     priority: High
-    status: spec_ready
+    status: in_progress
     gates: {needs_design: false, needs_contract: false}
     assigned: api-engineer
     pulled_from: backlog

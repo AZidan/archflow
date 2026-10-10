@@ -1,26 +1,31 @@
-story_id: "S5-02"
-story_title: "Resume parked work after an autopilot run finishes"
-epic_id: "E5"
-branch: "autopilot-resume"
-status: complete
+story_id: "S6-04"
+story_title: "Studio on non-Claude hosts (forward mode)"
+epic_id: "E6"
+branch: "studio-hosts"
+status: in_progress
 subtasks:
-  - text: "Decide and document how resume treats a finished run with parked stories (autopilot.md)"
-    completed: true
-    branch: "resume/finished-runs"
-    started_at: "2026-10-10"
-    completed_at: "2026-10-11"
-  - text: "Fix the end-of-run report's Next line"
-    completed: true
-    branch: "resume/finished-runs"
-    started_at: "2026-10-10"
-    completed_at: "2026-10-11"
-  - text: "Align status.md's parked case (plugin/commands/status.md) and regenerate adapters"
-    completed: true
-    branch: "resume/finished-runs"
-    started_at: "2026-10-10"
-    completed_at: "2026-10-11"
-  - text: "Tests + CHANGELOG"
-    completed: true
-    branch: "resume/finished-runs"
-    started_at: "2026-10-10"
-    completed_at: "2026-10-11"
+  - text: "Commit the rebuilt bundle and hooks.json"
+    completed: false
+    branch: "studio/forward-mode"
+    started_at: "2026-10-11"
+    completed_at: null
+  - text: "Ship studio + server bundle in every adapter (build-adapters.mjs, installer)"
+    completed: false
+    branch: "studio/forward-mode"
+    started_at: "2026-10-11"
+    completed_at: null
+  - text: "Rewrite studio.md for forward mode and host-neutral launch paths"
+    completed: false
+    branch: "studio/forward-mode"
+    started_at: "2026-10-11"
+    completed_at: null
+  - text: "Regenerate adapters; tests for per-host studio"
+    completed: false
+    branch: "studio/forward-mode"
+    started_at: "2026-10-11"
+    completed_at: null
+  - text: "CHANGELOG, README/site host claims"
+    completed: false
+    branch: "studio/forward-mode"
+    started_at: "2026-10-11"
+    completed_at: null
