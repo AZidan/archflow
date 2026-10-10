@@ -322,7 +322,7 @@ def test_commit_rule_names_run_branch_then_base_branch_and_never_main():
     assert "HALT before writing anything" in rule
 
 
-def test_step_2c_commits_every_new_ledger_on_base_branch_before_the_run_branch_exists():
+def test_step_2c_checks_out_base_branch_before_writing_the_ledger():
     """I-15 and the normal-run carry-over gap: the first ledger commit lands where Step 3 cuts from."""
     plan = re.sub(r"\s+", " ", AUTOPILOT.read_text().split("### 2c.", 1)[1].split("### Where", 1)[0])
     assert plan.index("Check out `base_branch`") < plan.index("create `.archflow/autopilot/{run-id}.yaml`")
@@ -360,17 +360,25 @@ def test_abort_picks_the_current_run_by_the_resume_scan_and_checks_out_its_branc
 
 
 # --------------------------------------------------------------------------
-# Re-run after fix pass 4 (ec0bfb6): a git replay of the commit rule, and I-20
+# Re-run after fix pass 4 (ec0bfb6) and fix pass 5 (ca3ecdb): a git replay of the commit rule
+# as now written, resume's scan + choice + planned-run guard, and the I-20 reproductions
 # --------------------------------------------------------------------------
 
 import shutil
 import subprocess
 
 RANK = {"preflight": 0, "running": 1, "finished": 2, "aborted": 2}
+REL, LED = ".archflow/releases/r1.yaml", ".archflow/autopilot/2026-10-10-1.yaml"
+RUN = "r1-autopilot"
 
 
-def _git(repo, *args):
-    return subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True, text=True).stdout
+def _git(repo, *args, check=True):
+    r = subprocess.run(["git", *args], cwd=repo, check=check, capture_output=True, text=True)
+    return r.stdout if check else r
+
+
+def _ok(repo, *args):
+    return _git(repo, *args, check=False).returncode == 0
 
 
 def _write(repo, rel, data):
@@ -383,9 +391,9 @@ def _read(repo, rel):
     return yaml.safe_load((repo / rel).read_text())
 
 
-def _scan(repo):
+def _kept(repo):
     """resume's scan as written: every local branch, one copy per run_id (most advanced status,
-    tie -> the copy on its own run_branch); the release file is read from the source branch."""
+    tie -> the copy on its own run_branch). Returns {run_id: (source_branch, ledger)}."""
     kept = {}
     for b in _git(repo, "for-each-ref", "--format=%(refname:short)", "refs/heads").split():
         for p in _git(repo, "ls-tree", "--name-only", b, ".archflow/autopilot/").split():
@@ -394,40 +402,99 @@ def _scan(repo):
             if (old is None or RANK[led["status"]] > RANK[old[1]["status"]]
                     or (RANK[led["status"]] == RANK[old[1]["status"]] and b == led["run_branch"])):
                 kept[led["run_id"]] = (b, led)
+    return kept
+
+
+def _scan(repo):
+    kept = _kept(repo)
     unfinished = [led["run_id"] for b, led in kept.values() if led["status"] in ("preflight", "running")]
     parked = []
     for b, led in kept.values():
         if led["status"] in ("finished", "aborted"):
-            rel = yaml.safe_load(_git(repo, "show", f"{b}:.archflow/releases/r1.yaml"))
+            rel = yaml.safe_load(_git(repo, "show", f"{b}:{REL}"))
             parked += [q["id"] for q in led["queue"]
                        if q["state"] == "parked" and rel["stories"][q["id"]]["status"] == "parked"]
     return unfinished, parked
 
 
-def _replay(repo, outcomes):
-    """Follow 'Where autopilot commits' literally: Step 2c on base_branch (created from main),
-    Step 3 cuts the run branch, each story on a task branch; ACCEPTED merges, park/fail carry the
-    release file. Returns the branch log of every commit."""
+def _guard_hit(repo, run_branch):
+    """Rule 1's planned-run guard, the three documented checks in order."""
+    if _ok(repo, "show-ref", "--verify", "--quiet", f"refs/heads/{run_branch}"):
+        return f"refs/heads/{run_branch}"
+    if _ok(repo, "show-ref", "--verify", "--quiet", f"refs/remotes/origin/{run_branch}"):
+        return f"refs/remotes/origin/{run_branch}"
+    if _ok(repo, "remote", "get-url", "origin") and \
+            _ok(repo, "ls-remote", "--exit-code", "--heads", "origin", run_branch):
+        return f"origin {run_branch}"
+    return None
+
+
+def _resume(repo):
+    """What `/archflow:autopilot resume` decides, per the choice and rules 1-3 as written."""
+    kept = _kept(repo)
+    _, parked = _scan(repo)
+    running = [led for b, led in kept.values() if led["status"] == "running"]
+    preflight = [led for b, led in kept.values() if led["status"] == "preflight"]
+    if running:
+        led = running[0]
+        if not _ok(repo, "show-ref", "--verify", "--quiet", f"refs/heads/{led['run_branch']}"):
+            return ("stop: run branch missing", led["run_id"])
+        return ("continue", led["run_id"])
+    if preflight and parked:
+        return ("ask", preflight[0]["run_id"], parked)
+    if preflight:
+        led = preflight[0]
+        hit = _guard_hit(repo, led["run_branch"])
+        return ("refuse", led["run_id"], hit) if hit else ("START planned run", led["run_id"])
+    if parked:
+        return ("follow-on", parked)
+    return ("nothing",)
+
+
+def _init(repo, stories):
     if not shutil.which("git"):
         pytest.skip("git not on PATH")
+    repo.mkdir(parents=True, exist_ok=True)
     _git(repo, "init", "-q", "-b", "main")
     _git(repo, "config", "user.email", "qa@example.com")
     _git(repo, "config", "user.name", "qa")
-    REL, LED = ".archflow/releases/r1.yaml", ".archflow/autopilot/2026-10-10-1.yaml"
-    _write(repo, REL, {"stories": {s: {"status": "ready"} for s in outcomes}})
+    _write(repo, REL, {"stories": {s: {"status": "ready"} for s in stories}})
     _git(repo, "add", "-A"); _git(repo, "commit", "-qm", "init")
 
-    def commit(msg):
-        _git(repo, "add", "-A"); _git(repo, "commit", "-qm", msg)
-        branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD").strip()
-        assert branch != "main", f"{msg!r} committed on main"
-        assert not _git(repo, "status", "--porcelain"), f"tree dirty after {msg!r}"
+
+def _commit(repo, msg):
+    _git(repo, "add", "-A"); _git(repo, "commit", "-qm", msg)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD").strip()
+    assert branch != "main", f"{msg!r} committed on main"
+    assert not _git(repo, "status", "--porcelain"), f"tree dirty after {msg!r}"
+    return branch
+
+
+def _ledger_set(repo, **kw):
+    d = _read(repo, LED); d.update(kw); _write(repo, LED, d)
+
+
+def _plan(repo, stories, plan=False):
+    """Step 2c as written in ca3ecdb. Returns the branch the ledger was committed on."""
+    _git(repo, "checkout", "-qb", "r1")                          # base_branch from HEAD (absent)
+    if not plan:
+        _git(repo, "checkout", "-qb", RUN)                       # cut BEFORE the ledger is written
+    _write(repo, LED, {"run_id": "2026-10-10-1", "status": "preflight", "base_branch": "r1",
+                       "run_branch": RUN, "release": "r1",
+                       "queue": [{"id": s, "state": "pending"} for s in stories]})
+    return _commit(repo, "chore(autopilot): plan")
+
+
+def _step3_and_run(repo, outcomes, abort_after=None):
+    """Step 3 (cut only if absent), then the story loop, then Step 4's finish (or abort)."""
+    if not _ok(repo, "show-ref", "--verify", "--quiet", f"refs/heads/{RUN}"):
+        _git(repo, "checkout", "-q", "r1"); _git(repo, "checkout", "-qb", RUN)
+    else:
+        _git(repo, "checkout", "-q", RUN)
+    _ledger_set(repo, status="running"); assert _commit(repo, "running") == RUN
 
     def story(s, status, **extra):
         d = _read(repo, REL); d["stories"][s] = {"status": status, **extra}; _write(repo, REL, d)
-
-    def ledger_set(**kw):
-        d = _read(repo, LED); d.update(kw); _write(repo, LED, d)
 
     def queue_set(s, state):
         d = _read(repo, LED)
@@ -436,50 +503,205 @@ def _replay(repo, outcomes):
                 q["state"] = state
         _write(repo, LED, d)
 
-    _git(repo, "checkout", "-qb", "r1")                          # 2c: base_branch from HEAD
-    _write(repo, LED, {"run_id": "2026-10-10-1", "status": "preflight", "base_branch": "r1",
-                       "run_branch": "r1-autopilot", "release": "r1",
-                       "queue": [{"id": s, "state": "pending"} for s in outcomes]})
-    commit("chore(autopilot): plan")
-    _git(repo, "checkout", "-qb", "r1-autopilot")                # Step 3
-    ledger_set(status="running"); commit("running")
-    for s, outcome in outcomes.items():
-        _git(repo, "checkout", "-qb", f"t/{s}", "r1-autopilot")
-        story(s, "in_progress"); commit(f"{s} in_progress")
-        (repo / f"{s}.txt").write_text(s); story(s, "review"); commit(f"{s} review")
+    for i, (s, outcome) in enumerate(outcomes.items()):
+        if abort_after is not None and i == abort_after:
+            break
+        _git(repo, "checkout", "-qb", f"t/{s}", RUN)
+        story(s, "in_progress"); _commit(repo, f"{s} in_progress")
+        (repo / f"{s}.txt").write_text(s); story(s, "review"); _commit(repo, f"{s} review")
         if outcome == "done":
-            _git(repo, "checkout", "-q", "r1-autopilot"); _git(repo, "merge", "-q", "--no-edit", f"t/{s}")
+            _git(repo, "checkout", "-q", RUN); _git(repo, "merge", "-q", "--no-edit", f"t/{s}")
             story(s, "done"); _git(repo, "branch", "-qD", f"t/{s}")
         else:
             story(s, outcome, **({"parked": {"question": "q?", "blocks_release": True}}
                                  if outcome == "parked" else {}))
-            commit(f"wip: {s} {outcome}")
-            before = yaml.safe_load(_git(repo, "show", f"r1-autopilot:{REL}"))["stories"]
-            _git(repo, "checkout", "-q", "r1-autopilot")
+            _commit(repo, f"wip: {s} {outcome}")
+            before = yaml.safe_load(_git(repo, "show", f"{RUN}:{REL}"))["stories"]
+            _git(repo, "checkout", "-q", RUN)
             _git(repo, "checkout", f"t/{s}", "--", REL)          # the carry-over
             after = _read(repo, REL)["stories"]
             assert {k for k in after if after[k] != before[k]} == {s}, "carry touched another story"
-        queue_set(s, outcome); commit(f"{s} ledger")
-    ledger_set(status="finished"); commit("chore(autopilot): finish")
+        queue_set(s, outcome); assert _commit(repo, f"{s} ledger") == RUN
+    if abort_after is not None:
+        _ledger_set(repo, status="aborted"); assert _commit(repo, "chore(autopilot): abort") == RUN
+    else:
+        _ledger_set(repo, status="finished"); assert _commit(repo, "chore(autopilot): finish") == RUN
     _git(repo, "checkout", "-q", "r1")                           # the user goes back to base
 
+
+def _replay(repo, outcomes, plan=False, abort_after=None):
+    _init(repo, outcomes)
+    _plan(repo, list(outcomes), plan=plan)
+    if plan:
+        assert _resume(repo) == ("START planned run", "2026-10-10-1")
+    _step3_and_run(repo, outcomes, abort_after=abort_after)
+
+
+def _with_origin(tmp_path, repo):
+    origin = tmp_path / "origin.git"
+    _git(tmp_path, "init", "-q", "--bare", "-b", "main", str(origin))
+    _git(repo, "remote", "add", "origin", str(origin))
+    _git(repo, "push", "-q", "origin", "main", "r1", RUN)
+    return origin
+
+
+# ---- the normal flow, end to end ----------------------------------------------------------
 
 def test_replay_of_a_normal_run_commits_off_main_and_resume_finds_the_parked_story(tmp_path):
     _replay(tmp_path, {"A": "done", "B": "parked", "C": "failed"})
     assert _git(tmp_path, "log", "--format=%s", "main").split("\n")[0] == "init"
+    assert _git(tmp_path, "ls-tree", "--name-only", "r1", ".archflow/autopilot/") == "", \
+        "a started run left a ledger copy on base_branch"
     assert _scan(tmp_path) == ([], ["B"])
+    assert _resume(tmp_path) == ("follow-on", ["B"])
 
+
+def test_replay_follow_on_builds_the_answered_story_and_then_resume_has_nothing(tmp_path):
+    """Rule 2 'Some answered', as written: check out the run branch first, new ledger + release file
+    committed there, continue on the WIP branch after merging the run branch into it, finish."""
+    repo = tmp_path
+    _replay(repo, {"A": "done", "B": "parked", "C": "failed"})
+    _git(repo, "checkout", "-q", RUN)                             # first, before writing anything
+    assert _read(repo, REL)["stories"]["B"]["status"] == "parked"
+    child = ".archflow/autopilot/2026-10-11-1.yaml"
+    _write(repo, child, {"run_id": "2026-10-11-1", "status": "preflight", "resumes": "2026-10-10-1",
+                         "base_branch": "r1", "run_branch": RUN, "release": "r1",
+                         "queue": [{"id": "B", "state": "pending", "branch": "t/B"}]})
+    d = _read(repo, REL); d["stories"]["B"] = {"status": "in_progress"}; _write(repo, REL, d)
+    assert _commit(repo, "resume: follow-on") == RUN
+    c = _read(repo, child); c["status"] = "running"; _write(repo, child, c); _commit(repo, "running")
+    _git(repo, "checkout", "-q", "t/B")
+    r = _git(repo, "merge", "--no-edit", RUN, check=False)
+    if r.returncode:                                              # take the run branch's release file
+        _git(repo, "checkout", RUN, "--", REL); _git(repo, "add", REL)
+        _git(repo, "commit", "-qm", "merge run branch")
+    assert _read(repo, REL)["stories"]["B"]["status"] == "in_progress"
+    d = _read(repo, REL); d["stories"]["B"] = {"status": "review"}; _write(repo, REL, d); _commit(repo, "B review")
+    _git(repo, "checkout", "-q", RUN); _git(repo, "merge", "-q", "--no-edit", "t/B")
+    d = _read(repo, REL); d["stories"]["B"] = {"status": "done"}; _write(repo, REL, d)
+    c = _read(repo, child); c["queue"][0]["state"] = "done"; c["status"] = "finished"; _write(repo, child, c)
+    _commit(repo, "chore(autopilot): finish 2026-10-11-1")
+    stories = _read(repo, REL)["stories"]
+    assert stories == {"A": {"status": "done"}, "B": {"status": "done"}, "C": {"status": "failed"}}
+    assert _read(repo, LED)["status"] == "finished", "the source ledger was edited"
+    _git(repo, "checkout", "-q", "r1")
+    assert _resume(repo) == ("nothing",)
+    assert _git(repo, "log", "--format=%s", "main").split("\n")[0] == "init"
+
+
+# ---- I-20 reproductions, against ca3ecdb ------------------------------------------------------
 
 def test_a_finished_run_is_not_resurrected_from_the_preflight_copy_on_base_branch(tmp_path):
-    """Fix pass 4 commits every new ledger on base_branch as `preflight` (Step 2c). That copy is
-    never updated: `running`/`finished`/`aborted` are only written on the run branch. While the run
-    branch is a local branch the one-copy rule hides it; once it is not (deleted unmerged, or a
-    fresh clone where it is only `origin/...`), resume's scan keeps the `preflight` copy and rule 1
-    starts the whole queue again unattended, unasked ('Only one of the two -> that rule')."""
+    """I-20 scenario A: all done, run branch deleted unmerged -> nothing to resume."""
     _replay(tmp_path, {"A": "done", "B": "done"})
-    _git(tmp_path, "branch", "-qD", "r1-autopilot")
-    unfinished, _ = _scan(tmp_path)
-    rule = re.sub(r"\s+", " ", resume_rule())
-    preflight = re.search(r"A \*\*`preflight`\*\* ledger is a planned run(.*?)A \*\*`running`\*\*", rule).group(1)
-    guarded = re.search(r"run.branch.{0,80}(already exists|origin/)", preflight)
-    assert not unfinished or guarded, f"{unfinished} would be started again by rule 1"
+    _git(tmp_path, "branch", "-qD", RUN)
+    assert _resume(tmp_path) == ("nothing",)
+
+
+def test_i20_fresh_clone_of_base_branch_resumes_nothing(tmp_path):
+    """I-20 scenario B: the run branch exists only as origin/r1-autopilot in a fresh clone."""
+    repo = tmp_path / "w"
+    _replay(repo, {"A": "done", "B": "done"})
+    _with_origin(tmp_path, repo)
+    fresh = tmp_path / "fresh"
+    _git(tmp_path, "clone", "-q", "-b", "r1", str(tmp_path / "origin.git"), str(fresh))
+    assert not _ok(fresh, "show-ref", "--verify", "--quiet", f"refs/heads/{RUN}")
+    assert _resume(fresh) == ("nothing",)
+
+
+@pytest.mark.parametrize("delete", [False, True])
+def test_i20_an_aborted_run_stays_aborted(tmp_path, delete):
+    """I-20 scenario C: aborted before anything parked, with and without its run branch."""
+    _replay(tmp_path, {"A": "done", "B": "done"}, abort_after=1)
+    if delete:
+        _git(tmp_path, "branch", "-qD", RUN)
+    assert _resume(tmp_path) == ("nothing",)
+
+
+def test_an_aborted_planned_run_that_never_started_stays_aborted(tmp_path):
+    _init(tmp_path, ["A"])
+    assert _plan(tmp_path, ["A"], plan=True) == "r1"
+    _ledger_set(tmp_path, status="aborted"); assert _commit(tmp_path, "chore(autopilot): abort") == "r1"
+    assert _resume(tmp_path) == ("nothing",)
+
+
+def test_an_aborted_run_with_a_parked_story_hands_it_to_rule_2(tmp_path):
+    _replay(tmp_path, {"A": "parked", "B": "done"}, abort_after=1)
+    assert _resume(tmp_path) == ("follow-on", ["A"])
+
+
+# ---- planned runs (--plan) and the guard ------------------------------------------------------
+
+def test_planned_run_lifecycle_with_its_run_branch_present(tmp_path):
+    """--plan on base_branch, started by resume (guard clear), finished: resume has nothing, because
+    the finished copy on the run branch outranks the preflight copy left on base_branch."""
+    _replay(tmp_path, {"A": "done"}, plan=True)
+    assert yaml.safe_load(_git(tmp_path, "show", f"r1:{LED}"))["status"] == "preflight"
+    assert _resume(tmp_path) == ("nothing",)
+
+
+def test_planned_run_branch_deleted_locally_but_on_origin_is_refused(tmp_path):
+    repo = tmp_path / "w"
+    _replay(repo, {"A": "done"}, plan=True)
+    _with_origin(tmp_path, repo)
+    _git(repo, "branch", "-qD", RUN)
+    assert _resume(repo)[0] == "refuse"
+
+
+def test_planned_run_merged_on_origin_and_pulled_is_not_restarted(tmp_path):
+    """The usual 'review it and merge it yourself' flow: merged (here into main on origin, like a
+    PR), branch deleted everywhere, main pulled -> the finished copy on main wins."""
+    repo = tmp_path / "w"
+    _replay(repo, {"A": "done"}, plan=True)
+    origin = _with_origin(tmp_path, repo)
+    other = tmp_path / "other"
+    _git(tmp_path, "clone", "-q", str(origin), str(other))
+    _git(other, "config", "user.email", "qa@example.com"); _git(other, "config", "user.name", "qa")
+    _git(other, "merge", "-q", "--no-edit", f"origin/{RUN}")
+    _git(other, "push", "-q", "origin", "main", f":{RUN}")
+    _git(repo, "fetch", "-q", "--prune", "origin"); _git(repo, "branch", "-qD", RUN)
+    _git(repo, "checkout", "-q", "main"); _git(repo, "merge", "-q", "--ff-only", "origin/main")
+    _git(repo, "checkout", "-q", "r1")
+    assert _resume(repo) == ("nothing",)
+
+
+@pytest.mark.xfail(strict=True, reason="I-23: a started --plan run's preflight copy on base_branch "
+                   "restarts the queue once its run branch is gone locally and on origin")
+@pytest.mark.parametrize("how", ["discarded", "merged-on-origin-not-pulled", "aborted-discarded"])
+def test_started_planned_run_is_not_restarted_once_its_run_branch_is_gone_everywhere(tmp_path, how):
+    """g1. The run finished (nothing parked), or was aborted. Its branch is then deleted locally and on origin
+    without the finished ledger reaching any local branch: either the user discarded the night's
+    work, or merged it as a PR on origin (auto-delete branch), pruned, and has not pulled main yet.
+    No guard check hits, the preflight copy on base_branch is the only copy, and 'Only one of the
+    two -> that rule' sends it to rule 1, which starts the whole queue again unattended."""
+    repo = tmp_path / "w"
+    _replay(repo, {"A": "done", "B": "done"}, plan=True,
+            abort_after=1 if how == "aborted-discarded" else None)
+    origin = _with_origin(tmp_path, repo)
+    if how == "merged-on-origin-not-pulled":
+        other = tmp_path / "other"
+        _git(tmp_path, "clone", "-q", str(origin), str(other))
+        _git(other, "config", "user.email", "qa@example.com"); _git(other, "config", "user.name", "qa")
+        _git(other, "merge", "-q", "--no-edit", f"origin/{RUN}")
+        _git(other, "push", "-q", "origin", "main")
+    _git(repo, "push", "-q", "origin", f":{RUN}")
+    _git(repo, "fetch", "-q", "--prune", "origin"); _git(repo, "branch", "-qD", RUN)
+    assert _resume(repo) == ("nothing",)
+
+
+# ---- g2: a normal run that dies before Step 3's `running` commit -----------------------------
+
+def test_g2_run_dead_before_running_is_refused_and_abort_clears_it(tmp_path):
+    """Step 2c committed `preflight` on the run branch, then the session died. resume's guard
+    refuses (the run branch exists); `abort` - documented to take the newest preflight/running
+    ledger and commit `aborted` on the branch it lives on - clears it, after which resume has
+    nothing and a new run is unobstructed."""
+    _init(tmp_path, ["A"])
+    assert _plan(tmp_path, ["A"]) == RUN
+    _git(tmp_path, "checkout", "-q", "r1")
+    assert _resume(tmp_path) == ("refuse", "2026-10-10-1", f"refs/heads/{RUN}")
+    src, led = _kept(tmp_path)["2026-10-10-1"]                    # abort: same scan, one copy
+    assert src == RUN
+    _git(tmp_path, "checkout", "-q", src)
+    _ledger_set(tmp_path, status="aborted"); assert _commit(tmp_path, "chore(autopilot): abort") == RUN
+    assert _resume(tmp_path) == ("nothing",)

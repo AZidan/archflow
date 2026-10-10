@@ -657,6 +657,13 @@ stories:
         location: "plugin/commands/autopilot.md:131"
         report: "docs/qa-reports/S5-02-qa.md"
         status: fixed
+      - id: I-23
+        summary: "A started --plan run leaves its preflight ledger on base_branch; once its run branch is gone locally and on origin (discarded, or PR-merged and main not yet pulled), the guard finds nothing and resume restarts the finished or aborted run's whole queue unattended"
+        found_by: qa-engineer
+        severity: blocking
+        location: "plugin/commands/autopilot.md:386"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"
