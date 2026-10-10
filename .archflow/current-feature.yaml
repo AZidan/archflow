@@ -1,0 +1,36 @@
+story_id: "S2-06"
+story_title: "/archflow:help command; status drops the command list"
+epic_id: "E2"
+branch: "archflow-help"
+status: in_progress
+subtasks:
+  - text: "Write plugin/commands/help.md (command list + how-Archflow-works primer)"
+    completed: false
+    branch: null
+    started_at: null
+    completed_at: null
+  - text: "Trim plugin/commands/status.md: drop Step 2 command list, end with next step + pointer to help"
+    completed: false
+    branch: null
+    started_at: null
+    completed_at: null
+  - text: "Add a test that help.md lists exactly the commands in plugin/commands/"
+    completed: false
+    branch: null
+    started_at: null
+    completed_at: null
+  - text: "Add help to every command list (CLAUDE.md, README.md, instructions/reference/SKILL mirrored in .archflow/, docs guides, site)"
+    completed: false
+    branch: null
+    started_at: null
+    completed_at: null
+  - text: "Regenerate adapters; build-adapters.mjs --check passes"
+    completed: false
+    branch: null
+    started_at: null
+    completed_at: null
+  - text: "Telemetry allowlist + CHANGELOG entry"
+    completed: false
+    branch: null
+    started_at: null
+    completed_at: null

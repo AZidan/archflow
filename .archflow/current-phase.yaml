@@ -26,6 +26,6 @@ gaps:
 git_workflow: "workflow.md"
 
 # Feature tracking
-current_feature: null
-feature_status: "ready"
+current_feature: "S2-06"
+feature_status: "in_progress"
 status: "onboarded"

@@ -389,3 +389,31 @@ stories:
         location: "docs/index.html:99"
         report: "docs/qa-reports/S9-04-code-review.md"
         status: fixed
+
+  - id: S2-06
+    title: "/archflow:help command; status drops the command list"
+    priority: High
+    status: in_progress
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: >-
+      Add /archflow:help: every command with a one-line usage note, plus a short primer on how Archflow
+      works (phases, releases, the story pipeline, gates, a typical flow). Trim /archflow:status to
+      project state and the next step, ending with a pointer to /archflow:help. Status answers "where am
+      I"; help answers "what can I do". Added 2026-10-10, mid-release, after the other six v2-5-0 stories
+      were done.
+    acceptance_criteria:
+      - {text: "plugin/commands/help.md lists every command in plugin/commands/ with a one-line usage note, plus a short primer on how Archflow works", met: false}
+      - {text: "/archflow:status no longer prints the command list; it ends with the suggested next command(s) and a pointer to /archflow:help", met: false}
+      - {text: "A test checks that help lists exactly the commands in plugin/commands/, so the list cannot drift", met: false}
+      - {text: "Every place that lists commands includes help: CLAUDE.md, README.md, instructions.md, reference.md, SKILL.md (mirrored in .archflow/), docs guides, site", met: false}
+      - {text: "Gemini adapters regenerate with help.toml and build-adapters.mjs --check passes", met: false}
+      - {text: "Telemetry's command allowlist (plugin/lib/telemetry.mjs) recognises help, if it keeps one", met: false}
+      - {text: "CHANGELOG has an entry for the change", met: false}
+    subtasks:
+      - {text: "Write plugin/commands/help.md (command list + how-Archflow-works primer)", completed: false}
+      - {text: "Trim plugin/commands/status.md: drop Step 2 command list, end with next step + pointer to help", completed: false}
+      - {text: "Add a test that help.md lists exactly the commands in plugin/commands/", completed: false}
+      - {text: "Add help to every command list (CLAUDE.md, README.md, instructions/reference/SKILL mirrored in .archflow/, docs guides, site)", completed: false}
+      - {text: "Regenerate adapters; build-adapters.mjs --check passes", completed: false}
+      - {text: "Telemetry allowlist + CHANGELOG entry", completed: false}
