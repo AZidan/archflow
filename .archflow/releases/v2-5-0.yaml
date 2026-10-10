@@ -417,3 +417,25 @@ stories:
       - {text: "Add help to every command list (CLAUDE.md, README.md, instructions/reference/SKILL mirrored in .archflow/, docs guides, site)", completed: true}
       - {text: "Regenerate adapters; build-adapters.mjs --check passes", completed: true}
       - {text: "Telemetry allowlist + CHANGELOG entry", completed: true}
+    issues:
+      - id: I-1
+        summary: "Generated help on all six non-Claude hosts lists /archflow:studio, which every adapter skips (no studio command exists there)"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/help.md:52 (rendered into adapters/*/…/archflow-help, adapters/gemini/commands/archflow/help.toml)"
+        report: "docs/qa-reports/S2-06-qa.md"
+        status: open
+      - id: I-2
+        summary: "help's per-command pointer resolves to a non-existent path on codex/copilot/generic/cursor/opencode (<host>/archflow/commands/<name>.md is never generated)"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/help.md:10 (rewritten by scripts/build-adapters.mjs CLAUDE_PLUGIN_ROOT vocab, e.g. :391)"
+        report: "docs/qa-reports/S2-06-qa.md"
+        status: open
+      - id: I-3
+        summary: "help.md takes an optional <command> argument but declares no argument-hint, so the picker does not show it"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/help.md:1-3"
+        report: "docs/qa-reports/S2-06-qa.md"
+        status: open
