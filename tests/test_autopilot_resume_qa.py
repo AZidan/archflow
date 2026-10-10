@@ -710,3 +710,70 @@ def test_g2_run_dead_before_running_is_refused_and_abort_clears_it(tmp_path):
     _git(tmp_path, "checkout", "-q", src)
     _ledger_set(tmp_path, status="aborted"); assert _commit(tmp_path, "chore(autopilot): abort") == RUN
     assert _resume(tmp_path) == ("nothing",)
+
+
+# ---- fix pass 6 (b220c36): rule 1's `running` bullet when the run branch is missing --------------
+
+def _start_planned_and_die(repo, stories):
+    """--plan, resume starts it (rule 1: `running` committed alone on base_branch), Step 3 cuts the
+    run branch, then the session dies before any story finishes."""
+    _init(repo, stories)
+    assert _plan(repo, stories, plan=True) == "r1"
+    assert _resume(repo) == ("START planned run", "2026-10-10-1")
+    _git(repo, "checkout", "-q", "r1")
+    _ledger_set(repo, status="running"); assert _commit(repo, "chore(autopilot): start") == "r1"
+    _git(repo, "checkout", "-qb", RUN)
+    _git(repo, "checkout", "-q", "r1")
+
+
+def test_interrupted_planned_run_continues_while_its_branch_exists(tmp_path):
+    _start_planned_and_die(tmp_path, ["A", "B"])
+    assert _resume(tmp_path) == ("continue", "2026-10-10-1")
+
+
+def test_interrupted_run_whose_branch_the_user_deleted_is_not_continued_and_abort_closes_it(tmp_path):
+    """The user threw the interrupted run away on purpose (branch deleted, no origin). resume must not
+    continue or restart it; the documented `abort` (run_branch, else base_branch) closes it there,
+    never on main, and resume then has nothing."""
+    _start_planned_and_die(tmp_path, ["A", "B"])
+    _git(tmp_path, "branch", "-qD", RUN)
+    assert _resume(tmp_path) == ("nothing",)
+    src, led = _kept(tmp_path)["2026-10-10-1"]
+    assert (src, led["status"]) == ("r1", "running")
+    target = RUN if _ok(tmp_path, "show-ref", "--verify", "--quiet", f"refs/heads/{RUN}") else led["base_branch"]
+    _git(tmp_path, "checkout", "-q", target)
+    _ledger_set(tmp_path, status="aborted"); assert _commit(tmp_path, "chore(autopilot): abort") == "r1"
+    assert _resume(tmp_path) == ("nothing",)
+
+
+def test_interrupted_run_branch_only_on_origin_is_refused_not_restarted(tmp_path):
+    repo = tmp_path / "w"
+    _start_planned_and_die(repo, ["A"])
+    _with_origin(tmp_path, repo)
+    _git(repo, "push", "-q", "origin", RUN)
+    _git(repo, "branch", "-qD", RUN)
+    assert _resume(repo) == ("refuse", "2026-10-10-1", f"refs/remotes/origin/{RUN}")
+
+
+@pytest.mark.xfail(strict=True, reason="I-24: after a gone `running` run, 're-choose without that "
+                   "ledger' starts an older planned run unattended, without asking")
+def test_gone_running_run_does_not_silently_start_an_older_planned_run(tmp_path):
+    """Y was planned (--plan) first, X later; resume started X (the newest), which was interrupted and
+    whose branch the user then deleted. The user runs resume expecting X. The running bullet says X
+    is gone, then makes the choice again without it: the only candidate left is Y, 'Only one of the
+    two -> that rule', and rule 1 starts Y's whole queue unattended in the same invocation. The
+    choice's own principle (a preflight ledger must never be started silently instead of what the
+    user came for) says this should ask or stop."""
+    _init(tmp_path, ["A", "B"])
+    _git(tmp_path, "checkout", "-qb", "r1")
+    _write(tmp_path, ".archflow/autopilot/2026-10-09-1.yaml",
+           {"run_id": "2026-10-09-1", "status": "preflight", "base_branch": "r1",
+            "run_branch": "r1-autopilot-y", "release": "r1",
+            "queue": [{"id": "B", "state": "pending"}]})
+    _commit(tmp_path, "chore(autopilot): plan Y")
+    _write(tmp_path, LED, {"run_id": "2026-10-10-1", "status": "running", "base_branch": "r1",
+                           "run_branch": RUN, "release": "r1",
+                           "queue": [{"id": "A", "state": "pending"}]})
+    _commit(tmp_path, "chore(autopilot): start X")               # X started; its branch was cut,
+    # interrupted, and then deleted by the user: no refs/heads/RUN, no origin.
+    assert _resume(tmp_path)[0] != "START planned run"
