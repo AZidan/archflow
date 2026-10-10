@@ -195,7 +195,7 @@ Everything lands on one branch. **Autopilot never merges to `main`, never opens 
 
 ```
 /archflow:autopilot --plan     # interview + show the queue, don't start
-/archflow:autopilot resume     # answer the parked questions and build those stories, even after a run finished
+/archflow:autopilot resume     # answer the parked questions and build those stories, even after a run finished or was aborted
 ```
 
 ---

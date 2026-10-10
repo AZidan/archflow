@@ -51,9 +51,15 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   same, but `resume` only read a run that was still `preflight` or `running`, and a run that empties
   its queue is `finished`. `resume` now falls back to the newest finished run that still has parked
   stories: it asks their questions and builds the answered ones in a follow-on run, linked by a new
-  `resumes` field in the ledger, on the same run branch. The finished ledger is left as it was. A
-  finished run with nothing parked, and an aborted run, are never resumed. The report's `Next:` line
-  and `/archflow:status` now describe that path.
+  `resumes` field in the ledger, on the same run branch. The finished ledger is left as it was. The
+  same applies to stories parked by a run that was then aborted: the aborted ledger stays `aborted`
+  and its queue is never continued, but its still-parked stories can be picked up. A run with
+  nothing still parked is never restarted. Only runs from the active release are considered, so
+  autopilot never edits a shipped or archived release file, and `resume` checks the usual
+  prerequisites (clean tree, phase 3 or later) before writing anything. When a planned `--plan` run
+  that never started is also waiting, `resume` asks which one to pick up instead of silently
+  starting the planned run. The report's `Next:` line, `/archflow:status` and the landing page now
+  describe that path.
 - Gemini commands that quote the plugin path, such as `/archflow:doctor`, pointed at
   `"~/.gemini/..."`, which the shell does not expand. They now use `$HOME`.
 - Gemini commands, agents and skills that tell the model to follow another command, such as

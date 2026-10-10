@@ -94,10 +94,6 @@ def test_next_line_without_parked_stories_does_not_name_resume():
     assert RESUME not in m.group(1)
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "S5-02 I-1: `abort` prints Step 4, whose Next: line names `resume` when stories are parked, "
-    "but resume refuses an aborted run ('An `aborted` run is never resumed'). Same dead end the "
-    "story fixed for finished runs. Remove this xfail once abort's Next: line, or resume, is fixed."))
 def test_abort_report_next_line_names_a_command_that_works_for_an_aborted_run():
     abort = subcommand("abort")
     resume = re.sub(r"\s+", " ", resume_rule())

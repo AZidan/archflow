@@ -4,10 +4,10 @@ A run that empties its queue is set `finished`, yet its report told the user to
 answer the parked questions and then run `resume`, which only read `preflight` /
 `running` ledgers. Parked stories left by a finished run had no way back.
 
-The fix: `resume` falls back to the newest FINISHED run that still has parked
-stories and starts a follow-on run over them (`resumes: <run-id>`), leaving the
-finished ledger untouched. Aborted runs and finished runs with nothing parked are
-never resumed.
+The fix: `resume` falls back to the newest FINISHED or ABORTED run (of the active
+release) that still has parked stories and starts a follow-on run over them
+(`resumes: <run-id>`), leaving that ledger untouched. An aborted run's queue is never
+continued, and a run with nothing still parked is never restarted.
 
 The behaviour lives in markdown, so the tests pin the documented contract — the
 report, the resume rule and /archflow:status must agree — and check that the
@@ -120,9 +120,40 @@ def test_a_finished_run_without_parked_stories_is_not_resurrected():
     assert "no parked stories" in rule
 
 
-def test_an_aborted_run_is_never_resumed():
-    rule = resume_rule()
-    assert "`aborted` run is never resumed" in rule
+def test_an_aborted_run_stays_aborted_but_its_parked_stories_come_back():
+    """I-1: abort prints the Step 4 report, whose Next: line names resume.
+
+    The aborted ledger is a record and keeps its status; only its still-parked stories return.
+    """
+    rule = re.sub(r"\s+", " ", resume_rule())
+    assert "`finished` or `aborted`" in rule
+    assert "An aborted run stays `aborted`" in rule
+    assert "never change its `status`" in rule
+    assert "aborted run's queue is never continued" in rule
+
+
+def test_resume_only_considers_the_active_release():
+    """I-2: a parked story in a shipped/archived release is never edited by resume."""
+    rule = re.sub(r"\s+", " ", resume_rule())
+    assert "whose `release` is the `active_release`" in rule
+    assert "still `status: parked` in `.archflow/releases/{active_release}.yaml`" in rule
+    assert "never edits another release file" in rule
+
+
+def test_resume_checks_prerequisites_before_writing_state():
+    """I-2: resume writes a ledger and a release file, so the preflight checks come first."""
+    rule = re.sub(r"\s+", " ", resume_rule())
+    i = rule.index("The Prerequisites above apply to `resume`")
+    assert i < rule.index("Write a new ledger")
+    assert "before checking out a branch or writing any state" in rule
+
+
+def test_a_planned_run_never_silently_outranks_parked_stories():
+    """I-3: a never-started --plan ledger and parked stories both present -> ask, never default."""
+    rule = re.sub(r"\s+", " ", resume_rule())
+    assert "A `preflight` ledger and parked stories both → ask which to resume" in rule
+    assert "Never default either way" in rule
+    assert "one to pick up" in re.sub(r"\s+", " ", status_parked_case())
 
 
 def test_answered_story_leaves_parked_via_in_progress():
@@ -234,3 +265,22 @@ def test_follow_on_run_arms_the_guard(tmp_path):
 def test_aborted_run_with_parked_stories_does_not_arm_the_guard(tmp_path):
     proj = project(tmp_path, [ledger("2026-01-01-1", "aborted", [DONE, PARKED])])
     assert guard("git push origin main", proj) == 0
+
+
+def test_follow_on_from_an_aborted_run_validates_and_the_parent_stays_aborted(tmp_path):
+    parent = ledger("2026-01-01-1", "aborted", [DONE, PARKED], finished_at="2026-01-01T02:00:00Z")
+    queued = {k: v for k, v in PARKED.items() if k != "park"}
+    child = ledger("2026-01-02-1", "running", [dict(queued, order=1, state="pending")],
+                   resumes="2026-01-01-1")
+    code, data = validate(project(tmp_path, [parent, child]))
+    assert code == 0, data["violations"]
+    assert any("2026-01-02-1" in f for f in data["checked"])
+    assert not any("2026-01-01-1" in f for f in data["checked"]), "aborted ledger is a record"
+
+
+def test_follow_on_from_an_aborted_run_arms_the_guard(tmp_path):
+    proj = project(tmp_path, [
+        ledger("2026-01-01-1", "aborted", [DONE, PARKED]),
+        ledger("2026-01-02-1", "running", [DONE], resumes="2026-01-01-1"),
+    ])
+    assert guard("git push origin main", proj) == 2
