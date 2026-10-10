@@ -285,7 +285,7 @@ def test_resume_names_other_run_branches_without_reading_them():
     assert "information only" in text and "nothing is read from those branches' release files" in text
     assert "instead of `Nothing to resume.`" in text
     assert "one line per branch, naming the newest such run on it" in text
-    assert "no newer follow-on has in its `queue[]`" in text
+    assert "no newer live follow-on (as for *Parked stories*) has in its `queue[]`" in text
 
 
 def test_terminal_ledger_commits_name_the_branch_they_land_on():
@@ -397,6 +397,11 @@ def test_follow_on_without_a_source_run_has_a_base_branch():
 
 def test_resume_refuses_on_a_wip_branch_and_skips_picked_up_stories():
     rule = re.sub(r"\s+", " ", resume_rule())
+    assert "Drop any that a **live** follow-on whose `run_branch` is not the current branch" in rule
+    assert ("A follow-on is live when its `run_branch` still exists locally "
+            "(`git show-ref --verify --quiet refs/heads/{run_branch}`) and its kept ledger is not "
+            "`aborted`.") in rule
+    assert "no newer live follow-on (as for *Parked stories*) has in its `queue[]`" in rule
     assert ("`This is {story}'s WIP branch; check out {run_branch} and run /archflow:autopilot "
             "resume there.`") in rule
     assert rule.index("Not on a WIP branch") < rule.index("**Ask** every parked story")
@@ -466,13 +471,19 @@ def _release_here(repo):
     return (yaml.safe_load(r.stdout).get("stories") or {}) if not r.returncode else {}
 
 
+def _live(repo, led):
+    """A follow-on that can have delivered its queue: its run branch exists locally and it was not
+    aborted (I-45)."""
+    return bool(led.get("resumes")) and led["status"] != "aborted" and _local(repo, led["run_branch"])
+
+
 def _picked_up(repo):
-    """Parked here, but queued by a follow-on on another run branch: [(story, run_id, run_branch)]."""
+    """Parked here, but queued by a live follow-on on another run branch: [(story, run_id, run_branch)]."""
     cur, out = _current(repo), []
     for s, v in _release_here(repo).items():
         if v["status"] != "parked":
             continue
-        by = _newest([l for l in _ledgers(repo) if l.get("resumes") and l["run_branch"] != cur
+        by = _newest([l for l in _ledgers(repo) if _live(repo, l) and l["run_branch"] != cur
                       and any(q["id"] == s for q in l["queue"])])
         if by:
             out.append((s, by["run_id"], by["run_branch"]))
@@ -493,7 +504,7 @@ def _pointers(repo):
     cur, leds = _current(repo), _ledgers(repo)
 
     def picked_later(led, s):
-        return any(l.get("resumes") and _rid_key(l["run_id"]) > _rid_key(led["run_id"])
+        return any(_live(repo, l) and _rid_key(l["run_id"]) > _rid_key(led["run_id"])
                    and any(q["id"] == s for q in l["queue"]) for l in leds)
 
     by_branch = {}
@@ -1227,3 +1238,67 @@ def test_two_planned_runs_resume_starts_the_newest(tmp_path):
     _plan(tmp_path, ["A"], plan=True, run_id="2026-10-10-1", run="r1-autopilot-a")
     _plan(tmp_path, ["B"], plan=True, run_id="2026-10-10-2", run="r1-autopilot-b")
     assert _resume(tmp_path) == ("START planned run", "2026-10-10-2")
+
+
+def _follow_on_cut_from_main(repo):
+    """The run is merged into r1 and r1 into main, the run branch deleted. On main B is answered and
+    a follow-on cuts its run branch from main and commits its `running` ledger there (no story work
+    yet). Returns (run_id, run_branch)."""
+    _replay(repo, {"A": "done", "B": "parked"})
+    _git(repo, "merge", "-q", "--no-edit", RUN)
+    _git(repo, "checkout", "-q", "main"); _git(repo, "merge", "-q", "--no-edit", "r1")
+    _git(repo, "branch", "-qD", RUN)
+    assert _resume(repo) == ("follow-on", ["B"])
+    rid = "2026-10-11-1"
+    branch, new, _, source = _follow_on(repo, ["B"], rid)
+    assert (branch, new, source) == ("r1-autopilot-2026-10-11-1", True, "2026-10-10-1")
+    _git(repo, "checkout", "-qb", branch)
+    _write(repo, f".archflow/autopilot/{rid}.yaml",
+           {"run_id": rid, "status": "running", "resumes": source, "base_branch": "r1",
+            "run_branch": branch, "release": "r1",
+            "queue": [{"id": "B", "state": "pending", "branch": "t/B"}]})
+    d = _read(repo, REL); d["stories"]["B"] = {"status": "in_progress"}; _write(repo, REL, d)
+    assert _commit(repo, f"chore(autopilot): plan {rid}") == branch
+    return rid, branch
+
+
+def test_i45_follow_on_whose_run_branch_was_deleted_unmerged_and_aborted_does_not_hide_the_story(tmp_path):
+    """QA's 5b: the follow-on starts B on its WIP branch, then the user rejects it and deletes its run
+    branch unmerged. resume reports it gone, abort closes it on base_branch r1 as told. Back on main B
+    still reads `parked` and is asked again: a run that no longer exists never picked it up."""
+    repo = tmp_path
+    rid, branch = _follow_on_cut_from_main(repo)
+    _git(repo, "checkout", "-q", "t/B")                           # story work on the kept WIP branch
+    if _ok(repo, "merge", "-q", "--no-edit", branch) is False:
+        _git(repo, "checkout", branch, "--", REL, ".archflow/autopilot/")
+    (repo / "B.txt").write_text("B, second try")
+    _commit(repo, "B work in the follow-on")
+    _git(repo, "checkout", "-q", "main"); _git(repo, "branch", "-qD", branch)
+    assert _resume(repo) == ("gone", rid)
+    led = dict(_kept(repo)[rid][1], status="aborted")             # the copy the scan kept (on t/B)
+    _git(repo, "checkout", "-q", "r1")                            # abort: run_branch gone -> base_branch
+    _write(repo, f".archflow/autopilot/{rid}.yaml", led)
+    assert _commit(repo, "chore(autopilot): abort") == "r1"
+    assert _kept(repo)[rid][1]["status"] == "aborted"
+    _git(repo, "checkout", "-q", "main")
+    assert _read(repo, REL)["stories"]["B"]["status"] == "parked"
+    assert _picked_up(repo) == []
+    assert _resume(repo) == ("follow-on", ["B"])
+
+
+def test_i45_aborted_follow_on_whose_run_branch_still_exists_does_not_hide_the_story(tmp_path):
+    """The follow-on is aborted on its own run branch, which the user keeps. It delivered nothing, so on
+    main B is asked again. A live (finished) follow-on still hides it, as before."""
+    repo = tmp_path
+    rid, branch = _follow_on_cut_from_main(repo)
+    _ledger_set(repo, f".archflow/autopilot/{rid}.yaml", status="aborted")
+    assert _commit(repo, "chore(autopilot): abort") == branch
+    _git(repo, "checkout", "-q", "main")
+    assert _local(repo, branch) and _kept(repo)[rid][1]["status"] == "aborted"
+    assert _picked_up(repo) == []
+    assert _resume(repo) == ("follow-on", ["B"])
+    _git(repo, "checkout", "-q", branch)                          # contrast: the same follow-on, finished
+    _ledger_set(repo, f".archflow/autopilot/{rid}.yaml", status="finished")
+    _commit(repo, "finished instead")
+    _git(repo, "checkout", "-q", "main")
+    assert _picked_up(repo) == [("B", rid, branch)] and _resume(repo) == ("nothing",)

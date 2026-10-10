@@ -363,8 +363,11 @@ own `run_branch`, else the current checkout's. That is the run's **source branch
 **Parked stories** are the stories still `status: parked` in
 `.archflow/releases/{active_release}.yaml` in the current checkout, and nowhere else. `resume`
 never reads another branch's copy of that file, and never reads or edits another release file.
-Drop any that a follow-on whose `run_branch` is not the current branch has in its `queue[]`, and
-say `{story} was picked up by {run-id} on {run_branch}.`
+Drop any that a **live** follow-on whose `run_branch` is not the current branch has in its
+`queue[]`, and say `{story} was picked up by {run-id} on {run_branch}.` A follow-on is live when
+its `run_branch` still exists locally (`git show-ref --verify --quiet refs/heads/{run_branch}`)
+and its kept ledger is not `aborted`. One whose run branch is gone, or that was aborted, never
+delivered the story, so the story is asked as normal.
 
 The **current run** is the newest `running` ledger, else the newest `preflight` one (`abort`
 closes the same run); name any other unfinished ledger in one line. Choose by it, so that
@@ -445,8 +448,8 @@ closes the same run); name any other unfinished ledger in one line. Choose by it
 
 **Other run branches.** Rules 2 and 3 end by naming the branches that may hold parked work this
 checkout does not show. Take each kept `finished` or `aborted` ledger whose `release` is the
-`active_release` and whose `queue[]` has a `parked` item that no newer follow-on has in its
-`queue[]`. If its `run_branch` exists locally and is not the current branch, print one line per
+`active_release` and whose `queue[]` has a `parked` item that no newer live follow-on (as for
+*Parked stories*) has in its `queue[]`. If its `run_branch` exists locally and is not the current branch, print one line per
 branch, naming the newest such run on it: `Parked work from {run-id} may be on {run_branch}: check
 it out and run /archflow-autopilot resume there.` This is information only: nothing is read from
 those branches' release files or decided from them. With no parked story here and at least one
