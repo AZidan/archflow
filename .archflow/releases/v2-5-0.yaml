@@ -411,9 +411,9 @@ stories:
       - {text: "Telemetry's command allowlist (plugin/lib/telemetry.mjs) recognises help, if it keeps one", met: false}
       - {text: "CHANGELOG has an entry for the change", met: false}
     subtasks:
-      - {text: "Write plugin/commands/help.md (command list + how-Archflow-works primer)", completed: false}
-      - {text: "Trim plugin/commands/status.md: drop Step 2 command list, end with next step + pointer to help", completed: false}
-      - {text: "Add a test that help.md lists exactly the commands in plugin/commands/", completed: false}
-      - {text: "Add help to every command list (CLAUDE.md, README.md, instructions/reference/SKILL mirrored in .archflow/, docs guides, site)", completed: false}
-      - {text: "Regenerate adapters; build-adapters.mjs --check passes", completed: false}
-      - {text: "Telemetry allowlist + CHANGELOG entry", completed: false}
+      - {text: "Write plugin/commands/help.md (command list + how-Archflow-works primer)", completed: true}
+      - {text: "Trim plugin/commands/status.md: drop Step 2 command list, end with next step + pointer to help", completed: true}
+      - {text: "Add a test that help.md lists exactly the commands in plugin/commands/", completed: true}
+      - {text: "Add help to every command list (CLAUDE.md, README.md, instructions/reference/SKILL mirrored in .archflow/, docs guides, site)", completed: true}
+      - {text: "Regenerate adapters; build-adapters.mjs --check passes", completed: true}
+      - {text: "Telemetry allowlist + CHANGELOG entry", completed: true}
