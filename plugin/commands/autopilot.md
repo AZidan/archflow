@@ -114,7 +114,9 @@ Print the queue, the branch, the stop conditions, and the count of recorded deci
 On `--plan` there is no run branch yet. Commit the ledger alone on `base_branch` instead (same
 message), print the same summary, and stop, with the ledger still `preflight` on `base_branch`;
 `/archflow:autopilot resume` starts it later. This is the only ledger autopilot commits on
-`base_branch`.
+`base_branch`. When `resume` starts it, it sets that ledger `running` and commits it on
+`base_branch` once more, before the run branch is cut (rule 1), so the copy left there never reads
+`preflight` for a run that has started.
 
 ### Where autopilot commits
 
@@ -129,7 +131,9 @@ travels with the run: `resume` needs a clean tree, and its branch scan reads com
   time, so that copy differs from the run branch's only in this story. Once the run branch
   exists, the ledger is only ever written there.
 - **`base_branch`** for a `--plan` ledger only: it waits there, `preflight`, until `resume` starts
-  it, and Step 3 cuts the run branch from `base_branch` so the ledger goes with it. A run that
+  it. Then `resume` sets it `running` and commits it alone on `base_branch`, and only after that
+  does Step 3 cut the run branch from `base_branch`, so the ledger goes with it, already
+  `running`. That transition is the last ledger write on `base_branch`. A run that
   starts now has its run branch cut in Step 2c before its ledger is written, so no copy of its
   ledger is ever left on `base_branch`. Writes for a run whose run branch has been merged and
   deleted also land on `base_branch`. Only Step 2c may create `base_branch`, and only when it
@@ -158,7 +162,8 @@ git checkout {base-branch} && git pull origin {base-branch} 2>/dev/null || true
 git checkout -b {run-branch}
 git push -u origin {run-branch} 2>/dev/null || true
 ```
-Set the ledger `status: running` and commit it on the run branch.
+Set the ledger `status: running` and commit it on the run branch. A `--plan` run that `resume`
+started already carries `running` from `base_branch` (rule 1), so there is nothing to commit here.
 
 Then, for each `pending` story in queue order:
 
@@ -384,19 +389,32 @@ Choose between them, so that `resume` never starts unattended work the user did 
 1. **Continue an unfinished run.**
    - A **`preflight`** ledger is a planned run (`--plan`) that never started, so it has no run
      branch yet. **Refuse to start it if its `run_branch` already exists**, locally or on `origin`:
-     a planned run whose branch exists has already started somewhere, and this `preflight` copy is
-     stale. Check fetch-free first, `git show-ref --verify --quiet refs/heads/{run_branch}` and
+     a `preflight` ledger whose run branch exists is not a plan waiting to start (a run cut that
+     branch, perhaps one that died between Step 2c and Step 3), and starting it would build on a
+     branch whose state it does not know. Check fetch-free first, `git show-ref --verify --quiet refs/heads/{run_branch}` and
      `git show-ref --verify --quiet refs/remotes/origin/{run_branch}`, then, if an `origin` remote
      is configured, `git ls-remote --exit-code --heads origin {run_branch}` (an unreachable remote
      leaves the two ref checks standing). On any hit, write nothing, tell the user which ref exists
-     (`{run_branch} already exists as {ref}: {run-id} has already started, not starting it
-     again.`), and stop. Otherwise check out `base_branch` first, where Step 2c committed the
-     ledger, and go to Step 3, which cuts the run branch from it, sets the ledger `running` there,
-     and runs the queue.
-   - A **`running`** ledger: verify the run branch still exists and its HEAD matches the ledger;
-     if it is missing or diverged, report and stop rather than building on an unknown base. Check
-     it out, re-ask (via `AskUserQuestion`) only questions for stories that were parked on an
-     unanswered decision, then continue the queue.
+     and how to clear it (`{run_branch} already exists as {ref}, so {run-id} cannot start from
+     its plan. Close that run with /archflow:autopilot abort before starting again.`), and stop.
+     Otherwise check out `base_branch` first, where Step 2c committed the ledger, set the ledger
+     `status: running`, and commit it alone on `base_branch` (`chore(autopilot): start {run-id}`)
+     **before** Step 3 cuts the run branch. From then on the copy on `base_branch` reads
+     `running`, so if the run branch is later deleted, locally and on `origin`, the `running`
+     bullet below never starts the queue again. Then go to Step 3, which cuts the
+     run branch from `base_branch` (the ledger comes along, `running`) and runs the queue.
+   - A **`running`** ledger: verify the run branch still exists locally and its HEAD matches the
+     ledger; if it has diverged, report and stop rather than building on an unknown base. If it is
+     not a local branch, write nothing and run the same three checks as the `preflight` guard
+     above. On a hit, tell the user (`{run_branch} exists as {ref} but not locally. Check it out
+     and run /archflow:autopilot resume again.`) and stop: that branch holds the run's real
+     ledger. With no hit, the run branch is gone (discarded, or merged and deleted), so this
+     `running` copy is all that is left of a run that cannot be continued: never continue or
+     restart it. Say so in one line (`{run-id}'s run branch {run_branch} no longer exists, not
+     continuing it; /archflow:autopilot abort closes it.`), then make the choice above again
+     without it; with nothing else to resume, that is rule 3.
+     Otherwise (local, HEAD matching) check it out, re-ask (via `AskUserQuestion`) only questions
+     for stories that were parked on an unanswered decision, then continue the queue.
    Do not re-run the whole interview in either case.
 2. **Pick up parked stories from a finished or aborted run.** That ledger is a record of what
    happened: never reopen it, never change its `status`, never edit it. An aborted run stays

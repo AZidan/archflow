@@ -437,9 +437,12 @@ def _resume(repo):
     preflight = [led for b, led in kept.values() if led["status"] == "preflight"]
     if running:
         led = running[0]
-        if not _ok(repo, "show-ref", "--verify", "--quiet", f"refs/heads/{led['run_branch']}"):
-            return ("stop: run branch missing", led["run_id"])
-        return ("continue", led["run_id"])
+        if _ok(repo, "show-ref", "--verify", "--quiet", f"refs/heads/{led['run_branch']}"):
+            return ("continue", led["run_id"])
+        hit = _guard_hit(repo, led["run_branch"])                # not local: same checks as the guard
+        if hit:
+            return ("refuse", led["run_id"], hit)
+        # gone everywhere: never continued; the choice is made again without it (I-23)
     if preflight and parked:
         return ("ask", preflight[0]["run_id"], parked)
     if preflight:
@@ -491,7 +494,8 @@ def _step3_and_run(repo, outcomes, abort_after=None):
         _git(repo, "checkout", "-q", "r1"); _git(repo, "checkout", "-qb", RUN)
     else:
         _git(repo, "checkout", "-q", RUN)
-    _ledger_set(repo, status="running"); assert _commit(repo, "running") == RUN
+    if _read(repo, LED)["status"] != "running":                  # a resumed --plan run is already
+        _ledger_set(repo, status="running"); assert _commit(repo, "running") == RUN
 
     def story(s, status, **extra):
         d = _read(repo, REL); d["stories"][s] = {"status": status, **extra}; _write(repo, REL, d)
@@ -534,6 +538,9 @@ def _replay(repo, outcomes, plan=False, abort_after=None):
     _plan(repo, list(outcomes), plan=plan)
     if plan:
         assert _resume(repo) == ("START planned run", "2026-10-10-1")
+        # Rule 1 (I-23 fix): `running`, committed alone on base_branch, before Step 3 cuts the run branch.
+        _git(repo, "checkout", "-q", "r1")
+        _ledger_set(repo, status="running"); assert _commit(repo, "chore(autopilot): start") == "r1"
     _step3_and_run(repo, outcomes, abort_after=abort_after)
 
 
@@ -634,9 +641,9 @@ def test_an_aborted_run_with_a_parked_story_hands_it_to_rule_2(tmp_path):
 
 def test_planned_run_lifecycle_with_its_run_branch_present(tmp_path):
     """--plan on base_branch, started by resume (guard clear), finished: resume has nothing, because
-    the finished copy on the run branch outranks the preflight copy left on base_branch."""
+    the finished copy on the run branch outranks the running copy left on base_branch."""
     _replay(tmp_path, {"A": "done"}, plan=True)
-    assert yaml.safe_load(_git(tmp_path, "show", f"r1:{LED}"))["status"] == "preflight"
+    assert yaml.safe_load(_git(tmp_path, "show", f"r1:{LED}"))["status"] == "running"
     assert _resume(tmp_path) == ("nothing",)
 
 
@@ -665,8 +672,6 @@ def test_planned_run_merged_on_origin_and_pulled_is_not_restarted(tmp_path):
     assert _resume(repo) == ("nothing",)
 
 
-@pytest.mark.xfail(strict=True, reason="I-23: a started --plan run's preflight copy on base_branch "
-                   "restarts the queue once its run branch is gone locally and on origin")
 @pytest.mark.parametrize("how", ["discarded", "merged-on-origin-not-pulled", "aborted-discarded"])
 def test_started_planned_run_is_not_restarted_once_its_run_branch_is_gone_everywhere(tmp_path, how):
     """g1. The run finished (nothing parked), or was aborted. Its branch is then deleted locally and on origin
