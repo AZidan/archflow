@@ -473,7 +473,7 @@ stories:
         severity: minor
         location: "plugin/commands/help.md:65"
         report: "docs/acceptance-reports/S2-06-review.md"
-        status: open
+        status: fixed
 
   - id: S5-02
     title: "Resume parked work after an autopilot run finishes"

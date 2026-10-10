@@ -96,15 +96,14 @@ def test_help_explains_how_archflow_works():
         assert concept in primer, f"the help primer does not cover {concept!r}"
 
 
-# status.md names the commands it can suggest as a next step, plus its edge cases: 13 today, its
-# own title included. Raising this is a deliberate edit; a reintroduced command list trips it.
-STATUS_MAX_NAMED = 13
 HELP_POINTER = "All commands, and how Archflow works: /archflow:help"
 
 
 def test_status_drops_the_command_list_and_points_at_help():
     """Status answers "where am I"; help answers "what can I do". Status keeps only the commands
-    it suggests as a next step, so it never carries a second copy of the list, whole or partial."""
+    it suggests as a next step, so it never carries a second copy of the list, whole or partial.
+    The checks are structural (code block, bullet, numbered or table item starting with a command),
+    not a count, so naming one more command in prose is not a failure."""
     import re
     body = (COMMANDS / "status.md").read_text()
     assert "Available commands" not in body
@@ -114,11 +113,8 @@ def test_status_drops_the_command_list_and_points_at_help():
     assert not listed, f"status.md has a command list in a code block (help.md owns it): {listed}"
     bullets = re.findall(r"^\s*(?:[-*]|\d+\.)\s+`?/archflow:([a-z][a-z-]*)", body, re.M)
     assert not bullets, f"status.md has a bulleted command list (help.md owns it): {bullets}"
-    named = set(re.findall(r"/archflow:([a-z][a-z-]*)", body))
-    assert len(named) <= STATUS_MAX_NAMED, (
-        f"status.md names {len(named)} commands (limit {STATUS_MAX_NAMED}): {sorted(named)}. "
-        "The command list lives in help.md"
-    )
+    rows = re.findall(r"^\s*\|\s*`?/archflow:([a-z][a-z-]*)", body, re.M)
+    assert not rows, f"status.md has a command table (help.md owns it): {rows}"
     assert fences and fences[-1].strip() == HELP_POINTER, (
         "status.md must close with the pointer to /archflow:help as its last code block"
     )

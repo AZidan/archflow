@@ -61,7 +61,7 @@ Workspace and settings
 Phases     The process loop. 1 Strategy → 2 Design → 2.25 Hi-fi design → 2.5 API
            contract → 3 Build → 4 Quality → 5 Launch → 6 Enhancement. Each phase has
            its own instructions (.archflow/phases/) and its own specialist agents.
-           2.25 and 2.5 are skipped when they do not apply.
+           2, 2.25 and 2.5 are skipped when they do not apply (no UI, no API).
 
 Releases   The product loop, around the phases. A release is a shippable increment
            holding stories. Unscheduled ideas wait in the backlog as stubs. At most
