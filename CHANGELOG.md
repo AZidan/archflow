@@ -46,38 +46,23 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 ### Fixed
 
-- Parked stories left by a finished autopilot run had no way back. The end-of-run report said
-  "answer the parked questions, then `/archflow:autopilot resume`", and `/archflow:status` said the
-  same, but `resume` only read a run that was still `preflight` or `running`, and a run that empties
-  its queue is `finished`. `resume` now falls back to the newest finished run that still has parked
-  stories: it asks their questions and builds the answered ones in a follow-on run, linked by a new
-  `resumes` field in the ledger, on the same run branch. The finished ledger is left as it was. The
-  same applies to stories parked by a run that was then aborted: the aborted ledger stays `aborted`
-  and its queue is never continued, but its still-parked stories can be picked up. A run with
-  nothing still parked is never restarted. Only runs from the active release are considered, so
-  autopilot never edits a shipped or archived release file, and `resume` checks the usual
-  prerequisites (clean tree, phase 3 or later) before writing anything. When a planned `--plan` run
-  that never started is also waiting, `resume` asks which one to pick up instead of silently
-  starting the planned run. If an interrupted run is waiting, `resume` continues it first and says
-  the parked questions wait for the next `resume`. `resume` also finds a run whose ledger is only
-  on its run branch, for a user who switched back without merging, and checks out the run branch
-  before writing anything. A `blocks_release` waiver given for a question left unanswered is now
-  recorded instead of dropped. The report's `Next:` line, `/archflow:status` and the landing page
-  now describe that path.
+- Parked stories left by a finished autopilot run had no way back. The end-of-run report and
+  `/archflow:status` said to answer them and run `/archflow:autopilot resume`, but `resume` only
+  read a run still `preflight` or `running`, and a run that empties its queue is `finished`.
+  `resume` now also picks up the still-parked stories of the newest finished or aborted run in the
+  active release, from any local branch: it asks their questions, records any `blocks_release`
+  waiver, and builds the answered ones in a follow-on run linked by a new `resumes` ledger field.
+  The old ledger is left as it was, and a run with nothing still parked is never restarted. If a
+  `--plan` run is also waiting, `resume` asks which one to pick up. The report's `Next:` line,
+  `/archflow:status` and the landing page now describe that path.
 - `/archflow:autopilot abort` printed the end-of-run report, whose last step set the run
   `finished`, so an aborted run did not stay `aborted`. `abort` and `report` now skip that write.
-- Autopilot left three ledger writes uncommitted: the closing `finished`, `abort`'s `aborted`, and
-  the `preflight` ledger written by `--plan`. `resume` needs a clean tree, so following the report's
-  `Next:` line stopped on the run's own change, and setting it aside left the committed ledger at
-  `running`, which `resume` then continued, even for an aborted run. Each of these writes is now
-  committed on the branch the ledger lives on.
-- `/archflow:autopilot resume` looked at other branches only when the current checkout had nothing
-  to resume, so a `--plan` ledger there could hide parked stories on an unmerged run branch and
-  start the planned run unasked. It now always reads every local branch, keeps one copy of each run,
-  and then chooses. If every answered or waived story turns out to be resolved already, it now stops
-  without writing anything.
 - `/archflow:autopilot resume` on a run planned with `--plan` stopped because the run branch did
   not exist yet. It now creates the branch and starts the planned run.
+- Autopilot left its ledger writes uncommitted (the `--plan` ledger, the closing `finished`,
+  `abort`'s `aborted`), so `resume`, which needs a clean tree, stopped on the run's own change.
+  Every ledger and release-file write is now committed, on the run branch or the base branch,
+  never on `main`, and a parked story's state is carried onto the run branch where `resume` looks.
 - Gemini commands that quote the plugin path, such as `/archflow:doctor`, pointed at
   `"~/.gemini/..."`, which the shell does not expand. They now use `$HOME`.
 - Gemini commands, agents and skills that tell the model to follow another command, such as

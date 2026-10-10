@@ -247,14 +247,6 @@ def test_terminal_ledger_writes_are_committed():
     assert re.search(r"--plan`.{0,200}[Cc]ommit", plan), plan
 
 
-def test_branch_scan_does_not_stop_at_the_first_checkout_with_a_candidate():
-    """I-13: 'If it holds no candidate, scan ... every local branch' lets a preflight ledger on
-    the current branch hide a finished run's parked stories on its run branch, so the
-    preflight-vs-parked question is never asked and the planned run starts (regresses I-3)."""
-    rule = re.sub(r"\s+", " ", resume_rule())
-    assert "If it holds no candidate, scan" not in rule
-
-
 def test_follow_on_stops_when_the_reread_drops_every_answer():
     rule = re.sub(r"\s+", " ", resume_rule())
     m = re.search(r"drop from the answers any story no longer `status: parked`\.(.{0,250})", rule)
@@ -270,7 +262,7 @@ def test_terminal_ledger_commits_name_the_branch_they_land_on():
     plan = re.sub(r"\s+", " ", AUTOPILOT.read_text().split("### 2c.", 1)[1].split("---", 1)[0])
     assert "ledger alone on the run branch" in closing, closing
     assert "ledger alone on the branch it lives on" in abort and "run branch" in abort, abort
-    assert re.search(r"--plan`.{0,120}ledger alone on the current branch", plan), plan
+    assert "Commit the ledger alone on `base_branch`" in plan and "ledger still `preflight` on `base_branch`" in plan, plan
 
 
 def test_branch_scan_dedups_one_run_across_branches():
@@ -298,10 +290,9 @@ def test_envelope_must_not_rule_admits_the_resume_waiver():
 
 
 # --------------------------------------------------------------------------
-# Re-run after fix pass 3 (96ea739): I-15 (strict xfail until fixed)
+# Re-run after fix pass 3 (96ea739): I-15 (fixed in fix pass 4)
 # --------------------------------------------------------------------------
 
-@pytest.mark.xfail(strict=True, reason="I-15: a committed preflight ledger does not reach base_branch")
 def test_planned_run_ledger_reaches_the_run_branch():
     """I-15: --plan now commits the preflight ledger on the CURRENT branch, but Step 3 cuts the run
     branch from `base_branch`. When the two differ (e.g. planned on main, base = release slug), the
@@ -312,3 +303,57 @@ def test_planned_run_ledger_reaches_the_run_branch():
     m = re.search(r"A \*\*`preflight`\*\* ledger is a planned run(.*?)A \*\*`running`\*\*", rule)
     assert m, "rule 1 lost its preflight bullet"
     assert re.search(r"source branch|planned on|base_branch`? (?:first|before)", m.group(1)), m.group(1)
+
+
+# --------------------------------------------------------------------------
+# Fix pass 4: one "where autopilot commits" rule (I-15..I-18)
+# --------------------------------------------------------------------------
+
+def commit_rule():
+    body = AUTOPILOT.read_text()
+    m = re.search(r"^### Where autopilot commits\n(.*?)(?=^---|^### )", body, re.S | re.M)
+    assert m, "autopilot.md lost its 'Where autopilot commits' rule"
+    return re.sub(r"\s+", " ", m.group(1))
+
+
+def test_commit_rule_names_run_branch_then_base_branch_and_never_main():
+    rule = commit_rule()
+    assert rule.index("**The run branch**") < rule.index("**`base_branch`**") < rule.index("**Never `main`.**")
+    assert "HALT before writing anything" in rule
+
+
+def test_step_2c_commits_every_new_ledger_on_base_branch_before_the_run_branch_exists():
+    """I-15 and the normal-run carry-over gap: the first ledger commit lands where Step 3 cuts from."""
+    plan = re.sub(r"\s+", " ", AUTOPILOT.read_text().split("### 2c.", 1)[1].split("### Where", 1)[0])
+    assert plan.index("Check out `base_branch`") < plan.index("create `.archflow/autopilot/{run-id}.yaml`")
+    step3 = re.sub(r"\s+", " ", AUTOPILOT.read_text().split("## Step 3", 1)[1].split("Then, for each", 1)[0])
+    assert "`status: running` and commit it on the run branch" in step3
+
+
+def test_parked_state_is_carried_onto_the_run_branch():
+    """I-16: a parked block committed on the WIP task branch must reach the run branch, where
+    resume's scan reads the release file."""
+    rule = commit_rule()
+    assert "git checkout {task-branch} -- .archflow/releases/{active_release}.yaml" in rule
+    parking = re.sub(r"\s+", " ", AUTOPILOT.read_text().split("### Parking", 1)[1].split("### Stop", 1)[0])
+    assert "carry the release file onto the run branch" in parking
+    assert parking.count("carry the release file onto the run branch") == 2, "park and fail both carry"
+
+
+def test_waiver_only_path_never_commits_on_main():
+    """I-17: after a merge the source branch can be main; the waiver commits on run_branch or
+    base_branch only."""
+    rule = re.sub(r"\s+", " ", resume_rule())
+    m = re.search(r"Nothing answered, some waived\*\* → (.*?)(?= - \*\*)", rule)
+    assert m
+    branch = m.group(1)
+    assert "`run_branch`, else its `base_branch`" in branch and "never `main`" in branch
+    assert "source branch if it is not the current one" not in branch
+
+
+def test_abort_picks_the_current_run_by_the_resume_scan_and_checks_out_its_branch():
+    """I-18."""
+    abort = re.sub(r"\s+", " ", subcommand("abort")).split("print Step 4", 1)[0]
+    assert "branch scan" in abort and "one-copy-per-run" in abort
+    assert abort.index("Check out the branch that ledger lives on") < abort.index("Set `status: aborted`")
+    assert "Nothing to abort." in abort
