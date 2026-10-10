@@ -67,12 +67,6 @@ epics:
         status: backlog
         target: studio
         description: "Split the ~5.6 MB Studio bundle out of the default plugin and fetch it on first /archflow:studio (proposed)."
-      - id: S6-04
-        title: "Studio on non-Claude hosts"
-        priority: Medium
-        status: backlog
-        target: studio
-        description: "Read-only board over .archflow/ first, for hosts that cannot fork a Claude session (proposed; ADR 001 open question)."
   - id: E7
     stories:
       - id: S7-06

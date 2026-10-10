@@ -474,3 +474,63 @@ stories:
         location: "plugin/commands/help.md:65"
         report: "docs/acceptance-reports/S2-06-review.md"
         status: open
+
+  - id: S5-02
+    title: "Resume parked work after an autopilot run finishes"
+    priority: High
+    status: spec_ready
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: >-
+      Added 2026-10-10 (user: fix in this release), found by S2-06 QA. `/archflow:autopilot resume`
+      only reads the newest ledger whose status is preflight or running (autopilot.md:284), but a run
+      that empties its queue is set `finished` (autopilot.md:253) while its end-of-run report still
+      says "answer the parked questions, then /archflow:autopilot resume" (autopilot.md:245). Parked
+      stories left by a finished run therefore have no sanctioned way back. Status (S2-06, case 3)
+      gives the same advice, so it must stay true after this change.
+    acceptance_criteria:
+      - {text: "After a run finishes with parked stories, there is one documented command that picks them up once their questions are answered", met: false}
+      - {text: "The end-of-run report's 'Next:' line names a command that actually works for a finished run", met: false}
+      - {text: "/archflow:status's parked-story advice matches the real resume path", met: false}
+      - {text: "A run with no parked stories is not resurrected by resume; aborted runs stay aborted", met: false}
+      - {text: "Tests cover resume on a finished run with parked stories, one without, and an aborted run", met: false}
+      - {text: "CHANGELOG has a Fixed entry", met: false}
+    subtasks:
+      - {text: "Decide and document how resume treats a finished run with parked stories (autopilot.md)", completed: false}
+      - {text: "Fix the end-of-run report's Next line", completed: false}
+      - {text: "Align status.md's parked case (plugin/commands/status.md) and regenerate adapters", completed: false}
+      - {text: "Tests + CHANGELOG", completed: false}
+
+  - id: S6-04
+    title: "Studio on non-Claude hosts (forward mode)"
+    priority: High
+    status: spec_ready
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    pulled_from: backlog
+    description: >-
+      Pulled from backlog 2026-10-10 and re-groomed: the stub's "read-only board first" plan is
+      superseded. DECISIONS (user, 2026-10-10): (1) the uncommitted rebuilt Studio bundle in the working
+      tree (plugin/server/server.mjs + plugin/dist/** + the hooks.json SessionStart reorder) is the
+      forward-mode build to ship; it supports Codex, Gemini, Copilot, Cursor and OpenCode. (2) The
+      adapters ship the server bundle themselves (no new npx subcommand). Today everything committed
+      says Studio is Claude Code only: build-adapters.mjs skips `studio` for every host, studio.md says
+      forwarding "is not built yet" and launches from the Claude plugin cache path, CHANGELOG 2.4.0
+      says "stays Claude Code only". Watch size: the bundle is ~6.5 MB (server 2.5 MB, dist 4 MB);
+      decide how adapters carry it without committing six full copies if a shared or install-time copy
+      works (the npx installer copies adapters/<host>, see scripts/archflow.mjs and package.json files).
+    acceptance_criteria:
+      - {text: "The rebuilt forward-mode bundle (plugin/server/server.mjs, plugin/dist/**, hooks.json) is committed", met: false}
+      - {text: "Every adapter ships /archflow:studio and the server bundle it needs; build-adapters.mjs no longer skips studio", met: false}
+      - {text: "/archflow:studio starts, reports status and stops Studio on a non-Claude host, launching the server from the adapter's own copy", met: false}
+      - {text: "studio.md describes forward mode and per-host behaviour accurately; no 'not built yet' or Claude-only claims remain", met: false}
+      - {text: "help, SKILL.md and reference.md list studio on every host, consistent with what each adapter ships", met: false}
+      - {text: "npx archflow install copies the bundle for each host; the npm package stays a sensible size", met: false}
+      - {text: "build-adapters.mjs --check passes and tests cover the shipped bundle per host", met: false}
+      - {text: "CHANGELOG supersedes the 2.4.0 'Claude Code only' line; the site's host claims match", met: false}
+    subtasks:
+      - {text: "Commit the rebuilt bundle and hooks.json", completed: false}
+      - {text: "Ship studio + server bundle in every adapter (build-adapters.mjs, installer)", completed: false}
+      - {text: "Rewrite studio.md for forward mode and host-neutral launch paths", completed: false}
+      - {text: "Regenerate adapters; tests for per-host studio", completed: false}
+      - {text: "CHANGELOG, README/site host claims", completed: false}
