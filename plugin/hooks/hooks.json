@@ -21,22 +21,22 @@
         ]
       },
       {
-        "matcher": "startup|resume|clear|compact",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/studio-session-context.mjs\"",
-            "timeout": 5
-          }
-        ]
-      },
-      {
         "matcher": "startup|resume|clear",
         "hooks": [
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/telemetry.mjs\"",
             "timeout": 3
+          }
+        ]
+      },
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/studio-session-context.mjs\"",
+            "timeout": 5
           }
         ]
       }
