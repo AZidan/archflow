@@ -608,6 +608,34 @@ stories:
         location: "plugin/commands/autopilot.md:107"
         report: "docs/qa-reports/S5-02-qa.md"
         status: open
+      - id: I-16
+        summary: "Resume's scan and rule-2 re-read assume a story's parked block is committed on the run branch, but Parking/Step 3 never say so; committed on the WIP task branch, resume finds nothing to resume"
+        found_by: code-reviewer
+        severity: minor
+        location: "plugin/commands/autopilot.md:317"
+        report: "docs/qa-reports/S5-02-code-review.md"
+        status: open
+      - id: I-17
+        summary: "Rule 2's waiver-only path commits the release file on the source branch, which after a merge (or on a tie, the current checkout) can be main"
+        found_by: code-reviewer
+        severity: minor
+        location: "plugin/commands/autopilot.md:366"
+        report: "docs/qa-reports/S5-02-code-review.md"
+        status: open
+      - id: I-18
+        summary: "abort commits 'on the branch it lives on' but never says which ledger is the current run (no branch scan like resume) or that it checks that branch out first"
+        found_by: code-reviewer
+        severity: minor
+        location: "plugin/commands/autopilot.md:397"
+        report: "docs/qa-reports/S5-02-code-review.md"
+        status: open
+      - id: I-19
+        summary: "CHANGELOG lists a never-shipped intermediate regression (cross-branch scan from fix pass 2) as its own Fixed entry, and the first S5-02 entry has grown to 17 lines"
+        found_by: code-reviewer
+        severity: minor
+        location: "CHANGELOG.md:74"
+        report: "docs/qa-reports/S5-02-code-review.md"
+        status: open
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"

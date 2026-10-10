@@ -148,3 +148,134 @@ run (`resumes`); the ledger itself is never reopened." to both.
 4. Fix I-9 and I-10 while in the files.
 5. File (b) as its own item: `resume` on a `preflight` ledger dead-ends at the branch check.
 6. I-5 remains open from QA.
+
+---
+
+## Re-check after fix passes 2-3
+
+**PASS.** Scope: `git diff 7864959..HEAD` (6ad86a4, 96ea739). Every acceptance criterion holds as
+written. I-6 is resolved, and so are I-7 through I-11. Four new findings, all minor. I-15 (qa) is
+still open and is not repeated here.
+
+### Checks run
+
+- `pytest tests/test_autopilot_resume.py tests/test_autopilot_resume_qa.py`: 54 passed, 1 xfailed
+  (strict xfail for I-15). Full suite: 817 passed, 1 xfailed.
+- `node scripts/build-adapters.mjs --check`: all six adapters up to date. The adapter copies of
+  `autopilot-schema.yaml` differ from the plugin copy only by the host translations (command
+  spelling, the `AskUserQuestion` wording on Gemini).
+- `.archflow/schemas/autopilot-schema.yaml` and `plugin/skills/archflow/schemas/autopilot-schema.yaml`
+  are identical.
+- `plugin/scripts/validate_archflow.py`: 11 state files valid.
+- No `/archflow <sub>` form in the story diff.
+- Stack (`project-settings.yaml`): javascript + pytest. Nothing was installed.
+
+### Verification of earlier findings
+
+| Id | Verdict | Evidence |
+|----|---------|----------|
+| I-6 (blocking) | Resolved | Step 4 (`autopilot.md:264-269`) now names `abort` and `report` as callers that skip the closing write. `abort` (`:397-400`) commits `aborted` first, then prints Step 4 with that write skipped. `report` (`:394-395`) says the same. An aborted run stays `aborted`. |
+| I-7 | Resolved | "Where the scan reads" (`:317-331`) reads every local branch with `for-each-ref` / `ls-tree` / `show` and checks nothing out. When answers were given, rule 2 checks out the run branch (or `base_branch`) before any write (`:371-375`). |
+| I-8 | Resolved | Rule 2 now separates "nothing answered and nothing waived" from "nothing answered, some waived" (`:364-370`). A waiver is offered only for unanswered stories, which is the only case where it applies, and it is recorded. |
+| I-9 | Resolved | The vacuous test is now a positive assertion on the `Next:` line, Step 4's aborted clause, and rule 2's `finished` or `aborted`. Earlier tests now use key terms or whitespace-normalised regexes, not exact line breaks. |
+| I-10 | Resolved | The `finished` and `aborted` descriptions in both schema mirrors now say the ledger is never reopened and that still-parked stories come back in a follow-on run. |
+| I-11 | Resolved | Rule 1 (`:345-353`) splits `preflight` (no run branch yet, set `running`, go to Step 3) from `running` (verify the branch). The remaining gap, where the committed preflight ledger lives, is I-15. |
+
+### New material: correctness
+
+- **Terminal commits (I-12 fix).** The finish, abort and plan writes each commit the ledger alone,
+  with a named message and a named branch. This is correct for finish. abort is I-18 below. --plan is I-15.
+- **Cross-branch scan and de-dup.** Sound. "Most advanced status" correctly lets a merged or run-branch
+  `finished` copy outrank a stale `running` copy. Reading the release file from the same source
+  branch keeps ledger and story state consistent. The scan rests on one claim the rest of the file
+  does not back up (I-16).
+- **Rule 2 re-read and stop paths (I-14 fix).** Both the waiver-only path and the answered path
+  re-read on the branch they will write to, and stop without writing when nothing is still parked.
+  Correct. The waiver-only path can commit on `main` (I-17).
+- **MAY / MUST NOT.** These now agree. MAY allows recording the waiver the user gives in person.
+  MUST NOT says "any other story (beyond recording that waiver)". The Parked-stories section says
+  "never by autopilot" and means "never decided by autopilot". That is consistent, since autopilot
+  only records the waiver.
+
+### New material: clarity
+
+The `resume` section is now about 95 lines and is still followable. The order (prerequisites,
+gather, de-dup, choose, rules 1-3) matches the order an agent has to work in, and each rule-2 case
+starts with a bold condition. Two passages could be tighter. Neither is filed as an issue:
+- The candidate definition (`:310-313`) says to read story state from
+  `.archflow/releases/{active_release}.yaml` "only", which reads like the working-tree file. Eight
+  lines later the scan says to read it from the source branch. Adding "on the run's source branch
+  (below)" at `:313` would remove the double reading.
+- `:109-110` ("Every ledger status write is committed as it is made") is stated generally. On a
+  normal run, the ledger is first written in 2c on the current branch, and Step 3 then checks out
+  `base_branch`. The same carry-over gap as I-15 applies whenever those two branches differ. Fix it
+  together with I-15 rather than as a separate issue.
+
+### New findings
+
+**I-16 (minor): the scan assumes the `parked` state is committed on the run branch, but Parking
+never says so.**
+`plugin/commands/autopilot.md:317` (with `:192-197`, `:130-131`, `:153`). "Where the scan reads"
+states that "A run commits its ledger and its stories' `parked` state on the run branch". The
+candidate predicate (`:312`) and rule 2's re-read (`:375`) both depend on that. The steps that write
+the state do not say where to commit it:
+- Step 3.2 sets `in_progress` and commits after creating the task branch.
+- Parking step 3 sets `parked` without naming a branch.
+- Step 3.7 commits "the ledger and the release file with the story's work".
+
+A natural reading of these steps puts the `parked` block on the unmerged WIP task branch. In that
+case the run branch shows the story as `ready` or `in_progress`, and `resume` reports
+`Nothing to resume.` (or "resolved since"). That is the dead end this story closes. This ambiguity
+existed before the story, but the story's resume path now depends on it. Suggested fix: Parking
+steps 3-4 should say to switch back to the run branch, then commit the `parked` block and the ledger
+entry there.
+
+**I-17 (minor): the waiver-only path can commit straight to `main`.**
+`plugin/commands/autopilot.md:366-370`. "Nothing answered, some waived" checks out the source branch
+and commits the release file there. Once a run is merged and its run branch deleted, the source
+branch is any branch that holds the ledger, and on a tie it is the current checkout. That can be
+`main`. Every other autopilot write goes to a run, task or base branch. Suggested fix: if the source
+branch is `main` (or the default branch), record the waiver on `base_branch` instead, or stop and
+tell the user.
+
+**I-18 (minor): `abort` does not say which ledger it targets, or that it checks out the branch it
+commits on.**
+`plugin/commands/autopilot.md:397-400`. The I-12 fix made `abort` commit "on the branch it lives on
+(the run branch ...)". It does not say:
+- which ledger counts as "the current run" when the run's ledger exists only on the run branch, as
+  happens for a user back on `base_branch`. `resume` scans every branch, but `abort` does not.
+- that it checks out that branch first, under the clean-tree prerequisite.
+
+Run from `base_branch`, `abort` finds nothing, or a stale `running` copy, or commits on the wrong
+branch. Suggested fix: "`abort` finds the run like `resume` (newest `preflight`/`running` after the
+branch scan and de-dup), checks out its branch, then writes and commits."
+
+**I-19 (minor): the CHANGELOG has an entry for a regression that never shipped, and the first entry
+has grown to 17 lines.**
+`CHANGELOG.md:74-78`. The entry that starts "`resume` looked at other branches only when the current
+checkout had nothing to resume" describes behaviour added in fix pass 2 of this same unreleased story.
+No user ever had it. Part of the "three ledger writes uncommitted" entry (`:69-73`), the stop at the
+report's `Next:` line, is also new in this story. The abort entry and the `--plan` branch-check
+entry fix behaviour that did ship and should stay. Suggested fix: delete the cross-branch entry, fold
+"always reads every local branch" into the first entry's sentence about branches, and trim the first
+entry to the user-visible change. A user does not need every sub-case listed.
+
+### Test quality
+
+The added tests are string and regex matches on markdown, which is the only practical option here.
+They are now keyed on terms (`Keep one copy per \`run_id\``, `ledger alone on the run branch`) and
+section-scoped regexes rather than whole sentences, so they are less brittle than before. One is
+negative-only: `test_branch_scan_does_not_stop_at_the_first_checkout_with_a_candidate`
+(`tests/test_autopilot_resume_qa.py:250`) passes on any text that lacks one phrase. This is the same
+pattern as I-9, but `test_branch_scan_dedups_one_run_across_branches` asserts the positive ("always,
+from ... every local branch"), so nothing is left uncovered. It can be deleted. The real-behaviour
+tests (validator and guard hook on fixture ledgers) are unchanged and still cover the finished,
+no-parked and aborted cases from the AC.
+
+### Recommendations
+
+1. I-16 before shipping v2-5-0, because it sits on the AC-1 path: say where Parking commits the
+   `parked` block.
+2. I-15 together with the `:109-110` generalisation: one rule for where the first ledger commit lands.
+3. I-17 and I-18: small wording fixes in rule 2 and `abort`.
+4. I-19: fold the CHANGELOG.
