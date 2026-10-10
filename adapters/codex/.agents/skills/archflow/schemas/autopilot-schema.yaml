@@ -60,14 +60,19 @@ run:
       description: "Slug of the release the queued stories belong to."
       example: "checkout-redesign"
     resumes:
-      type: string
+      type: [array, string]
       required: false
       pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$"
+      items:
+        type: string
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$"
       description: >
-        Set on a follow-on run that `$archflow-autopilot resume` started to pick up a
-        FINISHED or ABORTED run's parked stories: the run id of that run. Its ledger is
-        never reopened and keeps its status; it stays a record, and this field links the two.
-      example: "2026-08-24-1"
+        Set on a follow-on run that `$archflow-autopilot resume` started to pick up parked
+        stories left by FINISHED or ABORTED runs: the run ids of the runs that parked the
+        stories it queues (each story's source run), as a list, since one follow-on can pick up
+        stories from several runs. A single run id string is still accepted. Those ledgers are
+        never reopened and keep their status; they stay records, and this field links them.
+      example: ["2026-08-24-1", "2026-08-25-2"]
     mode_at_start:
       type: string
       enum: [quick, full]
