@@ -1,0 +1,6 @@
+status case 3 would list parked: ['B', 'D']
+harness _scan (all ledgers): ['B', 'D']
+resume #1: doc-literal candidate ledger + questions asked = ('2026-10-09-1', ['D'])
+resume #2: doc-literal candidate ledger + questions asked = ('2026-10-09-1', ['D'])
+resume #3: doc-literal candidate ledger + questions asked = ('2026-10-09-1', ['D'])
+B ever asked: False

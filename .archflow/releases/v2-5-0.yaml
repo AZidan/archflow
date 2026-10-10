@@ -671,6 +671,34 @@ stories:
         location: "plugin/commands/autopilot.md:414"
         report: "docs/qa-reports/S5-02-qa.md"
         status: fixed
+      - id: I-25
+        summary: "resume offers only the newest finished/aborted run's parked stories; an older run's parked story is unreachable while the newer one stays parked (permanently once it is waived), yet status lists it and says resume asks it"
+        found_by: pm-reviewer
+        severity: blocking
+        location: "plugin/commands/autopilot.md:353"
+        report: "docs/acceptance-reports/S5-02-review.md"
+        status: open
+      - id: I-26
+        summary: "Follow-on run is written preflight per Step 2c and enters 'Step 3 from its story loop', skipping the running write; an interrupted follow-on is then refused as a planned run"
+        found_by: pm-reviewer
+        severity: minor
+        location: "plugin/commands/autopilot.md:455"
+        report: "docs/acceptance-reports/S5-02-review.md"
+        status: open
+      - id: I-27
+        summary: "Rule 2 assumes a merged-and-deleted run branch went into base_branch; merged elsewhere (e.g. main) it re-reads a stale base_branch and falsely says the story was resolved since; new run branch name unspecified"
+        found_by: pm-reviewer
+        severity: minor
+        location: "plugin/commands/autopilot.md:441"
+        report: "docs/acceptance-reports/S5-02-review.md"
+        status: open
+      - id: I-28
+        summary: "Status case 3 says resume continues an interrupted running run, but when its run branch is gone everywhere resume stops and asks for abort"
+        found_by: pm-reviewer
+        severity: minor
+        location: "plugin/commands/status.md:36"
+        report: "docs/acceptance-reports/S5-02-review.md"
+        status: open
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"
