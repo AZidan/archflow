@@ -37,8 +37,10 @@ one that applies, and add a second only if it is independent of the first.
    It stops the story reaching `done`
 3. a `parked` story → print its `parked.question`, then `$archflow-autopilot resume`, which asks
    it and builds the story once answered. It works whether the run that parked the story is still
-   open, has finished, or was aborted. If a planned `--plan` run is also waiting, resume asks which
-   one to pick up. A parked story blocks shipping the release by default
+   open, has finished, or was aborted. If an interrupted `running` run is also waiting, resume
+   continues that run first and the parked question waits for the next resume. If a planned
+   `--plan` run is also waiting, resume asks which one to pick up. A parked story blocks shipping
+   the release by default
 4. a story `in_progress` → carry on building it on its branch; it goes to `review` when every
    subtask is complete
 5. a story in `review` → finish its gate: qa-engineer, then pm-reviewer, then the user's approval

@@ -537,42 +537,49 @@ stories:
         severity: minor
         location: "plugin/commands/status.md:34"
         report: "docs/qa-reports/S5-02-qa.md"
-        status: open
+        status: fixed
       - id: I-6
         summary: "abort prints Step 4, whose last line sets status: finished with no exemption for abort, so an aborted run does not stay aborted as written"
         found_by: code-reviewer
         severity: blocking
         location: "plugin/commands/autopilot.md:259"
         report: "docs/qa-reports/S5-02-code-review.md"
-        status: open
+        status: fixed
       - id: I-7
         summary: "Resume rule 2 writes the follow-on ledger and release-file edits before checking out the run branch, and never says which branch's .archflow/ the candidate scan reads"
         found_by: code-reviewer
         severity: minor
         location: "plugin/commands/autopilot.md:331"
         report: "docs/qa-reports/S5-02-code-review.md"
-        status: open
+        status: fixed
       - id: I-8
         summary: "Rule 2 offers a blocks_release waiver but 'if nothing was answered, change nothing' discards it for the only stories it applies to"
         found_by: code-reviewer
         severity: minor
         location: "plugin/commands/autopilot.md:326"
         report: "docs/qa-reports/S5-02-code-review.md"
-        status: open
+        status: fixed
       - id: I-9
         summary: "test_abort_report_next_line_names_a_command_that_works_for_an_aborted_run is vacuous after the fix (keys on a phrase that no longer exists)"
         found_by: code-reviewer
         severity: minor
         location: "tests/test_autopilot_resume_qa.py:97"
         report: "docs/qa-reports/S5-02-code-review.md"
-        status: open
+        status: fixed
       - id: I-10
         summary: "Schema status descriptions mark only preflight/running as resumable; finished/aborted say nothing about follow-on runs"
         found_by: code-reviewer
         severity: minor
         location: "plugin/skills/archflow/schemas/autopilot-schema.yaml:44"
         report: "docs/qa-reports/S5-02-code-review.md"
-        status: open
+        status: fixed
+      - id: I-11
+        summary: "Resume rule 1 checks the run branch on a preflight (--plan) ledger, which has no run branch until Step 3, so the 'start the planned run' choice dead-ends"
+        found_by: code-reviewer
+        severity: minor
+        location: "plugin/commands/autopilot.md:317"
+        report: "docs/qa-reports/S5-02-code-review.md"
+        status: fixed
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"

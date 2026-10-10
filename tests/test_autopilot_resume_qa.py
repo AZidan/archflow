@@ -44,7 +44,7 @@ def test_follow_on_run_carries_the_finished_runs_policy(carried):
 def test_follow_on_run_reuses_wip_branches_and_the_run_branch():
     rule = re.sub(r"\s+", " ", resume_rule())
     assert "WIP task branch" in rule
-    assert "`run_branch` if it still exists" in rule
+    assert re.search(r"`run_branch` if it still exists", rule)
     assert "`base_branch`" in rule, "a merged-and-deleted run branch must have a defined fallback"
 
 
@@ -95,17 +95,18 @@ def test_next_line_without_parked_stories_does_not_name_resume():
 
 
 def test_abort_report_next_line_names_a_command_that_works_for_an_aborted_run():
-    abort = subcommand("abort")
-    resume = re.sub(r"\s+", " ", resume_rule())
+    """abort prints Step 4, whose Next: line (with parked stories) names resume — so resume must
+    accept the parked stories of an aborted run, and Step 4 must say its Next: rule covers abort."""
+    abort = re.sub(r"\s+", " ", subcommand("abort"))
+    rule = re.sub(r"\s+", " ", resume_rule())
     step4 = re.sub(r"\s+", " ", report_block())
-    aborted_refused = "`aborted` run is never resumed" in resume
-    abort_prints_step4 = "print Step 4" in abort
-    parked_next_is_resume = "With parked stories it is the line above" in step4
-    aborted_carve_out = re.search(r"abort", step4, re.I) is not None
-    # Either resume accepts an aborted run's parked stories, or Step 4 carves abort out of the
-    # "resume" Next: line. Today neither holds.
-    assert not (aborted_refused and abort_prints_step4 and parked_next_is_resume
-                and not aborted_carve_out)
+    next_line = [l for l in report_block().splitlines() if l.startswith("Next:")][0]
+    assert "print Step 4" in abort
+    assert RESUME in next_line
+    assert "`aborted`" in step4.split("Next:` line", 1)[1][:200], \
+        "Step 4's Next: rule must say it has to work for an aborted run too"
+    assert "`finished` or `aborted`" in rule, "resume must take an aborted run's parked stories"
+    assert "Nothing to resume." in rule
 
 
 # --------------------------------------------------------------------------
@@ -117,30 +118,114 @@ def test_abort_hands_its_parked_stories_to_resume_rule_2():
     that abort and rule 2 actually point at each other."""
     abort = re.sub(r"\s+", " ", subcommand("abort"))
     rule = re.sub(r"\s+", " ", resume_rule())
-    assert "`resume` picks them up in a follow-on run (rule 2)" in abort
-    assert "Pick up parked stories from a finished or aborted run" in rule
+    assert "follow-on run" in abort and "rule 2" in abort
+    assert re.search(r"2\. \*\*[^*]*finished or aborted run", rule)
     # the aborted record itself is never reopened
-    assert "never reopen it, never change its `status`, never edit it" in rule
+    assert "never reopen it" in rule and "never change its `status`" in rule
 
 
 def test_follow_on_with_no_answers_writes_nothing():
     rule = re.sub(r"\s+", " ", resume_rule())
-    assert "If nothing was answered, stop: write no ledger and change nothing" in rule
+    m = re.search(r"Nothing answered and nothing waived\*\* → (.*?)(?= - \*\*)", rule)
+    assert m, "rule 2 must say what happens when nothing is answered or waived"
+    assert "write no ledger" in m.group(1) and "change nothing" in m.group(1)
 
 
 def test_parked_stories_of_another_release_are_named_not_edited():
     rule = re.sub(r"\s+", " ", resume_rule())
-    assert "belong to a release that is no longer the active one, name them" in rule
+    assert re.search(r"no longer the active one, name them", rule)
     assert "change nothing" in rule
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "S5-02 I-5: with an interrupted `running` ledger present, resume continues that run and "
-    "parked stories from another run 'wait for the next resume', but status case 3 still says "
-    "resume asks the parked question, naming only the --plan exception. Remove this xfail once "
-    "status case 3 (or resume) covers the running-ledger case."))
 def test_status_parked_advice_covers_an_interrupted_running_run():
     rule = re.sub(r"\s+", " ", resume_rule())
     status = re.sub(r"\s+", " ", status_parked_case())
     assert "they wait for the next `resume`" in rule  # the precedence resume documents
     assert re.search(r"interrupted|`running`|still running|unfinished run", status), status
+
+
+# --------------------------------------------------------------------------
+# Fix pass 2 (code review 7864959): I-6, I-7, I-8, I-10, I-11
+# --------------------------------------------------------------------------
+
+def _closing_write():
+    """The paragraph of Step 4 that sets `status: finished`, through the end of Step 4."""
+    step4 = re.sub(r"\s+", " ", report_block())
+    i = step4.find("`status: finished`")
+    assert i != -1, "Step 4 no longer closes the run with `status: finished`"
+    return step4[i:]
+
+
+def test_step4_closing_write_exempts_abort():
+    """I-6: abort prints Step 4; Step 4's closing `status: finished` must not apply to it,
+    or an aborted run ends up `finished`. Fails if the exemption is removed."""
+    closing = _closing_write()
+    assert re.search(r"\*\*`abort`\*\*[^*]*stays `aborted`", closing), closing
+    abort = re.sub(r"\s+", " ", subcommand("abort"))
+    assert "print Step 4" in abort
+    assert re.search(r"skip\w* its closing status write", abort)
+    assert "stays `aborted`" in abort
+
+
+def test_step4_closing_write_exempts_report():
+    """I-6: report reprints Step 4 and must never close (or re-close) a run."""
+    closing = _closing_write()
+    assert re.search(r"\*\*`report`\*\*[^*]*read-only", closing, re.I), closing
+    report = re.sub(r"\s+", " ", subcommand("report"))
+    assert "Read-only" in report and "closing status write" in report
+
+
+def test_resume_scan_reads_committed_state_on_other_branches():
+    """I-7: the finished ledger and `parked` status live on the run branch; a user back on
+    base_branch must still find them."""
+    rule = re.sub(r"\s+", " ", resume_rule())
+    assert "current checkout first" in rule
+    assert "git for-each-ref" in rule and "git show {branch}:" in rule
+    assert "source branch" in rule
+    assert "without checking anything out" in rule
+
+
+def test_follow_on_checks_out_the_run_branch_before_writing():
+    """I-7: writing the ledger and release file before checkout dirties the tree."""
+    rule = re.sub(r"\s+", " ", resume_rule())
+    i_checkout = rule.index("check out the run branch")
+    assert i_checkout < rule.index("Write a new ledger")
+    assert i_checkout < rule.index("clear each answered story's `parked` block")
+    assert "before writing anything" in rule
+
+
+def test_a_waiver_on_an_unanswered_story_is_recorded():
+    """I-8: the waiver only matters for a story that stays parked, so it must not be discarded
+    when nothing else was answered."""
+    rule = re.sub(r"\s+", " ", resume_rule())
+    m = re.search(r"Nothing answered, some waived\*\* → (.*?)(?= - \*\*)", rule)
+    assert m, "rule 2 must handle waivers when nothing was answered"
+    branch = m.group(1)
+    assert "write no ledger" in branch
+    assert "`parked.blocks_release: false`" in branch
+    assert "stays `parked`" in branch
+    # the authority envelope allows exactly this release-file write
+    assert "`blocks_release` waiver" in AUTOPILOT.read_text().split("**MUST NOT")[0]
+
+
+def test_resume_does_not_look_for_a_run_branch_on_a_preflight_ledger():
+    """I-11: a --plan ledger has no run branch until Step 3 creates it."""
+    rule = re.sub(r"\s+", " ", resume_rule())
+    m = re.search(r"1\. \*\*Continue an unfinished run\.\*\*(.*?)2\. \*\*", rule)
+    assert m
+    rule1 = m.group(1)
+    pre = rule1.index("`preflight`")
+    run = rule1.index("**`running`** ledger")
+    assert "no run branch yet" in rule1[pre:run]
+    assert "Step 3" in rule1[pre:run]
+    assert "verify the run branch" in rule1[run:], "the branch check belongs to `running` only"
+
+
+@pytest.mark.parametrize("status", ["finished", "aborted"])
+def test_schema_says_finished_and_aborted_parked_stories_can_be_picked_up(status):
+    """I-10, in both mirrors."""
+    for path in (SCHEMA, REPO / "plugin" / "skills" / "archflow" / "schemas" / "autopilot-schema.yaml"):
+        desc = re.sub(r"\s+", " ", yaml.safe_load(path.read_text())["run"]["properties"]["status"]["description"])
+        m = re.search(rf"{status} — (.*?)(?= \w+ +—|$)", desc)
+        assert m, (path, status)
+        assert "never" in m.group(1) and "follow-on run" in m.group(1), (path, m.group(1))

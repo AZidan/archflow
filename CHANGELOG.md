@@ -58,8 +58,16 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   autopilot never edits a shipped or archived release file, and `resume` checks the usual
   prerequisites (clean tree, phase 3 or later) before writing anything. When a planned `--plan` run
   that never started is also waiting, `resume` asks which one to pick up instead of silently
-  starting the planned run. The report's `Next:` line, `/archflow:status` and the landing page now
-  describe that path.
+  starting the planned run. If an interrupted run is waiting, `resume` continues it first and says
+  the parked questions wait for the next `resume`. `resume` also finds a run whose ledger is only
+  on its run branch, for a user who switched back without merging, and checks out the run branch
+  before writing anything. A `blocks_release` waiver given for a question left unanswered is now
+  recorded instead of dropped. The report's `Next:` line, `/archflow:status` and the landing page
+  now describe that path.
+- `/archflow:autopilot abort` printed the end-of-run report, whose last step set the run
+  `finished`, so an aborted run did not stay `aborted`. `abort` and `report` now skip that write.
+- `/archflow:autopilot resume` on a run planned with `--plan` stopped because the run branch did
+  not exist yet. It now creates the branch and starts the planned run.
 - Gemini commands that quote the plugin path, such as `/archflow:doctor`, pointed at
   `"~/.gemini/..."`, which the shell does not expand. They now use `$HOME`.
 - Gemini commands, agents and skills that tell the model to follow another command, such as

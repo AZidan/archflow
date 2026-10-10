@@ -41,8 +41,12 @@ run:
       description: >
         preflight — interview done, queue written, not started (--plan). Resumable.
         running   — the loop is live (or the session died mid-run). Resumable.
-        finished  — the run reached a stop condition and reported.
-        aborted   — the user aborted; branches and commits left intact.
+        finished  — the run reached a stop condition and reported. The ledger itself is never
+        resumed or reopened, but its still-parked stories can be picked up by
+        `resume` in a follow-on run (`resumes`).
+        aborted   — the user aborted; branches and commits left intact. Never resumed or
+        reopened and its queue is never continued, but its still-parked stories can
+        be picked up by `resume` in a follow-on run (`resumes`).
     base_branch:
       type: string
       description: "Branch the run branch was cut from — the active feature branch, else the release slug's branch."
