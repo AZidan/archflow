@@ -1,4 +1,4 @@
-VERDICT: FAIL
+VERDICT: PASS
 
 # Code Review: S5-02 Resume parked work after an autopilot run finishes
 
@@ -279,3 +279,174 @@ no-parked and aborted cases from the AC.
 2. I-15 together with the `:109-110` generalisation: one rule for where the first ledger commit lands.
 3. I-17 and I-18: small wording fixes in rule 2 and `abort`.
 4. I-19: fold the CHANGELOG.
+
+## Re-check after the simplification (f074598)
+
+**PASS.** Scope: `git diff 19de841..HEAD` (fix passes 4-10, through f074598, plus the QA runs up to
+b426a51), read against the whole story `cf68104..HEAD`. Every acceptance criterion holds as
+written. Nothing is blocking. Seven new findings, all minor: I-38 to I-44. I-34 to I-37 are still
+open and are not repeated here. Fixes for them are proposed at the end of this section.
+
+### Design System Compliance
+
+PASS / not applicable. The story changes command docs, a schema, tests and adapters. It touches no UI.
+
+### Checks run
+
+- `pytest tests/test_autopilot_resume.py tests/test_autopilot_resume_qa.py`: 100 passed.
+  Full `pytest tests`: 863 passed.
+- `node scripts/build-adapters.mjs` rebuilt every adapter with no diff, and `--check` reports
+  everything up to date. The adapters are regenerated.
+- `.archflow/schemas/autopilot-schema.yaml` and `plugin/skills/archflow/schemas/autopilot-schema.yaml`
+  are byte-identical.
+- No `/archflow <sub>` form appears in autopilot.md, status.md, README or CHANGELOG.
+- Leftover sweep for combine, superseded copies, grouping, Proceed/Stop and multi-source in
+  autopilot.md, status.md, README, CHANGELOG, the schema and both test files. The docs are clean.
+  The schema and two tests still carry multi-source leftovers (I-38). The only other hits are the
+  negative assertions in `test_parked_stories_come_from_the_current_checkout_only`, which are
+  correct.
+- CHANGELOG claims checked against `2.4.0:plugin/commands/autopilot.md`: every "before" claim is
+  accurate. In 2.4.0 the `Next:` line said "answer the parked questions, then resume", `resume`
+  read only `preflight`/`running`, `abort` printed Step 4 whose last line set `finished`, and
+  `--plan` left the ledger uncommitted.
+
+### Acceptance criteria
+
+| AC | Holds | Where |
+|---|---|---|
+| One documented command picks up a finished run's parked stories | yes | autopilot.md:403-436 (rule 2) |
+| Report `Next:` names a command that works for a finished run | yes | :294-301. Step 4 runs on the run branch, where rule 2 finds the park |
+| status parked advice matches the real resume path | yes, with I-37 open | status.md:34-43 |
+| No-parked run not resurrected; aborted stays aborted | yes | :403-405, :437-440, :310-315 |
+| Tests: finished+parked, finished without, aborted | yes | qa:683-783, story:250-281 |
+| CHANGELOG Fixed entry | yes | CHANGELOG.md:49-71 |
+
+### New findings
+
+**I-38 (minor): the `resumes` back-compat describes ledgers that never existed.**
+`.archflow/schemas/autopilot-schema.yaml:62-76` (and its mirror) declares `type: [array, string]`
+and says "A list of several (older follow-ons) or a single run id string is still accepted". The
+field is new in this story: it does not exist in 2.4.0 or on `main`. No shipped follow-on ever
+wrote several sources or a bare string. Both are leftovers of the removed multi-source design.
+`test_follow_on_run_from_two_sources_validates` (qa:68) and the `resumes[1]` case (qa:82) test
+that removed behaviour. Fix: make it a one-item list (`maxItems: 1`) or, simpler, a plain run-id
+string, which matches what rule 2 writes. Then drop the "older follow-ons" sentence and the
+two-source test.
+
+**I-39 (minor): the base_branch rules contradict each other, and `abort` misses the case rule 1 sends it.**
+- :109 and :116-117 say the `--plan` ledger "is the only ledger autopilot commits on
+  `base_branch`".
+- :138-139 says "Writes for a run whose run branch has been merged and deleted also land on
+  `base_branch`". That is a leftover from the design where rule 2 wrote on base_branch after a
+  merge. Rule 2 now writes on the current branch, so nothing produces these writes except `abort`.
+- `abort` (:455-456) checks out "its run branch, or `base_branch` for a `--plan` run that never
+  started". It does not cover a started run whose run branch is gone, and that is exactly the case
+  rule 1 tells the user to `abort` (:396-398). An agent reading `abort` alone tries to check out a
+  branch that does not exist. The *Where autopilot commits* rule (:146-148) does give the fallback
+  "else its `base_branch`", so the case can be resolved, but the two passages disagree.
+
+Fix: delete the :138-139 sentence. Make `abort` say "its `run_branch` if that exists locally, else
+`base_branch`". Make :116-117 read "the only ledger autopilot *writes first* on `base_branch`", or
+name abort's fallback as the one exception.
+
+**I-40 (minor): several unfinished ledgers have no tie-break in `resume`.**
+The choice (:369-376) says "A `running` ledger → rule 1" and "A `preflight` ledger and parked
+stories both → ask". It never says which ledger wins when two exist, for example after two `--plan`
+invocations. That case is realistic. `abort` picks "the newest" (:453-454). The QA simulator's
+`_resume` silently takes `running[0]` (qa:557), so the tests rely on an order the doc never states.
+Fix: add "the newest (by `run_id`)" to the choice, matching abort. Optionally name the others in
+one line.
+
+**I-41 (minor): a follow-on with no source run has no defined `base_branch`.**
+:420-424 says "With no source run, ask Step 2a's questions instead". Step 2a Q3 asks for the run
+branch name (proposing `{base-branch}-autopilot`). Two lines later the rule fixes the name to
+`{base_branch}-autopilot-{run-id}`, but with no source run `base_branch` is undefined, and the
+answer to Q3 is ignored. Fix: with no source run, `base_branch` is the current branch and Q3's
+answer names the run branch. Or skip Q3 and use the fixed name with the current branch as base.
+
+**I-42 (minor): the pointer never goes away.**
+:442-448 prints a pointer for every kept finished/aborted ledger whose `queue[]` has a `parked`
+item. Ledgers are never edited (:403-404), so a run whose parked story was later built by a
+follow-on still shows `state: parked` forever. While its run branch exists locally, every
+`resume` on another branch ends with "Parked work from {run-id} may be on {run_branch}" instead of
+`Nothing to resume.`, and following it leads to "Nothing to resume." there. I-36 covers duplicate
+lines for one shared branch. This finding is about a pointer that stays after the park is
+resolved. Fix (ledger-only, consistent with current-branch-only): skip a parked queue item that a
+kept ledger whose `resumes` names that run has queued. The I-34 fix below uses the same mechanism.
+
+**I-43 (minor): the suite is hard to maintain, and parts of it guard nothing.**
+- `test_replay_a_started_run_leaves_no_ledger_on_base_branch` (tests/test_autopilot_resume.py:356)
+  is tautological. It cuts the branches itself, commits only on the run branch, deletes it, and
+  asserts that base has no ledger. That is true by construction, and the test never consults
+  autopilot.md.
+- The replay harness in `tests/test_autopilot_resume_qa.py:415-680` (`_kept`, `_resume`,
+  `_source_run`, `_follow_on`, `_pointers`, `_waive`) re-implements the spec in Python. About 25
+  replay tests assert this model's decisions, so no edit to autopilot.md can fail them. That has
+  value as an executable model of the user's decisions, but it is not regression coverage of the
+  doc. Either label it as a model, or anchor each modelled rule to a phrase in the doc, as
+  `_planned_run_refused` does by running the commands extracted from the doc. That one is a good
+  pattern.
+- Tests are grouped by fix-pass chronology, and the docstrings cite commits and pass numbers
+  ("Step 2c as written in ca3ecdb", "Fix pass 5: I-20"). Some are already stale: the code under
+  test is no longer "as written in ca3ecdb". Group them by behaviour (report `Next:`, rule 1
+  guard, rule 2 follow-on, waiver, pointer, abort, commit rule, schema).
+- There are two parallel git harnesses. `_git` and `_commit` are defined in both files with
+  different signatures and return types. `_repo` and `_init` duplicate each other. There are
+  mid-file imports (`import shutil`/`pytest` at story:294-296, `shutil`/`subprocess` at qa:415-416).
+- `_scan`'s first return value is only ever asserted to be `[]` (qa:691, 695).
+- Phrase-exact string tests (for example "committing on it never is", "`status: running` from the
+  start") pin wording rather than rules. Every rewrite of autopilot.md breaks a dozen of them
+  without any change in behaviour. Keep phrase pins for user-visible strings (the `Next:` line,
+  refusal messages, the pointer line) and loosen the rest.
+
+**I-44 (minor): autopilot.md and status.md say the same thing several times.**
+The `--plan` start transition (the ledger set `running` and committed on `base_branch` before the
+run branch is cut) is stated four times: :114-119, :133-138, :167-169 and :388-391. "No copy of a
+started run's ledger is left on `base_branch`" is stated twice (:109, :136-138). Every restatement
+is one more place to drift, and I-39 is exactly such a drift. status.md case 3 (:34-43) is one
+ten-line sentence restating resume's precedence rules. Fix: state the transition once in *Where
+autopilot commits* and reference it elsewhere. Cut status case 3 to: print each parked question,
+then `/archflow:autopilot resume` (which also says what it does when a run is waiting or the park
+is on another run branch).
+
+### Smaller notes (no issue)
+
+- The `Next:` line would be clearer as `Next: on {run-branch}, /archflow:autopilot resume — …`.
+  It works as written because Step 4 leaves the user on the run branch, but users often switch
+  back to base first.
+- CHANGELOG's first Fixed bullet is 12 lines and includes internal detail ("written `running` from
+  the start", the `resumes` field). Users need: resume now picks up parked stories after a run
+  finished or was aborted; it works on the branch you are on and names other run branches; it
+  never restarts a finished run or continues an aborted one; it asks if a planned run is also
+  waiting. The other three bullets are accurate and short enough.
+- Rule 1's "its HEAD matches the ledger" (:392) has no ledger field to compare against. This
+  predates the story and is out of scope.
+
+### Proposed fixes for I-34..I-37 (current branch only)
+
+- **I-34** (a follow-on cut from a non-run branch leaves that branch showing the story parked).
+  Before asking, skip any parked story that a kept follow-on ledger (one with `resumes`) has in its
+  `queue[]`, and print `{story} was picked up by {run-id} on {run_branch}.` This reads ledgers
+  only, which the scan already does cross-branch. It never reads another branch's release file,
+  so it stays inside the current-branch rule. The same check fixes I-42.
+- **I-35** (resume on a WIP task branch). If the current branch is the `branch` of any kept
+  ledger's queue item, or a parked story's `parked.branch`, write nothing and say `This is
+  {story}'s WIP branch; check out {run_branch} and run /archflow:autopilot resume there.` One
+  sentence in rule 2, before "Choose the run branch".
+- **I-36** (two ledgers share a run_branch). Source run = the newest kept ledger by `run_id` whose
+  `run_branch` is the current branch. The follow-on already carries its source's decisions plus
+  its own, so the newest is a superset. In the pointer, print one line per `run_branch`, naming
+  the newest run on it.
+- **I-37** (status has no pointer). In status case 3, trigger also when resume would print an
+  *Other run branches* line, and print those lines by reference ("the lines resume's *Other run
+  branches* rule prints"), without restating the rule. Status then gives advice on base_branch
+  after a run, exactly as resume does.
+
+### Recommendations
+
+1. I-39 and I-40 first. They are small wording fixes, and an agent following the doc literally
+   can trip on either.
+2. I-34 with I-42 (one ledger-only check), then I-35 and I-36.
+3. I-38: shrink `resumes` to what is written, and delete the two-source test.
+4. I-43 and I-44 as a cleanup pass: one git harness, tests grouped by behaviour, the transition
+   stated once.
