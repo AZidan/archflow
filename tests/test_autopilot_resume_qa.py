@@ -1095,3 +1095,24 @@ def test_i30_leftover_subtask_branch_cut_before_the_park_does_not_hide_the_story
     ip = _git(repo, "log", "--format=%H", "--grep", "B in_progress", "t/B").split()[0]
     _git(repo, "branch", "t/B-1.1-sub", ip)
     assert _resume(repo) == ("follow-on", ["B"]), (_resume(repo), _not_asked(repo))
+
+
+# ---- QA re-run after fix pass 9: whole-file supersession misses a stale story on a moved copy (I-32) --
+
+@pytest.mark.xfail(strict=True, reason="I-32: one later release-file commit on base_branch revives I-29")
+def test_i32_story_queued_in_progress_parked_then_base_commits_the_release_file_is_still_asked(tmp_path):
+    """The I-29 shape plus one ordinary step: back on r1 after the run, the user records an issue or
+    adds a story, committing the release file. r1's last commit to it is no longer an ancestor of the
+    run branch, so r1's copy is not superseded, and its B, unchanged since before the run and still
+    `in_progress`, outranks the run's `parked`: "B is in_progress on r1, not asking it." again."""
+    repo = tmp_path
+    _init(repo, ["A", "B"])
+    _git(repo, "checkout", "-qb", "r1")
+    d = _read(repo, REL); d["stories"]["B"] = {"status": "in_progress", "started": "by hand"}
+    _write(repo, REL, d); _commit(repo, "B started on r1 before the run")
+    _plan(repo, ["A", "B"])
+    _step3_and_run(repo, {"A": "done", "B": "parked"})
+    _git(repo, "checkout", "-q", "r1")
+    d = _read(repo, REL); d["stories"]["E"] = {"status": "ready"}; _write(repo, REL, d)
+    _commit(repo, "feat: add E to the release")                   # any later commit to the file on r1
+    assert _resume(repo) == ("follow-on", ["B"]), (_resume(repo), _not_asked(repo))

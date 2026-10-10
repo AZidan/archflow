@@ -720,6 +720,20 @@ stories:
         location: "plugin/commands/autopilot.md:438"
         report: "docs/qa-reports/S5-02-qa.md"
         status: fixed
+      - id: I-32
+        summary: "Supersession is whole-file: after one later release-file commit on base_branch (an issue, a new story), base's pre-run in_progress copy is no longer superseded and hides the run's park again (I-29 revived)"
+        found_by: qa-engineer
+        severity: blocking
+        location: "plugin/commands/autopilot.md:362"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
+      - id: I-33
+        summary: "Answers whose source runs share one run_branch (a follow-on re-parked a story on its source's branch) are split into separate groups, so the user must pick one and re-answer the other next resume although both build on the same branch"
+        found_by: qa-engineer
+        severity: minor
+        location: "plugin/commands/autopilot.md:438"
+        report: "docs/qa-reports/S5-02-qa.md"
+        status: open
 
   - id: S6-04
     title: "Studio on non-Claude hosts (forward mode)"
