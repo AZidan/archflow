@@ -35,7 +35,7 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   entry in `HOOK_SCRIPTS` rather than an edit per host.
 - **Archflow Studio on every host.** `/archflow:studio` now ships in every adapter: OpenAI Codex
   (`$archflow-studio`), GitHub Copilot CLI, Cursor, OpenCode (`/archflow-studio`), Gemini CLI
-  (`/archflow:studio`) and the generic AGENTS.md package. This supersedes 2.4.0's "`/archflow:studio`
+  (enterprise/API, `/archflow:studio`) and the generic AGENTS.md package. This supersedes 2.4.0's "`/archflow:studio`
   stays Claude Code only". Off Claude Code, Studio runs in **forward mode**: the board, releases,
   stories and files work as they do on Claude Code, and its chat panel runs no agent. You compose
   there, Studio spells the command the way your host expects, and Send copies it for you to paste

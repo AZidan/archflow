@@ -2,6 +2,8 @@
 
 Generated from Archflow 2.4.0 by `scripts/build-adapters.mjs`. Do not edit here.
 
+Gemini CLI serves Gemini Code Assist Standard/Enterprise and paid Gemini API users. Google now points individual users (free, AI Pro, AI Ultra) to its Antigravity CLI; Archflow support for Antigravity CLI is planned.
+
 ## Install
 
 **One command:** `npx archflow install --host gemini` from your project root does every step below, and re-running it upgrades in place. By hand:

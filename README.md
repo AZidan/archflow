@@ -24,7 +24,7 @@
 
 Getting AI to write code stopped being the hard part. Keeping it coherent is. Sessions end and take their context with them. The frontend drifts from the backend. Two weeks in, nobody can say what's actually finished.
 
-Archflow is a **phase-based AI development framework** for your coding agent that fixes this structurally, with 17 specialized agents working from product strategy through to production deployment. It runs on Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode, from the same files in your repo; see [Hosts](#hosts).
+Archflow is a **phase-based AI development framework** for your coding agent that fixes this structurally, with 17 specialized agents working from product strategy through to production deployment. It runs on Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI (enterprise/API) and OpenCode, from the same files in your repo; see [Hosts](#hosts).
 
 Instead of one AI doing everything, each task goes to an agent with deep expertise in its domain. A `product-strategist` defines business goals. A `ux-designer` creates the design system. An `api-contract-architect` locks down API specs. Then `ui-engineer` and `api-engineer` build frontend and backend in parallel against that same contract, so they can't quietly disagree. Handoffs happen through files, not chat, so context outlives the session that created it.
 
@@ -49,7 +49,7 @@ npx archflow install
 ```
 
 It detects the coding agents on your machine and sets Archflow up for each one: Claude Code, OpenAI
-Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode. Everything it writes lands in your repo, so
+Codex, GitHub Copilot CLI, Cursor, Gemini CLI (enterprise/API) and OpenCode. Everything it writes lands in your repo, so
 teammates get it on clone. Pass `--host codex,cursor` to choose, or `--dry-run` to see the plan first.
 
 On Claude Code the plugin marketplace works too, and is what `npx archflow install` runs for you there:
@@ -87,9 +87,12 @@ version of the installer npx has cached, and a session-start check tells you whe
 | OpenAI Codex | `.codex/` agents and `$archflow-<cmd>` skills | yes | yes |
 | GitHub Copilot CLI | `.github/` agents, skills and hooks; VS Code agent mode reads the same tree | yes | yes |
 | Cursor | `.cursor/` agents, commands, rules and hooks; also a Cursor Plugin | yes | yes |
-| Gemini CLI | An extension, installed per user | preview | yes |
+| Gemini CLI (enterprise/API) | An extension, installed per user | preview | yes |
 | OpenCode | `.opencode/` agents, commands and a plugin for hooks | yes | primary agent only |
 | Anything with `AGENTS.md` + Agent Skills | Skills only; roles run serially; the git guard is the safety net | no | no |
+
+Google now points individual users (free, AI Pro, AI Ultra) to its Antigravity CLI; Gemini CLI serves
+Gemini Code Assist Standard/Enterprise and paid Gemini API users. Archflow support for Antigravity CLI is planned.
 
 Studio runs on every host. Off Claude Code it runs in forward mode: its chat composes the command
 and you paste it into your own terminal session, and `npx archflow@latest install` puts its bundle in
@@ -219,7 +222,7 @@ optional.
 **Its chat runs your host, or feeds it.** On Claude Code, Studio's chat runs its own `claude`
 process; opt in with `STUDIO_MODE=companion` and it starts from your running session's history, on a
 branch, so you don't re-explain the project to a second assistant. On Codex, Copilot CLI, Cursor,
-Gemini CLI, OpenCode and any `AGENTS.md` + Agent Skills agent it runs in forward mode: you compose in the panel, Studio spells the command
+Gemini CLI (enterprise/API), OpenCode and any `AGENTS.md` + Agent Skills agent it runs in forward mode: you compose in the panel, Studio spells the command
 the way your host expects, and you paste it into the terminal session you already have open.
 `/archflow:studio status` says which host Studio resolved and what its chat does.
 
@@ -521,7 +524,7 @@ These integrations are primarily used during `/archflow:onboard` to pull existin
 
 | Tool | Why | Used by |
 |---|---|---|
-| One of the supported coding agents: Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode (see [Hosts](#hosts)) | Archflow runs inside it | Everything |
+| One of the supported coding agents: Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI (enterprise/API) and OpenCode (see [Hosts](#hosts)) | Archflow runs inside it | Everything |
 | Git | Branch-per-story workflow, release tags, the ship ritual | All phases |
 | Node.js 18+ | Archflow Studio and the `SessionStart` hook that ships with the plugin; some MCP servers too | Studio, hooks |
 
