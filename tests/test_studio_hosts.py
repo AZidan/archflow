@@ -235,3 +235,153 @@ def test_a_release_without_the_bundle_installs_and_says_so(target, tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "skip  Archflow Studio bundle" in proc.stdout
     assert not (project / ".codex" / "archflow" / "server").exists()
+
+
+# --------------------------------------------------------------------------
+# Fix pass 1 (S6-04 I-1, I-3, I-4)
+# --------------------------------------------------------------------------
+
+LATEST = "npx archflow@latest install"
+
+
+def _without_latest(text):
+    """Every `npx archflow install` spelled without `@latest` (the --host form is fine: it is the
+    first-time install line, not the missing-bundle remedy)."""
+    return re.findall(r"npx archflow install(?! --host)", text)
+
+
+@pytest.mark.parametrize("host", sorted(STUDIO_COMMANDS))
+def test_the_missing_bundle_remedy_fetches_the_current_installer(host):
+    """I-3: a cached pre-2.5.0 installer brings the studio command without the bundle, so the
+    remedy must be `@latest`, or it reruns the same cached installer forever."""
+    text = command_text(host)
+    assert LATEST in text, f"{host}: the studio command's missing-bundle step must say `{LATEST}`"
+    assert not _without_latest(text), f"{host}: the studio command still says `npx archflow install`"
+
+
+def test_the_plugin_studio_command_says_latest():
+    text = (PLUGIN / "commands" / "studio.md").read_text()
+    assert LATEST in text and not _without_latest(text)
+
+
+@pytest.mark.parametrize("host", sorted(STUDIO_COMMANDS))
+def test_every_adapter_readme_studio_row_says_latest(host):
+    readme = (ADAPTERS / host / "README.md").read_text()
+    (row,) = [l for l in readme.splitlines() if l.startswith("| `/archflow:studio` |")]
+    assert LATEST in row and not _without_latest(row), f"{host}: README Studio row: {row}"
+
+
+def _fake_gemini(bin_dir, *, install_ok=True):
+    """A `gemini` on PATH whose `extensions install` succeeds (or says it is already installed)."""
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    script = bin_dir / "gemini"
+    if install_ok:
+        body = 'echo "Extension archflow installed."; exit 0'
+    else:
+        body = ('if [ "$2" = "install" ]; then echo "Extension archflow is already installed." >&2; exit 1; fi\n'
+                'echo "Extension archflow updated."; exit 0')
+    script.write_text(f"#!/bin/sh\n{body}\n")
+    script.chmod(0o755)
+    return bin_dir
+
+
+def _install_with_path(home, project, path_prefix, *hosts, extra=()):
+    env = {
+        "HOME": str(home),
+        "PATH": f"{path_prefix}:{Path(shutil.which('node')).parent}:/usr/bin:/bin",
+        "DO_NOT_TRACK": "1",
+        "ARCHFLOW_CONFIG_DIR": str(home / ".archflow"),
+    }
+    return subprocess.run(
+        ["node", str(CLI), "install", "--bundled", "--host", ",".join(hosts), "--yes", "--no-guard",
+         "--dir", str(project), *extra],
+        capture_output=True, text=True, timeout=120, env=env,
+    )
+
+
+def _version():
+    return json.loads((REPO / "package.json").read_text())["version"]
+
+
+def _seed_old_staged(home, tmp_path):
+    cache = home / ".cache" / "archflow" / "gemini-extension"
+    old = cache / "0.0.1" / "archflow"
+    old.mkdir(parents=True)
+    (old / "marker.txt").write_text("an older version's staged copy\n")
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "keep.txt").write_text("not ours\n")
+    (cache / "linked").symlink_to(outside, target_is_directory=True)
+    return cache, outside
+
+
+def test_gemini_install_removes_older_staged_copies(target, tmp_path):
+    """I-1: each version stages ~11 MB under ~/.cache/archflow/gemini-extension/<version>/. After a
+    successful install only the current one stays; a symlink there is never followed or removed."""
+    home, project = target
+    cache, outside = _seed_old_staged(home, tmp_path)
+    proc = _install_with_path(home, project, _fake_gemini(tmp_path / "bin"), "gemini")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert not (cache / "0.0.1").exists(), "an older version's staged copy was left behind"
+    assert (cache / _version() / "archflow" / "server" / "server.mjs").is_file(), "the current staged copy was removed"
+    assert (cache / "linked").is_symlink() and (outside / "keep.txt").is_file(), "a symlink was followed or removed"
+    assert f"remove {cache / '0.0.1'}" in proc.stdout
+
+
+def test_gemini_update_keeps_staged_copies_gemini_may_still_read(target, tmp_path):
+    """`gemini extensions update` re-reads the source Gemini remembers, which may be an older staged
+    copy, so that path prunes nothing."""
+    home, project = target
+    cache, _ = _seed_old_staged(home, tmp_path)
+    proc = _install_with_path(home, project, _fake_gemini(tmp_path / "bin", install_ok=False), "gemini")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "gemini extensions update archflow" in proc.stdout
+    assert (cache / "0.0.1" / "archflow" / "marker.txt").is_file()
+
+
+def test_gemini_dry_run_reports_the_staged_source_and_the_prune_and_writes_nothing(target, tmp_path):
+    """I-4 + I-1: the dry run names the staged copy the real run installs from, lists the older
+    staged copies it would remove, and touches nothing."""
+    home, project = target
+    cache, _ = _seed_old_staged(home, tmp_path)
+    proc = _install_with_path(home, project, _fake_gemini(tmp_path / "bin"), "gemini", extra=("--dry-run",))
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    staged = cache / _version() / "archflow"
+    assert f"run   gemini extensions install {staged}" in proc.stdout
+    assert "adapters/gemini" not in proc.stdout, "the dry run names the package copy, not the staged one"
+    assert f"remove {cache / '0.0.1'}" in proc.stdout
+    assert (cache / "0.0.1" / "archflow" / "marker.txt").is_file(), "the dry run deleted something"
+    assert not staged.exists(), "the dry run staged a copy"
+    assert not (home / ".gemini").exists()
+
+
+@pytest.mark.parametrize("existing, verb", [
+    (None, "write"),
+    ("local-notes.txt\n", "merge"),
+    ("/server/\n/dist/\n", "keep "),
+])
+def test_dry_run_gitignore_verb_matches_the_real_run(target, existing, verb):
+    """I-4: the dry run's .gitignore verb is the one the real run takes, and it writes nothing."""
+    home, project = target
+    ignore = project / ".codex" / "archflow" / ".gitignore"
+    if existing is not None:
+        ignore.parent.mkdir(parents=True)
+        ignore.write_text(existing)
+    line = f"{verb} .codex/archflow/.gitignore"
+    dry = install(home, project, "codex", extra=("--dry-run",))
+    assert dry.returncode == 0, dry.stderr
+    assert line in dry.stdout, dry.stdout
+    assert (ignore.read_text() if ignore.exists() else None) == existing, "the dry run wrote the .gitignore"
+    real = install(home, project, "codex")
+    assert real.returncode == 0, real.stderr
+    assert line in real.stdout, real.stdout
+
+
+def test_the_guide_and_site_name_the_generic_host():
+    """I-2: the generic AGENTS.md package ships `$archflow-studio`; the docs that list Studio's
+    forward-mode hosts must say so."""
+    guide = (REPO / "docs" / "guides" / "studio.md").read_text()
+    (row,) = [l for l in guide.splitlines() if l.startswith("| ") and "`$archflow-studio`" in l]
+    assert "AGENTS.md" in row
+    assert "AGENTS.md" in [p for p in (REPO / "README.md").read_text().split("\n\n") if "forward mode: you compose" in p][0]
+    assert "AGENTS.md + Agent Skills agent composes each prompt" in (REPO / "docs" / "index.html").read_text()

@@ -92,8 +92,8 @@ version of the installer npx has cached, and a session-start check tells you whe
 | Anything with `AGENTS.md` + Agent Skills | Skills only; roles run serially; the git guard is the safety net | no | no |
 
 Studio runs on every host. Off Claude Code it runs in forward mode: its chat composes the command
-and you paste it into your own terminal session, and `npx archflow install` puts its bundle in that
-host's install. What does not port: Studio's companion mode, which forks a Claude Code session, and
+and you paste it into your own terminal session, and `npx archflow@latest install` puts its bundle in
+that host's install (`@latest`: an installer npx cached before 2.5.0 brings the adapters without it). What does not port: Studio's companion mode, which forks a Claude Code session, and
 `memory: user` agent memory, which has no equivalent elsewhere. Each adapter's README under `adapters/<host>/` lists that host's limits.
 Something off on your host? [Open an issue](https://github.com/AZidan/archflow/issues).
 Contributors regenerate the adapters after changing `plugin/` with `node scripts/build-adapters.mjs`;
@@ -219,7 +219,7 @@ optional.
 **Its chat runs your host, or feeds it.** On Claude Code, Studio's chat runs its own `claude`
 process; opt in with `STUDIO_MODE=companion` and it starts from your running session's history, on a
 branch, so you don't re-explain the project to a second assistant. On Codex, Copilot CLI, Cursor,
-Gemini CLI and OpenCode it runs in forward mode: you compose in the panel, Studio spells the command
+Gemini CLI, OpenCode and any `AGENTS.md` + Agent Skills agent it runs in forward mode: you compose in the panel, Studio spells the command
 the way your host expects, and you paste it into the terminal session you already have open.
 `/archflow:studio status` says which host Studio resolved and what its chat does.
 

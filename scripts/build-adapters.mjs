@@ -205,7 +205,7 @@ const commandPathRule = (to) => [/\$\{CLAUDE_PLUGIN_ROOT\}\/commands\/([a-z-]+|<
 
 /** The host README's row for Studio: what it does there, and where its bundle comes from. */
 function studioRow(spelling, root) {
-  return `| \`/archflow:studio\` | \`${spelling}\` in forward mode: Studio runs no agent, its chat composes the command and you paste it into this host's session. Its server bundle goes in \`${root}/server\` and \`${root}/dist\`: \`npx archflow install\` puts it there, or by hand copy the Archflow package's \`plugin/server/\` and \`plugin/dist/\` |\n`;
+  return `| \`/archflow:studio\` | \`${spelling}\` in forward mode: Studio runs no agent, its chat composes the command and you paste it into this host's session. Its server bundle goes in \`${root}/server\` and \`${root}/dist\`: \`npx archflow@latest install\` puts it there, or by hand copy the Archflow package's \`plugin/server/\` and \`plugin/dist/\` |\n`;
 }
 
 function readAgents() {

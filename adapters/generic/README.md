@@ -23,4 +23,4 @@ This is the lowest-common-denominator package: `AGENTS.md` + Agent Skills (agent
 
 | Claude Code | Here |
 |---|---|
-| `/archflow:studio` | `$archflow-studio` in forward mode: Studio runs no agent, its chat composes the command and you paste it into this host's session. Its server bundle goes in `.agents/archflow/server` and `.agents/archflow/dist`: `npx archflow install` puts it there, or by hand copy the Archflow package's `plugin/server/` and `plugin/dist/` |
+| `/archflow:studio` | `$archflow-studio` in forward mode: Studio runs no agent, its chat composes the command and you paste it into this host's session. Its server bundle goes in `.agents/archflow/server` and `.agents/archflow/dist`: `npx archflow@latest install` puts it there, or by hand copy the Archflow package's `plugin/server/` and `plugin/dist/` |

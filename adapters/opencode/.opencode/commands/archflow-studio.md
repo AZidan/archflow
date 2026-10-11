@@ -119,8 +119,9 @@ the user can see what the chat panel will do without opening the browser.
    ```
 
    If it is missing, stop and tell the user the Studio bundle did not reach this install: running
-   `npx archflow install` from the project root puts it where this command looks. Do not try to
-   build or fetch it from here.
+   `npx archflow@latest install` from the project root puts it where this command looks
+   (`@latest`, because a cached older installer brings the adapters without the bundle). Do not
+   try to build or fetch it from here.
 3. **Start it DETACHED.** Not as a background task of this session: that keeps the server a child
    of the session, so it dies when the session does. The studio has to outlive the conversation
    that started it — that is the whole point of a studio you can leave open.
@@ -163,6 +164,14 @@ the user can see what the chat panel will do without opening the browser.
    If it never answers, `cat "$LOG"` and stop — that file is the only place a detached server's
    output goes. The startup log's `[host]` line says which host it resolved and from where, and its
    `[mode]` line says which mode it resolved and, when it degraded, why.
+
+   **Sandboxed shells.** Some hosts run commands in a sandbox (Codex's `workspace-write`, for
+   one) that can block what steps 1–4 need: writing under `$HOME/.archflow`, listening on and
+   curling `127.0.0.1`, or a detached child outliving its command. A failed `mkdir`, no log file,
+   or `bundle=ok` with a port that never answers on such a host points at the sandbox, not Studio.
+   Re-run the start and probe with the host's approval to run outside the sandbox (or with network
+   and write access granted), or give the user step 3's command, values filled in, to run in their
+   own terminal from the project root.
 
 5. **Report.** Print one line: `Archflow Studio is running at ${URL}`, the project name from
    `/api/project`, and [the chat line](#the-chat-line). Only if the session set

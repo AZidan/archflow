@@ -153,13 +153,14 @@ each, since the handoff file is one per machine and the most recently started se
 ## Hosts
 
 Studio runs on every supported coding agent: Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor,
-Gemini CLI and OpenCode. `npx archflow install` sets it up with the rest of Archflow for each host.
+Gemini CLI, OpenCode, and any agent that reads `AGENTS.md` and Agent Skills (the generic package).
+`npx archflow@latest install` sets it up with the rest of Archflow for each host.
 Start it with that host's spelling of the command:
 
 | Host | Command |
 |---|---|
 | Claude Code, Gemini CLI | `/archflow:studio` |
-| OpenAI Codex | `$archflow-studio` |
+| OpenAI Codex, generic `AGENTS.md` + Agent Skills | `$archflow-studio` |
 | GitHub Copilot CLI, Cursor, OpenCode | `/archflow-studio` |
 
 The board, releases, stories and files work the same everywhere. The chat panel differs:

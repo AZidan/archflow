@@ -46,8 +46,9 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   plugin's copy, not one per adapter, and `npx archflow install` places it in each host's own
   install: `.codex/archflow/`, `.github/archflow/`, `.cursor/archflow/`, `.opencode/archflow/`,
   `.agents/archflow/` or `~/.gemini/extensions/archflow/`. In a project it adds a `.gitignore`
-  there so the bundle stays out of your commits; a teammate gets it by running the installer. A
-  re-run replaces it whole, so old builds do not pile up. The package grows by about 1.7 MB
+  there so the bundle stays out of your commits; a teammate gets it by running
+  `npx archflow@latest install` (`@latest`, since an installer npx cached before 2.5.0 brings the
+  adapters but not the bundle). A re-run replaces it whole, so old builds do not pile up. The package grows by about 1.7 MB
   compressed, where six copies would have added about 10 MB.
 - `/archflow:help`: every command with a one-line usage note, and a short primer on how Archflow
   works (phases, releases, the story pipeline, gates, modes and a typical flow). `/archflow:help

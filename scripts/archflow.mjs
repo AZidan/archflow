@@ -44,7 +44,7 @@
  */
 
 import {
-  chmodSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync,
+  chmodSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync,
   rmSync, statSync, symlinkSync, writeFileSync,
 } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -274,7 +274,7 @@ function installStudio(root, label, dry, { ignore = false } = {}) {
   const missing = STUDIO_BUNDLE.filter(([from]) => !existsSync(join(SRC.root, from)));
   if (missing.length) return [`skip  Archflow Studio bundle (not in ${SRC.origin}; /archflow:studio will say it is missing)`];
   const actions = [`copy  ${label}/server/server.mjs, ${label}/dist/ (Archflow Studio)`];
-  if (ignore) actions.push(`${dry ? "write" : ensureIgnored(root)} ${label}/.gitignore (Studio's bundle is build output)`);
+  if (ignore) actions.push(`${ensureIgnored(root, dry)} ${label}/.gitignore (Studio's bundle is build output)`);
   if (dry) return actions;
   for (const [from, to] of STUDIO_BUNDLE) {
     const dst = join(root, to);
@@ -284,14 +284,18 @@ function installStudio(root, label, dry, { ignore = false } = {}) {
   return actions;
 }
 
-/** Add the bundle's paths to <root>/.gitignore, keeping whatever else is there. Returns the verb. */
-function ensureIgnored(root) {
+/**
+ * Add the bundle's paths to <root>/.gitignore, keeping whatever else is there. Returns the verb the
+ * run takes (write, merge or keep). A dry run works out the same verb and writes nothing.
+ */
+function ensureIgnored(root, dry = false) {
   const file = join(root, ".gitignore");
   const lines = ["/server/", "/dist/"];
   const text = existsSync(file) ? readFileSync(file, "utf8") : "";
   const have = new Set(text.split(/\r?\n/).map((l) => l.trim()));
   const add = lines.filter((l) => !have.has(l));
   if (!add.length) return "keep ";
+  if (dry) return text ? "merge" : "write";
   mkdirSync(root, { recursive: true });
   const head = text ? text.replace(/\s*$/, "\n") : "# Archflow Studio's bundle: build output, placed by `npx archflow install`.\n";
   writeFileSync(file, head + add.join("\n") + "\n");
@@ -510,23 +514,31 @@ function writeClaudeSettings(project, source, dry) {
  */
 function installGemini(dry) {
   const label = "~/.gemini/extensions/archflow";
-  if (dry) return [...installGeminiFrom(join(ADAPTERS, "gemini"), true), ...installStudio(null, label, true)];
-  const staged = join(homedir(), ".cache", "archflow", "gemini-extension", VERSION, "archflow");
+  const cache = join(homedir(), ".cache", "archflow", "gemini-extension");
+  const staged = join(cache, VERSION, "archflow");
+  if (dry) {
+    const { actions } = installGeminiFrom(staged, true);
+    return [...actions, ...installStudio(null, label, true), ...pruneStaged(cache, VERSION, true)];
+  }
   rmSync(staged, { recursive: true, force: true });
   copyInto(join(ADAPTERS, "gemini"), staged, false);
   const studio = installStudio(staged, label, false);
-  return [...installGeminiFrom(staged, false), ...studio];
+  const { actions, via } = installGeminiFrom(staged, false);
+  // `gemini extensions update` re-reads the source Gemini remembers, which may be an older staged
+  // copy: keep them all in that case, so the extension's source never disappears from under it.
+  return [...actions, ...studio, ...(via === "update" ? [] : pruneStaged(cache, VERSION, false))];
 }
 
+/** Returns the actions taken and `via`: how the extension went in (install, update or copy). */
 function installGeminiFrom(src, dry) {
   if (onPath("gemini")) {
-    if (dry) return [`run   gemini extensions install ${src}`];
+    if (dry) return { actions: [`run   gemini extensions install ${src}`], via: "install" };
     const r = spawnSync("gemini", ["extensions", "install", src], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-    if (r.status === 0) return [`run   gemini extensions install → ${(r.stdout || "").trim().split("\n").pop() || "ok"}`];
+    if (r.status === 0) return { actions: [`run   gemini extensions install → ${(r.stdout || "").trim().split("\n").pop() || "ok"}`], via: "install" };
     const msg = (r.stderr || r.stdout || "").trim().split("\n").pop();
     if (/already/i.test(msg)) {
       const u = spawnSync("gemini", ["extensions", "update", "archflow"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-      if (u.status === 0) return [`run   gemini extensions update archflow → ${(u.stdout || "").trim().split("\n").pop() || "ok"}`];
+      if (u.status === 0) return { actions: [`run   gemini extensions update archflow → ${(u.stdout || "").trim().split("\n").pop() || "ok"}`], via: "update" };
     }
     log(`      gemini CLI install failed (${msg}); copying the extension directly`);
   }
@@ -535,7 +547,30 @@ function installGeminiFrom(src, dry) {
     rmSync(join(dst, "dist"), { recursive: true, force: true }); // hashed assets: replace, never merge
     copyInto(src, dst, false);
   }
-  return [`copy  ${dst} (Gemini extension)`];
+  return { actions: [`copy  ${dst} (Gemini extension)`], via: "copy" };
+}
+
+/**
+ * Remove staged Gemini extension copies (~11 MB each) left by earlier versions, keeping `keep`.
+ * Only real directories directly under `cache` go; a symlink (the cache dir itself, or an entry in
+ * it) is never followed or removed. A dry run lists what it would remove and removes nothing.
+ */
+function pruneStaged(cache, keep, dry) {
+  let entries;
+  try {
+    if (!lstatSync(cache).isDirectory()) return [];
+    entries = readdirSync(cache, { withFileTypes: true });
+  } catch { return []; }
+  const out = [];
+  for (const e of entries) {
+    if (e.name === keep || !e.isDirectory() || e.isSymbolicLink()) continue;
+    const dir = join(cache, e.name);
+    if (!dry) {
+      try { rmSync(dir, { recursive: true, force: true }); } catch (err) { out.push(`note  could not remove ${dir} (${err.code || err.message})`); continue; }
+    }
+    out.push(`remove ${dir} (an older version's staged Gemini extension)`);
+  }
+  return out;
 }
 
 /** `archflow telemetry [on|off|status]` — status with no argument (or `status`), otherwise change it. */
