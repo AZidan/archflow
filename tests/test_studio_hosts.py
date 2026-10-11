@@ -215,7 +215,9 @@ def test_dry_run_reports_the_bundle_and_writes_nothing(target):
     proc = install(home, project, "codex", "gemini", extra=("--dry-run",))
     assert proc.returncode == 0, proc.stderr
     assert ".codex/archflow/server/server.mjs, .codex/archflow/dist/ (Archflow Studio)" in proc.stdout
-    assert "~/.gemini/extensions/archflow/server/server.mjs" in proc.stdout
+    # via the gemini CLI when one is on PATH, else a direct copy; either way the bundle is named
+    assert re.search(r"→ ~/\.gemini/extensions/archflow \((Gemini extension: )?adapter \+ Studio bundle\)", proc.stdout), proc.stdout
+    assert "/archflow/server/server.mjs, " in proc.stdout and "gemini-extension" in proc.stdout
     assert not any(project.iterdir()) and not (home / ".gemini").exists() and not (home / ".cache").exists()
 
 
@@ -271,18 +273,36 @@ def test_every_adapter_readme_studio_row_says_latest(host):
     assert LATEST in row and not _without_latest(row), f"{host}: README Studio row: {row}"
 
 
-def _fake_gemini(bin_dir, *, install_ok=True):
-    """A `gemini` on PATH whose `extensions install` succeeds (or says it is already installed)."""
+def _fake_gemini(bin_dir, *, installed=False, uninstall_ok=True):
+    """A `gemini` on PATH that behaves like the real one for the calls the installer makes:
+    `extensions install <path>` copies <path> to ~/.gemini/extensions/archflow and records the call,
+    or says "already installed" when that directory exists; `extensions uninstall archflow` removes
+    it (or fails, with uninstall_ok=False). Every call is appended to bin_dir/calls.log."""
     bin_dir.mkdir(parents=True, exist_ok=True)
     script = bin_dir / "gemini"
-    if install_ok:
-        body = 'echo "Extension archflow installed."; exit 0'
-    else:
-        body = ('if [ "$2" = "install" ]; then echo "Extension archflow is already installed." >&2; exit 1; fi\n'
-                'echo "Extension archflow updated."; exit 0')
-    script.write_text(f"#!/bin/sh\n{body}\n")
+    ext = '"$HOME/.gemini/extensions/archflow"'
+    script.write_text(f"""#!/bin/sh
+echo "$*" >> "{bin_dir}/calls.log"
+if [ "$2" = "install" ]; then
+  if [ -d {ext} ]; then echo "Extension archflow is already installed." >&2; exit 1; fi
+  mkdir -p "$HOME/.gemini/extensions" && cp -R "$3" {ext} && echo "Extension archflow installed." && exit 0
+fi
+if [ "$2" = "uninstall" ]; then
+  {"rm -rf " + ext + ' && echo "Extension archflow uninstalled." && exit 0' if uninstall_ok else 'echo "uninstall: permission denied" >&2; exit 1'}
+fi
+if [ "$2" = "update" ]; then echo "update must not be called" >&2; exit 3; fi
+exit 2
+""")
     script.chmod(0o755)
     return bin_dir
+
+
+def _seed_installed_extension(home):
+    """An extension a 2.4.0 install left: no server/ or dist/."""
+    ext = home / ".gemini" / "extensions" / "archflow"
+    (ext / "commands").mkdir(parents=True)
+    (ext / "gemini-extension.json").write_text('{"name": "archflow", "version": "2.4.0"}\n')
+    return ext
 
 
 def _install_with_path(home, project, path_prefix, *hosts, extra=()):
@@ -328,14 +348,58 @@ def test_gemini_install_removes_older_staged_copies(target, tmp_path):
     assert f"remove {cache / '0.0.1'}" in proc.stdout
 
 
-def test_gemini_update_keeps_staged_copies_gemini_may_still_read(target, tmp_path):
-    """`gemini extensions update` re-reads the source Gemini remembers, which may be an older staged
-    copy, so that path prunes nothing."""
+def test_gemini_already_installed_reinstalls_from_the_staged_copy(target, tmp_path):
+    """I-6: upgrading from 2.4.0 (extension already installed, no bundle). The installer uninstalls
+    and installs from the staged copy, never `gemini extensions update` (which re-reads the source
+    Gemini recorded first, without the bundle). The bundle lands in the extension, and older staged
+    copies are pruned because Gemini's recorded source is now the current one."""
+    home, project = target
+    cache, outside = _seed_old_staged(home, tmp_path)
+    ext = _seed_installed_extension(home)
+    bin_dir = _fake_gemini(tmp_path / "bin")
+    proc = _install_with_path(home, project, bin_dir, "gemini")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    staged = cache / _version() / "archflow"
+    calls = (bin_dir / "calls.log").read_text().splitlines()
+    assert calls == [f"extensions install {staged}", "extensions uninstall archflow", f"extensions install {staged}"], calls
+    assert_bundle_at(ext)
+    assert "gemini extensions uninstall archflow" in proc.stdout
+    assert f"run   gemini extensions install {staged} → Extension archflow installed. (adapter + Studio bundle)" in proc.stdout
+    assert "extensions update" not in proc.stdout
+    assert not (cache / "0.0.1").exists(), "an older version's staged copy was left behind"
+    assert (staged / "server" / "server.mjs").is_file()
+    assert (cache / "linked").is_symlink() and (outside / "keep.txt").is_file()
+
+
+def test_gemini_uninstall_failure_falls_back_to_a_direct_copy(target, tmp_path):
+    """I-6: if the uninstall fails, the staged copy (bundle included) is copied straight into
+    ~/.gemini/extensions/archflow, and the report says copy, not install."""
     home, project = target
     cache, _ = _seed_old_staged(home, tmp_path)
-    proc = _install_with_path(home, project, _fake_gemini(tmp_path / "bin", install_ok=False), "gemini")
+    ext = _seed_installed_extension(home)
+    bin_dir = _fake_gemini(tmp_path / "bin", uninstall_ok=False)
+    proc = _install_with_path(home, project, bin_dir, "gemini")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "gemini extensions update archflow" in proc.stdout
+    assert "uninstall failed" in proc.stdout
+    staged = cache / _version() / "archflow"
+    assert f"copy  {staged} → ~/.gemini/extensions/archflow (Gemini extension: adapter + Studio bundle)" in proc.stdout
+    assert "run   gemini extensions install" not in proc.stdout
+    assert_bundle_at(ext)
+    assert not (cache / "0.0.1").exists()
+
+
+def test_gemini_dry_run_reports_the_reinstall_and_writes_nothing(target, tmp_path):
+    home, project = target
+    cache, _ = _seed_old_staged(home, tmp_path)
+    ext = _seed_installed_extension(home)
+    bin_dir = _fake_gemini(tmp_path / "bin")
+    proc = _install_with_path(home, project, bin_dir, "gemini", extra=("--dry-run",))
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    staged = cache / _version() / "archflow"
+    assert "run   gemini extensions uninstall archflow (already installed; reinstalling from the staged copy)" in proc.stdout
+    assert f"run   gemini extensions install {staged} → ~/.gemini/extensions/archflow (adapter + Studio bundle)" in proc.stdout
+    assert not (bin_dir / "calls.log").exists(), "the dry run ran gemini"
+    assert not (ext / "server").exists() and not staged.exists()
     assert (cache / "0.0.1" / "archflow" / "marker.txt").is_file()
 
 
@@ -347,7 +411,7 @@ def test_gemini_dry_run_reports_the_staged_source_and_the_prune_and_writes_nothi
     proc = _install_with_path(home, project, _fake_gemini(tmp_path / "bin"), "gemini", extra=("--dry-run",))
     assert proc.returncode == 0, proc.stdout + proc.stderr
     staged = cache / _version() / "archflow"
-    assert f"run   gemini extensions install {staged}" in proc.stdout
+    assert f"run   gemini extensions install {staged} → ~/.gemini/extensions/archflow (adapter + Studio bundle)" in proc.stdout
     assert "adapters/gemini" not in proc.stdout, "the dry run names the package copy, not the staged one"
     assert f"remove {cache / '0.0.1'}" in proc.stdout
     assert (cache / "0.0.1" / "archflow" / "marker.txt").is_file(), "the dry run deleted something"
