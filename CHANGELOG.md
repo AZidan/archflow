@@ -33,6 +33,22 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   changed or sent and the command says so.
 - `scripts/build-adapters.mjs` copies the hook runtime through one helper, so a new hook is one
   entry in `HOOK_SCRIPTS` rather than an edit per host.
+- **Archflow Studio on every host.** `/archflow:studio` now ships in every adapter: OpenAI Codex
+  (`$archflow-studio`), GitHub Copilot CLI, Cursor, OpenCode (`/archflow-studio`), Gemini CLI
+  (`/archflow:studio`) and the generic AGENTS.md package. This supersedes 2.4.0's "`/archflow:studio`
+  stays Claude Code only". Off Claude Code, Studio runs in **forward mode**: the board, releases,
+  stories and files work as they do on Claude Code, and its chat panel runs no agent. You compose
+  there, Studio spells the command the way your host expects, and Send copies it for you to paste
+  into your own terminal session. On Claude Code nothing changes: full mode by default, companion
+  opt-in. The command reports which host Studio resolved and what its chat does
+  (`host codex, chat forward`), and Studio's host picker changes the host per project.
+- Studio's bundle (server and web UI, about 6.5 MB) ships once. The npm package carries the
+  plugin's copy, not one per adapter, and `npx archflow install` places it in each host's own
+  install: `.codex/archflow/`, `.github/archflow/`, `.cursor/archflow/`, `.opencode/archflow/`,
+  `.agents/archflow/` or `~/.gemini/extensions/archflow/`. In a project it adds a `.gitignore`
+  there so the bundle stays out of your commits; a teammate gets it by running the installer. A
+  re-run replaces it whole, so old builds do not pile up. The package grows by about 1.7 MB
+  compressed, where six copies would have added about 10 MB.
 - `/archflow:help`: every command with a one-line usage note, and a short primer on how Archflow
   works (phases, releases, the story pipeline, gates, modes and a typical flow). `/archflow:help
   <command>` prints just that command's line. Generated for every host adapter. A test checks that
@@ -73,8 +89,8 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   the file each host really ships the command as, such as `.agents/skills/archflow-groom/SKILL.md`
   on Codex or `.cursor/commands/archflow-groom.md` on Cursor. A test checks that every path built
   from the plugin root, in every adapter, exists.
-- `/archflow:help` on every host but Claude Code listed `studio`, which those hosts do not ship.
-  Each host's help now lists exactly the commands that host has.
+- Each host's `/archflow:help` lists exactly the commands that host ships, and a test holds it
+  there. (With Studio now on every host, that list is the same everywhere.)
 - The Cursor hook bridge found the project from `cwd`, which Cursor sends only with some events,
   such as before a shell command, and then as the shell's directory. So session start, prompt and
   stop hooks fell back to whatever directory the hook ran in, and a shell in a subdirectory of the

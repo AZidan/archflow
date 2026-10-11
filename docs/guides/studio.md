@@ -9,7 +9,7 @@ Studio is a local workspace over the same `.archflow/` files the CLI uses. The r
 board, the release becomes a pipeline, and the agents work in front of you instead of behind a
 scroll of text.
 
-It is the terminal-free path. After the plugin is installed, one command opens it and everything
+It is the terminal-free path. After Archflow is installed, one command opens it and everything
 else, including onboarding an existing codebase, happens in the browser.
 
 **Beta.** Features are still landing. It is already what ships Studio itself, so it is not fragile,
@@ -28,7 +28,8 @@ claude
 /archflow:studio
 ```
 
-That prints a URL, `http://localhost:3456` by default, and offers to open it.
+That prints a URL, `http://localhost:3456` by default, and offers to open it. On another coding
+agent, open it in the project and use that host's spelling of the command; see [Hosts](#hosts).
 
 The server is **detached on purpose**: it outlives the session that started it, so you can close
 the terminal and leave Studio open beside your work. That also means it keeps running until you
@@ -152,10 +153,25 @@ each, since the handoff file is one per machine and the most recently started se
 ## Hosts
 
 Studio runs on every supported coding agent: Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor,
-Gemini CLI and OpenCode. On Claude Code the agent runs in Studio's own chat panel. On the others,
-Studio composes the prompt, spelled the way that host expects, and hands it to the terminal session
-you already have open, so you see every prompt before it goes. You choose which host Studio drives
-from inside Studio.
+Gemini CLI and OpenCode. `npx archflow install` sets it up with the rest of Archflow for each host.
+Start it with that host's spelling of the command:
+
+| Host | Command |
+|---|---|
+| Claude Code, Gemini CLI | `/archflow:studio` |
+| OpenAI Codex | `$archflow-studio` |
+| GitHub Copilot CLI, Cursor, OpenCode | `/archflow-studio` |
+
+The board, releases, stories and files work the same everywhere. The chat panel differs:
+
+- **Claude Code:** the agent runs in Studio's own chat panel (full mode, or companion if you opt in).
+- **Every other host: forward mode.** Studio runs no agent. You compose in the panel, Studio spells
+  the command the way that host expects, and Send copies it for you to paste into the terminal
+  session you already have open, so you see every prompt before it goes.
+
+`/archflow:studio status` reports which host Studio resolved and what its chat does, for example
+`host codex, chat forward`. Studio picks the host from the Archflow installs it finds in the
+project; you can switch it from inside Studio, and the choice is saved per project.
 
 ---
 

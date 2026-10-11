@@ -23,7 +23,7 @@ contract.
 
 It started as a Claude Code plugin. In 2.4.0 it became multi-host: one set of files, generated
 adapters for Codex, Copilot CLI, Cursor, Gemini CLI, OpenCode and a generic `AGENTS.md` package,
-installed by `npx archflow install`. Archflow Studio (beta, Claude Code only) is a local web
+installed by `npx archflow install`. Archflow Studio (beta, every host; forward mode off Claude Code) is a local web
 workspace over the same files, and the current branch repositions the public site around it
 ("Your coding agent, run from a board").
 
@@ -257,7 +257,8 @@ across six coding agents, and lets you run it from a board.
    auto-updates.
 7. **Git safety:** never merge to `main` without explicit user approval. Autopilot never merges,
    opens a PR or ships. Commit only your own changes, never `git add .`.
-8. **Host limits:** Studio and `memory: user` are Claude Code only. OpenCode hooks don't fire in
+8. **Host limits:** Studio's companion mode and `memory: user` are Claude Code only (Studio
+   itself runs on every host, in forward mode elsewhere). OpenCode hooks don't fire in
    subagents (upstream #5894). Gemini subagents are in preview.
 9. **Runtime requirements:** Node ≥18. Python 3 + PyYAML only for migrate and validate.
 10. **No API contract for this repo:** `docs/api-contract.md` is intentionally absent, and Phase 2.5

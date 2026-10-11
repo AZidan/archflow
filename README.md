@@ -83,7 +83,7 @@ version of the installer npx has cached, and a session-start check tells you whe
 
 | Host | What you get | Sub-agents | Hooks |
 |---|---|---|---|
-| Claude Code | The plugin, via the marketplace. Studio lives here | yes | yes |
+| Claude Code | The plugin, via the marketplace. Studio's chat runs the agent in its panel | yes | yes |
 | OpenAI Codex | `.codex/` agents and `$archflow-<cmd>` skills | yes | yes |
 | GitHub Copilot CLI | `.github/` agents, skills and hooks; VS Code agent mode reads the same tree | yes | yes |
 | Cursor | `.cursor/` agents, commands, rules and hooks; also a Cursor Plugin | yes | yes |
@@ -91,8 +91,10 @@ version of the installer npx has cached, and a session-start check tells you whe
 | OpenCode | `.opencode/` agents, commands and a plugin for hooks | yes | primary agent only |
 | Anything with `AGENTS.md` + Agent Skills | Skills only; roles run serially; the git guard is the safety net | no | no |
 
-What does not port: `/archflow:studio` drives the `claude` binary, and `memory: user` agent memory
-has no equivalent elsewhere. Each adapter's README under `adapters/<host>/` lists that host's limits.
+Studio runs on every host. Off Claude Code it runs in forward mode: its chat composes the command
+and you paste it into your own terminal session, and `npx archflow install` puts its bundle in that
+host's install. What does not port: Studio's companion mode, which forks a Claude Code session, and
+`memory: user` agent memory, which has no equivalent elsewhere. Each adapter's README under `adapters/<host>/` lists that host's limits.
 Something off on your host? [Open an issue](https://github.com/AZidan/archflow/issues).
 Contributors regenerate the adapters after changing `plugin/` with `node scripts/build-adapters.mjs`;
 CI fails on drift.
@@ -214,10 +216,12 @@ the same approval gates, driven from a button instead of a prompt. A project sti
 gets a one-button migration to v2.0, backup included. After the plugin install, the terminal is
 optional.
 
-**Its chat is your session, forked.** Open Studio from a running Claude Code session and its chat
-starts with that conversation's history on a branch, so you don't re-explain the project to a second
-assistant. Nothing you type in Studio lands back in your terminal. If no session context is found it
-falls back to its own `claude` process and says so.
+**Its chat runs your host, or feeds it.** On Claude Code, Studio's chat runs its own `claude`
+process; opt in with `STUDIO_MODE=companion` and it starts from your running session's history, on a
+branch, so you don't re-explain the project to a second assistant. On Codex, Copilot CLI, Cursor,
+Gemini CLI and OpenCode it runs in forward mode: you compose in the panel, Studio spells the command
+the way your host expects, and you paste it into the terminal session you already have open.
+`/archflow:studio status` says which host Studio resolved and what its chat does.
 
 **Local, and only local.** Binds to `127.0.0.1` with an origin allowlist covering the WebSocket
 upgrade. No cloud service and no account. Your code and your Claude credentials never leave the
@@ -604,13 +608,10 @@ Archflow drives your coding agent, Claude Code or one of the other hosts, so eve
 External code it can install is listed under [Supply chain](#supply-chain), and nothing there
 installs without asking you first.
 
-Archflow Studio additionally needs the `claude` binary on your `PATH`, which you already have if
-Claude Code works, and a project on schema v2.0. A v1.0 project opens read-only until you take the
-one-button migration Studio offers.
-
-Archflow Studio additionally needs the `claude` binary on your `PATH`, which you already have if
-Claude Code works, and a project on schema v2.0. A v1.0 project opens read-only until you take the
-one-button migration Studio offers.
+Archflow Studio needs Node.js 18+ and a project on schema v2.0. On Claude Code its chat also needs
+the `claude` binary on your `PATH`, which you already have if Claude Code works; forward mode on the
+other hosts needs nothing more. A v1.0 project opens read-only until you take the one-button
+migration Studio offers.
 
 ---
 
