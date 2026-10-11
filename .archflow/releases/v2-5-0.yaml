@@ -876,3 +876,18 @@ stories:
       - {text: "Rewrite studio.md for forward mode and host-neutral launch paths", completed: true}
       - {text: "Regenerate adapters; tests for per-host studio", completed: true}
       - {text: "CHANGELOG, README/site host claims", completed: true}
+    issues:
+      - id: I-1
+        summary: "Gemini install keeps a staged extension copy (with Studio's bundle, ~11 MB) per version under ~/.cache/archflow/gemini-extension/ and never prunes old versions"
+        found_by: qa-engineer
+        severity: minor
+        location: "scripts/archflow.mjs:514"
+        report: "docs/qa-reports/S6-04-qa.md"
+        status: open
+      - id: I-2
+        summary: "The generic AGENTS.md host ships $archflow-studio but is missing from the guide's host/command table and from the README and site lists of forward-mode hosts"
+        found_by: qa-engineer
+        severity: minor
+        location: "docs/guides/studio.md:159"
+        report: "docs/qa-reports/S6-04-qa.md"
+        status: open
