@@ -940,7 +940,8 @@ stories:
         severity: minor
         location: "docs/index.html"
         report: "docs/acceptance-reports/S6-04-review.md"
-        status: open
+        status: deferred
+        deferred_to: S9-09
       - id: I-10
         summary: "Studio guide says declining Gemini's trust/confirm prompts leaves 'Studio's bundle' uninstalled; a declined fresh install leaves no Archflow extension at all, and a declined upgrade keeps the old one"
         found_by: pm-reviewer

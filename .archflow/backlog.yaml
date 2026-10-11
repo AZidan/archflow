@@ -157,6 +157,12 @@ epics:
         priority: Low
         status: backlog
         description: "Compare pages vs GitHub Spec Kit and Kiro; public before/after onboard showcase on real OSS repos (proposed)."
+      - id: S9-09
+        title: "Point individual Gemini users to Antigravity on the site and Studio guide"
+        priority: Low
+        status: backlog
+        target: site
+        description: "Deferred from S6-04 I-9: only the README and the Gemini adapter README tell individual Google users (free, AI Pro, AI Ultra) that Gemini CLI moved them to Antigravity CLI and that Archflow support is planned; the site, the Studio guide and the CHANGELOG only say '(enterprise/API)'. Marketing-copy decision; pairs with S7-11."
   - id: E10
     stories:
       - id: S10-03
