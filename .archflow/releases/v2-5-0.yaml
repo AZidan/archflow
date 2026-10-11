@@ -912,3 +912,10 @@ stories:
         location: "plugin/commands/studio.md:127"
         report: "docs/qa-reports/S6-04-code-review.md"
         status: fixed
+      - id: I-6
+        summary: "Gemini 'already installed' path runs `gemini extensions update`, which re-copies from Gemini's recorded (old) source, so upgraders never get the Studio bundle, yet the installer reports copying it; the @latest remedy loops"
+        found_by: qa-engineer
+        severity: blocking
+        location: "scripts/archflow.mjs:539"
+        report: "docs/qa-reports/S6-04-qa.md"
+        status: open
