@@ -106,6 +106,12 @@ epics:
         priority: Low
         status: backlog
         description: "Onboard reads existing constitution/spec/PRD files into project-context and backlog (proposed)."
+      - id: S7-11
+        title: "Antigravity CLI host adapter"
+        priority: High
+        status: backlog
+        target: adapters
+        description: "Google moved individual Gemini CLI users to Antigravity CLI (agy) on 2026-06-18; Gemini CLI now serves enterprise/API users only. Add an agy adapter: plugins (agy plugin install / /plugin install, the rebrand of Gemini extensions), its command/hook format and paths, installer support incl. the Studio bundle, and a check of `agy plugin import gemini` on an existing Archflow Gemini extension. Test against the real agy."
   - id: E8
     stories:
       - id: S8-08
