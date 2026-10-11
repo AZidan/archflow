@@ -948,4 +948,4 @@ stories:
         severity: minor
         location: "docs/guides/studio.md:158"
         report: "docs/acceptance-reports/S6-04-review.md"
-        status: open
+        status: fixed
