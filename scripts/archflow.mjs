@@ -508,11 +508,11 @@ function writeClaudeSettings(project, source, dry) {
 }
 
 /**
- * Gemini: a per-user extension. Prefer the CLI; fall back to copying into ~/.gemini/extensions.
+ * Gemini: a per-user extension. Prefer the CLI; with no `gemini` on PATH, copy into ~/.gemini/extensions.
  * The extension is installed from a staged copy of adapters/gemini plus Studio's bundle, kept
  * under ~/.cache/archflow (not a temp dir), because Gemini remembers where an extension came from.
- * Every successful path leaves that staged copy (bundle included) as the installed extension, so
- * older staged copies are pruned afterwards.
+ * Older staged copies are pruned only once the staged copy (bundle included) is confirmed to be the
+ * installed extension; an install that did not land leaves everything as it was.
  */
 function installGemini(dry) {
   const cache = join(homedir(), ".cache", "archflow", "gemini-extension");
@@ -523,67 +523,114 @@ function installGemini(dry) {
   }
   const studio = installStudio(staged, staged, dry);
   const bundled = studio.some((a) => a.startsWith("copy"));
-  const { actions } = installGeminiFrom(staged, dry, bundled);
-  return [...studio, ...actions, ...pruneStaged(cache, VERSION, dry)];
+  const { actions, via } = installGeminiFrom(staged, dry, bundled);
+  const landed = via === "install" || via === "reinstall" || via === "copy";
+  return [...studio, ...actions, ...(landed ? pruneStaged(cache, VERSION, dry) : [])];
 }
 
 const GEMINI_EXT = () => join(homedir(), ".gemini", "extensions", "archflow");
+/** Where an existing extension waits while the new one installs; outside extensions/ so Gemini does not load it. */
+const GEMINI_PREV = () => join(homedir(), ".gemini", "archflow-extension.previous");
+/** Hosts whose install did not complete; main() reports them instead of "Installed." and exits 1. */
+const incomplete = [];
+
+/**
+ * Gemini asks its own questions on `extensions install` (trust the source folder? trust this
+ * workspace? continue?) and exits 0 when they are declined or unanswered. Those answers are the
+ * user's, so the install runs with the terminal passed through, and only when there is a terminal.
+ * ARCHFLOW_TEST_STDIN_TTY (1/0) overrides the check, for the test suite only.
+ */
+function stdinIsTTY() {
+  const o = process.env.ARCHFLOW_TEST_STDIN_TTY;
+  if (o === "1" || o === "0") return o === "1";
+  return Boolean(process.stdin.isTTY);
+}
+
+/** True when ~/.gemini/extensions/archflow is the staged copy: same manifest, and the same server bundle when there is one. */
+function geminiExtMatches(src) {
+  const dst = GEMINI_EXT();
+  const same = (rel) => {
+    try { return readFileSync(join(src, rel)).equals(readFileSync(join(dst, rel))); } catch { return false; }
+  };
+  if (!same("gemini-extension.json")) return false;
+  return !existsSync(join(src, "server", "server.mjs")) || same(join("server", "server.mjs"));
+}
 
 /**
  * Make `src` (the staged adapter + Studio bundle) the installed extension. Returns the actions taken
- * and `via`: install (first install), reinstall (it was already installed: uninstall, then install
- * from `src`, so Gemini's recorded source is the current staged copy and a later
- * `gemini extensions update` cannot revert to an older one), or copy (no CLI, or the CLI failed).
- * `gemini extensions update` is never used: it re-copies from the source Gemini recorded at the first
- * install, which for 2.4.0 is adapters/gemini in the package and never had Studio's bundle.
+ * and `via`:
+ *   install    first install through `gemini extensions install`, confirmed afterwards
+ *   reinstall  it was already installed: the old copy is moved aside, `src` installed, the old copy
+ *              removed once the new one is confirmed (or put back when it is not)
+ *   copy       no `gemini` CLI on PATH: copied straight into ~/.gemini/extensions/archflow
+ *   pending    not installed: no terminal to answer Gemini's prompts, or Gemini's install did not
+ *              land (declined, cancelled, failed). The previous extension, if any, is left in place.
+ * The exit code of `gemini extensions install` is never trusted: a declined prompt exits 0. Success
+ * means `gemini extensions list` names archflow and the extension directory holds the staged copy.
+ * `gemini extensions uninstall` and `update` are never used: update re-copies from the source Gemini
+ * recorded at the first install (for 2.4.0, adapters/gemini without the bundle), and an uninstall
+ * before an install that then stops at a prompt would leave the user with no extension.
  */
 function installGeminiFrom(src, dry, bundled) {
   const what = bundled ? "adapter + Studio bundle" : "adapter";
   const label = "~/.gemini/extensions/archflow";
-  const run = (...args) => spawnSync("gemini", ["extensions", ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-  const last = (r) => (r.stderr || r.stdout || "").trim().split("\n").pop() || "";
-  const ok = (r) => (r.stdout || "").trim().split("\n").pop() || "ok";
-  // Archflow's manifest declares no extension settings, so an uninstall drops none of ours. Gemini
-  // may also forget per-workspace enable/disable choices for the extension; say so.
-  const scopes = "note  reinstalled: if you had run `gemini extensions disable archflow --scope workspace` in a repo, check `gemini extensions list` there";
+  const cmd = `gemini extensions install ${src}`;
+  const ext = GEMINI_EXT();
+  const had = existsSync(ext);
   if (onPath("gemini")) {
+    const tty = stdinIsTTY();
+    const askNote = "note  Gemini asks you to trust the extension folder (and this workspace) and to confirm; answer yes, or Studio's bundle is not installed";
+    if (!tty) {
+      const why = "no terminal to answer Gemini's trust and consent prompts";
+      incomplete.push(`Gemini CLI: extension not installed (${why}). In a terminal, run \`${cmd}\` and accept Gemini's prompts, or re-run \`npx archflow@latest install --host gemini\` there.`);
+      return { actions: [
+        `skip  ${cmd} (${why}${had ? "; the installed extension is left as it is" : ""})`,
+        `todo  run in a terminal: ${cmd}`,
+      ], via: "pending" };
+    }
     if (dry) {
-      if (existsSync(GEMINI_EXT())) {
-        return { actions: [
-          `run   gemini extensions uninstall archflow (already installed; reinstalling from the staged copy)`,
-          `run   gemini extensions install ${src} → ${label} (${what})`,
-        ], via: "reinstall" };
-      }
-      return { actions: [`run   gemini extensions install ${src} → ${label} (${what})`], via: "install" };
+      return { actions: [
+        ...(had ? [`move  ${label} → ~/.gemini/archflow-extension.previous (already installed; restored if the new install does not land)`] : []),
+        `run   ${cmd} → ${label} (${what}; interactive)`,
+        askNote,
+        ...(had ? ["remove ~/.gemini/archflow-extension.previous (once the new install is confirmed)"] : []),
+      ], via: had ? "reinstall" : "install" };
     }
-    const r = run("install", src);
-    if (r.status === 0) return { actions: [`run   gemini extensions install ${src} → ${ok(r)} (${what})`], via: "install" };
-    let msg = last(r);
-    if (/already/i.test(msg)) {
-      const u = run("uninstall", "archflow");
-      if (u.status === 0) {
-        const i = run("install", src);
-        if (i.status === 0) {
-          return { actions: [
-            `run   gemini extensions uninstall archflow → ${ok(u)}`,
-            `run   gemini extensions install ${src} → ${ok(i)} (${what})`,
-            scopes,
-          ], via: "reinstall" };
-        }
-        msg = `install after uninstall failed: ${last(i)}`;
-      } else {
-        msg = `uninstall failed: ${last(u)}`;
-      }
+    const prev = GEMINI_PREV();
+    if (had) {
+      rmSync(prev, { recursive: true, force: true });
+      renameSync(ext, prev); // same directory tree under ~/.gemini, so a rename, not a copy
     }
-    log(`      gemini CLI install failed (${msg}); copying the extension directly`);
+    log(`      Running \`${cmd}\`. Gemini asks you to trust the extension folder (and this workspace) and to confirm;`);
+    log(`      answer yes, or Studio's bundle is not installed.`);
+    const r = spawnSync("gemini", ["extensions", "install", src], { stdio: "inherit" });
+    const list = spawnSync("gemini", ["extensions", "list"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    const listed = /\barchflow\b/.test(`${list.stdout || ""}\n${list.stderr || ""}`);
+    if (listed && geminiExtMatches(src)) {
+      if (had) rmSync(prev, { recursive: true, force: true });
+      return { actions: [
+        ...(had ? [`move  ${label} → ~/.gemini/archflow-extension.previous (already installed)`] : []),
+        `run   ${cmd} → installed, confirmed in \`gemini extensions list\` and ${label} (${what})`,
+        ...(had ? ["remove ~/.gemini/archflow-extension.previous (the new install is confirmed)"] : []),
+      ], via: had ? "reinstall" : "install" };
+    }
+    // Not landed. Put the previous extension back, so a declined upgrade changes nothing.
+    let restored = "";
+    if (had) {
+      if (!existsSync(ext)) { renameSync(prev, ext); restored = "; the previous extension is back in place"; }
+      else restored = `; Gemini left a partial ${label}, the previous one is kept at ~/.gemini/archflow-extension.previous`;
+    }
+    const why = r.error ? `gemini could not run: ${r.error.message}` : r.status === 0 ? "declined or cancelled" : `gemini exited ${r.status}`;
+    incomplete.push(`Gemini CLI: install not completed (${why}); Studio bundle not installed. Re-run \`npx archflow@latest install --host gemini\` and accept Gemini's prompts, or run \`${cmd}\` yourself.`);
+    return { actions: [`fail  ${cmd} (${why}; not in \`gemini extensions list\` with the staged copy${restored})`], via: "pending" };
   }
-  const dst = GEMINI_EXT();
+  const dst = ext;
   if (!dry) {
     rmSync(join(dst, "dist"), { recursive: true, force: true }); // hashed assets: replace, never merge
     rmSync(join(dst, "server"), { recursive: true, force: true });
     copyInto(src, dst, false);
   }
-  return { actions: [`copy  ${src} → ${label} (Gemini extension: ${what})`], via: "copy" };
+  return { actions: [`copy  ${src} → ${label} (Gemini extension: ${what}; no gemini CLI on PATH)`], via: "copy" };
 }
 
 /**
@@ -706,7 +753,12 @@ async function main() {
     log(`    ${installGuard(project, opts.dryRun)}\n`);
   }
 
-  log(opts.dryRun ? "Dry run complete." : "Installed.");
+  if (opts.dryRun) log("Dry run complete.");
+  else if (incomplete.length) {
+    log("Not fully installed:");
+    for (const m of incomplete) log(`  ${m}`);
+    process.exitCode = 1;
+  } else log("Installed.");
   log("\nNext:");
   for (const [label, steps] of nextSteps) for (const s of steps) log(`  ${label}: ${s}`);
   log("\nRe-run this command after upgrading Archflow; it updates in place and never deletes your files.");

@@ -925,4 +925,4 @@ stories:
         severity: blocking
         location: "scripts/archflow.mjs:560"
         report: "docs/qa-reports/S6-04-qa.md"
-        status: open
+        status: fixed

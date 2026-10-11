@@ -11,6 +11,8 @@ gemini extensions install https://github.com/AZidan/archflow --ref main   # once
 gemini extensions link ./adapters/gemini                                # local development
 ```
 
+Gemini asks you to trust the extension folder (and the workspace) and to confirm the install. Answer yes: if you decline, nothing is installed, Studio's bundle included. The one-command install runs Gemini's install in your terminal so you can answer; with no terminal (CI, piped) it prints the command to run instead.
+
 Restart Gemini CLI, then run `/archflow:init` or `/archflow:onboard`. Node.js 18+ is required for the hooks.
 
 ## What is different on Gemini CLI

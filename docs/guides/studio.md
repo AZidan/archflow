@@ -155,6 +155,8 @@ each, since the handoff file is one per machine and the most recently started se
 Studio runs on every supported coding agent: Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor,
 Gemini CLI, OpenCode, and any agent that reads `AGENTS.md` and Agent Skills (the generic package).
 `npx archflow@latest install` sets it up with the rest of Archflow for each host.
+On Gemini CLI the install asks you to trust the extension folder and to confirm. Accept both, or
+Studio's bundle is not installed (re-run the install to try again).
 Start it with that host's spelling of the command:
 
 | Host | Command |

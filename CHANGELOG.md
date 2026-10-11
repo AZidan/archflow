@@ -50,6 +50,10 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
   `npx archflow@latest install` (`@latest`, since an installer npx cached before 2.5.0 brings the
   adapters but not the bundle). A re-run replaces it whole, so old builds do not pile up. The package grows by about 1.7 MB
   compressed, where six copies would have added about 10 MB.
+- On Gemini CLI, `npx archflow install` runs `gemini extensions install` in your terminal, so you
+  answer Gemini's own trust and confirm prompts; it then checks the extension really landed before
+  saying so. A declined upgrade keeps the extension you had. With no terminal (CI, piped) it prints
+  the command to run instead and exits 1.
 - `/archflow:help`: every command with a one-line usage note, and a short primer on how Archflow
   works (phases, releases, the story pipeline, gates, modes and a typical flow). `/archflow:help
   <command>` prints just that command's line. Generated for every host adapter. A test checks that

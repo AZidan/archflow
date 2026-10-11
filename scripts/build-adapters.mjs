@@ -699,6 +699,7 @@ const HOSTS = {
         join(out, "README.md"),
         `# Archflow for ${this.label}\n\nGenerated from Archflow ${manifest.version} by \`scripts/build-adapters.mjs\`. Do not edit here.\n\n` +
           `## Install\n\n**One command:** \`npx archflow install --host ${ctx.host}\` from your project root does every step below, and re-running it upgrades in place. By hand:\n\n\`\`\`\ngemini extensions install https://github.com/AZidan/archflow --ref main   # once published under adapters/gemini\ngemini extensions link ./adapters/gemini                                # local development\n\`\`\`\n\n` +
+          `Gemini asks you to trust the extension folder (and the workspace) and to confirm the install. Answer yes: if you decline, nothing is installed, Studio's bundle included. The one-command install runs Gemini's install in your terminal so you can answer; with no terminal (CI, piped) it prints the command to run instead.\n\n` +
           `Restart Gemini CLI, then run \`/archflow:init\` or \`/archflow:onboard\`. Node.js 18+ is required for the hooks.\n\n` +
           `## What is different on Gemini CLI\n\n| Claude Code | Gemini CLI |\n|---|---|\n` +
           `| \`/archflow:<cmd>\` | \`/archflow:<cmd>\` (identical; TOML commands under \`commands/archflow/\`) |\n` +
