@@ -120,8 +120,9 @@ def test_every_host_command_listing_is_covered():
 
 @pytest.mark.parametrize("host", sorted(HELP_FILES))
 def test_each_adapters_help_lists_exactly_what_that_host_ships(host):
-    """S2-06 I-1: every adapter skips /archflow:studio, so its help must not advertise it. The
-    list holds per host: none missing, none the host does not ship, none twice."""
+    """S2-06 I-1: a host's help lists exactly the commands it ships: none missing, none the host
+    does not ship, none twice. S6-04 ships /archflow:studio on every host, so it is listed on
+    every host; a command a host skips again would drop out of its help with it."""
     shipped_here = sorted(n[len("archflow-"):] for n in HOST_COMMANDS[host][0](ADAPTERS / host))
     assert "help" in shipped_here and len(shipped_here) >= 10, f"{host}: command glob found too little"
     listed = host_help_list(host)
@@ -136,6 +137,12 @@ def test_each_adapters_help_lists_exactly_what_that_host_ships(host):
 def test_the_claude_code_help_still_lists_studio():
     """The filter is per host: Claude Code ships Studio, so the plugin's own help keeps it."""
     assert re.search(r"^\s+/archflow:studio\s", (COMMANDS / "help.md").read_text(), re.M)
+
+
+@pytest.mark.parametrize("host", sorted(HELP_FILES))
+def test_every_adapters_help_lists_studio(host):
+    """S6-04: Studio runs on every host (forward mode off Claude Code), so every help lists it."""
+    assert "studio" in host_help_list(host), f"{host} help does not list studio"
 
 
 # --------------------------------------------------------------------------

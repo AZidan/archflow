@@ -29,5 +29,5 @@ Node.js 18+ is required for the hooks. The same `.github/` tree is read by VS Co
 | `agents/*.md` sub-agents | `.github/agents/*.agent.md` custom agents (`disable-model-invocation: true`, so only Archflow dispatches them) |
 | Plugin hooks | `.github/hooks/archflow.json` using PascalCase events, which give Claude-compatible payloads |
 | Telemetry: `UserPromptExpansion` names the command | `UserPromptSubmit` counts a prompt that starts with `/archflow-<cmd>`. Loading the Claude plugin directly should report session starts only, as `host: claude` (Copilot lists no `UserPromptExpansion` event) |
-| `/archflow:studio` | Not available |
+| `/archflow:studio` | `/archflow-studio` in forward mode: Studio runs no agent, its chat composes the command and you paste it into this host's session. Its server bundle goes in `.github/archflow/server` and `.github/archflow/dist`: `npx archflow install` puts it there, or by hand copy the Archflow package's `plugin/server/` and `plugin/dist/` |
 | `memory: user` | Not available |

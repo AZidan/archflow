@@ -22,6 +22,7 @@ Archflow actions are skills under `.agents/skills/`. Run one when the user asks 
 - `$archflow-release` — Release pipeline: see status, cut a new release, start building it, or ship it
 - `$archflow-setup-mcp` — Connect an external tool via MCP (Jira, Notion, Linear, GitHub, SuperDesign, ...)
 - `$archflow-status` — Where the project stands: phase, mode, active release, and what to run next
+- `$archflow-studio` — [Beta] Start (or stop) Archflow Studio for the current project and open it in the browser
 - `$archflow-telemetry` — Show or change anonymous usage telemetry (on by default; this is how to opt out)
 
 Specialised roles are skills named `archflow-agent-<role>`. When a phase delegates to a role, load that skill and perform the role yourself, one role at a time. Phase 3 runs `ui-engineer` then `api-engineer` serially against the same API contract.

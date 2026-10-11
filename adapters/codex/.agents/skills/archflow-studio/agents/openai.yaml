@@ -1,0 +1,5 @@
+interface:
+  display_name: "Archflow: studio"
+  short_description: "[Beta] Start (or stop) Archflow Studio for the current project and open it in the browser"
+policy:
+  allow_implicit_invocation: false

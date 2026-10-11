@@ -136,17 +136,24 @@ GEMINI_TEXT = sorted(p for p in GEMINI.rglob("*") if p.suffix in (".md", ".toml"
 def test_every_extension_path_in_the_package_exists(path):
     # Commands, agents and skills all point the model at files by this path. Command bodies ship
     # as commands/archflow/<n>.toml here, so a plugin-style commands/<n>.md reference is a dead end.
+    # Studio's bundle (server/, dist/) is the one exception: `npx archflow install` adds the
+    # plugin's copy to the extension (tests/test_studio_hosts.py), so it resolves against the plugin.
     for ref in extension_paths(path.read_text()):
         rel = ref[len(EXT_PREFIX):].lstrip("/")
-        assert (GEMINI / rel).exists(), f"{path.relative_to(GEMINI)} names {ref}, which the package does not ship"
+        base = REPO / "plugin" if rel.split("/")[0] in ("server", "dist") else GEMINI
+        assert (base / rel).exists(), f"{path.relative_to(GEMINI)} names {ref}, which the package does not ship"
 
 
 @pytest.fixture
 def gemini_home(tmp_path):
-    """A throwaway HOME with the extension installed where `gemini extensions install` puts it."""
+    """A throwaway HOME with the extension installed where `gemini extensions install` puts it,
+    plus Studio's bundle, which `npx archflow install` adds to it."""
     home = tmp_path / "home"
-    shutil.copytree(GEMINI, home / ".gemini" / "extensions" / "archflow",
-                    ignore=shutil.ignore_patterns("__pycache__"))
+    ext = home / ".gemini" / "extensions" / "archflow"
+    shutil.copytree(GEMINI, ext, ignore=shutil.ignore_patterns("__pycache__"))
+    (ext / "server").mkdir()
+    shutil.copy2(REPO / "plugin" / "server" / "server.mjs", ext / "server" / "server.mjs")
+    shutil.copytree(REPO / "plugin" / "dist", ext / "dist")
     return home
 
 

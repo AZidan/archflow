@@ -55,6 +55,8 @@ Releases and pace
                           (blocker interview first, then silent; one report at the end)
 
 Workspace and settings
+  $archflow-studio        Open Archflow Studio, a local web workspace over the same files
+                          (beta; stop | status | port <n>)
   $archflow-telemetry     Show or change anonymous usage telemetry (on by default;
                           off opts out)
 ```

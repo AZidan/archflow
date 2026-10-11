@@ -250,9 +250,18 @@ def _derived_paths(host, text):
             yield m.group(0).rstrip(".:")
 
 
+# Studio's bundle is not in any adapter: the installer places the package's one copy under each
+# host's plugin root (tests/test_studio_hosts.py checks that it does). A path into it resolves
+# against the plugin, which is where that copy comes from.
+STUDIO_BUNDLE = ("server", "dist")
+
+
 def _resolve(host, path):
     prefix, _ = PLUGIN_ROOTS[host]
     path = path.replace("<name>", "help")
+    rest = path[len(prefix):].lstrip("/") if path.startswith(prefix) else None
+    if rest is not None and rest.split("/")[0] in STUDIO_BUNDLE:
+        return REPO / "plugin" / rest
     if host == "gemini":
         path = path[len(prefix):].lstrip("/")
     return ADAPTERS / host / path

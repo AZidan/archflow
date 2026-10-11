@@ -1,13 +1,10 @@
----
-description: "[Beta] Start (or stop) Archflow Studio for the current project and open it in the browser"
-argument-hint: "[stop | status | port <n>]"
-allowed-tools: Bash(curl:*), Bash(lsof:*), Bash(kill:*), Bash(node:*), Bash(nohup:*), Bash(mkdir:*), Bash(cat:*), Bash(tail:*), Bash(test:*), Bash(open:*), Bash(xdg-open:*), Bash(sleep:*), Bash(nc:*), Bash(printf:*)
-disable-model-invocation: true
----
-
+# Generated from plugin/commands/studio.md — do not edit.
+description = "[Beta] Start (or stop) Archflow Studio for the current project and open it in the browser"
+prompt = '''
+<!-- archflow-command: studio -->
 # Archflow Studio
 
-Arguments: `$ARGUMENTS`
+Arguments: `{{args}}`
 
 You manage a local Archflow Studio server for the project in the current working directory. Run
 **the probe** first, classify the port with the table below, then follow the branch for the verb.
@@ -24,8 +21,8 @@ everywhere: it starts, reports on and stops the server.
 
 - `PORT` = the number after `port` in the arguments, otherwise `3456`.
 - `URL` = `http://localhost:${PORT}`
-- `BUNDLE` = `${CLAUDE_PLUGIN_ROOT}/server/server.mjs`, the server, with the web UI it serves in
-  `${CLAUDE_PLUGIN_ROOT}/dist` beside it. Both ship with this host's Archflow install.
+- `BUNDLE` = `$HOME/.gemini/extensions/archflow/server/server.mjs`, the server, with the web UI it serves in
+  `$HOME/.gemini/extensions/archflow/dist` beside it. Both ship with this host's Archflow install.
 - `LOG` = `$HOME/.archflow/studio/logs/studio-${PORT}.log`, where a detached server's output
   goes, since a detached process cannot write to this session's terminal.
 - Session context: `${STUDIO_SESSION_CONTEXT:-$HOME/.archflow/studio/session-context.json}`.
@@ -33,7 +30,7 @@ everywhere: it starts, reports on and stops the server.
   [Companion mode](#companion-mode).
 - Project root: the current working directory of this session (`$PWD` in Bash). Run every command
   below from it.
-- This host's id, `claude`: how Studio names the host this command is running in.
+- This host's id, `gemini`: how Studio names the host this command is running in.
 
 ## The probe
 
@@ -117,7 +114,7 @@ the user can see what the chat panel will do without opening the browser.
 2. **Bundle present?**
 
    ```bash
-   test -f "${CLAUDE_PLUGIN_ROOT}/server/server.mjs" && echo bundle=ok || echo bundle=missing
+   test -f "$HOME/.gemini/extensions/archflow/server/server.mjs" && echo bundle=ok || echo bundle=missing
    ```
 
    If it is missing, stop and tell the user the Studio bundle did not reach this install: running
@@ -130,7 +127,7 @@ the user can see what the chat panel will do without opening the browser.
    ```bash
    mkdir -p "$HOME/.archflow/studio/logs"
    STUDIO_PROJECT_PATH="$PWD" STUDIO_PORT=${PORT} STUDIO_AUTO_OPEN=0 \
-     nohup node "${CLAUDE_PLUGIN_ROOT}/server/server.mjs" \
+     nohup node "$HOME/.gemini/extensions/archflow/server/server.mjs" \
      --session-context "${STUDIO_SESSION_CONTEXT:-$HOME/.archflow/studio/session-context.json}" \
      > "$HOME/.archflow/studio/logs/studio-${PORT}.log" 2>&1 < /dev/null &
    ```
@@ -258,3 +255,4 @@ to the command line above.
   `STUDIO_HOST`, `STUDIO_MODE` or chat policy.
 - In forward mode a command copied from Studio and pasted into this session is an ordinary prompt
   here: run it as you would any other.
+'''

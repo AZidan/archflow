@@ -9,6 +9,8 @@
     "adapters",
     "scripts/archflow.mjs",
     "plugin/.claude-plugin/plugin.json",
+    "plugin/server/server.mjs",
+    "plugin/dist",
     "plugin/scripts/archflow-pre-push.sh",
     "plugin/lib/telemetry.mjs",
     "plugin/lib/telemetry-key.mjs"

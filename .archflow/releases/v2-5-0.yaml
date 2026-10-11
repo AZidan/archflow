@@ -871,8 +871,8 @@ stories:
       - {text: "build-adapters.mjs --check passes and tests cover the shipped bundle per host", met: false}
       - {text: "CHANGELOG supersedes the 2.4.0 'Claude Code only' line; the site's host claims match", met: false}
     subtasks:
-      - {text: "Commit the rebuilt bundle and hooks.json", completed: false}
-      - {text: "Ship studio + server bundle in every adapter (build-adapters.mjs, installer)", completed: false}
-      - {text: "Rewrite studio.md for forward mode and host-neutral launch paths", completed: false}
-      - {text: "Regenerate adapters; tests for per-host studio", completed: false}
-      - {text: "CHANGELOG, README/site host claims", completed: false}
+      - {text: "Commit the rebuilt bundle and hooks.json", completed: true}
+      - {text: "Ship studio + server bundle in every adapter (build-adapters.mjs, installer)", completed: true}
+      - {text: "Rewrite studio.md for forward mode and host-neutral launch paths", completed: true}
+      - {text: "Regenerate adapters; tests for per-host studio", completed: true}
+      - {text: "CHANGELOG, README/site host claims", completed: true}

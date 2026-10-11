@@ -156,7 +156,7 @@ function readCommands() {
 
 /**
  * A command's body as one host ships it. help.md lists every plugin command, but a host that
- * skips one (Studio, everywhere but Claude Code) must not advertise it: drop that command's line
+ * skips one (a host's `skip` set; empty on every host today) must not advertise it: drop that command's line
  * from help's command block, with the usage note continuing beneath it. Throws if a skipped
  * command has no line there, so a reshaped help.md cannot silently leak it back in.
  */
@@ -193,6 +193,20 @@ function hostBody(c, skip) {
  * path that is never generated. `<name>` (a placeholder in prose) is kept as is.
  */
 const commandPathRule = (to) => [/\$\{CLAUDE_PLUGIN_ROOT\}\/commands\/([a-z-]+|<name>)\.md/g, to];
+
+/**
+ * Archflow Studio's server (plugin/server/server.mjs) and web UI (plugin/dist/) are ~6.5 MB of
+ * prebuilt output from the archflow-studio repo. They are deliberately NOT copied into adapters/:
+ * six copies would put ~39 MB in git and in the npm package. The package ships the plugin's one
+ * copy, and `npx archflow install` (scripts/archflow.mjs, installStudio) places it at
+ * <plugin root>/server/server.mjs and <plugin root>/dist for every host it installs, which is where
+ * each host's studio command (its ${CLAUDE_PLUGIN_ROOT}/server/server.mjs, rewritten) looks.
+ */
+
+/** The host README's row for Studio: what it does there, and where its bundle comes from. */
+function studioRow(spelling, root) {
+  return `| \`/archflow:studio\` | \`${spelling}\` in forward mode: Studio runs no agent, its chat composes the command and you paste it into this host's session. Its server bundle goes in \`${root}/server\` and \`${root}/dist\`: \`npx archflow install\` puts it there, or by hand copy the Archflow package's \`plugin/server/\` and \`plugin/dist/\` |\n`;
+}
 
 function readAgents() {
   return readdirSync(join(PLUGIN, "agents"))
@@ -398,16 +412,17 @@ const HOSTS = {
    *   commands/<n>.md        → .agents/skills/archflow-<n>/SKILL.md   ($archflow-<n>)
    *   skills/archflow/       → .agents/skills/archflow/               (core, vocab-rewritten)
    *   agents/<n>.md          → .codex/agents/<n>.toml                 (spawn_agent targets)
-   *   hooks/hooks.json       → .codex/hooks.json                      (same schema, minus Studio)
+   *   hooks/hooks.json       → .codex/hooks.json                      (same schema, minus Studio's session hook)
    *   hooks/*.mjs, plugin.json → .codex/archflow/…                    (so CLAUDE_PLUGIN_ROOT resolves)
    *   —                      → AGENTS.md block, config.toml snippet, README
    *
-   * Not ported: /archflow:studio (spawns the `claude` binary), the Studio
-   * session hook, `memory: user` agent frontmatter, `color`.
+   * Not ported: the Studio session hook (companion mode needs Claude Code),
+   * `memory: user` agent frontmatter, `color`. $archflow-studio ships like every
+   * command; its server bundle is placed by the installer (see studioRow).
    */
   codex: {
     label: "OpenAI Codex",
-    skip: new Set(["studio"]),
+    skip: new Set(),
     vocab: [
       // Command invocation: /archflow:feature → $archflow-feature
       [/\/archflow:([a-z-]+)/g, "$$archflow-$1"],
@@ -550,7 +565,7 @@ const HOSTS = {
           `| \`agents/*.md\` sub-agents | \`.codex/agents/*.toml\` custom agents via \`spawn_agent\` |\n` +
           `| Plugin hooks (\`hooks.json\`) | \`.codex/hooks.json\` — same events; needs the \`hooks\` feature (default on) |\n` +
           `| \`SessionStart\` injects \`instructions.md\` | Same hook, plus an AGENTS.md instruction as a fallback |\n` +
-          `| \`/archflow:studio\` | Not available — Studio drives the \`claude\` binary |\n` +
+          studioRow("$archflow-studio", ".codex/archflow") +
           `| Telemetry: \`UserPromptExpansion\` names the command | \`UserPromptSubmit\` counts a prompt that starts with \`$archflow-<cmd>\` |\n` +
           `| \`memory: user\` agent memory | Not available |\n\n` +
           `The \`.archflow/\` state files, schemas, phases, design systems and stack profiles are identical across hosts, ` +
@@ -572,7 +587,7 @@ const HOSTS = {
    */
   gemini: {
     label: "Gemini CLI",
-    skip: new Set(["studio"]),
+    skip: new Set(),
     vocab: [
       // /archflow:<n> is already the Gemini namespaced form — no rewrite needed.
       [/Task tool with `subagent_type:\s*"([^"]+)"`/g, "delegating to the `$1` sub-agent"],
@@ -690,7 +705,7 @@ const HOSTS = {
           `| \`agents/*.md\` sub-agents | \`agents/*.md\` (\`kind: local\`) — sub-agents are a preview feature |\n` +
           `| \`PreToolUse\` / \`Stop\` hooks | \`BeforeTool\` / \`AfterAgent\` hooks (timeouts in ms) |\n` +
           `| Telemetry: \`UserPromptExpansion\` names the command | \`BeforeAgent\` counts a prompt that starts with \`/archflow:<cmd>\` or the command's marker line |\n` +
-          `| \`/archflow:studio\` | Not available |\n` +
+          studioRow("/archflow:studio", "~/.gemini/extensions/archflow") +
           `| \`memory: user\` | Not available |\n\n` +
           `Note: Gemini CLI's extension install location is per-user (\`~/.gemini/extensions\`), not per-project. Use \`gemini extensions disable archflow --scope workspace\` in repos that don't use it.\n`,
       );
@@ -709,7 +724,7 @@ const HOSTS = {
    */
   opencode: {
     label: "OpenCode",
-    skip: new Set(["studio"]),
+    skip: new Set(),
     vocab: [
       [/\/archflow:([a-z-]+)/g, "/archflow-$1"],
       [/\/archflow:<name>/g, "/archflow-<name>"],
@@ -786,7 +801,7 @@ const HOSTS = {
           `| \`agents/*.md\` sub-agents | \`.opencode/agents/*.md\` with \`mode: subagent\` |\n` +
           `| Telemetry: \`UserPromptExpansion\` names the command | \`command.executed\` names the command |\n` +
           `| Plugin hooks | \`.opencode/plugins/archflow.ts\` (\`tool.execute.before\`, system-prompt transform, \`session.created\`, \`command.executed\`, \`session.idle\`) |\n` +
-          `| \`/archflow:studio\` | Not available |\n` +
+          studioRow("/archflow-studio", ".opencode/archflow") +
           `| \`memory: user\` | Not available |\n\n` +
           `Known limitation: OpenCode plugin hooks do not currently fire for tool calls made *inside* subagents (anomalyco/opencode#5894), so the git guard only covers the primary agent. The approval gates remain the real control.\n`,
       );
@@ -802,7 +817,7 @@ const HOSTS = {
    */
   generic: {
     label: "any Agent-Skills host",
-    skip: new Set(["studio"]),
+    skip: new Set(),
     vocab: [
       [/\/archflow:([a-z-]+)/g, "$$archflow-$1"],
       [/\/archflow:<name>/g, "$$archflow-<name>"],
@@ -869,7 +884,8 @@ const HOSTS = {
           `This is the lowest-common-denominator package: \`AGENTS.md\` + Agent Skills (agentskills.io). It works in any host that reads those, ` +
           `including Cline, Roo, Kilo, Windsurf, Zed, Amp and Copilot/Codex/OpenCode/Cursor without their native adapters.\n\n` +
           `## Install\n\n**One command:** \`npx archflow install --host ${ctx.host}\` from your project root does every step below, and re-running it upgrades in place. By hand:\n\n1. Copy \`.agents/\` into your project root.\n2. Merge \`AGENTS.archflow.md\` into \`AGENTS.md\`.\n3. Install the git guard: \`sh .agents/archflow/scripts/archflow-install-git-guard.sh\`\n4. Ask your agent to run \`$archflow-init\` or \`$archflow-onboard\`.\n\n` +
-          `## What you give up\n\n- No sub-agents: roles run serially inside the main context (bigger context use, slower Phase 3).\n- No lifecycle hooks: instructions load via AGENTS.md, and the upgrade check and session telemetry run because AGENTS.md asks the agent to run them, not because the host does. Per-command telemetry is not available.\n- The git guard is a real \`pre-push\` hook, so it also protects you from your own terminal.\n`,
+          `## What you give up\n\n- No sub-agents: roles run serially inside the main context (bigger context use, slower Phase 3).\n- No lifecycle hooks: instructions load via AGENTS.md, and the upgrade check and session telemetry run because AGENTS.md asks the agent to run them, not because the host does. Per-command telemetry is not available.\n- The git guard is a real \`pre-push\` hook, so it also protects you from your own terminal.\n\n` +
+          `## Archflow Studio\n\n| Claude Code | Here |\n|---|---|\n` + studioRow("$archflow-studio", ".agents/archflow"),
       );
     },
   },
@@ -881,7 +897,7 @@ const HOSTS = {
    */
   cursor: {
     label: "Cursor",
-    skip: new Set(["studio"]),
+    skip: new Set(),
     vocab: [
       [/\/archflow:([a-z-]+)/g, "/archflow-$1"],
       [/\/archflow:<name>/g, "/archflow-<name>"],
@@ -961,7 +977,7 @@ const HOSTS = {
           `| Plugin hooks | \`.cursor/hooks.json\` (\`sessionStart\` / \`beforeSubmitPrompt\` / \`beforeShellExecution\` / \`stop\`) via a small bridge script |\n` +
           `| \`CLAUDE.md\` section | \`.cursor/rules/archflow.mdc\` (\`alwaysApply\`) |\n` +
           `| Telemetry: \`UserPromptExpansion\` names the command | \`beforeSubmitPrompt\` counts a prompt that starts with \`/archflow-<cmd>\` |\n` +
-          `| \`/archflow:studio\` | Not available |\n` +
+          studioRow("/archflow-studio", ".cursor/archflow") +
           `| \`memory: user\` | Not available |\n\nProject hooks also run in Cursor cloud agents.\n`);
     },
   },
@@ -973,7 +989,7 @@ const HOSTS = {
    */
   copilot: {
     label: "GitHub Copilot CLI",
-    skip: new Set(["studio"]),
+    skip: new Set(),
     vocab: [
       [/\/archflow:([a-z-]+)/g, "/archflow-$1"],
       [/\/archflow:<name>/g, "/archflow-<name>"],
@@ -1054,7 +1070,7 @@ const HOSTS = {
           `| \`agents/*.md\` sub-agents | \`.github/agents/*.agent.md\` custom agents (\`disable-model-invocation: true\`, so only Archflow dispatches them) |\n` +
           `| Plugin hooks | \`.github/hooks/archflow.json\` using PascalCase events, which give Claude-compatible payloads |\n` +
           `| Telemetry: \`UserPromptExpansion\` names the command | \`UserPromptSubmit\` counts a prompt that starts with \`/archflow-<cmd>\`. Loading the Claude plugin directly should report session starts only, as \`host: claude\` (Copilot lists no \`UserPromptExpansion\` event) |\n` +
-          `| \`/archflow:studio\` | Not available |\n` +
+          studioRow("/archflow-studio", ".github/archflow") +
           `| \`memory: user\` | Not available |\n`);
     },
   },
@@ -1091,7 +1107,12 @@ for (const host of targets) {
   rmSync(out, { recursive: true, force: true });
   // The telemetry command runs its script outside any hook, so ARCHFLOW_HOST is unset there; pass
   // the host on the command line instead, so an opt-out or opt-in is attributed to this host.
-  const vocab = [...def.vocab, [/(\/hooks\/telemetry\.mjs") --(enable|disable)\b/g, `$1 --$2 --host ${host}`]];
+  const vocab = [
+    ...def.vocab,
+    [/(\/hooks\/telemetry\.mjs") --(enable|disable)\b/g, `$1 --$2 --host ${host}`],
+    // studio.md names the host it runs in by Studio's id for it, to compare with what Studio resolved.
+    [/This host's id, `claude`/g, `This host's id, \`${host}\``],
+  ];
   def.emit({ out, vocab, commands, agents, host });
 
   if (check) {

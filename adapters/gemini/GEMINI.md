@@ -21,6 +21,7 @@ Commands:
 - `/archflow:release` — Release pipeline: see status, cut a new release, start building it, or ship it
 - `/archflow:setup-mcp` — Connect an external tool via MCP (Jira, Notion, Linear, GitHub, SuperDesign, ...)
 - `/archflow:status` — Where the project stands: phase, mode, active release, and what to run next
+- `/archflow:studio` — [Beta] Start (or stop) Archflow Studio for the current project and open it in the browser
 - `/archflow:telemetry` — Show or change anonymous usage telemetry (on by default; this is how to opt out)
 
 Specialised sub-agents ship with the extension (`agents/`). Phase 3 delegates to `ui-engineer` and `api-engineer` against the same API contract; if sub-agents are unavailable, run them serially in that order.

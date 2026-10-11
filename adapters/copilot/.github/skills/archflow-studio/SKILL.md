@@ -1,13 +1,14 @@
 ---
-description: "[Beta] Start (or stop) Archflow Studio for the current project and open it in the browser"
-argument-hint: "[stop | status | port <n>]"
-allowed-tools: Bash(curl:*), Bash(lsof:*), Bash(kill:*), Bash(node:*), Bash(nohup:*), Bash(mkdir:*), Bash(cat:*), Bash(tail:*), Bash(test:*), Bash(open:*), Bash(xdg-open:*), Bash(sleep:*), Bash(nc:*), Bash(printf:*)
-disable-model-invocation: true
+name: archflow-studio
+description: "Use ONLY when the user asks for /archflow-studio or \"archflow studio\". [Beta] Start (or stop) Archflow Studio for the current project and open it in the browser"
 ---
+
+> Arguments are the text after the skill name.
+
 
 # Archflow Studio
 
-Arguments: `$ARGUMENTS`
+Arguments: `the text the user wrote after the skill name`
 
 You manage a local Archflow Studio server for the project in the current working directory. Run
 **the probe** first, classify the port with the table below, then follow the branch for the verb.
@@ -24,8 +25,8 @@ everywhere: it starts, reports on and stops the server.
 
 - `PORT` = the number after `port` in the arguments, otherwise `3456`.
 - `URL` = `http://localhost:${PORT}`
-- `BUNDLE` = `${CLAUDE_PLUGIN_ROOT}/server/server.mjs`, the server, with the web UI it serves in
-  `${CLAUDE_PLUGIN_ROOT}/dist` beside it. Both ship with this host's Archflow install.
+- `BUNDLE` = `.github/archflow/server/server.mjs`, the server, with the web UI it serves in
+  `.github/archflow/dist` beside it. Both ship with this host's Archflow install.
 - `LOG` = `$HOME/.archflow/studio/logs/studio-${PORT}.log`, where a detached server's output
   goes, since a detached process cannot write to this session's terminal.
 - Session context: `${STUDIO_SESSION_CONTEXT:-$HOME/.archflow/studio/session-context.json}`.
@@ -33,7 +34,7 @@ everywhere: it starts, reports on and stops the server.
   [Companion mode](#companion-mode).
 - Project root: the current working directory of this session (`$PWD` in Bash). Run every command
   below from it.
-- This host's id, `claude`: how Studio names the host this command is running in.
+- This host's id, `copilot`: how Studio names the host this command is running in.
 
 ## The probe
 
@@ -58,7 +59,7 @@ Compare `path` to `$PWD` literally after resolving symlinks if they differ only 
 (macOS `/tmp`). Never assume — always read `path` out of the probe body you just ran.
 
 **FOREIGN is never killed.** Not by `start`, not by `stop`. Report what is there
-(`lsof -iTCP:${PORT} -sTCP:LISTEN` names the process) and suggest `/archflow:studio port <n+1>`.
+(`lsof -iTCP:${PORT} -sTCP:LISTEN` names the process) and suggest `/archflow-studio port <n+1>`.
 
 ## The chat line
 
@@ -97,7 +98,7 @@ picker in Studio's settings changes it (the choice is saved per project), or set
 2. **FREE** → `Archflow Studio is not running on port ${PORT}.`
 3. **STUDIO-HERE** → `Archflow Studio is running at ${URL} — <name> (this project).`
 4. **STUDIO-ELSEWHERE** → `Port ${PORT} is serving another project: <name> at <path>.` Add that
-   `/archflow:studio port <n+1>` would start one for this project.
+   `/archflow-studio port <n+1>` would start one for this project.
 5. **FOREIGN** → `Port ${PORT} is held by another program, not Archflow Studio.`
 
 For STUDIO-HERE or STUDIO-ELSEWHERE, append [the chat line](#the-chat-line) to the same report, so
@@ -110,14 +111,14 @@ the user can see what the chat panel will do without opening the browser.
      start a second server.** This is the idempotent case and it must be silent about having done
      nothing new beyond one line.
    - **STUDIO-ELSEWHERE** → tell the user that port is serving `<name>` at `<path>` and suggest
-     `/archflow:studio port <n+1>`. Stop; do not start anything on this port.
-   - **FOREIGN** → say another program owns the port, name it, suggest `/archflow:studio port
+     `/archflow-studio port <n+1>`. Stop; do not start anything on this port.
+   - **FOREIGN** → say another program owns the port, name it, suggest `/archflow-studio port
      <n+1>`. Stop; **never kill it**.
    - **FREE** → continue.
 2. **Bundle present?**
 
    ```bash
-   test -f "${CLAUDE_PLUGIN_ROOT}/server/server.mjs" && echo bundle=ok || echo bundle=missing
+   test -f ".github/archflow/server/server.mjs" && echo bundle=ok || echo bundle=missing
    ```
 
    If it is missing, stop and tell the user the Studio bundle did not reach this install: running
@@ -130,7 +131,7 @@ the user can see what the chat panel will do without opening the browser.
    ```bash
    mkdir -p "$HOME/.archflow/studio/logs"
    STUDIO_PROJECT_PATH="$PWD" STUDIO_PORT=${PORT} STUDIO_AUTO_OPEN=0 \
-     nohup node "${CLAUDE_PLUGIN_ROOT}/server/server.mjs" \
+     nohup node ".github/archflow/server/server.mjs" \
      --session-context "${STUDIO_SESSION_CONTEXT:-$HOME/.archflow/studio/session-context.json}" \
      > "$HOME/.archflow/studio/logs/studio-${PORT}.log" 2>&1 < /dev/null &
    ```
@@ -172,7 +173,7 @@ the user can see what the chat panel will do without opening the browser.
    `[mode]` line — a degrade is normal and explained, not a fault to debug.
 6. **Open it.** Ask the user whether to open it in the browser. If yes (or if the user's request
    already said "open"), run `open "${URL}"` on macOS (`xdg-open` on Linux). Mention that
-   `/archflow:studio stop` shuts it down.
+   `/archflow-studio stop` shuts it down.
 
 ## Hosts and chat
 
@@ -248,7 +249,7 @@ to the command line above.
   skip it — not even when you started the server yourself a moment ago.
 - **The server outlives this session, by design.** Step 3 detaches it, so ending the conversation
   — or closing the terminal — leaves Studio running. That is deliberate: a studio that vanished
-  with the session could not be left open beside it. `/archflow:studio stop` is how it ends, and
+  with the session could not be left open beside it. `/archflow-studio stop` is how it ends, and
   `stop` works from any session, on any host, because it kills by the pid the probe finds, not by
   parentage.
 - A consequence worth stating rather than discovering: a studio from an EARLIER session is

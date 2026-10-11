@@ -34,6 +34,10 @@
  * Claude Code is the reference host: `--host claude` installs the marketplace plugin at
  * project scope (`.claude/settings.json`), so the choice is committed with the repo.
  *
+ * Archflow Studio's prebuilt bundle (server + web UI, ~6.5 MB) ships ONCE in this package, under
+ * plugin/server and plugin/dist, not in every adapter. Each non-Claude host gets its own copy at
+ * install time, in the root its studio command launches from (see installStudio).
+ *
  * Local testing without publishing:
  *   node /path/to/archflow/scripts/archflow.mjs --host codex
  *   or `npm link` in the archflow checkout, then `archflow install` anywhere.
@@ -56,6 +60,8 @@ const REPO = "AZidan/archflow";
 // Where the adapters come from. Default: the latest GitHub release, cached per tag
 // under ~/.cache/archflow. Falls back to the copy bundled with this package.
 let SRC, ADAPTERS, PRE_PUSH, VERSION;
+/** Archflow Studio's bundle: [path in the package, path under a host's plugin root]. */
+const STUDIO_BUNDLE = [["plugin/server/server.mjs", "server/server.mjs"], ["plugin/dist", "dist"]];
 function useSource(root, origin) {
   SRC = { root, origin };
   ADAPTERS = join(root, "adapters");
@@ -116,7 +122,9 @@ async function resolveSource(opts) {
 // Host table. `copy` are adapter-relative paths copied into the project.
 // `hookRoot` is what the hooks see as CLAUDE_PLUGIN_ROOT; it must contain
 // skills/archflow, which the adapter provides as a relative symlink. npm drops
-// symlinks when packing, so `ensureLink` recreates it after the copy.
+// symlinks when packing, so `ensureLink` recreates it after the copy. It is also
+// where Studio's bundle goes (installStudio), since each host's studio command
+// launches <hookRoot>/server/server.mjs.
 // ---------------------------------------------------------------------------
 const MARKETPLACE_REPO = "AZidan/archflow";
 
@@ -252,6 +260,42 @@ function copyInto(src, dst, dry) {
     force: true,
     filter: (s) => !s.endsWith(".DS_Store") && !lstatSync(s).isSymbolicLink(),
   });
+}
+
+/**
+ * Put Archflow Studio's bundle under a host's plugin root: <root>/server/server.mjs and <root>/dist,
+ * where that host's studio command launches it. One copy ships in the package (or the release),
+ * so adapters/ never holds six. dist/ is replaced, not merged: its asset names are content hashes,
+ * and an upgrade merged over an old copy would pile up every previous build. `label` is the root as
+ * the user should read it. `ignore` adds a .gitignore beside it, for project overlays a team
+ * commits: the bundle is build output, and a teammate gets it by running this installer.
+ */
+function installStudio(root, label, dry, { ignore = false } = {}) {
+  const missing = STUDIO_BUNDLE.filter(([from]) => !existsSync(join(SRC.root, from)));
+  if (missing.length) return [`skip  Archflow Studio bundle (not in ${SRC.origin}; /archflow:studio will say it is missing)`];
+  const actions = [`copy  ${label}/server/server.mjs, ${label}/dist/ (Archflow Studio)`];
+  if (ignore) actions.push(`${dry ? "write" : ensureIgnored(root)} ${label}/.gitignore (Studio's bundle is build output)`);
+  if (dry) return actions;
+  for (const [from, to] of STUDIO_BUNDLE) {
+    const dst = join(root, to);
+    rmSync(dst, { recursive: true, force: true });
+    copyInto(join(SRC.root, from), dst, false);
+  }
+  return actions;
+}
+
+/** Add the bundle's paths to <root>/.gitignore, keeping whatever else is there. Returns the verb. */
+function ensureIgnored(root) {
+  const file = join(root, ".gitignore");
+  const lines = ["/server/", "/dist/"];
+  const text = existsSync(file) ? readFileSync(file, "utf8") : "";
+  const have = new Set(text.split(/\r?\n/).map((l) => l.trim()));
+  const add = lines.filter((l) => !have.has(l));
+  if (!add.length) return "keep ";
+  mkdirSync(root, { recursive: true });
+  const head = text ? text.replace(/\s*$/, "\n") : "# Archflow Studio's bundle: build output, placed by `npx archflow install`.\n";
+  writeFileSync(file, head + add.join("\n") + "\n");
+  return text ? "merge" : "write";
 }
 
 /** (Re)create hookRoot/skills/archflow → skillTree as a relative link inside the project. */
@@ -459,9 +503,22 @@ function writeClaudeSettings(project, source, dry) {
   return [`${existsSync(file) ? "merge" : "create"} .claude/settings.json (+ ${changed.join(", ")})`];
 }
 
-/** Gemini: a per-user extension. Prefer the CLI; fall back to copying into ~/.gemini/extensions. */
+/**
+ * Gemini: a per-user extension. Prefer the CLI; fall back to copying into ~/.gemini/extensions.
+ * The extension is installed from a staged copy of adapters/gemini plus Studio's bundle, kept
+ * under ~/.cache/archflow (not a temp dir), because Gemini remembers where an extension came from.
+ */
 function installGemini(dry) {
-  const src = join(ADAPTERS, "gemini");
+  const label = "~/.gemini/extensions/archflow";
+  if (dry) return [...installGeminiFrom(join(ADAPTERS, "gemini"), true), ...installStudio(null, label, true)];
+  const staged = join(homedir(), ".cache", "archflow", "gemini-extension", VERSION, "archflow");
+  rmSync(staged, { recursive: true, force: true });
+  copyInto(join(ADAPTERS, "gemini"), staged, false);
+  const studio = installStudio(staged, label, false);
+  return [...installGeminiFrom(staged, false), ...studio];
+}
+
+function installGeminiFrom(src, dry) {
   if (onPath("gemini")) {
     if (dry) return [`run   gemini extensions install ${src}`];
     const r = spawnSync("gemini", ["extensions", "install", src], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -474,7 +531,10 @@ function installGemini(dry) {
     log(`      gemini CLI install failed (${msg}); copying the extension directly`);
   }
   const dst = join(homedir(), ".gemini", "extensions", "archflow");
-  if (!dry) copyInto(src, dst, false);
+  if (!dry) {
+    rmSync(join(dst, "dist"), { recursive: true, force: true }); // hashed assets: replace, never merge
+    copyInto(src, dst, false);
+  }
   return [`copy  ${dst} (Gemini extension)`];
 }
 
@@ -556,6 +616,7 @@ async function main() {
       }
       const linked = ensureLink(project, host, opts.dryRun);
       if (linked) actions.push(linked);
+      actions.push(...installStudio(join(project, host.hookRoot), host.hookRoot, opts.dryRun, { ignore: true }));
       if (host.agentsBlock) blocks.push({ label: host.label, text: readFileSync(join(src, host.agentsBlock), "utf8") });
       if (host.codexConfig) actions.push(mergeToml(join(project, ".codex", "config.toml"), readFileSync(join(src, host.codexConfig), "utf8"), opts.dryRun));
     }
