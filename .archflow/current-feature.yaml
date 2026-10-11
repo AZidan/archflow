@@ -2,30 +2,30 @@ story_id: "S6-04"
 story_title: "Studio on non-Claude hosts (forward mode)"
 epic_id: "E6"
 branch: "studio-hosts"
-status: in_progress
+status: complete
 subtasks:
   - text: "Commit the rebuilt bundle and hooks.json"
-    completed: false
+    completed: true
     branch: "studio/forward-mode"
     started_at: "2026-10-11"
-    completed_at: null
+    completed_at: "2026-10-11"
   - text: "Ship studio + server bundle in every adapter (build-adapters.mjs, installer)"
-    completed: false
+    completed: true
     branch: "studio/forward-mode"
     started_at: "2026-10-11"
-    completed_at: null
+    completed_at: "2026-10-11"
   - text: "Rewrite studio.md for forward mode and host-neutral launch paths"
-    completed: false
+    completed: true
     branch: "studio/forward-mode"
     started_at: "2026-10-11"
-    completed_at: null
+    completed_at: "2026-10-11"
   - text: "Regenerate adapters; tests for per-host studio"
-    completed: false
+    completed: true
     branch: "studio/forward-mode"
     started_at: "2026-10-11"
-    completed_at: null
+    completed_at: "2026-10-11"
   - text: "CHANGELOG, README/site host claims"
-    completed: false
+    completed: true
     branch: "studio/forward-mode"
     started_at: "2026-10-11"
-    completed_at: null
+    completed_at: "2026-10-11"
