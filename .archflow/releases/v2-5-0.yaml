@@ -862,14 +862,14 @@ stories:
       decide how adapters carry it without committing six full copies if a shared or install-time copy
       works (the npx installer copies adapters/<host>, see scripts/archflow.mjs and package.json files).
     acceptance_criteria:
-      - {text: "The rebuilt forward-mode bundle (plugin/server/server.mjs, plugin/dist/**, hooks.json) is committed", met: false}
-      - {text: "Every adapter ships /archflow:studio and the server bundle it needs; build-adapters.mjs no longer skips studio", met: false}
-      - {text: "/archflow:studio starts, reports status and stops Studio on a non-Claude host, launching the server from the adapter's own copy", met: false}
-      - {text: "studio.md describes forward mode and per-host behaviour accurately; no 'not built yet' or Claude-only claims remain", met: false}
-      - {text: "help, SKILL.md and reference.md list studio on every host, consistent with what each adapter ships", met: false}
-      - {text: "npx archflow install copies the bundle for each host; the npm package stays a sensible size", met: false}
-      - {text: "build-adapters.mjs --check passes and tests cover the shipped bundle per host", met: false}
-      - {text: "CHANGELOG supersedes the 2.4.0 'Claude Code only' line; the site's host claims match", met: false}
+      - {text: "The rebuilt forward-mode bundle (plugin/server/server.mjs, plugin/dist/**, hooks.json) is committed", met: true}
+      - {text: "Every adapter ships /archflow:studio and the server bundle it needs; build-adapters.mjs no longer skips studio", met: true}
+      - {text: "/archflow:studio starts, reports status and stops Studio on a non-Claude host, launching the server from the adapter's own copy", met: true}
+      - {text: "studio.md describes forward mode and per-host behaviour accurately; no 'not built yet' or Claude-only claims remain", met: true}
+      - {text: "help, SKILL.md and reference.md list studio on every host, consistent with what each adapter ships", met: true}
+      - {text: "npx archflow install copies the bundle for each host; the npm package stays a sensible size", met: true}
+      - {text: "build-adapters.mjs --check passes and tests cover the shipped bundle per host", met: true}
+      - {text: "CHANGELOG supersedes the 2.4.0 'Claude Code only' line; the site's host claims match", met: true}
     subtasks:
       - {text: "Commit the rebuilt bundle and hooks.json", completed: true}
       - {text: "Ship studio + server bundle in every adapter (build-adapters.mjs, installer)", completed: true}
@@ -934,3 +934,17 @@ stories:
         report: "docs/qa-reports/S6-04-qa.md"
         status: deferred
         deferred_to: S7-12
+      - id: I-9
+        summary: "Antigravity note is README-only: the site, the Studio guide and the CHANGELOG mark Gemini CLI '(enterprise/API)' but never point individual Gemini users to Antigravity or say its support is planned"
+        found_by: pm-reviewer
+        severity: minor
+        location: "docs/index.html"
+        report: "docs/acceptance-reports/S6-04-review.md"
+        status: open
+      - id: I-10
+        summary: "Studio guide says declining Gemini's trust/confirm prompts leaves 'Studio's bundle' uninstalled; a declined fresh install leaves no Archflow extension at all, and a declined upgrade keeps the old one"
+        found_by: pm-reviewer
+        severity: minor
+        location: "docs/guides/studio.md:158"
+        report: "docs/acceptance-reports/S6-04-review.md"
+        status: open
