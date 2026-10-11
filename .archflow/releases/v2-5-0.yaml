@@ -891,3 +891,24 @@ stories:
         location: "docs/guides/studio.md:159"
         report: "docs/qa-reports/S6-04-qa.md"
         status: open
+      - id: I-3
+        summary: "A cached pre-2.5.0 npx installer installs the 2.5.0 studio command without its bundle, and the documented remedy ('npx archflow install') reruns the same stale installer; needs npx archflow@latest"
+        found_by: code-reviewer
+        severity: blocking
+        location: "plugin/commands/studio.md:124"
+        report: "docs/qa-reports/S6-04-code-review.md"
+        status: open
+      - id: I-4
+        summary: "--dry-run misreports: .gitignore verb is always 'write' (real run may merge/keep), and Gemini shows adapters/gemini instead of the staged path it installs from"
+        found_by: code-reviewer
+        severity: minor
+        location: "scripts/archflow.mjs:277"
+        report: "docs/qa-reports/S6-04-code-review.md"
+        status: open
+      - id: I-5
+        summary: "studio.md is silent on sandboxed hosts (Codex workspace-write: $HOME log writes, localhost networking, detached child); launch inside a real Codex session is unverified"
+        found_by: code-reviewer
+        severity: minor
+        location: "plugin/commands/studio.md:127"
+        report: "docs/qa-reports/S6-04-code-review.md"
+        status: open
