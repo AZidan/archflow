@@ -926,3 +926,10 @@ stories:
         location: "scripts/archflow.mjs:560"
         report: "docs/qa-reports/S6-04-qa.md"
         status: fixed
+      - id: I-8
+        summary: "Ctrl-C at a Gemini prompt during an upgrade kills the installer too (same terminal process group), after it has moved the extension to ~/.gemini/archflow-extension.previous and before the restore runs: Gemini is left with no archflow extension, nothing is printed, and a later successful re-run leaves the .previous copy behind for good"
+        found_by: qa-engineer
+        severity: blocking
+        location: "scripts/archflow.mjs:602"
+        report: "docs/qa-reports/S6-04-qa.md"
+        status: open
