@@ -111,7 +111,7 @@ epics:
         priority: High
         status: backlog
         target: adapters
-        description: "Google moved individual Gemini CLI users to Antigravity CLI (agy) on 2026-06-18; Gemini CLI now serves enterprise/API users only. Add an agy adapter: plugins (agy plugin install / /plugin install, the rebrand of Gemini extensions), its command/hook format and paths, installer support incl. the Studio bundle, and a check of `agy plugin import gemini` on an existing Archflow Gemini extension. Test against the real agy."
+        description: "Google moved individual Gemini CLI users to Antigravity CLI (agy) on 2026-06-18; Gemini CLI now serves enterprise/API users only. Add an agy adapter: plugins (agy plugin install / /plugin install, the rebrand of Gemini extensions), its command/hook format and paths, installer support incl. the Studio bundle, and a check of `agy plugin import gemini` on an existing Archflow Gemini extension. Test against the real agy. FINDING (user, 2026-10-11): `agy plugin import gemini` imported the Archflow Gemini extension fine — first decide whether a documented import path is enough (verify commands, hooks, telemetry host id and the Studio bundle survive the import) before building a separate adapter."
   - id: E8
     stories:
       - id: S8-08
