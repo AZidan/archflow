@@ -919,3 +919,10 @@ stories:
         location: "scripts/archflow.mjs:539"
         report: "docs/qa-reports/S6-04-qa.md"
         status: fixed
+      - id: I-7
+        summary: "Real Gemini CLI 0.63.0 prompts (folder trust, then install consent) and exits 0 when stdin is closed, so installGeminiFrom treats a declined prompt as success: fresh installs and upgrades install nothing yet print 'Installed.', and when the staged folder is already trusted the re-run uninstalls the working extension and leaves none"
+        found_by: qa-engineer
+        severity: blocking
+        location: "scripts/archflow.mjs:560"
+        report: "docs/qa-reports/S6-04-qa.md"
+        status: open
