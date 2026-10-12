@@ -203,10 +203,11 @@ second one. Forward mode needs nothing beyond Node: no hook, no handoff file, no
 Studio detects a host by its Archflow install: `.claude/settings.json` (or the user-level one)
 enabling the plugin for `claude`; `.codex/archflow`, `.cursor/archflow`, `.opencode/archflow` or
 `.github/archflow` in the project for `codex`, `cursor`, `opencode` and `copilot`;
-`$HOME/.gemini/extensions/archflow` for `gemini`; `.agents/archflow` for `generic`. When several are
-installed, detection ranks them: the `claude` plugin enabled in the project, then the project's own
-`codex`, `cursor`, `opencode` or `copilot` install, then the `claude` plugin enabled for the user,
-then `gemini`, then `generic`. The host picker in Studio switches between the detected hosts.
+`$HOME/.gemini/extensions/archflow` for `gemini`; `.agents/archflow` for `generic`, or Archflow's
+block in `AGENTS.md` when nothing else matched. When several are installed, detection ranks them:
+the `claude` plugin enabled in the project, then the project's own `codex`, `cursor`, `opencode` or
+`copilot` install, then the `claude` plugin enabled for the user, then `gemini`, then `generic`. The
+host picker in Studio switches between the detected hosts.
 
 ## Companion mode
 

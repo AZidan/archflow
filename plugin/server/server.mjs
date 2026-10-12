@@ -303,41 +303,41 @@ var require_queue = __commonJS({
       queue2.drained = drained;
       return queue2;
       function push2(value) {
-        var p = new Promise(function(resolve8, reject) {
+        var p = new Promise(function(resolve9, reject) {
           pushCb(value, function(err, result) {
             if (err) {
               reject(err);
               return;
             }
-            resolve8(result);
+            resolve9(result);
           });
         });
         p.catch(noop);
         return p;
       }
       function unshift(value) {
-        var p = new Promise(function(resolve8, reject) {
+        var p = new Promise(function(resolve9, reject) {
           unshiftCb(value, function(err, result) {
             if (err) {
               reject(err);
               return;
             }
-            resolve8(result);
+            resolve9(result);
           });
         });
         p.catch(noop);
         return p;
       }
       function drained() {
-        var p = new Promise(function(resolve8) {
+        var p = new Promise(function(resolve9) {
           process.nextTick(function() {
             if (queue2.idle()) {
-              resolve8();
+              resolve9();
             } else {
               var previousDrain = queue2.drain;
               queue2.drain = function() {
                 if (typeof previousDrain === "function") previousDrain();
-                resolve8();
+                resolve9();
                 queue2.drain = previousDrain;
               };
             }
@@ -680,8 +680,8 @@ var require_create_promise = __commonJS({
         reject: null,
         promise: null
       };
-      obj2.promise = new Promise((resolve8, reject) => {
-        obj2.resolve = resolve8;
+      obj2.promise = new Promise((resolve9, reject) => {
+        obj2.resolve = resolve9;
         obj2.reject = reject;
       });
       return obj2;
@@ -950,11 +950,11 @@ var require_thenify = __commonJS({
         return;
       }
       debug("thenify");
-      return (resolve8, reject) => {
+      return (resolve9, reject) => {
         const p = this._loadRegistered();
         return p.then(() => {
           this[kThenifyDoNotWrap] = true;
-          return resolve8(this._server);
+          return resolve9(this._server);
         }, reject);
       };
     }
@@ -1091,12 +1091,12 @@ var require_boot = __commonJS({
     inherits(Boot, EE);
     if ("asyncDispose" in Symbol) {
       Boot.prototype[Symbol.asyncDispose] = function() {
-        return new Promise((resolve8, reject) => {
+        return new Promise((resolve9, reject) => {
           this.close((err) => {
             if (err) {
               return reject(err);
             }
-            resolve8();
+            resolve9();
           });
         });
       };
@@ -1243,12 +1243,12 @@ var require_boot = __commonJS({
           throw new AVV_ERR_CALLBACK_NOT_FN("close", typeof func);
         }
       } else {
-        promise = new Promise(function(resolve8, reject) {
+        promise = new Promise(function(resolve9, reject) {
           func = function(err) {
             if (err) {
               return reject(err);
             }
-            resolve8();
+            resolve9();
           };
         });
       }
@@ -1268,7 +1268,7 @@ var require_boot = __commonJS({
         queueMicrotask(this.start.bind(this));
         return;
       }
-      return new Promise((resolve8, reject) => {
+      return new Promise((resolve9, reject) => {
         this._readyQ.push(readyPromiseCB);
         this.start();
         const relativeContext = this._current[0].server;
@@ -1276,7 +1276,7 @@ var require_boot = __commonJS({
           if (err) {
             reject(err);
           } else {
-            resolve8(relativeContext);
+            resolve9(relativeContext);
           }
           process.nextTick(done);
         }
@@ -2551,8 +2551,8 @@ var require_promise = __commonJS({
     var { kTestInternals } = require_symbols2();
     function withResolvers() {
       let res, rej;
-      const promise = new Promise((resolve8, reject) => {
-        res = resolve8;
+      const promise = new Promise((resolve9, reject) => {
+        res = resolve9;
         rej = reject;
       });
       return { promise, resolve: res, reject: rej };
@@ -2651,15 +2651,15 @@ var require_server = __commonJS({
         if (cb === void 0) {
           const listening = listenPromise.call(this, server, listenOptions);
           return listening.then((address) => {
-            const { promise, resolve: resolve8 } = PonyPromise.withResolvers();
+            const { promise, resolve: resolve9 } = PonyPromise.withResolvers();
             if (host === "localhost") {
               multipleBindings.call(this, server, httpHandler, options, listenOptions, () => {
                 this[kState].listening = true;
-                resolve8(address);
+                resolve9(address);
                 onListenHookRunner(this);
               });
             } else {
-              resolve8(address);
+              resolve9(address);
               onListenHookRunner(this);
             }
             return promise;
@@ -2786,7 +2786,7 @@ var require_server = __commonJS({
       }
       return this.ready().then(() => {
         if (this[kState].aborted) return;
-        const { promise, resolve: resolve8, reject } = PonyPromise.withResolvers();
+        const { promise, resolve: resolve9, reject } = PonyPromise.withResolvers();
         const errEventHandler = (err) => {
           cleanup();
           this[kState].listening = false;
@@ -2795,7 +2795,7 @@ var require_server = __commonJS({
         const listeningEventHandler = () => {
           cleanup();
           this[kState].listening = true;
-          resolve8(logServerAddress.call(
+          resolve9(logServerAddress.call(
             this,
             server,
             listenOptions.listenTextResolver || defaultResolveServerListeningText
@@ -5492,7 +5492,7 @@ var require_thread_stream = __commonJS({
     var { version } = require_package();
     var { EventEmitter: EventEmitter8 } = __require("events");
     var { Worker } = __require("worker_threads");
-    var { join: join21 } = __require("path");
+    var { join: join22 } = __require("path");
     var { pathToFileURL } = __require("url");
     var { wait } = require_wait();
     var {
@@ -5528,7 +5528,7 @@ var require_thread_stream = __commonJS({
     function createWorker(stream, opts) {
       const { filename, workerData } = opts;
       const bundlerOverrides = "__bundlerPathsOverrides" in globalThis ? globalThis.__bundlerPathsOverrides : {};
-      const toExecute = bundlerOverrides["thread-stream-worker"] || join21(__studio_dirname, "lib", "worker.js");
+      const toExecute = bundlerOverrides["thread-stream-worker"] || join22(__studio_dirname, "lib", "worker.js");
       const worker = new Worker(toExecute, {
         ...opts.workerOpts,
         trackUnmanagedFds: false,
@@ -5917,9 +5917,9 @@ var require_transport = __commonJS({
   "node_modules/pino/lib/transport.js"(exports, module) {
     "use strict";
     var { createRequire } = __require("module");
-    var { existsSync: existsSync9 } = __require("node:fs");
+    var { existsSync: existsSync10 } = __require("node:fs");
     var getCallers = require_caller();
-    var { join: join21, isAbsolute: isAbsolute3, sep: sep3 } = __require("node:path");
+    var { join: join22, isAbsolute: isAbsolute4, sep: sep3 } = __require("node:path");
     var { fileURLToPath: fileURLToPath3 } = __require("node:url");
     var sleep2 = require_atomic_sleep();
     var onExit = require_on_exit_leak_free();
@@ -5991,7 +5991,7 @@ var require_transport = __commonJS({
           return false;
         }
       }
-      return isAbsolute3(path2) && !existsSync9(path2);
+      return isAbsolute4(path2) && !existsSync10(path2);
     }
     function stripQuotes(value) {
       const first = value[0];
@@ -6072,7 +6072,7 @@ var require_transport = __commonJS({
         throw new Error("only one of target or targets can be specified");
       }
       if (targets) {
-        target = bundlerOverrides["pino-worker"] || join21(__studio_dirname, "worker.js");
+        target = bundlerOverrides["pino-worker"] || join22(__studio_dirname, "worker.js");
         options.targets = targets.filter((dest) => dest.target).map((dest) => {
           return {
             ...dest,
@@ -6090,7 +6090,7 @@ var require_transport = __commonJS({
           });
         });
       } else if (pipeline) {
-        target = bundlerOverrides["pino-worker"] || join21(__studio_dirname, "worker.js");
+        target = bundlerOverrides["pino-worker"] || join22(__studio_dirname, "worker.js");
         options.pipelines = [pipeline.map((dest) => {
           return {
             ...dest,
@@ -6109,11 +6109,11 @@ var require_transport = __commonJS({
       return buildStream(fixTarget(target), options, worker, sync, name);
       function fixTarget(origin) {
         origin = bundlerOverrides[origin] || origin;
-        if (isAbsolute3(origin) || origin.indexOf("file://") === 0) {
+        if (isAbsolute4(origin) || origin.indexOf("file://") === 0) {
           return origin;
         }
         if (origin === "pino/file") {
-          return join21(__studio_dirname, "..", "file.js");
+          return join22(__studio_dirname, "..", "file.js");
         }
         let fixTarget2;
         for (const filePath of callers) {
@@ -7093,7 +7093,7 @@ var require_safe_stable_stringify = __commonJS({
               return circularValue;
             }
             let res = "";
-            let join21 = ",";
+            let join22 = ",";
             const originalIndentation = indentation;
             if (Array.isArray(value)) {
               if (value.length === 0) {
@@ -7107,7 +7107,7 @@ var require_safe_stable_stringify = __commonJS({
                 indentation += spacer;
                 res += `
 ${indentation}`;
-                join21 = `,
+                join22 = `,
 ${indentation}`;
               }
               const maximumValuesToStringify = Math.min(value.length, maximumBreadth);
@@ -7115,13 +7115,13 @@ ${indentation}`;
               for (; i < maximumValuesToStringify - 1; i++) {
                 const tmp2 = stringifyFnReplacer(String(i), value, stack, replacer, spacer, indentation);
                 res += tmp2 !== void 0 ? tmp2 : "null";
-                res += join21;
+                res += join22;
               }
               const tmp = stringifyFnReplacer(String(i), value, stack, replacer, spacer, indentation);
               res += tmp !== void 0 ? tmp : "null";
               if (value.length - 1 > maximumBreadth) {
                 const removedKeys = value.length - maximumBreadth - 1;
-                res += `${join21}"... ${getItemCount(removedKeys)} not stringified"`;
+                res += `${join22}"... ${getItemCount(removedKeys)} not stringified"`;
               }
               if (spacer !== "") {
                 res += `
@@ -7142,7 +7142,7 @@ ${originalIndentation}`;
             let separator = "";
             if (spacer !== "") {
               indentation += spacer;
-              join21 = `,
+              join22 = `,
 ${indentation}`;
               whitespace = " ";
             }
@@ -7156,13 +7156,13 @@ ${indentation}`;
               const tmp = stringifyFnReplacer(key2, value, stack, replacer, spacer, indentation);
               if (tmp !== void 0) {
                 res += `${separator}${strEscape(key2)}:${whitespace}${tmp}`;
-                separator = join21;
+                separator = join22;
               }
             }
             if (keyLength > maximumBreadth) {
               const removedKeys = keyLength - maximumBreadth;
               res += `${separator}"...":${whitespace}"${getItemCount(removedKeys)} not stringified"`;
-              separator = join21;
+              separator = join22;
             }
             if (spacer !== "" && separator.length > 1) {
               res = `
@@ -7203,7 +7203,7 @@ ${originalIndentation}`;
             }
             const originalIndentation = indentation;
             let res = "";
-            let join21 = ",";
+            let join22 = ",";
             if (Array.isArray(value)) {
               if (value.length === 0) {
                 return "[]";
@@ -7216,7 +7216,7 @@ ${originalIndentation}`;
                 indentation += spacer;
                 res += `
 ${indentation}`;
-                join21 = `,
+                join22 = `,
 ${indentation}`;
               }
               const maximumValuesToStringify = Math.min(value.length, maximumBreadth);
@@ -7224,13 +7224,13 @@ ${indentation}`;
               for (; i < maximumValuesToStringify - 1; i++) {
                 const tmp2 = stringifyArrayReplacer(String(i), value[i], stack, replacer, spacer, indentation);
                 res += tmp2 !== void 0 ? tmp2 : "null";
-                res += join21;
+                res += join22;
               }
               const tmp = stringifyArrayReplacer(String(i), value[i], stack, replacer, spacer, indentation);
               res += tmp !== void 0 ? tmp : "null";
               if (value.length - 1 > maximumBreadth) {
                 const removedKeys = value.length - maximumBreadth - 1;
-                res += `${join21}"... ${getItemCount(removedKeys)} not stringified"`;
+                res += `${join22}"... ${getItemCount(removedKeys)} not stringified"`;
               }
               if (spacer !== "") {
                 res += `
@@ -7243,7 +7243,7 @@ ${originalIndentation}`;
             let whitespace = "";
             if (spacer !== "") {
               indentation += spacer;
-              join21 = `,
+              join22 = `,
 ${indentation}`;
               whitespace = " ";
             }
@@ -7252,7 +7252,7 @@ ${indentation}`;
               const tmp = stringifyArrayReplacer(key2, value[key2], stack, replacer, spacer, indentation);
               if (tmp !== void 0) {
                 res += `${separator}${strEscape(key2)}:${whitespace}${tmp}`;
-                separator = join21;
+                separator = join22;
               }
             }
             if (spacer !== "" && separator.length > 1) {
@@ -7310,20 +7310,20 @@ ${originalIndentation}`;
               indentation += spacer;
               let res2 = `
 ${indentation}`;
-              const join22 = `,
+              const join23 = `,
 ${indentation}`;
               const maximumValuesToStringify = Math.min(value.length, maximumBreadth);
               let i = 0;
               for (; i < maximumValuesToStringify - 1; i++) {
                 const tmp2 = stringifyIndent(String(i), value[i], stack, spacer, indentation);
                 res2 += tmp2 !== void 0 ? tmp2 : "null";
-                res2 += join22;
+                res2 += join23;
               }
               const tmp = stringifyIndent(String(i), value[i], stack, spacer, indentation);
               res2 += tmp !== void 0 ? tmp : "null";
               if (value.length - 1 > maximumBreadth) {
                 const removedKeys = value.length - maximumBreadth - 1;
-                res2 += `${join22}"... ${getItemCount(removedKeys)} not stringified"`;
+                res2 += `${join23}"... ${getItemCount(removedKeys)} not stringified"`;
               }
               res2 += `
 ${originalIndentation}`;
@@ -7339,16 +7339,16 @@ ${originalIndentation}`;
               return '"[Object]"';
             }
             indentation += spacer;
-            const join21 = `,
+            const join22 = `,
 ${indentation}`;
             let res = "";
             let separator = "";
             let maximumPropertiesToStringify = Math.min(keyLength, maximumBreadth);
             if (isTypedArrayWithEntries(value)) {
-              res += stringifyTypedArray(value, join21, maximumBreadth);
+              res += stringifyTypedArray(value, join22, maximumBreadth);
               keys = keys.slice(value.length);
               maximumPropertiesToStringify -= value.length;
-              separator = join21;
+              separator = join22;
             }
             if (deterministic) {
               keys = sort(keys, comparator);
@@ -7359,13 +7359,13 @@ ${indentation}`;
               const tmp = stringifyIndent(key2, value[key2], stack, spacer, indentation);
               if (tmp !== void 0) {
                 res += `${separator}${strEscape(key2)}: ${tmp}`;
-                separator = join21;
+                separator = join22;
               }
             }
             if (keyLength > maximumBreadth) {
               const removedKeys = keyLength - maximumBreadth;
               res += `${separator}"...": "${getItemCount(removedKeys)} not stringified"`;
-              separator = join21;
+              separator = join22;
             }
             if (separator !== "") {
               res = `
@@ -15204,7 +15204,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve8.call(this, root, ref);
+      let _sch = resolve9.call(this, root, ref);
       if (_sch === void 0) {
         const schema2 = (_a = root.localRefs) === null || _a === void 0 ? void 0 : _a[ref];
         const { schemaId } = this.opts;
@@ -15231,7 +15231,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve8(root, ref) {
+    function resolve9(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -15806,7 +15806,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve8(baseURI, relativeURI, options) {
+    function resolve9(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const resolved2 = resolveComponent(parse(baseURI, schemelessOptions), parse(relativeURI, schemelessOptions), schemelessOptions, true);
       schemelessOptions.skipEscape = true;
@@ -16033,7 +16033,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize: normalize2,
-      resolve: resolve8,
+      resolve: resolve9,
       resolveComponent,
       equal,
       serialize,
@@ -33306,9 +33306,9 @@ var require_light_my_request = __commonJS({
         const res = new Response(req, callback);
         return makeRequest(dispatchFunc, server, req, res);
       } else {
-        return new Promise((resolve8, reject) => {
+        return new Promise((resolve9, reject) => {
           const req = new RequestConstructor(options);
-          const res = new Response(req, resolve8, reject);
+          const res = new Response(req, resolve9, reject);
           makeRequest(dispatchFunc, server, req, res);
         });
       }
@@ -37400,10 +37400,10 @@ var require_commonjs4 = __commonJS({
        * Return a void Promise that resolves once the stream ends.
        */
       async promise() {
-        return new Promise((resolve8, reject) => {
+        return new Promise((resolve9, reject) => {
           this.on(DESTROYED, () => reject(new Error("stream destroyed")));
           this.on("error", (er) => reject(er));
-          this.on("end", () => resolve8());
+          this.on("end", () => resolve9());
         });
       }
       /**
@@ -37427,7 +37427,7 @@ var require_commonjs4 = __commonJS({
             return Promise.resolve({ done: false, value: res });
           if (this[EOF])
             return stop();
-          let resolve8;
+          let resolve9;
           let reject;
           const onerr = (er) => {
             this.off("data", ondata);
@@ -37441,19 +37441,19 @@ var require_commonjs4 = __commonJS({
             this.off("end", onend);
             this.off(DESTROYED, ondestroy);
             this.pause();
-            resolve8({ value, done: !!this[EOF] });
+            resolve9({ value, done: !!this[EOF] });
           };
           const onend = () => {
             this.off("error", onerr);
             this.off("data", ondata);
             this.off(DESTROYED, ondestroy);
             stop();
-            resolve8({ done: true, value: void 0 });
+            resolve9({ done: true, value: void 0 });
           };
           const ondestroy = () => onerr(new Error("stream destroyed"));
           return new Promise((res2, rej) => {
             reject = rej;
-            resolve8 = res2;
+            resolve9 = res2;
             this.once(DESTROYED, ondestroy);
             this.once("error", onerr);
             this.once("end", onend);
@@ -38473,9 +38473,9 @@ var require_commonjs5 = __commonJS({
         if (this.#asyncReaddirInFlight) {
           await this.#asyncReaddirInFlight;
         } else {
-          let resolve8 = () => {
+          let resolve9 = () => {
           };
-          this.#asyncReaddirInFlight = new Promise((res) => resolve8 = res);
+          this.#asyncReaddirInFlight = new Promise((res) => resolve9 = res);
           try {
             for (const e of await this.#fs.promises.readdir(fullpath, {
               withFileTypes: true
@@ -38488,7 +38488,7 @@ var require_commonjs5 = __commonJS({
             children.provisional = 0;
           }
           this.#asyncReaddirInFlight = void 0;
-          resolve8();
+          resolve9();
         }
         return children.slice(0, children.provisional);
       }
@@ -41685,9 +41685,9 @@ var require_send = __commonJS({
     var { parseTokenList } = require_parseTokenList();
     var { createHttpError } = require_createHttpError();
     var extname3 = path2.extname;
-    var join21 = path2.join;
+    var join22 = path2.join;
     var normalize2 = path2.normalize;
-    var resolve8 = path2.resolve;
+    var resolve9 = path2.resolve;
     var sep3 = path2.sep;
     var Readable2 = stream.Readable;
     var BYTES_RANGE_REGEXP = /^ *bytes=/;
@@ -41734,7 +41734,7 @@ var require_send = __commonJS({
       const lastModified = options.lastModified !== void 0 ? Boolean(options.lastModified) : true;
       const maxage = normalizeMaxAge(options.maxAge ?? options.maxage);
       const maxContentRangeChunkSize = options.maxContentRangeChunkSize !== void 0 ? Number(options.maxContentRangeChunkSize) : null;
-      const root = options.root ? resolve8(options.root) : null;
+      const root = options.root ? resolve9(options.root) : null;
       const highWaterMark = Number.isSafeInteger(options.highWaterMark) && options.highWaterMark > 0 ? options.highWaterMark : null;
       return {
         acceptRanges,
@@ -41772,14 +41772,14 @@ var require_send = __commonJS({
           return { statusCode: 403 };
         }
         parts = path3.split(sep3);
-        path3 = normalize2(join21(root, path3));
+        path3 = normalize2(join22(root, path3));
       } else {
         if (UP_PATH_REGEXP.test(path3)) {
           debug('malicious path "%s"', path3);
           return { statusCode: 403 };
         }
         parts = normalize2(path3).split(sep3);
-        path3 = resolve8(path3);
+        path3 = resolve9(path3);
       }
       return { path: path3, parts };
     }
@@ -41875,9 +41875,9 @@ var require_send = __commonJS({
       );
     }
     function tryStat(path3) {
-      return new Promise((resolve9) => {
-        fs.stat(path3, function onstat(error, stat9) {
-          resolve9({ error, stat: stat9 });
+      return new Promise((resolve10) => {
+        fs.stat(path3, function onstat(error, stat10) {
+          resolve10({ error, stat: stat10 });
         });
       });
     }
@@ -41912,7 +41912,7 @@ var require_send = __commonJS({
           return sendError4(500, err);
       }
     }
-    function sendNotModified(headers, path3, stat9) {
+    function sendNotModified(headers, path3, stat10) {
       debug("not modified");
       delete headers["Content-Encoding"];
       delete headers["Content-Language"];
@@ -41925,11 +41925,11 @@ var require_send = __commonJS({
         stream: Readable2.from(""),
         // metadata
         type: "file",
-        metadata: { path: path3, stat: stat9 }
+        metadata: { path: path3, stat: stat10 }
       };
     }
-    function sendFileDirectly(request, path3, stat9, options) {
-      let len = stat9.size;
+    function sendFileDirectly(request, path3, stat10, options) {
+      let len = stat10.size;
       let offset = options.start ?? 0;
       let statusCode = 200;
       const headers = {};
@@ -41947,12 +41947,12 @@ var require_send = __commonJS({
         headers["Cache-Control"] = cacheControl;
       }
       if (options.lastModified) {
-        const modified = stat9.mtime.toUTCString();
+        const modified = stat10.mtime.toUTCString();
         debug("modified %s", modified);
         headers["Last-Modified"] = modified;
       }
       if (options.etag) {
-        const etag = 'W/"' + stat9.size.toString(16) + "-" + stat9.mtime.getTime().toString(16) + '"';
+        const etag = 'W/"' + stat10.size.toString(16) + "-" + stat10.mtime.getTime().toString(16) + '"';
         debug("etag %s", etag);
         headers.ETag = etag;
       }
@@ -41971,7 +41971,7 @@ var require_send = __commonJS({
           return sendError4(412);
         }
         if (isNotModifiedFailure(request, headers)) {
-          return sendNotModified(headers, path3, stat9);
+          return sendNotModified(headers, path3, stat10);
         }
       }
       len = Math.max(0, len - offset);
@@ -42013,7 +42013,7 @@ var require_send = __commonJS({
           stream: Readable2.from(""),
           // metadata
           type: "file",
-          metadata: { path: path3, stat: stat9 }
+          metadata: { path: path3, stat: stat10 }
         };
       }
       const stream2 = fs.createReadStream(path3, {
@@ -42027,7 +42027,7 @@ var require_send = __commonJS({
         stream: stream2,
         // metadata
         type: "file",
-        metadata: { path: path3, stat: stat9 }
+        metadata: { path: path3, stat: stat10 }
       };
     }
     function sendRedirect(path3, options) {
@@ -42055,14 +42055,14 @@ var require_send = __commonJS({
       let err;
       for (let i = 0; i < options.index.length; i++) {
         const index = options.index[i];
-        const p = join21(path3, index);
-        const { error, stat: stat9 } = await tryStat(p);
+        const p = join22(path3, index);
+        const { error, stat: stat10 } = await tryStat(p);
         if (error) {
           err = error;
           continue;
         }
-        if (stat9.isDirectory()) continue;
-        return sendFileDirectly(request, p, stat9, options);
+        if (stat10.isDirectory()) continue;
+        return sendFileDirectly(request, p, stat10, options);
       }
       if (err) {
         return sendStatError(err);
@@ -42070,22 +42070,22 @@ var require_send = __commonJS({
       return sendError4(404);
     }
     async function sendFile(request, path3, options) {
-      const { error, stat: stat9 } = await tryStat(path3);
+      const { error, stat: stat10 } = await tryStat(path3);
       if (error && error.code === "ENOENT" && !extname3(path3) && path3[path3.length - 1] !== sep3) {
         let err = error;
         for (let i = 0; i < options.extensions.length; i++) {
           const extension = options.extensions[i];
           const p = path3 + "." + extension;
-          const { error: error2, stat: stat10 } = await tryStat(p);
+          const { error: error2, stat: stat11 } = await tryStat(p);
           if (error2) {
             err = error2;
             continue;
           }
-          if (stat10.isDirectory()) {
+          if (stat11.isDirectory()) {
             err = null;
             continue;
           }
-          return sendFileDirectly(request, p, stat10, options);
+          return sendFileDirectly(request, p, stat11, options);
         }
         if (err) {
           return sendStatError(err);
@@ -42093,8 +42093,8 @@ var require_send = __commonJS({
         return sendError4(404);
       }
       if (error) return sendStatError(error);
-      if (stat9.isDirectory()) return sendRedirect(path3, options);
-      return sendFileDirectly(request, path3, stat9, options);
+      if (stat10.isDirectory()) return sendRedirect(path3, options);
+      return sendFileDirectly(request, path3, stat10, options);
     }
     async function send(request, _path, options) {
       const opts = normalizeOptions(options);
@@ -42706,7 +42706,7 @@ var require_static = __commonJS({
     "use strict";
     var path2 = __require("node:path");
     var { fileURLToPath: fileURLToPath3 } = __require("node:url");
-    var { statSync: statSync5 } = __require("node:fs");
+    var { statSync: statSync6 } = __require("node:fs");
     var { glob } = require_commonjs6();
     var fp = require_plugin2();
     var send = require_send2();
@@ -42839,8 +42839,8 @@ var require_static = __commonJS({
               }
             }
           }
-          for (const [dirname10, rootPath] of indexDirs.entries()) {
-            const pathname = dirname10 + (dirname10.endsWith("/") ? "" : "/");
+          for (const [dirname11, rootPath] of indexDirs.entries()) {
+            const pathname = dirname11 + (dirname11.endsWith("/") ? "" : "/");
             const file = "/" + pathname.replace(prefix, "");
             setUpHeadAndGet(routeOpts, pathname, file, rootPath);
             if (opts.redirect === true) {
@@ -43069,7 +43069,7 @@ var require_static = __commonJS({
       }
       let pathStat;
       try {
-        pathStat = statSync5(rootPath);
+        pathStat = statSync6(rootPath);
       } catch (e) {
         if (e.code === "ENOENT") {
           fastify.log.warn(`"root" path "${rootPath}" must exist`);
@@ -43093,7 +43093,7 @@ var require_static = __commonJS({
         return indexFiles.find((filename) => {
           const p = path2.join(root, pathname, filename);
           try {
-            const stats = statSync5(p);
+            const stats = statSync6(p);
             return !stats.isDirectory();
           } catch {
             return false;
@@ -46897,7 +46897,7 @@ var require_buffer_list = __commonJS({
         }
       }, {
         key: "join",
-        value: function join21(s) {
+        value: function join22(s) {
           if (this.length === 0) return "";
           var p = this.head;
           var ret = "" + p.data;
@@ -48170,14 +48170,14 @@ var require_async_iterator = __commonJS({
       };
     }
     function readAndResolve(iter) {
-      var resolve8 = iter[kLastResolve];
-      if (resolve8 !== null) {
+      var resolve9 = iter[kLastResolve];
+      if (resolve9 !== null) {
         var data = iter[kStream].read();
         if (data !== null) {
           iter[kLastPromise] = null;
           iter[kLastResolve] = null;
           iter[kLastReject] = null;
-          resolve8(createIterResult(data, false));
+          resolve9(createIterResult(data, false));
         }
       }
     }
@@ -48185,13 +48185,13 @@ var require_async_iterator = __commonJS({
       process.nextTick(readAndResolve, iter);
     }
     function wrapForNext(lastPromise, iter) {
-      return function(resolve8, reject) {
+      return function(resolve9, reject) {
         lastPromise.then(function() {
           if (iter[kEnded]) {
-            resolve8(createIterResult(void 0, true));
+            resolve9(createIterResult(void 0, true));
             return;
           }
-          iter[kHandlePromise](resolve8, reject);
+          iter[kHandlePromise](resolve9, reject);
         }, reject);
       };
     }
@@ -48211,12 +48211,12 @@ var require_async_iterator = __commonJS({
           return Promise.resolve(createIterResult(void 0, true));
         }
         if (this[kStream].destroyed) {
-          return new Promise(function(resolve8, reject) {
+          return new Promise(function(resolve9, reject) {
             process.nextTick(function() {
               if (_this[kError]) {
                 reject(_this[kError]);
               } else {
-                resolve8(createIterResult(void 0, true));
+                resolve9(createIterResult(void 0, true));
               }
             });
           });
@@ -48239,13 +48239,13 @@ var require_async_iterator = __commonJS({
       return this;
     }), _defineProperty(_Object$setPrototypeO, "return", function _return() {
       var _this2 = this;
-      return new Promise(function(resolve8, reject) {
+      return new Promise(function(resolve9, reject) {
         _this2[kStream].destroy(null, function(err) {
           if (err) {
             reject(err);
             return;
           }
-          resolve8(createIterResult(void 0, true));
+          resolve9(createIterResult(void 0, true));
         });
       });
     }), _Object$setPrototypeO), AsyncIteratorPrototype);
@@ -48267,15 +48267,15 @@ var require_async_iterator = __commonJS({
         value: stream._readableState.endEmitted,
         writable: true
       }), _defineProperty(_Object$create, kHandlePromise, {
-        value: function value(resolve8, reject) {
+        value: function value(resolve9, reject) {
           var data = iterator[kStream].read();
           if (data) {
             iterator[kLastPromise] = null;
             iterator[kLastResolve] = null;
             iterator[kLastReject] = null;
-            resolve8(createIterResult(data, false));
+            resolve9(createIterResult(data, false));
           } else {
-            iterator[kLastResolve] = resolve8;
+            iterator[kLastResolve] = resolve9;
             iterator[kLastReject] = reject;
           }
         },
@@ -48294,12 +48294,12 @@ var require_async_iterator = __commonJS({
           iterator[kError] = err;
           return;
         }
-        var resolve8 = iterator[kLastResolve];
-        if (resolve8 !== null) {
+        var resolve9 = iterator[kLastResolve];
+        if (resolve9 !== null) {
           iterator[kLastPromise] = null;
           iterator[kLastResolve] = null;
           iterator[kLastReject] = null;
-          resolve8(createIterResult(void 0, true));
+          resolve9(createIterResult(void 0, true));
         }
         iterator[kEnded] = true;
       });
@@ -48314,7 +48314,7 @@ var require_async_iterator = __commonJS({
 var require_from = __commonJS({
   "node_modules/readable-stream/lib/internal/streams/from.js"(exports, module) {
     "use strict";
-    function asyncGeneratorStep(gen, resolve8, reject, _next, _throw, key, arg) {
+    function asyncGeneratorStep(gen, resolve9, reject, _next, _throw, key, arg) {
       try {
         var info = gen[key](arg);
         var value = info.value;
@@ -48323,7 +48323,7 @@ var require_from = __commonJS({
         return;
       }
       if (info.done) {
-        resolve8(value);
+        resolve9(value);
       } else {
         Promise.resolve(value).then(_next, _throw);
       }
@@ -48331,13 +48331,13 @@ var require_from = __commonJS({
     function _asyncToGenerator(fn) {
       return function() {
         var self2 = this, args = arguments;
-        return new Promise(function(resolve8, reject) {
+        return new Promise(function(resolve9, reject) {
           var gen = fn.apply(self2, args);
           function _next(value) {
-            asyncGeneratorStep(gen, resolve8, reject, _next, _throw, "next", value);
+            asyncGeneratorStep(gen, resolve9, reject, _next, _throw, "next", value);
           }
           function _throw(err) {
-            asyncGeneratorStep(gen, resolve8, reject, _next, _throw, "throw", err);
+            asyncGeneratorStep(gen, resolve9, reject, _next, _throw, "throw", err);
           }
           _next(void 0);
         });
@@ -49809,16 +49809,16 @@ var require_websocket2 = __commonJS({
         const clientStream = new Duplexify(client2Server, server2Client);
         const ws = new WebSocket(null, void 0, { isServer: false });
         const head = Buffer.from([]);
-        let resolve8, reject;
+        let resolve9, reject;
         const promise = new Promise((_resolve, _reject) => {
-          resolve8 = _resolve;
+          resolve9 = _resolve;
           reject = _reject;
         });
         typeof options.onInit === "function" && options.onInit(ws);
         ws.on("open", () => {
           typeof options.onOpen === "function" && options.onOpen(ws);
           clientStream.removeListener("data", onData);
-          resolve8(ws);
+          resolve9(ws);
         });
         const onData = (chunk) => {
           if (chunk.toString().includes("HTTP/1.1 101 Switching Protocols")) {
@@ -52436,14 +52436,14 @@ var require_stream_consumer = __commonJS({
   "node_modules/@fastify/multipart/lib/stream-consumer.js"(exports, module) {
     "use strict";
     module.exports = function streamToNull(stream) {
-      return new Promise((resolve8, reject) => {
+      return new Promise((resolve9, reject) => {
         stream.on("data", () => {
         });
         stream.on("close", () => {
-          resolve8();
+          resolve9();
         });
         stream.on("end", () => {
-          resolve8();
+          resolve9();
         });
         stream.on("error", (error) => {
           reject(error);
@@ -52788,10 +52788,10 @@ var require_multipart2 = __commonJS({
           }
         };
         const parts = () => {
-          return new Promise((resolve8, reject) => {
+          return new Promise((resolve9, reject) => {
             handle((val) => {
               if (val instanceof Error) return reject(val);
-              resolve8(val);
+              resolve9(val);
             });
           });
         };
@@ -53853,14 +53853,14 @@ var require_cors = __commonJS({
 var import_fastify = __toESM(require_fastify(), 1);
 var import_static = __toESM(require_static(), 1);
 var import_websocket = __toESM(require_websocket2(), 1);
-import { join as join20, dirname as dirname9, extname as extname2 } from "path";
+import { join as join21, dirname as dirname10, extname as extname2 } from "path";
 import { fileURLToPath as fileURLToPath2 } from "url";
-import { existsSync as existsSync8, statSync as statSync4, createReadStream as createReadStream2 } from "fs";
+import { existsSync as existsSync9, statSync as statSync5, createReadStream as createReadStream2 } from "fs";
 
 // server/services/projectLoader.ts
-import { readFile as readFile3, stat as stat2, readdir, writeFile as writeFile2, mkdir as mkdir2 } from "fs/promises";
-import { existsSync as existsSync2 } from "fs";
-import { join as join5, resolve as resolve2, relative, basename as basename2, isAbsolute } from "path";
+import { readFile as readFile4, stat as stat3, readdir, writeFile as writeFile2, mkdir as mkdir2 } from "fs/promises";
+import { existsSync as existsSync3 } from "fs";
+import { join as join6, resolve as resolve3, relative, basename as basename2, isAbsolute as isAbsolute2 } from "path";
 
 // node_modules/js-yaml/dist/js-yaml.mjs
 function isNothing(subject) {
@@ -58231,13 +58231,18 @@ function toAutopilotRunSummary(run2) {
     ...optional("extra", run2.extra)
   };
 }
-function resolveLiveRun(runs) {
+function resolveLiveRun(runs, currentBranch) {
   let live = null;
   for (const run2 of runs) {
     if (run2.status !== "running") continue;
+    if (isStaleBaseBranchCopy(run2, currentBranch)) continue;
     if (live === null || compareRunRecency(run2, live) < 0) live = run2;
   }
   return live;
+}
+function isStaleBaseBranchCopy(run2, currentBranch) {
+  if (currentBranch === null) return false;
+  return run2.baseBranch === currentBranch && run2.runBranch !== currentBranch;
 }
 function sortRunsNewestFirst(runs) {
   return [...runs].sort(compareRunRecency);
@@ -58432,6 +58437,48 @@ function optional(key, value) {
   return value === void 0 ? {} : { [key]: value };
 }
 
+// server/lib/gitHead.ts
+import { existsSync as existsSync2, readFileSync as readFileSync4, statSync as statSync2 } from "fs";
+import { readFile as readFile3, stat as stat2 } from "fs/promises";
+import { dirname as dirname2, isAbsolute, join as join5, resolve as resolve2 } from "path";
+function parseHeadRef(content) {
+  const m = /^ref:\s*refs\/heads\/(.+?)\s*$/m.exec(content);
+  return m ? m[1] : null;
+}
+function parseGitdirPointer(content, projectRoot) {
+  const m = /^gitdir:\s*(.+?)\s*$/m.exec(content);
+  if (!m) return null;
+  return isAbsolute(m[1]) ? m[1] : resolve2(projectRoot, m[1]);
+}
+function resolveGitHeadPath(projectRoot) {
+  const dotGit = join5(projectRoot, ".git");
+  try {
+    if (!existsSync2(dotGit)) return null;
+    if (statSync2(dotGit).isDirectory()) return join5(dotGit, "HEAD");
+    const gitdir = parseGitdirPointer(readFileSync4(dotGit, "utf-8"), dirname2(dotGit));
+    return gitdir ? join5(gitdir, "HEAD") : null;
+  } catch {
+    return null;
+  }
+}
+async function readCurrentBranch(projectRoot) {
+  const dotGit = join5(projectRoot, ".git");
+  try {
+    const s = await stat2(dotGit);
+    let headPath;
+    if (s.isDirectory()) {
+      headPath = join5(dotGit, "HEAD");
+    } else {
+      const gitdir = parseGitdirPointer(await readFile3(dotGit, "utf-8"), projectRoot);
+      if (!gitdir) return null;
+      headPath = join5(gitdir, "HEAD");
+    }
+    return parseHeadRef(await readFile3(headPath, "utf-8"));
+  } catch {
+    return null;
+  }
+}
+
 // server/services/projectLoader.ts
 function readProjectType(value) {
   return typeof value === "string" && PROJECT_TYPES.includes(value) ? value : "unknown";
@@ -58482,7 +58529,7 @@ function knownArtifacts(apiContractPath) {
     "superdesign/design_iterations"
   ];
 }
-var AUTOPILOT_DIR = join5(".archflow", "autopilot");
+var AUTOPILOT_DIR = join6(".archflow", "autopilot");
 var AUTOPILOT_RUN_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 function isRoadmapSystemFile(relativePath) {
   const normalized = relativePath.replace(/\\/g, "/").replace(/^\.\//, "");
@@ -58523,7 +58570,7 @@ var ProjectLoader = class {
     return this.projectPath !== null;
   }
   setProject(projectPath2) {
-    this.projectPath = resolve2(projectPath2);
+    this.projectPath = resolve3(projectPath2);
     this.schemaVersionCache = null;
     invalidateHostResolution();
   }
@@ -58541,13 +58588,13 @@ var ProjectLoader = class {
   async getSchemaVersion() {
     if (this.schemaVersionCache !== null) return this.schemaVersionCache;
     const projectRoot = this.ensureLoaded();
-    const roadmapPath = join5(projectRoot, ".archflow", "roadmap.yaml");
-    if (!existsSync2(roadmapPath)) {
+    const roadmapPath = join6(projectRoot, ".archflow", "roadmap.yaml");
+    if (!existsSync3(roadmapPath)) {
       this.schemaVersionCache = "2.0";
       return this.schemaVersionCache;
     }
     try {
-      const content = await readFile3(roadmapPath, "utf-8");
+      const content = await readFile4(roadmapPath, "utf-8");
       this.schemaVersionCache = detectSchemaVersion(content);
     } catch {
       this.schemaVersionCache = "1.0";
@@ -58576,8 +58623,7 @@ var ProjectLoader = class {
    */
   async getLiveAutopilotRun() {
     try {
-      const { runs } = await this.getAutopilotRuns();
-      const live = resolveLiveRun(runs);
+      const { live } = await this.getAutopilotRuns();
       return live ? { runId: live.runId, runBranch: live.runBranch, release: live.release } : null;
     } catch {
       return null;
@@ -58594,9 +58640,9 @@ var ProjectLoader = class {
    */
   validatePath(relativePath) {
     const projectRoot = this.ensureLoaded();
-    const resolved2 = resolve2(projectRoot, relativePath);
+    const resolved2 = resolve3(projectRoot, relativePath);
     const rel = relative(projectRoot, resolved2);
-    if (rel.startsWith("..") || resolve2(resolved2) !== resolved2.replace(/\/$/, "")) {
+    if (rel.startsWith("..") || resolve3(resolved2) !== resolved2.replace(/\/$/, "")) {
       if (!resolved2.startsWith(projectRoot)) {
         throw new InvalidPathError(relativePath);
       }
@@ -58609,8 +58655,8 @@ var ProjectLoader = class {
   async getProjectInfo() {
     const projectRoot = this.ensureLoaded();
     const name = basename2(projectRoot);
-    const archflowDir = join5(projectRoot, ".archflow");
-    const onboarded = existsSync2(archflowDir);
+    const archflowDir = join6(projectRoot, ".archflow");
+    const onboarded = existsSync3(archflowDir);
     const resolved2 = await this.resolveProjectType();
     const schemaVersion = await this.getSchemaVersion();
     return {
@@ -58660,7 +58706,7 @@ var ProjectLoader = class {
     const configured = settings?.apiContractPath?.trim();
     if (!configured) return DEFAULT_API_CONTRACT_PATH;
     const normalized = configured.replace(/\\/g, "/").replace(/^\.\//, "");
-    if (isAbsolute(configured) || normalized.startsWith("/")) return DEFAULT_API_CONTRACT_PATH;
+    if (isAbsolute2(configured) || normalized.startsWith("/")) return DEFAULT_API_CONTRACT_PATH;
     if (normalized.split("/").includes("..")) return DEFAULT_API_CONTRACT_PATH;
     return normalized;
   }
@@ -58674,10 +58720,10 @@ var ProjectLoader = class {
    */
   async getProjectSettings() {
     const projectRoot = this.ensureLoaded();
-    const settingsPath = join5(projectRoot, ".archflow", "project-settings.yaml");
-    if (!existsSync2(settingsPath)) return null;
+    const settingsPath = join6(projectRoot, ".archflow", "project-settings.yaml");
+    if (!existsSync3(settingsPath)) return null;
     try {
-      return parseProjectSettings(await readFile3(settingsPath, "utf-8"));
+      return parseProjectSettings(await readFile4(settingsPath, "utf-8"));
     } catch {
       return null;
     }
@@ -58736,11 +58782,11 @@ var ProjectLoader = class {
    */
   async readProjectTypeDrift(ownerValue, source) {
     if (source === "none") return null;
-    const roadmapPath = join5(this.ensureLoaded(), ".archflow", "roadmap.yaml");
-    if (!existsSync2(roadmapPath)) return null;
+    const roadmapPath = join6(this.ensureLoaded(), ".archflow", "roadmap.yaml");
+    if (!existsSync3(roadmapPath)) return null;
     let mirrorValue;
     try {
-      const data = jsYaml.load(await readFile3(roadmapPath, "utf-8"));
+      const data = jsYaml.load(await readFile4(roadmapPath, "utf-8"));
       const raw = data?.project_type;
       mirrorValue = typeof raw === "string" ? raw : void 0;
     } catch {
@@ -58769,7 +58815,7 @@ var ProjectLoader = class {
   async hasAutopilotRuns() {
     if (!this.currentPath) return false;
     try {
-      const entries = await readdir(join5(this.currentPath, ".archflow", "autopilot"));
+      const entries = await readdir(join6(this.currentPath, ".archflow", "autopilot"));
       return entries.some((e) => e.endsWith(".yaml"));
     } catch {
       return false;
@@ -58829,8 +58875,8 @@ var ProjectLoader = class {
     if (!projectRoot) return [];
     const verdicts = [];
     const seen = /* @__PURE__ */ new Set();
-    const releasesRoot = join5(projectRoot, ".archflow", "releases");
-    for (const directory of [releasesRoot, join5(releasesRoot, "archive")]) {
+    const releasesRoot = join6(projectRoot, ".archflow", "releases");
+    for (const directory of [releasesRoot, join6(releasesRoot, "archive")]) {
       let entries;
       try {
         entries = await readdir(directory);
@@ -58840,7 +58886,7 @@ var ProjectLoader = class {
       for (const entry of entries.sort()) {
         if (!entry.endsWith(".yaml")) continue;
         try {
-          const release2 = parseRelease(await readFile3(join5(directory, entry), "utf-8"));
+          const release2 = parseRelease(await readFile4(join6(directory, entry), "utf-8"));
           for (const story of release2.stories) {
             if (seen.has(story.id)) continue;
             seen.add(story.id);
@@ -58855,12 +58901,12 @@ var ProjectLoader = class {
   }
   async getPhaseState() {
     const projectRoot = this.ensureLoaded();
-    const phasePath = join5(projectRoot, ".archflow", "current-phase.yaml");
-    if (!existsSync2(phasePath)) {
+    const phasePath = join6(projectRoot, ".archflow", "current-phase.yaml");
+    if (!existsSync3(phasePath)) {
       throw new FileNotFoundError("current-phase.yaml not found in .archflow/");
     }
     try {
-      const content = await readFile3(phasePath, "utf-8");
+      const content = await readFile4(phasePath, "utf-8");
       const data = jsYaml.load(content);
       const phase = data.phase ?? 1;
       const phaseStr = String(phase);
@@ -58895,12 +58941,12 @@ var ProjectLoader = class {
   }
   async getCurrentFeature() {
     const projectRoot = this.ensureLoaded();
-    const featurePath = join5(projectRoot, ".archflow", "current-feature.yaml");
-    if (!existsSync2(featurePath)) {
+    const featurePath = join6(projectRoot, ".archflow", "current-feature.yaml");
+    if (!existsSync3(featurePath)) {
       return null;
     }
     try {
-      const content = await readFile3(featurePath, "utf-8");
+      const content = await readFile4(featurePath, "utf-8");
       const data = jsYaml.load(content);
       if (!data || !data.story_id) {
         return null;
@@ -58942,8 +58988,8 @@ var ProjectLoader = class {
    */
   async getRoadmap() {
     const projectRoot = this.ensureLoaded();
-    const roadmapPath = join5(projectRoot, ".archflow", "roadmap.yaml");
-    if (!existsSync2(roadmapPath)) {
+    const roadmapPath = join6(projectRoot, ".archflow", "roadmap.yaml");
+    if (!existsSync3(roadmapPath)) {
       throw new FileNotFoundError("roadmap.yaml not found in .archflow/");
     }
     const parsed = parseRoadmap(await this.readArchflowFile(roadmapPath, "roadmap.yaml"));
@@ -58967,8 +59013,8 @@ var ProjectLoader = class {
   /** The v2 index alone, without resolving releases or the backlog. */
   async getRoadmapIndex() {
     const projectRoot = this.ensureLoaded();
-    const roadmapPath = join5(projectRoot, ".archflow", "roadmap.yaml");
-    if (!existsSync2(roadmapPath)) {
+    const roadmapPath = join6(projectRoot, ".archflow", "roadmap.yaml");
+    if (!existsSync3(roadmapPath)) {
       throw new FileNotFoundError("roadmap.yaml not found in .archflow/");
     }
     return parseRoadmapIndex(await this.readArchflowFile(roadmapPath, "roadmap.yaml"));
@@ -58982,10 +59028,10 @@ var ProjectLoader = class {
     const projectRoot = this.ensureLoaded();
     const releases = [];
     for (const ref of index.releases) {
-      const absolute = join5(projectRoot, ".archflow", ref.file);
-      if (!existsSync2(absolute)) continue;
+      const absolute = join6(projectRoot, ".archflow", ref.file);
+      if (!existsSync3(absolute)) continue;
       try {
-        releases.push(parseRelease(await readFile3(absolute, "utf-8")));
+        releases.push(parseRelease(await readFile4(absolute, "utf-8")));
       } catch {
       }
     }
@@ -59002,11 +59048,11 @@ var ProjectLoader = class {
   async getRelease(releaseId) {
     const projectRoot = this.ensureLoaded();
     for (const relative4 of [
-      join5(".archflow", "releases", `${releaseId}.yaml`),
-      join5(".archflow", "releases", "archive", `${releaseId}.yaml`)
+      join6(".archflow", "releases", `${releaseId}.yaml`),
+      join6(".archflow", "releases", "archive", `${releaseId}.yaml`)
     ]) {
-      const absolute = join5(projectRoot, relative4);
-      if (existsSync2(absolute)) {
+      const absolute = join6(projectRoot, relative4);
+      if (existsSync3(absolute)) {
         return parseRelease(await this.readArchflowFile(absolute, relative4));
       }
     }
@@ -59018,8 +59064,8 @@ var ProjectLoader = class {
    */
   async getBacklog() {
     const projectRoot = this.ensureLoaded();
-    const backlogPath = join5(projectRoot, ".archflow", "backlog.yaml");
-    if (!existsSync2(backlogPath)) return { epics: [] };
+    const backlogPath = join6(projectRoot, ".archflow", "backlog.yaml");
+    if (!existsSync3(backlogPath)) return { epics: [] };
     return parseBacklog(await this.readArchflowFile(backlogPath, "backlog.yaml"));
   }
   /**
@@ -59032,8 +59078,8 @@ var ProjectLoader = class {
    */
   async getHistory(query = {}) {
     const projectRoot = this.ensureLoaded();
-    const historyPath = join5(projectRoot, ".archflow", "history.yaml");
-    if (!existsSync2(historyPath)) return [];
+    const historyPath = join6(projectRoot, ".archflow", "history.yaml");
+    if (!existsSync3(historyPath)) return [];
     let entries = parseHistory(await this.readArchflowFile(historyPath, "history.yaml"));
     if (query.story) {
       entries = entries.filter((e) => e.story === query.story);
@@ -59082,7 +59128,7 @@ var ProjectLoader = class {
    */
   async getAutopilotRuns() {
     const dir = this.autopilotDir();
-    if (!existsSync2(dir)) return { runs: [], live: null };
+    if (!existsSync3(dir)) return { runs: [], live: null };
     let names;
     try {
       names = (await readdir(dir)).filter((name) => name.endsWith(".yaml")).sort();
@@ -59093,17 +59139,20 @@ var ProjectLoader = class {
     const errors = [];
     for (const name of names) {
       try {
-        const content = await readFile3(join5(dir, name), "utf-8");
+        const content = await readFile4(join6(dir, name), "utf-8");
         summaries.push(toAutopilotRunSummary(parseAutopilotRun(content, basename2(name, ".yaml"))));
       } catch (err) {
         errors.push({ file: name, message: `Failed to parse ${name}: ${err.message}` });
       }
     }
     const runs = sortRunsNewestFirst(summaries);
+    const currentBranch = await readCurrentBranch(this.ensureLoaded());
     return {
       runs,
       // ONE owner (AC6). No other method, route or watcher branch derives this.
-      live: resolveLiveRun(runs),
+      live: resolveLiveRun(runs, currentBranch),
+      // Omitted when unknown (no `.git`, detached HEAD), on the `errors` idiom.
+      ...currentBranch !== null ? { currentBranch } : {},
       // Omitted, never an empty array, when every ledger parsed.
       ...errors.length > 0 ? { errors } : {}
     };
@@ -59121,14 +59170,14 @@ var ProjectLoader = class {
     const projectRoot = this.ensureLoaded();
     const relativePath = this.autopilotLedgerPath(id);
     const absolute = this.validatePath(relativePath);
-    const dir = join5(projectRoot, AUTOPILOT_DIR);
+    const dir = join6(projectRoot, AUTOPILOT_DIR);
     if (!absolute.startsWith(dir + "/")) throw new InvalidPathError(id);
-    if (!existsSync2(absolute)) {
+    if (!existsSync3(absolute)) {
       throw new FileNotFoundError(`Autopilot run '${id}' not found.`);
     }
     let content;
     try {
-      content = await readFile3(absolute, "utf-8");
+      content = await readFile4(absolute, "utf-8");
     } catch (err) {
       throw new ParseError(`Failed to read ${id}.yaml: ${err.message}`);
     }
@@ -59139,7 +59188,7 @@ var ProjectLoader = class {
     }
   }
   autopilotDir() {
-    return join5(this.ensureLoaded(), AUTOPILOT_DIR);
+    return join6(this.ensureLoaded(), AUTOPILOT_DIR);
   }
   /**
    * `.archflow/autopilot/{id}.yaml` for a shape-checked id.
@@ -59152,7 +59201,7 @@ var ProjectLoader = class {
    */
   autopilotLedgerPath(id) {
     if (!AUTOPILOT_RUN_ID.test(id)) throw new InvalidPathError(id);
-    return join5(AUTOPILOT_DIR, `${id}.yaml`);
+    return join6(AUTOPILOT_DIR, `${id}.yaml`);
   }
   /**
    * Load history for a QUERY surface — same file, same laziness, but absence and
@@ -59166,10 +59215,10 @@ var ProjectLoader = class {
    */
   async loadHistoryForQuery() {
     const projectRoot = this.ensureLoaded();
-    const historyPath = join5(projectRoot, ".archflow", "history.yaml");
-    if (!existsSync2(historyPath)) return { state: "no_history_file", entries: [] };
+    const historyPath = join6(projectRoot, ".archflow", "history.yaml");
+    if (!existsSync3(historyPath)) return { state: "no_history_file", entries: [] };
     try {
-      return { state: "ok", entries: parseHistory(await readFile3(historyPath, "utf-8")) };
+      return { state: "ok", entries: parseHistory(await readFile4(historyPath, "utf-8")) };
     } catch (err) {
       return { state: "unreadable", entries: [], message: err.message };
     }
@@ -59177,7 +59226,7 @@ var ProjectLoader = class {
   /** Read a .archflow file, mapping any failure to a ParseError naming the file. */
   async readArchflowFile(absolutePath, label) {
     try {
-      return await readFile3(absolutePath, "utf-8");
+      return await readFile4(absolutePath, "utf-8");
     } catch (err) {
       throw new ParseError(`Failed to read ${label}: ${err.message}`);
     }
@@ -59212,7 +59261,7 @@ var ProjectLoader = class {
     await this.assertWritable("The roadmap index", BACKLOG_NOT_A_RELEASE);
     const relativePath = ".archflow/roadmap.yaml";
     await this.writeArchflowFile(
-      join5(projectRoot, relativePath),
+      join6(projectRoot, relativePath),
       serializeRoadmapIndex(index),
       relativePath
     );
@@ -59233,9 +59282,9 @@ var ProjectLoader = class {
     if (!release2.id) {
       throw new WriteError("Cannot write a release with no id.");
     }
-    const relativePath = release2.status === "released" ? join5(".archflow", "releases", "archive", `${release2.id}.yaml`) : join5(".archflow", "releases", `${release2.id}.yaml`);
+    const relativePath = release2.status === "released" ? join6(".archflow", "releases", "archive", `${release2.id}.yaml`) : join6(".archflow", "releases", `${release2.id}.yaml`);
     await this.writeArchflowFile(
-      join5(projectRoot, relativePath),
+      join6(projectRoot, relativePath),
       serializeRelease(release2),
       relativePath
     );
@@ -59247,7 +59296,7 @@ var ProjectLoader = class {
     await this.assertWritable("The backlog", BACKLOG_NOT_A_RELEASE);
     const relativePath = ".archflow/backlog.yaml";
     await this.writeArchflowFile(
-      join5(projectRoot, relativePath),
+      join6(projectRoot, relativePath),
       serializeBacklog(backlog),
       relativePath
     );
@@ -59298,14 +59347,14 @@ var ProjectLoader = class {
   async savePhaseActiveRelease(activeRelease) {
     const projectRoot = this.ensureLoaded();
     await this.assertWritable("current-phase.yaml");
-    const relativePath = join5(".archflow", "current-phase.yaml");
-    const absolutePath = join5(projectRoot, relativePath);
-    if (!existsSync2(absolutePath)) {
+    const relativePath = join6(".archflow", "current-phase.yaml");
+    const absolutePath = join6(projectRoot, relativePath);
+    if (!existsSync3(absolutePath)) {
       throw new FileNotFoundError("current-phase.yaml not found in .archflow/");
     }
     let document;
     try {
-      const contents2 = await readFile3(absolutePath, "utf-8");
+      const contents2 = await readFile4(absolutePath, "utf-8");
       const loaded = jsYaml.load(contents2);
       if (loaded === null || loaded === void 0) {
         document = {};
@@ -59358,14 +59407,14 @@ var ProjectLoader = class {
    */
   async getProjectSettingsState() {
     const projectRoot = this.ensureLoaded();
-    const relativePath = join5(".archflow", "project-settings.yaml");
-    const absolutePath = join5(projectRoot, relativePath);
-    if (!existsSync2(absolutePath)) {
+    const relativePath = join6(".archflow", "project-settings.yaml");
+    const absolutePath = join6(projectRoot, relativePath);
+    if (!existsSync3(absolutePath)) {
       return { state: "unmigrated", path: null, settings: null, violations: [] };
     }
     let contents;
     try {
-      contents = await readFile3(absolutePath, "utf-8");
+      contents = await readFile4(absolutePath, "utf-8");
     } catch (err) {
       throw new ReadError(`Failed to read project-settings.yaml: ${err.message}`);
     }
@@ -59445,14 +59494,14 @@ var ProjectLoader = class {
   async saveProjectSettings(patch) {
     const projectRoot = this.ensureLoaded();
     await this.assertWritable("Project settings");
-    const relativePath = join5(".archflow", "project-settings.yaml");
-    const absolutePath = join5(projectRoot, relativePath);
-    if (!existsSync2(absolutePath)) {
+    const relativePath = join6(".archflow", "project-settings.yaml");
+    const absolutePath = join6(projectRoot, relativePath);
+    if (!existsSync3(absolutePath)) {
       throw new FileNotFoundError("project-settings.yaml not found in .archflow/");
     }
     let document;
     try {
-      const loaded = jsYaml.load(await readFile3(absolutePath, "utf-8"));
+      const loaded = jsYaml.load(await readFile4(absolutePath, "utf-8"));
       if (loaded === null || loaded === void 0) {
         document = {};
       } else if (typeof loaded !== "object" || Array.isArray(loaded)) {
@@ -59487,7 +59536,7 @@ var ProjectLoader = class {
   /** Shared write tail for the roadmap-system files. */
   async writeArchflowFile(absolutePath, contents, relativePath) {
     try {
-      await mkdir2(join5(absolutePath, ".."), { recursive: true });
+      await mkdir2(join6(absolutePath, ".."), { recursive: true });
       await writeFile2(absolutePath, contents, "utf-8");
     } catch (err) {
       throw new WriteError(`Failed to write ${relativePath}: ${err.message}`);
@@ -59495,13 +59544,13 @@ var ProjectLoader = class {
   }
   async readFile(relativePath) {
     const absolutePath = this.validatePath(relativePath);
-    if (!existsSync2(absolutePath)) {
+    if (!existsSync3(absolutePath)) {
       throw new FileNotFoundError(`File '${relativePath}' not found.`);
     }
     try {
       const [content, fileStat] = await Promise.all([
-        readFile3(absolutePath, "utf-8"),
-        stat2(absolutePath)
+        readFile4(absolutePath, "utf-8"),
+        stat3(absolutePath)
       ]);
       return {
         path: relativePath,
@@ -59524,10 +59573,10 @@ var ProjectLoader = class {
       await this.assertWritable(`'${relativePath}'`);
     }
     try {
-      const dir = join5(absolutePath, "..");
+      const dir = join6(absolutePath, "..");
       await mkdir2(dir, { recursive: true });
       await writeFile2(absolutePath, content, "utf-8");
-      const fileStat = await stat2(absolutePath);
+      const fileStat = await stat3(absolutePath);
       return {
         written: true,
         path: relativePath,
@@ -59545,15 +59594,15 @@ var ProjectLoader = class {
     const artifacts = [];
     let phaseStartTime = null;
     try {
-      const phasePath = join5(projectRoot, ".archflow", "current-phase.yaml");
-      const phaseStat = await stat2(phasePath);
+      const phasePath = join6(projectRoot, ".archflow", "current-phase.yaml");
+      const phaseStat = await stat3(phasePath);
       phaseStartTime = phaseStat.mtime;
     } catch {
     }
     for (const artifactPath of knownArtifacts(await this.resolveApiContractPath())) {
-      const fullPath = join5(projectRoot, artifactPath);
+      const fullPath = join6(projectRoot, artifactPath);
       try {
-        const fileStat = await stat2(fullPath);
+        const fileStat = await stat3(fullPath);
         const isDir = fileStat.isDirectory();
         let itemCount = null;
         if (isDir) {
@@ -59590,8 +59639,8 @@ var ProjectLoader = class {
   }
   async listDesignFiles(directory) {
     const projectRoot = this.ensureLoaded();
-    const fullDir = join5(projectRoot, directory);
-    if (!existsSync2(fullDir)) {
+    const fullDir = join6(projectRoot, directory);
+    if (!existsSync3(fullDir)) {
       return [];
     }
     try {
@@ -59599,11 +59648,11 @@ var ProjectLoader = class {
       const files = [];
       for (const entry of entries) {
         if (entry.isFile()) {
-          const filePath = join5(fullDir, entry.name);
-          const fileStat = await stat2(filePath);
+          const filePath = join6(fullDir, entry.name);
+          const fileStat = await stat3(filePath);
           files.push({
             name: entry.name,
-            path: join5(directory, entry.name),
+            path: join6(directory, entry.name),
             lastModified: fileStat.mtime.toISOString(),
             sizeBytes: fileStat.size
           });
@@ -59635,7 +59684,7 @@ var ProjectLoader = class {
     const root = "design-artifacts";
     const files = [];
     const directories = [];
-    await this.walkDesignArtifacts(join5(projectRoot, root), root, files, directories);
+    await this.walkDesignArtifacts(join6(projectRoot, root), root, files, directories);
     files.sort(byRecentThenPath);
     directories.sort(byRecentThenPath);
     return { files, directories };
@@ -59655,8 +59704,8 @@ var ProjectLoader = class {
     let fileCount = 0;
     for (const entry of entries) {
       if (entry.name.startsWith(".")) continue;
-      const absolute = join5(absDir, entry.name);
-      const relPath = join5(relDir, entry.name);
+      const absolute = join6(absDir, entry.name);
+      const relPath = join6(relDir, entry.name);
       try {
         if (entry.isDirectory()) {
           const beneath = await this.walkDesignArtifacts(
@@ -59665,7 +59714,7 @@ var ProjectLoader = class {
             files,
             directories
           );
-          const dirStat = await stat2(absolute);
+          const dirStat = await stat3(absolute);
           directories.push({
             name: entry.name,
             path: relPath,
@@ -59674,7 +59723,7 @@ var ProjectLoader = class {
           });
           fileCount += beneath;
         } else if (entry.isFile()) {
-          const fileStat = await stat2(absolute);
+          const fileStat = await stat3(absolute);
           files.push({
             name: entry.name,
             path: relPath,
@@ -59716,7 +59765,7 @@ var ProjectLoader = class {
     const projectRoot = this.ensureLoaded();
     let raw;
     try {
-      raw = await readFile3(join5(projectRoot, ".archflow", "design-system.yaml"), "utf-8");
+      raw = await readFile4(join6(projectRoot, ".archflow", "design-system.yaml"), "utf-8");
     } catch {
       return null;
     }
@@ -59729,7 +59778,7 @@ var ProjectLoader = class {
     let label = null;
     let docFound = false;
     try {
-      const markdown = await readFile3(join5(projectRoot, docPath), "utf-8");
+      const markdown = await readFile4(join6(projectRoot, docPath), "utf-8");
       docFound = true;
       label = parseDesignSystemLabel(markdown);
     } catch {
@@ -59741,9 +59790,9 @@ var ProjectLoader = class {
    */
   async getPluginStatus() {
     const projectRoot = this.ensureLoaded();
-    const settingsPath = join5(projectRoot, ".claude", "settings.json");
+    const settingsPath = join6(projectRoot, ".claude", "settings.json");
     try {
-      const raw = await readFile3(settingsPath, "utf-8");
+      const raw = await readFile4(settingsPath, "utf-8");
       const settings = JSON.parse(raw);
       const enabled = settings?.enabledPlugins?.["archflow@archflow"] === true;
       return { archflowEnabled: enabled };
@@ -59760,12 +59809,12 @@ var ProjectLoader = class {
     if (this.getHostState().host !== "claude") {
       return { created: false, alreadyEnabled: false, skipped: true };
     }
-    const claudeDir = join5(projectRoot, ".claude");
-    const settingsPath = join5(claudeDir, "settings.json");
+    const claudeDir = join6(projectRoot, ".claude");
+    const settingsPath = join6(claudeDir, "settings.json");
     let settings = {};
     let alreadyEnabled = false;
     try {
-      const raw = await readFile3(settingsPath, "utf-8");
+      const raw = await readFile4(settingsPath, "utf-8");
       settings = JSON.parse(raw);
       if (settings?.enabledPlugins && settings.enabledPlugins["archflow@archflow"] === true) {
         alreadyEnabled = true;
@@ -59773,7 +59822,7 @@ var ProjectLoader = class {
       }
     } catch {
     }
-    if (!existsSync2(claudeDir)) {
+    if (!existsSync3(claudeDir)) {
       await mkdir2(claudeDir, { recursive: true });
     }
     const enabledPlugins = settings.enabledPlugins ?? {};
@@ -59868,7 +59917,7 @@ var ReadError = class extends Error {
 
 // server/services/folderPicker.ts
 import { spawn } from "node:child_process";
-import { existsSync as existsSync3 } from "node:fs";
+import { existsSync as existsSync4 } from "node:fs";
 var PICKER_TIMEOUT_MS = 5 * 6e4;
 var inFlight = null;
 function pickFolder(startIn, env) {
@@ -59928,20 +59977,20 @@ function pickerCommand(platform, startIn, hasZenity2) {
   };
 }
 function hasZenity() {
-  return ["/usr/bin/zenity", "/usr/local/bin/zenity", "/bin/zenity"].some((p) => existsSync3(p));
+  return ["/usr/bin/zenity", "/usr/local/bin/zenity", "/bin/zenity"].some((p) => existsSync4(p));
 }
 function run(startIn, env) {
-  const location = startIn && existsSync3(startIn) ? startIn : null;
+  const location = startIn && existsSync4(startIn) ? startIn : null;
   const cmd = pickerCommand(env.platform, location, env.hasZenity);
   if ("unavailable" in cmd) {
     return Promise.resolve({ kind: "unavailable", reason: cmd.unavailable });
   }
-  return new Promise((resolve8) => {
+  return new Promise((resolve9) => {
     let child;
     try {
       child = spawn(cmd.file, cmd.args, { stdio: ["ignore", "pipe", "pipe"] });
     } catch {
-      resolve8({ kind: "unavailable", reason: `Could not launch ${cmd.file}.` });
+      resolve9({ kind: "unavailable", reason: `Could not launch ${cmd.file}.` });
       return;
     }
     let stdout = "";
@@ -59950,7 +59999,7 @@ function run(startIn, env) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      resolve8(outcome);
+      resolve9(outcome);
     };
     const timer = setTimeout(() => {
       child.kill();
@@ -59979,7 +60028,7 @@ function run(startIn, env) {
 }
 
 // server/routes/project.ts
-import { dirname as dirname6 } from "node:path";
+import { dirname as dirname7 } from "node:path";
 
 // server/claude/spawnedSession.ts
 import { EventEmitter as EventEmitter3 } from "events";
@@ -59990,8 +60039,8 @@ import { EventEmitter as EventEmitter2 } from "events";
 import { createInterface } from "readline";
 
 // server/claude/captureTap.ts
-import { appendFileSync, mkdirSync, writeFileSync, existsSync as existsSync4, readFileSync as readFileSync4 } from "fs";
-import { dirname as dirname2 } from "path";
+import { appendFileSync, mkdirSync, writeFileSync, existsSync as existsSync5, readFileSync as readFileSync5 } from "fs";
+import { dirname as dirname3 } from "path";
 var path = process.env.STUDIO_CAPTURE ?? null;
 var sidecar = path ? `${path}.jsonl` : null;
 var turnStartedAt = null;
@@ -60000,7 +60049,7 @@ function captureTurn(prompt) {
   if (!sidecar) return;
   turnStartedAt = Date.now();
   try {
-    mkdirSync(dirname2(sidecar), { recursive: true });
+    mkdirSync(dirname3(sidecar), { recursive: true });
     appendFileSync(sidecar, JSON.stringify({ kind: "turn", prompt }) + "\n");
   } catch (err) {
     console.error("[capture] could not write turn marker:", err.message);
@@ -60018,10 +60067,10 @@ function captureLine(line) {
   }
 }
 function finalise() {
-  if (!path || !sidecar || !existsSync4(sidecar)) return null;
+  if (!path || !sidecar || !existsSync5(sidecar)) return null;
   const turns = [];
   let lines = 0;
-  for (const row of readFileSync4(sidecar, "utf-8").split("\n")) {
+  for (const row of readFileSync5(sidecar, "utf-8").split("\n")) {
     if (!row.trim()) continue;
     let rec;
     try {
@@ -60062,12 +60111,12 @@ if (capturing) {
 }
 
 // server/services/claudeManager.ts
-import { join as join9 } from "path";
+import { join as join10 } from "path";
 import { homedir as homedir9 } from "node:os";
 
 // server/services/platformLaunch.ts
 import { execSync } from "child_process";
-import { closeSync, existsSync as existsSync5, openSync, readSync } from "node:fs";
+import { closeSync, existsSync as existsSync6, openSync, readSync } from "node:fs";
 import { homedir as homedir4 } from "node:os";
 import { posix as posixPath, win32 as win32Path } from "node:path";
 function currentHost() {
@@ -60102,6 +60151,21 @@ function fallbackCandidates(platform, host) {
 }
 function versionProbeCommand(_platform, candidate) {
   return `"${candidate}" --version`;
+}
+function helpProbeCommand(_platform, candidate) {
+  return `"${candidate}" --help`;
+}
+function flagsListedInHelp(helpText, flags) {
+  const listed = /* @__PURE__ */ new Set();
+  for (const flag2 of flags) {
+    const escaped = flag2.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (new RegExp(`(^|[\\s,])${escaped}(?=[\\s,=<\\[]|$)`, "m").test(helpText)) listed.add(flag2);
+  }
+  return listed;
+}
+function unknownOptionFlag(stderr) {
+  const match = /unknown option '(--[A-Za-z0-9][\w-]*)'/.exec(stderr);
+  return match ? match[1] : null;
 }
 function needsShell(binary2) {
   return /\.(cmd|bat)$/i.test(binary2);
@@ -60140,7 +60204,7 @@ var realShimProbe = {
   },
   exists: (file) => {
     try {
-      return existsSync5(file);
+      return existsSync6(file);
     } catch {
       return false;
     }
@@ -60403,33 +60467,33 @@ import { EventEmitter } from "events";
 // server/services/sessionHandoff.ts
 import { execFileSync } from "child_process";
 import {
-  existsSync as existsSync6,
+  existsSync as existsSync7,
   mkdirSync as mkdirSync3,
-  readFileSync as readFileSync5,
+  readFileSync as readFileSync6,
   readdirSync as readdirSync2,
   renameSync as renameSync2,
   rmSync,
-  statSync as statSync2,
+  statSync as statSync3,
   unlinkSync as unlinkSync2,
   writeFileSync as writeFileSync3
 } from "node:fs";
 import { homedir as homedir6 } from "node:os";
-import { join as join7 } from "node:path";
+import { join as join8 } from "node:path";
 
 // server/services/studioIdentity.ts
 import { mkdirSync as mkdirSync2, readdirSync, renameSync, unlinkSync, writeFileSync as writeFileSync2 } from "node:fs";
 import { homedir as homedir5 } from "node:os";
-import { basename as basename3, dirname as dirname3, join as join6 } from "node:path";
+import { basename as basename3, dirname as dirname4, join as join7 } from "node:path";
 function instancesDir(home = homedir5()) {
-  return join6(home, ".archflow", "studio", "instances");
+  return join7(home, ".archflow", "studio", "instances");
 }
 function defaultInstancePath(pid = process.pid, home = homedir5()) {
-  return join6(instancesDir(home), `${pid}.json`);
+  return join7(instancesDir(home), `${pid}.json`);
 }
 function writeAtomic(path2, text) {
   const tmp = `${path2}.${process.pid}.${Date.now()}.tmp`;
   try {
-    mkdirSync2(dirname3(path2), { recursive: true });
+    mkdirSync2(dirname4(path2), { recursive: true });
     writeFileSync2(tmp, text, { encoding: "utf-8", mode: 384 });
     renameSync(tmp, path2);
     return true;
@@ -60460,7 +60524,7 @@ function publishStudioIdentity(identity, path2 = defaultInstancePath(identity.pi
     );
     return;
   }
-  sweepDeadInstances(dirname3(path2), identity.pid, basename3(path2));
+  sweepDeadInstances(dirname4(path2), identity.pid, basename3(path2));
 }
 function sweepDeadInstances(dir = instancesDir(), selfPid = process.pid, keepName) {
   let names;
@@ -60482,7 +60546,7 @@ function sweepDeadInstances(dir = instancesDir(), selfPid = process.pid, keepNam
       if (err.code === "EPERM") continue;
     }
     try {
-      unlinkSync(join6(dir, name));
+      unlinkSync(join7(dir, name));
     } catch {
     }
   }
@@ -60499,7 +60563,7 @@ function identityPromptLine(identity, runIdentityFile) {
   return `${base} Your host's CURRENT identity is always in ${runIdentityFile} \u2014 that file is rewritten whenever a studio takes over this session, so re-read it before acting on any pid or port, and trust it over the numbers in this sentence if they disagree.`;
 }
 function runIdentityPath(runDir) {
-  return join6(runDir, "studio.json");
+  return join7(runDir, "studio.json");
 }
 function writeRunIdentity(identity, runDir) {
   writeAtomic(runIdentityPath(runDir), `${JSON.stringify(identity, null, 2)}
@@ -60510,7 +60574,7 @@ function writeRunIdentity(identity, runDir) {
 var RECORD_EXPIRY_MS = 24 * 60 * 60 * 1e3;
 function mtimeMs(path2) {
   try {
-    return statSync2(path2).mtimeMs;
+    return statSync3(path2).mtimeMs;
   } catch {
     return Number.NaN;
   }
@@ -60535,7 +60599,7 @@ function isRecordExpired(record, now2 = Date.now(), expiryMs = RECORD_EXPIRY_MS)
 }
 var INCOMPLETE_RUN_GRACE_MS = 5 * 60 * 1e3;
 function sessionsDir(home = homedir6()) {
-  return join7(home, ".archflow", "studio", "sessions");
+  return join8(home, ".archflow", "studio", "sessions");
 }
 function newRunId(now2 = Date.now()) {
   return `run_${now2}_${Math.random().toString(36).slice(2, 8)}`;
@@ -60544,10 +60608,10 @@ function cookieFor(runId) {
   return `af-${runId}`;
 }
 function runDirFor(cookie, home = homedir6()) {
-  return join7(sessionsDir(home), cookie);
+  return join8(sessionsDir(home), cookie);
 }
 function recordPathFor(runDir) {
-  return join7(runDir, "record.json");
+  return join8(runDir, "record.json");
 }
 function writeRecord(record, home = homedir6()) {
   const runDir = runDirFor(record.cookie, home);
@@ -60571,7 +60635,7 @@ function writeRecord(record, home = homedir6()) {
 function readRecord(runDir) {
   let raw;
   try {
-    raw = readFileSync5(recordPathFor(runDir), "utf-8");
+    raw = readFileSync6(recordPathFor(runDir), "utf-8");
   } catch {
     return null;
   }
@@ -60708,7 +60772,7 @@ function signalAndClear(record, runDir, waits = {}) {
 function studioIsAlive(studioPid, home = homedir6(), selfPid = process.pid) {
   if (studioPid === null || studioPid === selfPid) return false;
   if (!isPidRunning(studioPid)) return false;
-  return existsSync6(join7(instancesDir(home), `${studioPid}.json`));
+  return existsSync7(join8(instancesDir(home), `${studioPid}.json`));
 }
 function findPidsWithCookie(cookie, selfPid = process.pid, platform = process.platform) {
   if (!cookie) return { known: true, pids: [] };
@@ -60768,11 +60832,11 @@ function findAdoptableRecord(opts) {
   }
   let best = null;
   for (const name of entries) {
-    const runDir = join7(root, name);
+    const runDir = join8(root, name);
     const record = readRecord(runDir);
     if (!record) {
       try {
-        if (now2 - statSync2(runDir).mtimeMs > INCOMPLETE_RUN_GRACE_MS) endIncompleteRun(runDir, name);
+        if (now2 - statSync3(runDir).mtimeMs > INCOMPLETE_RUN_GRACE_MS) endIncompleteRun(runDir, name);
       } catch {
       }
       continue;
@@ -60998,7 +61062,7 @@ var FileTailer = class {
 
 // server/services/sessionTransport.ts
 import { execFileSync as execFileSync2 } from "child_process";
-import { closeSync as closeSync3, constants as FS, mkdirSync as mkdirSync4, openSync as openSync3, statSync as statSync3, writeSync } from "node:fs";
+import { closeSync as closeSync3, constants as FS, mkdirSync as mkdirSync4, openSync as openSync3, statSync as statSync4, writeSync } from "node:fs";
 import { homedir as homedir7 } from "node:os";
 function fifoTransportAvailable() {
   if (process.platform === "win32") return false;
@@ -61207,14 +61271,14 @@ var FifoTransport = class _FifoTransport {
   /** Current size of the out file, for a tailer that must not replay history. */
   outSize() {
     try {
-      return statSync3(this.outPath).size;
+      return statSync4(this.outPath).size;
     } catch {
       return 0;
     }
   }
   errSize() {
     try {
-      return statSync3(this.errPath).size;
+      return statSync4(this.errPath).size;
     } catch {
       return 0;
     }
@@ -61350,9 +61414,9 @@ function createFifoTransport(home) {
 
 // server/services/attachmentStore.ts
 import { createHash } from "node:crypto";
-import { mkdir as mkdir3, readFile as readFile4, rename as rename3, rm, stat as stat3, writeFile as writeFile3 } from "node:fs/promises";
+import { mkdir as mkdir3, readFile as readFile5, rename as rename3, rm, stat as stat4, writeFile as writeFile3 } from "node:fs/promises";
 import { homedir as homedir8 } from "node:os";
-import { join as join8, resolve as resolve3, sep } from "node:path";
+import { join as join9, resolve as resolve4, sep } from "node:path";
 var writeSeq = 0;
 var MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 var AttachmentTooLargeError = class extends Error {
@@ -61393,7 +61457,7 @@ function isAttachmentNotFoundError(err) {
   return err instanceof AttachmentNotFoundError || err instanceof Error && err.code === "ATTACHMENT_NOT_FOUND";
 }
 function attachmentsDir(home = homedir8()) {
-  return join8(home, ".archflow", "studio", "attachments");
+  return join9(home, ".archflow", "studio", "attachments");
 }
 var ATTACHMENT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 function isValidAttachmentId(id) {
@@ -61401,8 +61465,8 @@ function isValidAttachmentId(id) {
 }
 function resolveAttachmentPath(id, home = homedir8()) {
   if (!isValidAttachmentId(id)) throw new InvalidAttachmentIdError();
-  const root = resolve3(attachmentsDir(home));
-  const full = resolve3(join8(root, id));
+  const root = resolve4(attachmentsDir(home));
+  const full = resolve4(join9(root, id));
   if (full !== root && !full.startsWith(root + sep)) throw new InvalidAttachmentIdError();
   return full;
 }
@@ -61528,18 +61592,18 @@ function sniffedRest(meta) {
 async function readAttachmentMeta(id, home = homedir8()) {
   const path2 = resolveAttachmentPath(id, home);
   try {
-    await stat3(path2);
+    await stat4(path2);
   } catch {
     throw new AttachmentNotFoundError(id);
   }
   let meta = null;
   try {
-    meta = JSON.parse(await readFile4(`${path2}.json`, "utf-8"));
+    meta = JSON.parse(await readFile5(`${path2}.json`, "utf-8"));
   } catch {
     meta = null;
   }
   if (!meta) {
-    const bytes = await readFile4(path2);
+    const bytes = await readFile5(path2);
     const sniffed = sniffImage(bytes);
     if (!sniffed) throw new AttachmentNotFoundError(id);
     meta = { ...sniffed, byteSize: bytes.byteLength, filename: id };
@@ -61548,7 +61612,7 @@ async function readAttachmentMeta(id, home = homedir8()) {
 }
 async function readAttachment(id, home = homedir8()) {
   const meta = await readAttachmentMeta(id, home);
-  const bytes = await readFile4(resolveAttachmentPath(id, home));
+  const bytes = await readFile5(resolveAttachmentPath(id, home));
   return { bytes, meta };
 }
 async function loadAttachmentsForSend(ids, home = homedir8()) {
@@ -61589,6 +61653,46 @@ function parseAskUserQuestions(toolInput) {
 }
 var SUBAGENT_SPAWN_TOOL = "Agent";
 var SUBAGENT_RESUME_TOOL = "SendMessage";
+function isJsonObject(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function parseJsonObject(text) {
+  try {
+    const parsed = JSON.parse(text);
+    return isJsonObject(parsed) ? parsed : void 0;
+  } catch {
+    return void 0;
+  }
+}
+function mainToolResultIsError(block) {
+  if (block.is_error === true) return true;
+  const content = block.content;
+  let obj2;
+  if (isJsonObject(content)) {
+    obj2 = content;
+  } else if (typeof content === "string") {
+    obj2 = parseJsonObject(content);
+  } else if (Array.isArray(content) && content.length === 1) {
+    const only = content[0];
+    if (isJsonObject(only) && only.type === "text" && typeof only.text === "string") {
+      obj2 = parseJsonObject(only.text);
+    }
+  }
+  return obj2 !== void 0 && obj2.success === false;
+}
+function renderResultBlock(block) {
+  if (!isJsonObject(block) || typeof block.type !== "string") return "[unknown]";
+  if (block.type === "text" && typeof block.text === "string") return block.text;
+  if (block.type === "tool_reference" && typeof block.tool_name === "string") {
+    return `tool_reference: ${block.tool_name}`;
+  }
+  return `[${block.type}]`;
+}
+function mainToolResultOutput(content) {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) return content.map(renderResultBlock).join("\n\n");
+  return JSON.stringify(content) ?? "";
+}
 var AGENT_TOMBSTONE_LIMIT = 64;
 var ANNOUNCED_AGENT_LIMIT = 4096;
 var studioIdentity = null;
@@ -61611,6 +61715,65 @@ function installExitHook() {
     }
   });
 }
+var OPTIONAL_FLAGS = ["--forward-subagent-text"];
+var OPTIONAL_FLAG_LOSS = {
+  "--forward-subagent-text": "subagent text will not be shown in chat"
+};
+var HELP_PROBE_TIMEOUT_MS = 5e3;
+var HELP_PROBE_MAX_BYTES = 1024 * 1024;
+var optionalFlagSupport = /* @__PURE__ */ new Map();
+var announcedUnsupported = /* @__PURE__ */ new Set();
+function announceUnsupported(flag2) {
+  if (announcedUnsupported.has(flag2)) return;
+  announcedUnsupported.add(flag2);
+  const loss = OPTIONAL_FLAG_LOSS[flag2] ?? "a feature that needs it will be unavailable";
+  console.warn(
+    `[claude-manager] this Claude Code CLI does not support ${flag2}; ${loss} \u2014 update Claude Code to see it.`
+  );
+}
+function supportedOptionalFlags(binary2) {
+  let support = optionalFlagSupport.get(binary2);
+  if (!support) {
+    let listed = /* @__PURE__ */ new Set();
+    try {
+      const help = execSync2(helpProbeCommand(process.platform, binary2), {
+        encoding: "utf-8",
+        stdio: "pipe",
+        timeout: HELP_PROBE_TIMEOUT_MS,
+        maxBuffer: HELP_PROBE_MAX_BYTES
+      });
+      listed = flagsListedInHelp(String(help ?? ""), OPTIONAL_FLAGS);
+    } catch (err) {
+      console.warn(
+        `[claude-manager] Could not read \`${binary2} --help\` (${err.message.split("\n")[0]}); treating optional flags as unsupported.`
+      );
+    }
+    support = new Map(OPTIONAL_FLAGS.map((flag2) => [flag2, listed.has(flag2)]));
+    optionalFlagSupport.set(binary2, support);
+  }
+  for (const [flag2, ok] of support) if (!ok) announceUnsupported(flag2);
+  return support;
+}
+function markOptionalFlagUnsupported(binary2, flag2) {
+  const support = optionalFlagSupport.get(binary2) ?? /* @__PURE__ */ new Map();
+  support.set(flag2, false);
+  optionalFlagSupport.set(binary2, support);
+  announceUnsupported(flag2);
+}
+var STDERR_TAIL_LINES = 20;
+var STDERR_SETTLE_MS = 250;
+function afterClose(child, ms, then) {
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
+    child.off("close", finish);
+    then();
+  };
+  const timer = setTimeout(finish, ms);
+  child.once("close", finish);
+}
 var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
   process = null;
   projectPath;
@@ -61620,9 +61783,17 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
   startedAt = null;
   /** Why the last spawn died before it could take a prompt — for the error the user sees. */
   startFailure = null;
-  lastStderrLine = null;
   forkSession = false;
   static claudeBinary = null;
+  /**
+   * Tests only: forget the resolved binary, every `--help` probe and every
+   * one-per-process notice, as a fresh process would.
+   */
+  static resetCliCachesForTests() {
+    _ClaudeManager.claudeBinary = null;
+    optionalFlagSupport.clear();
+    announcedUnsupported.clear();
+  }
   // --- Detached transport + handoff (S3-14) --------------------------------
   /** The FIFO/file transport backing the live child, or null on the pipe fallback. */
   transport = null;
@@ -61728,6 +61899,23 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
   // Track emitted tool_use IDs to prevent duplicates
   // (stream_event emits empty input, assistant emits full input — only emit once)
   emittedToolUseIds = /* @__PURE__ */ new Set();
+  /**
+   * S3-24 — the main-thread calls that opened a GENERIC tool card, i.e. the
+   * ids a `tool_use` event was emitted for. Its result goes to that card, and
+   * only to that card.
+   *
+   * Not `emittedToolUseIds`: that set also holds `Agent`, `TodoWrite` and
+   * `AskUserQuestion`, which the stream_event path records before it decides
+   * not to open a card for them. Their results have no card to land on, and
+   * one of them would land on the wrong thing: an `Agent` call's tool_use_id
+   * IS its run-1 agent card's id, and the client's `chat-tool-result` handler
+   * patches by id whatever the message type. Gating on this set makes every
+   * one of them a no-op, along with any id the server never carded.
+   *
+   * An id leaves the set when its result is emitted, so one call emits one
+   * result. Cleared wherever `emittedToolUseIds` is.
+   */
+  toolCardIds = /* @__PURE__ */ new Set();
   // --- Subagents (S3-12) ---------------------------------------------------
   /**
    * Live agents, keyed by `agentId` — the spawning `Agent` call's own
@@ -61783,19 +61971,23 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
    * S3-18 I-4 — `task_id` -> `agentId` for agents that reached a terminal
    * event. Consulted ONLY to recognise a resume at `task_started`; it never
    * attributes a frame. Insertion-ordered, bounded at `AGENT_TOMBSTONE_LIMIT`.
+   *
+   * S3-22 — survives an interrupt (see `clearAgents`), and a `stopped`
+   * terminal inserts nothing (see `retireAgent`).
    */
   agentTombstones = /* @__PURE__ */ new Map();
   /**
    * S3-18 I-4 — every `agentId` an `agent_started` has gone out for, so a
    * `task_started` naming one whose live state and tombstone are both gone
-   * (an evicted or post-interrupt SELF-resume, contract rule 1a) is dropped
+   * (an evicted or post-new-session SELF-resume, contract rule 1a) is dropped
    * instead of reaching the S3-12 fallback, which would announce the same
    * card a second time. Never attributes and never recognises a resume; it
-   * only refuses a re-announcement. Inserted ONLY when `agent_started` is
-   * emitted (`ensureAgentStarted`). NEVER cleared — not by interrupt (the case
-   * it exists for), new session or teardown; agent ids are unique, so a stale
-   * entry is harmless. Bounded at `ANNOUNCED_AGENT_LIMIT`, oldest evicted
-   * first (contract § S3-18 "Announced-agent set").
+   * only refuses a re-announcement. Inserted when `agent_started` is emitted
+   * (`ensureAgentStarted`), and (S3-22) when `agent_resume_unjoined` announces
+   * a detached run in its place. NEVER cleared — not by interrupt, new
+   * session or teardown; agent ids are unique, so a stale entry is harmless.
+   * Bounded at `ANNOUNCED_AGENT_LIMIT`, oldest evicted first (contract
+   * § S3-18 "Announced-agent set").
    */
   announcedAgentIds = /* @__PURE__ */ new Set();
   /**
@@ -61803,8 +61995,21 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
    * carries. The join that gives `agent_resumed` its `messageId`, the same
    * way the `Agent` call's assistant frame gives `agent_started` its own.
    * Consumed by the resume it names.
+   *
+   * S3-22 — widened to the call's `to` and `message` too: `to` for
+   * `agent_resume_unjoined`, `message` as the resume prompt's fallback.
    */
   resumeCalls = /* @__PURE__ */ new Map();
+  /**
+   * S3-22 — every tool_use id a `task_started` has already been handled under
+   * as a `SendMessage` resume, whether it opened a run, a detached run, or was
+   * delivered to a running agent. A `task_started` repeating one is a
+   * duplicate and emits nothing, so one `runId` can never open two rows. The
+   * job S3-18 left to the consumed `resumeCalls` entry, which no longer gates a
+   * resume now that a call-less resume is emitted. Never cleared (ids are
+   * unique), bounded like `announcedAgentIds`.
+   */
+  handledResumeIds = /* @__PURE__ */ new Set();
   constructor(projectPath2, options = {}) {
     super();
     this.projectPath = projectPath2;
@@ -61872,7 +62077,28 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
   async startSession() {
     if (this.process) return;
     const binary2 = _ClaudeManager.resolveBinary();
-    const homeClaude = join9(homedir9(), ".claude");
+    const support = supportedOptionalFlags(binary2);
+    const optional2 = OPTIONAL_FLAGS.filter((flag2) => support.get(flag2) === true);
+    const fork = this.forkSession;
+    const first = await this.spawnSession(binary2, optional2);
+    if (!first.diedInInit) return;
+    const refused = unknownOptionFlag(first.stderr.join("\n"));
+    if (!refused || !optional2.includes(refused) || this.process) return;
+    markOptionalFlagUnsupported(binary2, refused);
+    console.warn(`[claude-manager] Retrying the start once without ${refused}.`);
+    this.forkSession = fork;
+    await this.spawnSession(
+      binary2,
+      optional2.filter((flag2) => flag2 !== refused)
+    );
+  }
+  /**
+   * ONE spawn attempt with the given optional flags, and its 1.5s crash
+   * window. Reports whether the child died inside that window, and the stderr
+   * it left, so `startSession` can decide on the one retry it is allowed.
+   */
+  async spawnSession(binary2, optional2) {
+    const homeClaude = join10(homedir9(), ".claude");
     const args = [
       "--input-format",
       "stream-json",
@@ -61894,8 +62120,13 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
        * subagents and nothing about a turn that spawns none — pinned by the
        * no-regression test, which asserts both the flag's presence and an
        * unchanged main-thread event sequence in the same run.
+       *
+       * S3-21. It is OPTIONAL: passed only when this CLI supports it (see
+       * OPTIONAL_FLAGS). An older CLI refuses it and exits 1, so passing it
+       * unconditionally meant no session could start at all. Same position
+       * as before when present, so the S3-12 arg pin still holds.
        */
-      "--forward-subagent-text",
+      ...optional2.includes("--forward-subagent-text") ? ["--forward-subagent-text"] : [],
       "--permission-mode",
       "bypassPermissions",
       "--dangerously-skip-permissions",
@@ -61929,7 +62160,13 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
     );
     this.forkSession = false;
     this.startFailure = null;
-    this.lastStderrLine = null;
+    const stderr = [];
+    const keepStderr = (line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      stderr.push(trimmed);
+      if (stderr.length > STDERR_TAIL_LINES) stderr.shift();
+    };
     let launch;
     try {
       launch = sessionLaunch(binary2, args);
@@ -61941,7 +62178,7 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
         transport.dispose();
         removeRun(transport.runDir);
       }
-      return;
+      return { diedInInit: false, stderr };
     }
     const child = spawn2(
       launch.file,
@@ -61981,7 +62218,9 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
       };
       this.persistRecord();
       this.startOutputTail(child, transport.outPath, 0);
-      this.startStderrTail(transport.errPath, 0);
+      this.startStderrTail(transport.errPath, 0, (line) => {
+        if (this.process === child) keepStderr(line);
+      });
     } else {
       const rl = createInterface({ input: child.stdout });
       rl.on("line", (line) => {
@@ -61991,20 +62230,28 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
       const stderrRl = createInterface({ input: child.stderr });
       stderrRl.on("line", (line) => {
         if (!isAvxNoise(line)) {
-          if (this.process === child && line.trim()) this.lastStderrLine = line.trim();
+          keepStderr(line);
           console.error("[claude stderr]", line);
         }
       });
     }
     this.attachLifecycleHandlers(child);
-    await new Promise((resolve8) => {
-      const timer = setTimeout(resolve8, 1500);
+    let diedInInit = false;
+    await new Promise((resolve9) => {
+      const timer = setTimeout(resolve9, 1500);
       child.on("exit", (code) => {
         clearTimeout(timer);
-        this.startFailure ??= `exited with code ${code}` + (this.lastStderrLine ? `: ${this.lastStderrLine}` : "");
-        resolve8();
+        diedInInit = true;
+        const settle = () => {
+          const last = stderr[stderr.length - 1];
+          this.startFailure ??= `exited with code ${code}` + (last ? `: ${last}` : "");
+          resolve9();
+        };
+        if (transport) settle();
+        else afterClose(child, STDERR_SETTLE_MS, settle);
       });
     });
+    return { diedInInit, stderr };
   }
   /**
    * `exit` and `error`, wired the same way for a child we spawned and for one
@@ -62088,7 +62335,7 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
     tail.start();
   }
   /** stderr is logged, never delivered, so it keeps no offset and replays nothing. */
-  startStderrTail(errPath, offset) {
+  startStderrTail(errPath, offset, onLine) {
     this.errTail?.stop();
     const tail = new FileTailer({
       path: errPath,
@@ -62097,6 +62344,7 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
         for (const line of lines) {
           if (line.trim() && !isAvxNoise(line)) {
             console.error("[claude stderr]", line);
+            onLine?.(line);
           }
         }
       }
@@ -62227,7 +62475,7 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
           runDir,
           fifoPath: record.fifo_path,
           outPath: record.out_path,
-          errPath: join9(runDir, "err.log")
+          errPath: join10(runDir, "err.log")
         }
       });
     } catch (err) {
@@ -62377,7 +62625,8 @@ var ClaudeManager = class _ClaudeManager extends EventEmitter2 {
     }
     this.busy = true;
     this.emittedToolUseIds.clear();
-    this.clearAgents({ keepBackgrounded: true });
+    this.toolCardIds.clear();
+    this.clearAgents("turn");
     this.turnResolvedAsInterrupt = false;
     const messageId = this.mintMessageId();
     this.currentMessageId = messageId;
@@ -62435,7 +62684,8 @@ ${message}` : message;
     this.turnResolvedAsInterrupt = false;
     this.startedAt = null;
     this.emittedToolUseIds.clear();
-    this.clearAgents();
+    this.toolCardIds.clear();
+    this.clearAgents("session");
   }
   /**
    * Respond to a permission request from the CLI process.
@@ -62563,7 +62813,8 @@ ${message}` : message;
     const messageId = this.currentMessageId ?? "unknown";
     this.busy = false;
     this.emittedToolUseIds.clear();
-    this.clearAgents();
+    this.toolCardIds.clear();
+    this.clearAgents("interrupt");
     this.currentMessageId = null;
     this.turnResolvedAsInterrupt = true;
     this.syncRecordState();
@@ -62681,7 +62932,8 @@ ${message}` : message;
     this.busy = false;
     this.turnResolvedAsInterrupt = false;
     this.emittedToolUseIds.clear();
-    this.clearAgents();
+    this.toolCardIds.clear();
+    this.clearAgents("session");
     await this.terminateProcess();
     this.assertNotDestroyed();
     const newId = this.waitForSessionId();
@@ -62722,12 +62974,12 @@ ${message}` : message;
    * answer arriving later cannot emit a second `interrupted`.
    */
   interruptAndWait() {
-    return new Promise((resolve8) => {
+    return new Promise((resolve9) => {
       let fallback = null;
       const done = () => {
         if (fallback) clearTimeout(fallback);
         fallback = null;
-        resolve8();
+        resolve9();
       };
       this.interruptWaiters.push(done);
       fallback = setTimeout(
@@ -62770,7 +63022,7 @@ ${message}` : message;
       this.releaseHandoff();
       return;
     }
-    await new Promise((resolve8) => {
+    await new Promise((resolve9) => {
       const timers = [];
       let settled = false;
       const finish = () => {
@@ -62778,7 +63030,7 @@ ${message}` : message;
         settled = true;
         for (const timer of timers) clearTimeout(timer);
         proc.off("exit", finish);
-        resolve8();
+        resolve9();
       };
       const arm = (ms, fn) => {
         const timer = setTimeout(fn, ms);
@@ -62819,7 +63071,7 @@ ${message}` : message;
    */
   waitForSessionId() {
     if (this.sessionId) return Promise.resolve(this.sessionId);
-    return new Promise((resolve8, reject) => {
+    return new Promise((resolve9, reject) => {
       const timer = setTimeout(() => {
         this.sessionIdWaiters = this.sessionIdWaiters.filter((w) => w !== waiter);
         const err = new Error(
@@ -62832,7 +63084,7 @@ ${message}` : message;
       const waiter = {
         resolve: (id) => {
           clearTimeout(timer);
-          resolve8(id);
+          resolve9(id);
         },
         reject: (err) => {
           clearTimeout(timer);
@@ -62942,7 +63194,10 @@ ${message}` : message;
       messageId,
       started: false,
       taskSeen: false,
-      parentAgentId
+      parentAgentId,
+      // S3-22 — a spawn is run 1, and run 1's id is the agent's own.
+      runId: agentId,
+      run: 1
     });
   }
   /**
@@ -62990,7 +63245,11 @@ ${message}` : message;
       prompt: record.prompt,
       isBackgrounded: record.isBackgrounded,
       spawnDepth,
-      messageId: record.messageId
+      messageId: record.messageId,
+      // S3-22 — `agent_started` only ever opens run 1 (a resumed record is
+      // created `started: true`), so these are always `agentId` and `1`.
+      runId: agentId,
+      run: 1
     });
     return true;
   }
@@ -63013,10 +63272,41 @@ ${message}` : message;
   canonicalAgentId(id) {
     return this.agentAliases.get(id) ?? id;
   }
-  /** Remember a `SendMessage` call's message id, for `agent_resumed`. */
-  recordResumeCall(toolUseId, messageId) {
-    if (!toolUseId || this.resumeCalls.has(toolUseId)) return;
-    this.resumeCalls.set(toolUseId, messageId);
+  /**
+   * S3-22 — the CURRENT run's id for a live agent, stamped on every event it
+   * emits (contract § "Routing a run's events"). A resumed agent's own frames
+   * still carry the ORIGINAL id in `parent_tool_use_id`, so `agentId`
+   * resolves as before and this names the run. Called only once
+   * `ensureAgentStarted` has confirmed a record; the fallback is run 1's id.
+   */
+  runIdOf(agentId) {
+    return this.agents.get(agentId)?.runId ?? agentId;
+  }
+  /**
+   * Remember a `SendMessage` call: its message id, for `agent_resumed`, and
+   * (S3-22) its `input.to` and `input.message`.
+   *
+   * S3-22 — the FIRST sighting keeps its `messageId`, but a later one MERGES
+   * its input. The `stream_event` `content_block_start` for the call arrives
+   * first and carries `input: {}` (verified on CLI 2.1.296); the complete
+   * `assistant` frame that follows carries the real input. Returning on a
+   * known id, as S3-18 did, kept the empty copy and lost `to`.
+   */
+  recordResumeCall(toolUseId, messageId, input = {}) {
+    if (!toolUseId) return;
+    const to = typeof input.to === "string" && input.to.length > 0 ? input.to : void 0;
+    const message = typeof input.message === "string" && input.message.length > 0 ? input.message : void 0;
+    const known = this.resumeCalls.get(toolUseId);
+    if (known) {
+      if (to !== void 0) known.to = to;
+      if (message !== void 0) known.message = message;
+      return;
+    }
+    this.resumeCalls.set(toolUseId, {
+      messageId,
+      ...to !== void 0 ? { to } : {},
+      ...message !== void 0 ? { message } : {}
+    });
     while (this.resumeCalls.size > AGENT_TOMBSTONE_LIMIT) {
       const oldest = this.resumeCalls.keys().next().value;
       this.resumeCalls.delete(oldest);
@@ -63026,9 +63316,18 @@ ${message}` : message;
    * End an agent's LIVE state at a terminal event and tombstone it (S3-18 I-4,
    * contract § "Retention and the tombstone map"). After this, every frame for
    * the agent is an orphan until a resume's `task_started` revives it.
+   *
+   * S3-22 — a `stopped` terminal retires the live state the same way but
+   * tombstones NOTHING (contract § "Interrupt and the tombstone map"). The CLI
+   * refuses to resume an agent the user stopped, so there is no run to join
+   * later; a resume frame that arrives anyway is handled as unjoined.
+   * `completed` and `failed` still tombstone.
    */
-  retireAgent(agentId, frameTaskId) {
-    const messageId = this.agents.get(agentId)?.messageId ?? "unknown";
+  retireAgent(agentId, frameTaskId, status) {
+    const record = this.agents.get(agentId);
+    const messageId = record?.messageId ?? "unknown";
+    const run2 = record ? record.run : null;
+    const tombstone = status !== "stopped";
     const taskIds = /* @__PURE__ */ new Set();
     if (frameTaskId && this.taskIdToAgentId.get(frameTaskId) === agentId) taskIds.add(frameTaskId);
     for (const [taskId, mapped] of this.taskIdToAgentId) {
@@ -63037,7 +63336,7 @@ ${message}` : message;
     for (const taskId of taskIds) {
       this.taskIdToAgentId.delete(taskId);
       this.agentTombstones.delete(taskId);
-      this.agentTombstones.set(taskId, { agentId, messageId });
+      if (tombstone) this.agentTombstones.set(taskId, { agentId, messageId, run: run2 });
     }
     while (this.agentTombstones.size > AGENT_TOMBSTONE_LIMIT) {
       const oldest = this.agentTombstones.keys().next().value;
@@ -63050,56 +63349,114 @@ ${message}` : message;
   }
   /**
    * S3-18 I-4 — a `task_started` whose `task_id` is already known, live or
-   * tombstoned. Returns having either recognised a resume or self-resume (and
-   * emitted `agent_resumed`), ignored a duplicate, or dropped an
-   * unrecognisable resume. Contract § "Resume identity" rules 1 and 1a, and
-   * § `chat-agent-resumed`.
+   * tombstoned. Returns having either started a NEW RUN of a finished agent
+   * (and emitted `agent_resumed`), delivered a `SendMessage` to a running one
+   * (emitting nothing), or ignored a duplicate. Contract § S3-18 "Resume
+   * identity" rules 1 and 1a, as amended by § S3-22 "Run identity" and
+   * § `chat-agent-resumed` (amended).
    */
   handleKnownTaskStarted(taskId, knownAgentId, tombstone, msg) {
     const live = tombstone === null;
     const toolUseId = typeof msg.tool_use_id === "string" && msg.tool_use_id.length > 0 ? msg.tool_use_id : null;
     const selfResume = !live && toolUseId === knownAgentId;
-    if (!selfResume && (!toolUseId || toolUseId === knownAgentId || this.agentAliases.get(toolUseId) === knownAgentId)) {
+    if (!selfResume && (!toolUseId || toolUseId === knownAgentId || this.agentAliases.get(toolUseId) === knownAgentId || this.handledResumeIds.has(toolUseId))) {
       return;
     }
-    let messageId;
-    if (selfResume) {
-      messageId = tombstone.messageId;
-    } else {
-      const joined = this.resumeCalls.get(toolUseId);
-      if (joined === void 0) {
-        console.warn(
-          `[claude-manager] Dropped a resume of agentId=${knownAgentId}: no SendMessage call was seen for tool_use_id=${toolUseId}`
-        );
-        return;
-      }
-      messageId = joined;
-      this.resumeCalls.delete(toolUseId);
-    }
+    if (selfResume && tombstone.run === null) return;
     const isBackgrounded = msg.is_backgrounded === true;
+    const call = selfResume ? void 0 : this.resumeCalls.get(toolUseId);
+    if (!selfResume) {
+      this.resumeCalls.delete(toolUseId);
+      this.handledResumeIds.add(toolUseId);
+      while (this.handledResumeIds.size > ANNOUNCED_AGENT_LIMIT) {
+        this.handledResumeIds.delete(this.handledResumeIds.values().next().value);
+      }
+      this.agentAliases.set(toolUseId, knownAgentId);
+    }
+    this.orphanedAgentsWarned.delete(knownAgentId);
     if (live) {
       const record = this.agents.get(knownAgentId);
       if (record && isBackgrounded) record.isBackgrounded = true;
-    } else {
-      this.agentTombstones.delete(taskId);
-      this.taskIdToAgentId.set(taskId, knownAgentId);
-      this.agents.set(knownAgentId, {
-        subagentType: "",
-        description: "",
-        prompt: "",
-        isBackgrounded,
-        messageId: tombstone.messageId,
-        started: true,
-        taskSeen: true,
-        parentAgentId: null
-      });
+      return;
     }
-    if (!selfResume) this.agentAliases.set(toolUseId, knownAgentId);
-    this.orphanedAgentsWarned.delete(knownAgentId);
+    const run2 = tombstone.run === null ? null : tombstone.run + 1;
+    const runId = selfResume ? `${knownAgentId}#${run2}` : toolUseId;
+    const messageId = selfResume ? tombstone.messageId : call?.messageId;
+    const framePrompt = typeof msg.prompt === "string" && msg.prompt.length > 0 ? msg.prompt : void 0;
+    const prompt = selfResume ? void 0 : framePrompt ?? call?.message;
+    this.agentTombstones.delete(taskId);
+    this.taskIdToAgentId.set(taskId, knownAgentId);
+    this.agents.set(knownAgentId, {
+      subagentType: "",
+      description: "",
+      prompt: "",
+      isBackgrounded,
+      messageId: tombstone.messageId,
+      started: true,
+      taskSeen: true,
+      parentAgentId: null,
+      runId,
+      run: run2
+    });
     this.emit("agent_resumed", {
       agentId: knownAgentId,
+      runId,
+      ...run2 !== null ? { run: run2 } : {},
+      trigger: selfResume ? "self" : "send-message",
+      ...prompt !== void 0 ? { prompt } : {},
       isBackgrounded,
-      messageId
+      ...messageId !== void 0 ? { messageId } : {}
+    });
+  }
+  /**
+   * S3-22 — a `SendMessage` resume whose `task_id` is neither live nor
+   * tombstoned: the server knows the run and the call, and not the agent
+   * (contract § "Resume the server cannot join"). It becomes a DETACHED run,
+   * an agent in its own right keyed on the SendMessage id, announced by
+   * `agent_resume_unjoined` in place of `agent_started`. Its task frames carry
+   * that id and/or the `task_id`, so it gets live state, usage and a terminal.
+   * Its own `assistant` / `user` frames carry the ORIGINAL agent id, which the
+   * server cannot resolve, so they stay orphans; nothing is inferred from
+   * arrival order.
+   */
+  startDetachedRun(taskId, toolUseId, call, msg) {
+    const str4 = (v) => typeof v === "string" && v.length > 0 ? v : void 0;
+    const subagentType = str4(msg.subagent_type);
+    const description = str4(msg.description);
+    const prompt = str4(msg.prompt) ?? call.message;
+    const isBackgrounded = msg.is_backgrounded === true;
+    this.resumeCalls.delete(toolUseId);
+    this.handledResumeIds.add(toolUseId);
+    while (this.handledResumeIds.size > ANNOUNCED_AGENT_LIMIT) {
+      this.handledResumeIds.delete(this.handledResumeIds.values().next().value);
+    }
+    this.announcedAgentIds.add(toolUseId);
+    while (this.announcedAgentIds.size > ANNOUNCED_AGENT_LIMIT) {
+      this.announcedAgentIds.delete(this.announcedAgentIds.values().next().value);
+    }
+    if (taskId) this.taskIdToAgentId.set(taskId, toolUseId);
+    this.agents.set(toolUseId, {
+      subagentType: subagentType ?? "",
+      description: description ?? "",
+      prompt: prompt ?? "",
+      isBackgrounded,
+      messageId: call.messageId,
+      started: true,
+      taskSeen: true,
+      parentAgentId: null,
+      runId: toolUseId,
+      run: null
+    });
+    this.emit("agent_resume_unjoined", {
+      agentId: toolUseId,
+      runId: toolUseId,
+      reason: "unknown-task",
+      ...call.to !== void 0 ? { to: call.to } : {},
+      ...subagentType !== void 0 ? { subagentType } : {},
+      ...description !== void 0 ? { description } : {},
+      ...prompt !== void 0 ? { prompt } : {},
+      isBackgrounded,
+      messageId: call.messageId
     });
   }
   /** Normalise the CLI's snake_case usage block. Absent reads as zeroes. */
@@ -63151,11 +63508,13 @@ ${message}` : message;
         return;
       }
       const startToolUseId = typeof msg.tool_use_id === "string" ? msg.tool_use_id : "";
-      if (startToolUseId && this.resumeCalls.has(startToolUseId)) {
-        this.resumeCalls.delete(startToolUseId);
+      if (startToolUseId && this.handledResumeIds.has(startToolUseId)) return;
+      const unjoinedCall = startToolUseId ? this.resumeCalls.get(startToolUseId) : void 0;
+      if (unjoinedCall) {
         console.warn(
-          `[claude-manager] Dropped an unrecognised resume: task_id=${taskId ?? "(none)"} is neither live nor tombstoned`
+          `[claude-manager] Unjoined resume: task_id=${taskId ?? "(none)"} is neither live nor tombstoned; reporting it as a detached run (runId=${startToolUseId})`
         );
+        this.startDetachedRun(taskId, startToolUseId, unjoinedCall, msg);
         return;
       }
     } else if (taskId && this.ignoredTaskIds.has(taskId)) {
@@ -63185,7 +63544,9 @@ ${message}` : message;
             messageId: this.currentMessageId || "unknown",
             started: false,
             taskSeen: true,
-            parentAgentId: null
+            parentAgentId: null,
+            runId: agentId,
+            run: 1
           });
         }
         this.ensureAgentStarted(
@@ -63198,6 +63559,7 @@ ${message}` : message;
         if (!this.ensureAgentStarted(agentId)) return;
         this.emit("agent_progress", {
           agentId,
+          runId: this.runIdOf(agentId),
           description: typeof msg.description === "string" ? msg.description : "",
           lastToolName: typeof msg.last_tool_name === "string" ? msg.last_tool_name : "",
           usage: this.readAgentUsage(msg.usage)
@@ -63209,6 +63571,7 @@ ${message}` : message;
         const patch = msg.patch;
         this.emit("agent_updated", {
           agentId,
+          runId: this.runIdOf(agentId),
           // Verbatim, and deliberately not narrowed — see
           // ClaudeAgentUpdatedEvent on why its `status` must not be merged
           // with task_notification's.
@@ -63225,12 +63588,14 @@ ${message}` : message;
           return;
         }
         if (!this.ensureAgentStarted(agentId)) return;
+        const runId = this.runIdOf(agentId);
         const summary = typeof msg.summary === "string" ? msg.summary : void 0;
         const outputFile = typeof msg.output_file === "string" ? msg.output_file : void 0;
-        this.retireAgent(agentId, taskId);
+        this.retireAgent(agentId, taskId, status);
         if (status === "completed") {
           this.emit("agent_complete", {
             agentId,
+            runId,
             summary: summary ?? "",
             outputFile: outputFile ?? "",
             usage: this.readAgentUsage(msg.usage)
@@ -63239,6 +63604,7 @@ ${message}` : message;
         }
         this.emit("agent_failed", {
           agentId,
+          runId,
           status,
           ...summary !== void 0 ? { summary } : {},
           ...outputFile !== void 0 ? { outputFile } : {},
@@ -63258,6 +63624,7 @@ ${message}` : message;
         if (!content) continue;
         this.emit("agent_message", {
           agentId,
+          runId: this.runIdOf(agentId),
           content,
           messageId
         });
@@ -63271,9 +63638,10 @@ ${message}` : message;
           this.recordAgentSpawn(toolId, toolInput, messageId, agentId);
           continue;
         }
-        if (toolName === SUBAGENT_RESUME_TOOL) this.recordResumeCall(toolId, messageId);
+        if (toolName === SUBAGENT_RESUME_TOOL) this.recordResumeCall(toolId, messageId, toolInput);
         this.emit("agent_tool_use", {
           agentId,
+          runId: this.runIdOf(agentId),
           toolName,
           input: toolInput,
           toolCallId: toolId,
@@ -63281,6 +63649,34 @@ ${message}` : message;
         });
         continue;
       }
+    }
+  }
+  /**
+   * S3-24 — the main thread's tool results. One `tool_result` event per block
+   * whose call opened a generic tool card (contract § S3-24 rule 4), with
+   * `output` and `isError` derived by rules 2 and 1. Subagent results do NOT
+   * come through here and keep S3-12's mapping (rule 3).
+   *
+   * Rule 6 — while an interrupt is in flight (`interruptRequestId` set, from
+   * `interrupt()` until `resolveInterrupt`), an ERROR result is not emitted.
+   * It is the CLI rejecting the call the user just stopped, in text written
+   * for the model, and the user's own Stop must not read as a failure; the
+   * card keeps its prior status. The id still leaves `toolCardIds` (the
+   * `delete` below runs first). A SUCCESS result mid-interrupt is emitted:
+   * that call really did finish.
+   */
+  handleMainUser(content) {
+    for (const block of content) {
+      if (block.type !== "tool_result") continue;
+      const toolUseId = block.tool_use_id;
+      if (typeof toolUseId !== "string" || !this.toolCardIds.delete(toolUseId)) continue;
+      const isError = mainToolResultIsError(block);
+      if (isError && this.interruptRequestId !== null) continue;
+      this.emit("tool_result", {
+        tool_use_id: toolUseId,
+        content: mainToolResultOutput(block.content),
+        is_error: isError
+      });
     }
   }
   /**
@@ -63297,6 +63693,7 @@ ${message}` : message;
       if (block.type !== "tool_result") continue;
       this.emit("agent_tool_result", {
         agentId,
+        runId: this.runIdOf(agentId),
         toolCallId: block.tool_use_id,
         output: typeof block.content === "string" ? block.content : JSON.stringify(block.content),
         isError: block.is_error || false
@@ -63318,8 +63715,8 @@ ${message}` : message;
    * later turns. Wiping the record at a boundary makes every one of those
    * frames an orphan, and an orphan is dropped (see `ensureAgentStarted`).
    *
-   * So the turn boundary (`keepBackgrounded: true` — the `result` line, and the
-   * start of the next prompt) keeps every live agent that is any of:
+   * So the turn boundary (`'turn'` — the `result` line, and the start of the
+   * next prompt) keeps every live agent that is any of:
    *
    *  - BACKGROUNDED, per `task_started.is_backgrounded` (authoritative) or the
    *    spawning call's `run_in_background`.
@@ -63343,19 +63740,33 @@ ${message}` : message;
    * evaluated per RUN — a resumed run is a live record again, judged by the
    * resume's own `is_backgrounded`.
    *
-   * `keepBackgrounded: false` is for the boundaries where nothing survives —
-   * an interrupt (the user stopped everything; `cancel_queued: true`, and the
-   * client marks any still-running agent aborted) and teardown.
+   * `'interrupt'` and `'session'` are the boundaries where no LIVE state
+   * survives — records, the `task_id` map, aliases and pending SendMessage
+   * joins. They differ on the tombstone map only (S3-22, contract § "Interrupt
+   * and the tombstone map", amending S3-18's "Cleared" rule):
+   *
+   *  - `'interrupt'` KEEPS it. The CLI stops every agent still running at an
+   *    interrupt and reports each with a `stopped` terminal, which inserts no
+   *    tombstone; so the map holds only agents that had already COMPLETED or
+   *    FAILED, and the CLI still resumes those (verified on 2.1.296). S3-18
+   *    cleared it here and so dropped exactly the resumes that work — AC1's
+   *    real capture. This runs when the interrupt RESOLVES (`resolveInterrupt`,
+   *    driven by the `result` line), never when the request is written, so the
+   *    `stopped` notifications that precede that line are processed against
+   *    live state first.
+   *  - `'session'` — teardown, new session (including S3-13's interrupt-first
+   *    path) and resuming a past session (S3-15) — CLEARS it: a different CLI
+   *    session cannot resume these agents.
    */
-  clearAgents({ keepBackgrounded = false } = {}) {
-    if (!keepBackgrounded) {
+  clearAgents(boundary) {
+    if (boundary !== "turn") {
       this.agents.clear();
       this.taskIdToAgentId.clear();
       this.orphanedAgentsWarned.clear();
       this.ignoredTaskIds.clear();
       this.agentAliases.clear();
-      this.agentTombstones.clear();
       this.resumeCalls.clear();
+      if (boundary === "session") this.agentTombstones.clear();
       return;
     }
     const survivors = /* @__PURE__ */ new Set();
@@ -63437,11 +63848,14 @@ ${message}` : message;
           const toolId = block.id;
           const toolName = block.name;
           this.emittedToolUseIds.add(toolId);
-          if (toolName === SUBAGENT_RESUME_TOOL) this.recordResumeCall(toolId, messageId);
+          if (toolName === SUBAGENT_RESUME_TOOL) {
+            this.recordResumeCall(toolId, messageId, block.input || {});
+          }
           if (toolName === "AskUserQuestion") {
           } else if (toolName === "TodoWrite") {
           } else if (toolName === SUBAGENT_SPAWN_TOOL) {
           } else {
+            this.toolCardIds.add(toolId);
             this.emit("tool_use", {
               id: toolId,
               name: toolName,
@@ -63463,13 +63877,15 @@ ${message}` : message;
     }
     if (msg.type === "user") {
       const parentToolUseId = this.readParentToolUseId(msg);
+      const message = msg.message;
       if (parentToolUseId) {
-        const message = msg.message;
-        if (message?.content) {
+        if (Array.isArray(message?.content)) {
           this.handleSubagentUser(this.canonicalAgentId(parentToolUseId), message.content);
         }
         return;
       }
+      if (Array.isArray(message?.content)) this.handleMainUser(message.content);
+      return;
     }
     if (msg.type === "assistant") {
       const message = msg.message;
@@ -63498,7 +63914,7 @@ ${message}` : message;
             this.recordAgentSpawn(toolId, toolInput, messageId);
             continue;
           }
-          if (toolName === SUBAGENT_RESUME_TOOL) this.recordResumeCall(toolId, messageId);
+          if (toolName === SUBAGENT_RESUME_TOOL) this.recordResumeCall(toolId, messageId, toolInput);
           if (toolName === "TodoWrite") {
             const rawTodos = toolInput.todos || [];
             const todos = rawTodos.map((t, i) => ({
@@ -63519,6 +63935,7 @@ ${message}` : message;
             });
           } else {
             this.emittedToolUseIds.add(toolId);
+            this.toolCardIds.add(toolId);
             this.emit("tool_use", {
               id: toolId,
               name: toolName,
@@ -63526,13 +63943,6 @@ ${message}` : message;
               messageId
             });
           }
-        }
-        if (block.type === "tool_result") {
-          this.emit("tool_result", {
-            tool_use_id: block.tool_use_id,
-            content: typeof block.content === "string" ? block.content : JSON.stringify(block.content),
-            is_error: block.is_error || false
-          });
         }
       }
       return;
@@ -63581,7 +63991,8 @@ ${message}` : message;
       }
       this.busy = false;
       this.emittedToolUseIds.clear();
-      this.clearAgents({ keepBackgrounded: true });
+      this.toolCardIds.clear();
+      this.clearAgents("turn");
       this.syncRecordState();
       const usage = msg.usage;
       this.emit("complete", {
@@ -63653,7 +64064,11 @@ var CHANNEL_EVENT_NAMES = [
   "agent_failed",
   // A SendMessage resumed a known agent (S3-18 I-4). Additive, and never the
   // first event for an agentId: it always follows that agent's agent_started.
+  // S3-22: it now opens a new RUN, and a live agent's SendMessage emits none.
   "agent_resumed",
+  // S3-22 — a SendMessage resume the server cannot join to a known agent: a
+  // detached run, announced in place of agent_started. Additive.
+  "agent_resume_unjoined",
   "permission_request",
   // A fresh session is live (S3-13). Additive: emitted only in answer to
   // `startNewSession()`, never as part of an ordinary turn.
@@ -64124,7 +64539,7 @@ var NullChannel = class {
 import { EventEmitter as EventEmitter6 } from "events";
 
 // server/claude/replayScript.ts
-import { readFileSync as readFileSync6 } from "fs";
+import { readFileSync as readFileSync7 } from "fs";
 var DEFAULT_PACING = {
   speed: 1,
   maxGapMs: 1200,
@@ -64173,7 +64588,7 @@ function parseScript(text, label) {
 function loadScriptSync(path2) {
   let text;
   try {
-    text = readFileSync6(path2, "utf-8");
+    text = readFileSync7(path2, "utf-8");
   } catch (err) {
     throw new ReplayScriptError(`cannot read replay script ${path2}: ${err.message}`);
   }
@@ -64268,8 +64683,8 @@ var ReplaySession = class {
         await this.wait(gaps[i]);
         if (this.aborted) return;
         while (this.parked && !this.aborted) {
-          await new Promise((resolve8) => {
-            this.waiting = resolve8;
+          await new Promise((resolve9) => {
+            this.waiting = resolve9;
           });
         }
         if (this.aborted) return;
@@ -64287,8 +64702,8 @@ var ReplaySession = class {
     }
   }
   wait(ms) {
-    return new Promise((resolve8) => {
-      this.timer = setTimeout(resolve8, ms);
+    return new Promise((resolve9) => {
+      this.timer = setTimeout(resolve9, ms);
     });
   }
   release() {
@@ -64768,12 +65183,12 @@ async function restoreSaved(projectPath2, saved) {
 
 // node_modules/chokidar/esm/index.js
 import { stat as statcb } from "fs";
-import { stat as stat6, readdir as readdir3 } from "fs/promises";
+import { stat as stat7, readdir as readdir3 } from "fs/promises";
 import { EventEmitter as EventEmitter7 } from "events";
 import * as sysPath2 from "path";
 
 // node_modules/readdirp/esm/index.js
-import { stat as stat4, lstat, readdir as readdir2, realpath } from "node:fs/promises";
+import { stat as stat5, lstat, readdir as readdir2, realpath } from "node:fs/promises";
 import { Readable } from "node:stream";
 import { resolve as presolve, relative as prelative, join as pjoin, sep as psep } from "node:path";
 var EntryTypes = {
@@ -64840,7 +65255,7 @@ var ReaddirpStream = class extends Readable {
     const { root, type: type2 } = opts;
     this._fileFilter = normalizeFilter(opts.fileFilter);
     this._directoryFilter = normalizeFilter(opts.directoryFilter);
-    const statMethod = opts.lstat ? lstat : stat4;
+    const statMethod = opts.lstat ? lstat : stat5;
     if (wantBigintFsStats) {
       this._stat = (path2) => statMethod(path2, { bigint: true });
     } else {
@@ -64993,7 +65408,7 @@ function readdirp(root, options = {}) {
 
 // node_modules/chokidar/esm/handler.js
 import { watchFile, unwatchFile, watch as fs_watch } from "fs";
-import { open as open2, stat as stat5, lstat as lstat2, realpath as fsrealpath } from "fs/promises";
+import { open as open2, stat as stat6, lstat as lstat2, realpath as fsrealpath } from "fs/promises";
 import * as sysPath from "path";
 import { type as osType } from "os";
 var STR_DATA = "data";
@@ -65020,7 +65435,7 @@ var EVENTS = {
 };
 var EV = EVENTS;
 var THROTTLE_MODE_WATCH = "watch";
-var statMethods = { lstat: lstat2, stat: stat5 };
+var statMethods = { lstat: lstat2, stat: stat6 };
 var KEY_LISTENERS = "listeners";
 var KEY_ERR = "errHandlers";
 var KEY_RAW = "rawEmitters";
@@ -65495,9 +65910,9 @@ var NodeFsHandler = class {
     if (this.fsw.closed) {
       return;
     }
-    const dirname10 = sysPath.dirname(file);
+    const dirname11 = sysPath.dirname(file);
     const basename7 = sysPath.basename(file);
-    const parent = this.fsw._getWatchedDir(dirname10);
+    const parent = this.fsw._getWatchedDir(dirname11);
     let prevStats = stats;
     if (parent.has(basename7))
       return;
@@ -65506,7 +65921,7 @@ var NodeFsHandler = class {
         return;
       if (!newStats || newStats.mtimeMs === 0) {
         try {
-          const newStats2 = await stat5(file);
+          const newStats2 = await stat6(file);
           if (this.fsw.closed)
             return;
           const at = newStats2.atimeMs;
@@ -65524,7 +65939,7 @@ var NodeFsHandler = class {
             prevStats = newStats2;
           }
         } catch (error) {
-          this.fsw._remove(dirname10, basename7);
+          this.fsw._remove(dirname11, basename7);
         }
       } else if (parent.has(basename7)) {
         const at = newStats.atimeMs;
@@ -65620,7 +66035,7 @@ var NodeFsHandler = class {
         this._addToNodeFs(path2, initialAdd, wh, depth + 1);
       }
     }).on(EV.ERROR, this._boundHandleError);
-    return new Promise((resolve8, reject) => {
+    return new Promise((resolve9, reject) => {
       if (!stream)
         return reject();
       stream.once(STR_END, () => {
@@ -65629,7 +66044,7 @@ var NodeFsHandler = class {
           return;
         }
         const wasThrottled = throttler ? throttler.clear() : false;
-        resolve8(void 0);
+        resolve9(void 0);
         previous.getChildren().filter((item) => {
           return item !== directory && !current.has(item);
         }).forEach((item) => {
@@ -66205,7 +66620,7 @@ var FSWatcher = class extends EventEmitter7 {
       const fullPath = opts.cwd ? sysPath2.join(opts.cwd, path2) : path2;
       let stats2;
       try {
-        stats2 = await stat6(fullPath);
+        stats2 = await stat7(fullPath);
       } catch (err) {
       }
       if (!stats2 || this.closed)
@@ -66332,8 +66747,8 @@ var FSWatcher = class extends EventEmitter7 {
     }
     return this._userIgnored(path2, stats);
   }
-  _isntIgnored(path2, stat9) {
-    return !this._isIgnored(path2, stat9);
+  _isntIgnored(path2, stat10) {
+    return !this._isIgnored(path2, stat10);
   }
   /**
    * Provides a set of common helpers and properties relating to symlink handling.
@@ -66457,7 +66872,7 @@ function watch(paths, options = {}) {
 }
 
 // server/ws/index.ts
-import { join as join12 } from "path";
+import { join as join13 } from "path";
 var clients = /* @__PURE__ */ new Map();
 var watcher = null;
 var debounceTimers = /* @__PURE__ */ new Map();
@@ -66546,17 +66961,42 @@ function classifyArchflowPath(relativePath) {
   if (autopilot) return { kind: "autopilot", runId: autopilot[1] };
   return { kind: "artifact" };
 }
+async function autopilotPayloadsForHeadChange(projectLoader) {
+  let runs;
+  let live;
+  try {
+    ({ runs, live } = await projectLoader.getAutopilotRuns());
+  } catch {
+    return [];
+  }
+  const payloads = [];
+  for (const summary of runs) {
+    if (summary.status !== "running") continue;
+    let run2 = null;
+    try {
+      run2 = await projectLoader.getAutopilotRun(summary.runId);
+    } catch {
+    }
+    payloads.push({
+      type: "autopilot-changed",
+      data: { runId: summary.runId, run: run2, removed: false, live }
+    });
+  }
+  return payloads;
+}
 function setupFileWatcher(projectPath2, projectLoader) {
   if (watcher) {
     watcher.close();
     watcher = null;
   }
   const watchPaths = [
-    join12(projectPath2, ".archflow"),
-    join12(projectPath2, "design-artifacts"),
-    join12(projectPath2, "docs"),
-    join12(projectPath2, "superdesign", "design_iterations")
+    join13(projectPath2, ".archflow"),
+    join13(projectPath2, "design-artifacts"),
+    join13(projectPath2, "docs"),
+    join13(projectPath2, "superdesign", "design_iterations")
   ];
+  const gitHeadPath = resolveGitHeadPath(projectPath2);
+  if (gitHeadPath) watchPaths.push(gitHeadPath);
   watcher = watch(watchPaths, {
     ignoreInitial: true,
     persistent: true,
@@ -66567,6 +67007,14 @@ function setupFileWatcher(projectPath2, projectLoader) {
   });
   const handleFileChange = (eventType, filePath) => {
     const relativePath = filePath.replace(projectPath2 + "/", "");
+    if (gitHeadPath && filePath === gitHeadPath) {
+      debounce("git-head", async () => {
+        for (const payload of await autopilotPayloadsForHeadChange(projectLoader)) {
+          broadcast(payload, projectPath2);
+        }
+      });
+      return;
+    }
     debounce(`${eventType}:${relativePath}`, async () => {
       if (relativePath === ".archflow/current-phase.yaml") {
         try {
@@ -66884,6 +67332,8 @@ function wireChannelEvents() {
       type: "chat-agent-started",
       data: {
         agentId: event.agentId,
+        runId: event.runId,
+        run: event.run,
         subagentType: event.subagentType,
         description: event.description,
         prompt: event.prompt,
@@ -66898,6 +67348,7 @@ function wireChannelEvents() {
       type: "chat-agent-progress",
       data: {
         agentId: event.agentId,
+        runId: event.runId,
         description: event.description,
         lastToolName: event.lastToolName,
         usage: event.usage
@@ -66907,7 +67358,7 @@ function wireChannelEvents() {
   channel2.events.on("agent_updated", (event, meta) => {
     broadcast({
       type: "chat-agent-updated",
-      data: { agentId: event.agentId, patch: event.patch }
+      data: { agentId: event.agentId, runId: event.runId, patch: event.patch }
     }, to(meta));
   });
   channel2.events.on("agent_message", (event, meta) => {
@@ -66916,6 +67367,7 @@ function wireChannelEvents() {
       data: {
         type: "text",
         agentId: event.agentId,
+        runId: event.runId,
         content: event.content,
         messageId: event.messageId
       }
@@ -66927,6 +67379,7 @@ function wireChannelEvents() {
       data: {
         type: "tool_use",
         agentId: event.agentId,
+        runId: event.runId,
         toolName: event.toolName,
         input: event.input,
         toolCallId: event.toolCallId,
@@ -66942,6 +67395,7 @@ function wireChannelEvents() {
         data: {
           type: "tool_result",
           agentId: event.agentId,
+          runId: event.runId,
           toolCallId: event.toolCallId,
           output: event.output,
           isError: event.isError
@@ -66954,6 +67408,7 @@ function wireChannelEvents() {
       type: "chat-agent-complete",
       data: {
         agentId: event.agentId,
+        runId: event.runId,
         summary: event.summary,
         outputFile: event.outputFile,
         usage: event.usage
@@ -66965,16 +67420,40 @@ function wireChannelEvents() {
       type: "chat-agent-resumed",
       data: {
         agentId: event.agentId,
+        runId: event.runId,
+        ...event.run !== void 0 ? { run: event.run } : {},
+        trigger: event.trigger,
+        ...event.prompt !== void 0 ? { prompt: event.prompt } : {},
         isBackgrounded: event.isBackgrounded,
-        messageId: event.messageId
+        ...event.messageId !== void 0 ? { messageId: event.messageId } : {}
       }
     }, to(meta));
   });
+  channel2.events.on(
+    "agent_resume_unjoined",
+    (event, meta) => {
+      broadcast({
+        type: "chat-agent-resume-unjoined",
+        data: {
+          agentId: event.agentId,
+          runId: event.runId,
+          reason: event.reason,
+          ...event.to !== void 0 ? { to: event.to } : {},
+          ...event.subagentType !== void 0 ? { subagentType: event.subagentType } : {},
+          ...event.description !== void 0 ? { description: event.description } : {},
+          ...event.prompt !== void 0 ? { prompt: event.prompt } : {},
+          isBackgrounded: event.isBackgrounded,
+          ...event.messageId !== void 0 ? { messageId: event.messageId } : {}
+        }
+      }, to(meta));
+    }
+  );
   channel2.events.on("agent_failed", (event, meta) => {
     broadcast({
       type: "chat-agent-failed",
       data: {
         agentId: event.agentId,
+        runId: event.runId,
         /**
          * Verbatim. sdk.d.ts:4834 closes `task_notification.status` at
          * `completed | failed | stopped`, and `completed` never routes here —
@@ -67407,7 +67886,7 @@ async function projectRoutes(fastify, opts) {
   fastify.post("/project/browse", async (_request, reply) => {
     try {
       const current = projectLoader.currentPath;
-      const startIn = current ? dirname6(current) : null;
+      const startIn = current ? dirname7(current) : null;
       const outcome = await pickFolder(startIn);
       if (outcome.kind === "picked") return reply.send({ path: outcome.path });
       if (outcome.kind === "cancelled") return reply.status(204).send();
@@ -68042,17 +68521,17 @@ async function designRoutes(fastify, opts) {
 
 // server/routes/preview.ts
 import { spawn as spawn3 } from "child_process";
-import { existsSync as existsSync7, readFileSync as readFileSync7 } from "fs";
-import { join as join13 } from "path";
+import { existsSync as existsSync8, readFileSync as readFileSync8 } from "fs";
+import { join as join14 } from "path";
 import { createConnection } from "net";
 var devServerProcess = null;
 function detectProjectKind(projectRoot) {
-  const pkgPath = join13(projectRoot, "package.json");
-  if (!existsSync7(pkgPath)) {
+  const pkgPath = join14(projectRoot, "package.json");
+  if (!existsSync8(pkgPath)) {
     return { kind: "web", hasExpo: false };
   }
   try {
-    const pkg = JSON.parse(readFileSync7(pkgPath, "utf-8"));
+    const pkg = JSON.parse(readFileSync8(pkgPath, "utf-8"));
     const deps2 = { ...pkg.dependencies, ...pkg.devDependencies };
     if (deps2["expo"]) {
       return { kind: "expo", hasExpo: true };
@@ -68066,10 +68545,10 @@ function detectProjectKind(projectRoot) {
   }
 }
 function detectPort(projectRoot) {
-  const pkgPath = join13(projectRoot, "package.json");
-  if (!existsSync7(pkgPath)) return 5173;
+  const pkgPath = join14(projectRoot, "package.json");
+  if (!existsSync8(pkgPath)) return 5173;
   try {
-    const pkg = JSON.parse(readFileSync7(pkgPath, "utf-8"));
+    const pkg = JSON.parse(readFileSync8(pkgPath, "utf-8"));
     const scripts = pkg.scripts ?? {};
     for (const key of ["dev", "start", "serve"]) {
       const script = scripts[key] ?? "";
@@ -68086,10 +68565,10 @@ function detectPort(projectRoot) {
   }
 }
 function detectDevScript(projectRoot) {
-  const pkgPath = join13(projectRoot, "package.json");
-  if (!existsSync7(pkgPath)) return "dev";
+  const pkgPath = join14(projectRoot, "package.json");
+  if (!existsSync8(pkgPath)) return "dev";
   try {
-    const pkg = JSON.parse(readFileSync7(pkgPath, "utf-8"));
+    const pkg = JSON.parse(readFileSync8(pkgPath, "utf-8"));
     const scripts = pkg.scripts ?? {};
     if (scripts["dev"]) return "dev";
     if (scripts["start"]) return "start";
@@ -68100,19 +68579,19 @@ function detectDevScript(projectRoot) {
   }
 }
 async function isPortOpen(port2) {
-  return new Promise((resolve8) => {
+  return new Promise((resolve9) => {
     const socket = createConnection({ port: port2, host: "127.0.0.1" });
     socket.setTimeout(500);
     socket.on("connect", () => {
       socket.destroy();
-      resolve8(true);
+      resolve9(true);
     });
     socket.on("error", () => {
-      resolve8(false);
+      resolve9(false);
     });
     socket.on("timeout", () => {
       socket.destroy();
-      resolve8(false);
+      resolve9(false);
     });
   });
 }
@@ -68133,10 +68612,10 @@ async function previewRoutes(fastify, opts) {
       const devScript = detectDevScript(projectRoot);
       let portConflict = studioPort ? port2 === studioPort : false;
       if (!portConflict && studioPort) {
-        const pkgPath = join13(projectRoot, "package.json");
-        if (existsSync7(pkgPath)) {
+        const pkgPath = join14(projectRoot, "package.json");
+        if (existsSync8(pkgPath)) {
           try {
-            const pkg = JSON.parse(readFileSync7(pkgPath, "utf-8"));
+            const pkg = JSON.parse(readFileSync8(pkgPath, "utf-8"));
             const scriptContent = pkg.scripts?.[devScript] ?? "";
             if (scriptContent.includes(`${studioPort}`)) {
               portConflict = true;
@@ -68185,9 +68664,9 @@ async function previewRoutes(fastify, opts) {
           code: "PORT_CONFLICT"
         });
       }
-      const pkgPath = join13(projectRoot, "package.json");
-      if (existsSync7(pkgPath)) {
-        const pkg = JSON.parse(readFileSync7(pkgPath, "utf-8"));
+      const pkgPath = join14(projectRoot, "package.json");
+      if (existsSync8(pkgPath)) {
+        const pkg = JSON.parse(readFileSync8(pkgPath, "utf-8"));
         if (!pkg.scripts?.[script]) {
           return reply.status(500).send({
             error: `No '${script}' script found in package.json. Available scripts: ${Object.keys(pkg.scripts ?? {}).join(", ")}`,
@@ -68238,19 +68717,19 @@ async function previewRoutes(fastify, opts) {
 }
 
 // server/routes/chat.ts
-import { readdir as readdir5, readFile as readFile6 } from "node:fs/promises";
-import { join as join17 } from "node:path";
+import { readdir as readdir5, readFile as readFile7 } from "node:fs/promises";
+import { join as join18 } from "node:path";
 import { homedir as homedir12 } from "node:os";
 
 // server/lib/transcript/paths.ts
 import { homedir as homedir10 } from "node:os";
-import { join as join14, resolve as resolve6, sep as sep2 } from "node:path";
+import { join as join15, resolve as resolve7, sep as sep2 } from "node:path";
 function projectSlug(projectPath2) {
   const trimmed = projectPath2.length > 1 ? projectPath2.replace(/[/\\]+$/, "") : projectPath2;
   return trimmed.replace(/[^a-zA-Z0-9]/g, "-");
 }
 function transcriptDirFor(projectPath2, home = homedir10()) {
-  return join14(home, ".claude", "projects", projectSlug(projectPath2));
+  return join15(home, ".claude", "projects", projectSlug(projectPath2));
 }
 var SESSION_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 function isValidSessionId(sessionId) {
@@ -68264,8 +68743,8 @@ var InvalidSessionIdError = class extends Error {
 };
 function resolveTranscriptPath(transcriptDir, sessionId) {
   if (!isValidSessionId(sessionId)) throw new InvalidSessionIdError(sessionId);
-  const dir = resolve6(transcriptDir);
-  const filePath = resolve6(dir, `${sessionId}.jsonl`);
+  const dir = resolve7(transcriptDir);
+  const filePath = resolve7(dir, `${sessionId}.jsonl`);
   if (!filePath.startsWith(dir + sep2)) throw new InvalidSessionIdError(sessionId);
   return filePath;
 }
@@ -68603,8 +69082,8 @@ var SummarySink = class {
 };
 
 // server/lib/transcript/sessions.ts
-import { readdir as readdir4, stat as stat7 } from "node:fs/promises";
-import { join as join15 } from "node:path";
+import { readdir as readdir4, stat as stat8 } from "node:fs/promises";
+import { join as join16 } from "node:path";
 var SessionNotFoundError = class extends Error {
   constructor(sessionId) {
     super(`No transcript for session ${sessionId}`);
@@ -68677,7 +69156,7 @@ var TranscriptReader = class {
     const filePath = resolveTranscriptPath(transcriptDir, sessionId);
     let stats;
     try {
-      stats = await stat7(filePath);
+      stats = await stat8(filePath);
     } catch (err) {
       if (err.code === "ENOENT") {
         throw new SessionNotFoundError(sessionId);
@@ -68720,10 +69199,10 @@ var TranscriptReader = class {
    * than one that is not there.
    */
   async summarise(transcriptDir, sessionId) {
-    const filePath = join15(transcriptDir, `${sessionId}.jsonl`);
+    const filePath = join16(transcriptDir, `${sessionId}.jsonl`);
     let stats;
     try {
-      stats = await stat7(filePath);
+      stats = await stat8(filePath);
     } catch (err) {
       const code = err.code;
       if (code !== "ENOENT") {
@@ -68792,23 +69271,23 @@ var import_multipart = __toESM(require_multipart2(), 1);
 // server/services/queueStore.ts
 import { createHash as createHash2, randomBytes as randomBytes3 } from "node:crypto";
 import { realpathSync as realpathSync2 } from "node:fs";
-import { chmod, mkdir as mkdir4, open as open3, readFile as readFile5, rename as rename4, stat as stat8, unlink as unlink3 } from "node:fs/promises";
+import { chmod, mkdir as mkdir4, open as open3, readFile as readFile6, rename as rename4, stat as stat9, unlink as unlink3 } from "node:fs/promises";
 import { homedir as homedir11 } from "node:os";
-import { basename as basename6, dirname as dirname7, join as join16, resolve as resolve7 } from "node:path";
+import { basename as basename6, dirname as dirname8, join as join17, resolve as resolve8 } from "node:path";
 function queueDir(home = homedir11()) {
-  return join16(home, ".archflow", "studio", "queue");
+  return join17(home, ".archflow", "studio", "queue");
 }
 function queueKey(projectPath2) {
   let real;
   try {
     real = realpathSync2(projectPath2);
   } catch {
-    real = resolve7(projectPath2);
+    real = resolve8(projectPath2);
   }
   return createHash2("sha256").update(real).digest("hex");
 }
 function queueFilePath(projectPath2, home = homedir11()) {
-  return join16(queueDir(home), `${queueKey(projectPath2)}.jsonl`);
+  return join17(queueDir(home), `${queueKey(projectPath2)}.jsonl`);
 }
 var QUEUE_RETAIN = 500;
 var QUEUE_TRIM_AT = 600;
@@ -68846,14 +69325,14 @@ function indexBytes(index, buf, base) {
 async function prepareDir(dir) {
   if (preparedDirs.has(dir)) return;
   await mkdir4(dir, { recursive: true, mode: DIR_MODE });
-  const { mode } = await stat8(dir);
+  const { mode } = await stat9(dir);
   if ((mode & 511) !== DIR_MODE) await chmod(dir, DIR_MODE);
   preparedDirs.add(dir);
 }
 async function syncIndex(path2) {
   let st;
   try {
-    st = await stat8(path2);
+    st = await stat9(path2);
   } catch (err) {
     if (errCode2(err) !== "ENOENT") throw err;
     const empty = { ino: -1, size: 0, lines: 0, endsWithNewline: true, ids: /* @__PURE__ */ new Map() };
@@ -68875,7 +69354,7 @@ async function syncIndex(path2) {
   }
   if ((st.mode & 511) !== FILE_MODE) await chmod(path2, FILE_MODE);
   const fresh = { ino: st.ino, size: 0, lines: 0, endsWithNewline: true, ids: /* @__PURE__ */ new Map() };
-  indexBytes(fresh, await readFile5(path2), 0);
+  indexBytes(fresh, await readFile6(path2), 0);
   indexes.set(path2, fresh);
   return fresh;
 }
@@ -68890,7 +69369,7 @@ async function readLine(path2, ref) {
   }
 }
 async function trim(path2) {
-  const kept = (await readFile5(path2, "utf-8")).split("\n").filter((line) => {
+  const kept = (await readFile6(path2, "utf-8")).split("\n").filter((line) => {
     if (line.trim() === "") return false;
     try {
       return typeof JSON.parse(line)?.id === "string";
@@ -68900,8 +69379,8 @@ async function trim(path2) {
   }).slice(-QUEUE_RETAIN);
   const content = Buffer.from(kept.length > 0 ? `${kept.join("\n")}
 ` : "", "utf-8");
-  const tmp = join16(
-    dirname7(path2),
+  const tmp = join17(
+    dirname8(path2),
     `.${basename6(path2)}.${process.pid}.${randomBytes3(4).toString("hex")}.tmp`
   );
   let ino;
@@ -68991,7 +69470,7 @@ function parseFrontmatter(content) {
   const userInvocable = uiRaw === void 0 ? true : uiRaw !== "false";
   return { name, description, argumentHint, userInvocable };
 }
-async function getSlashCommandsFromCache(cacheRoot = join17(homedir12(), ".claude", "plugins", "cache")) {
+async function getSlashCommandsFromCache(cacheRoot = join18(homedir12(), ".claude", "plugins", "cache")) {
   const commands = [];
   const seen = /* @__PURE__ */ new Set();
   const add = (plugin, bareName, fm) => {
@@ -69012,21 +69491,21 @@ async function getSlashCommandsFromCache(cacheRoot = join17(homedir12(), ".claud
   for (const marketplace of marketplaces) {
     let plugins;
     try {
-      plugins = await readdir5(join17(cacheRoot, marketplace));
+      plugins = await readdir5(join18(cacheRoot, marketplace));
     } catch {
       continue;
     }
     for (const plugin of plugins) {
       let versions;
       try {
-        versions = await readdir5(join17(cacheRoot, marketplace, plugin));
+        versions = await readdir5(join18(cacheRoot, marketplace, plugin));
       } catch {
         continue;
       }
       const version = versions.sort().at(-1);
       if (!version) continue;
-      const versionPath = join17(cacheRoot, marketplace, plugin, version);
-      const commandsPath = join17(versionPath, "commands");
+      const versionPath = join18(cacheRoot, marketplace, plugin, version);
+      const commandsPath = join18(versionPath, "commands");
       let commandFiles = [];
       try {
         commandFiles = await readdir5(commandsPath);
@@ -69035,12 +69514,12 @@ async function getSlashCommandsFromCache(cacheRoot = join17(homedir12(), ".claud
       for (const file of commandFiles) {
         if (!file.endsWith(".md")) continue;
         try {
-          const content = await readFile6(join17(commandsPath, file), "utf-8");
+          const content = await readFile7(join18(commandsPath, file), "utf-8");
           add(plugin, file.slice(0, -".md".length), parseFrontmatter(content));
         } catch {
         }
       }
-      const skillsPath = join17(versionPath, "skills");
+      const skillsPath = join18(versionPath, "skills");
       let skills = [];
       try {
         skills = await readdir5(skillsPath);
@@ -69048,7 +69527,7 @@ async function getSlashCommandsFromCache(cacheRoot = join17(homedir12(), ".claud
       }
       for (const skill of skills) {
         try {
-          const content = await readFile6(join17(skillsPath, skill, "SKILL.md"), "utf-8");
+          const content = await readFile7(join18(skillsPath, skill, "SKILL.md"), "utf-8");
           const fm = parseFrontmatter(content);
           add(plugin, fm.name ?? skill, fm);
         } catch {
@@ -69072,7 +69551,7 @@ async function scanSkillDirs(root) {
     const bareName = entry.slice(ARCHFLOW_PREFIX.length);
     if (!bareName) continue;
     try {
-      const content = await readFile6(join17(root, entry, "SKILL.md"), "utf-8");
+      const content = await readFile7(join18(root, entry, "SKILL.md"), "utf-8");
       const fm = parseFrontmatter(content);
       if (!fm.userInvocable) continue;
       const cmd = { name: `archflow:${bareName}`, description: fm.description ?? "" };
@@ -69096,7 +69575,7 @@ async function scanCommandFiles(root) {
     const bareName = entry.slice(ARCHFLOW_PREFIX.length, -".md".length);
     if (!bareName) continue;
     try {
-      const content = await readFile6(join17(root, entry), "utf-8");
+      const content = await readFile7(join18(root, entry), "utf-8");
       const fm = parseFrontmatter(content);
       if (!fm.userInvocable) continue;
       const cmd = { name: `archflow:${bareName}`, description: fm.description ?? "" };
@@ -69124,7 +69603,7 @@ async function scanTomlFiles(root) {
     const bareName = entry.slice(0, -".toml".length);
     if (!bareName) continue;
     try {
-      const content = await readFile6(join17(root, entry), "utf-8");
+      const content = await readFile7(join18(root, entry), "utf-8");
       commands.push({ name: `archflow:${bareName}`, description: parseTomlDescription(content) });
     } catch {
     }
@@ -69141,7 +69620,7 @@ async function getSlashCommandsForHost(host, projectPath2, deps2 = {}) {
     })).sort((a, b) => a.name.localeCompare(b.name));
   }
   if (host === "gemini") {
-    const root = deps2.geminiRoot ?? join17(homedir12(), ".gemini", "extensions", "archflow", "commands", "archflow");
+    const root = deps2.geminiRoot ?? join18(homedir12(), ".gemini", "extensions", "archflow", "commands", "archflow");
     const bare2 = await scanTomlFiles(root);
     return bare2.map((cmd) => ({
       ...cmd,
@@ -69153,16 +69632,16 @@ async function getSlashCommandsForHost(host, projectPath2, deps2 = {}) {
   switch (host) {
     case "codex":
     case "generic":
-      bare = await scanSkillDirs(join17(projectPath2, ".agents", "skills"));
+      bare = await scanSkillDirs(join18(projectPath2, ".agents", "skills"));
       break;
     case "cursor":
-      bare = await scanCommandFiles(join17(projectPath2, ".cursor", "commands"));
+      bare = await scanCommandFiles(join18(projectPath2, ".cursor", "commands"));
       break;
     case "copilot":
-      bare = await scanSkillDirs(join17(projectPath2, ".github", "skills"));
+      bare = await scanSkillDirs(join18(projectPath2, ".github", "skills"));
       break;
     case "opencode":
-      bare = await scanCommandFiles(join17(projectPath2, ".opencode", "commands"));
+      bare = await scanCommandFiles(join18(projectPath2, ".opencode", "commands"));
       break;
   }
   return bare.map((cmd) => ({ ...cmd, invocation: commandFor(host, cmd.name.slice(ARCHFLOW_NAMESPACE.length)) })).sort((a, b) => a.name.localeCompare(b.name));
@@ -69441,8 +69920,8 @@ import { homedir as homedir15 } from "node:os";
 import { randomUUID } from "node:crypto";
 
 // server/services/telemetryContext.ts
-import { readFileSync as readFileSync8 } from "node:fs";
-import { dirname as dirname8, join as join18 } from "node:path";
+import { readFileSync as readFileSync9 } from "node:fs";
+import { dirname as dirname9, join as join19 } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // server/services/telemetryCatalog.ts
@@ -69535,13 +70014,13 @@ function closedValue(value, allowed) {
 }
 
 // server/services/telemetryContext.ts
-var __dirname2 = dirname8(fileURLToPath(import.meta.url));
+var __dirname2 = dirname9(fileURLToPath(import.meta.url));
 var cachedVersion = null;
 function studioVersion() {
   if (cachedVersion !== null) return cachedVersion;
   try {
-    const pkgPath = join18(__dirname2, "..", "..", "package.json");
-    const pkg = JSON.parse(readFileSync8(pkgPath, "utf-8"));
+    const pkgPath = join19(__dirname2, "..", "..", "package.json");
+    const pkg = JSON.parse(readFileSync9(pkgPath, "utf-8"));
     cachedVersion = pkg.version ?? "unknown";
   } catch {
     cachedVersion = "unknown";
@@ -69634,16 +70113,16 @@ var POSTHOG_API_KEY = "phc_nuuik2SamCaEPcZ8DNF7nfqDZ534zFQ8Ae8cYmEsjMcq";
 var POSTHOG_HOST = "https://us.i.posthog.com";
 
 // server/services/telemetryConfigFile.ts
-import { readFileSync as readFileSync9 } from "node:fs";
-import { mkdir as mkdir5, readFile as readFile7, rename as rename5, unlink as unlink4, writeFile as writeFile4 } from "node:fs/promises";
+import { readFileSync as readFileSync10 } from "node:fs";
+import { mkdir as mkdir5, readFile as readFile8, rename as rename5, unlink as unlink4, writeFile as writeFile4 } from "node:fs/promises";
 import { homedir as homedir13 } from "node:os";
-import { join as join19 } from "node:path";
+import { join as join20 } from "node:path";
 import { randomBytes as randomBytes4 } from "node:crypto";
 function telemetryConfigDir(home = homedir13()) {
-  return join19(home, ".archflow");
+  return join20(home, ".archflow");
 }
 function telemetryConfigPath(home = homedir13()) {
-  return join19(telemetryConfigDir(home), "config.json");
+  return join20(telemetryConfigDir(home), "config.json");
 }
 function parseConfig(text) {
   try {
@@ -69655,14 +70134,14 @@ function parseConfig(text) {
 }
 async function loadConfig(home = homedir13()) {
   try {
-    return parseConfig(await readFile7(telemetryConfigPath(home), "utf-8"));
+    return parseConfig(await readFile8(telemetryConfigPath(home), "utf-8"));
   } catch {
     return {};
   }
 }
 function loadConfigSync(home = homedir13()) {
   try {
-    return parseConfig(readFileSync9(telemetryConfigPath(home), "utf-8"));
+    return parseConfig(readFileSync10(telemetryConfigPath(home), "utf-8"));
   } catch {
     return {};
   }
@@ -69675,7 +70154,7 @@ async function updateConfig(update, home = homedir13()) {
     const current = await loadConfig(home);
     const next = update(current);
     if (next === null) return current;
-    const tmp = join19(dir, `.config.${process.pid}.${randomBytes4(4).toString("hex")}.tmp`);
+    const tmp = join20(dir, `.config.${process.pid}.${randomBytes4(4).toString("hex")}.tmp`);
     try {
       await writeFile4(tmp, JSON.stringify(next, null, 2) + "\n", "utf-8");
       await rename5(tmp, path2);
@@ -70185,7 +70664,7 @@ async function registerTrustBoundary(fastify, port2) {
 
 // server/index.ts
 var __filename = fileURLToPath2(import.meta.url);
-var __dirname3 = dirname9(__filename);
+var __dirname3 = dirname10(__filename);
 async function startServer(options) {
   const { projectPath: projectPath2, port: port2 } = options;
   const fastify = (0, import_fastify.default)({
@@ -70229,13 +70708,13 @@ async function startServer(options) {
     } catch {
       return reply.status(400).send({ error: "Invalid path.", code: "INVALID_PATH" });
     }
-    if (!existsSync8(absolute) || statSync4(absolute).isDirectory()) {
+    if (!existsSync9(absolute) || statSync5(absolute).isDirectory()) {
       return reply.status(404).send({ error: "Not found.", code: "NOT_FOUND" });
     }
     return reply.type(contentTypeFor(absolute)).send(createReadStream2(absolute));
   });
-  const distPath = join20(__dirname3, "..", "dist");
-  if (existsSync8(distPath)) {
+  const distPath = join21(__dirname3, "..", "dist");
+  if (existsSync9(distPath)) {
     await fastify.register(import_static.default, {
       root: distPath,
       prefix: "/",
