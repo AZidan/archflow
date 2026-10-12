@@ -132,6 +132,12 @@ epics:
         status: backlog
         target: telemetry
         description: "Central telemetry disable and a policy file for allowed hosts/MCP servers (proposed)."
+      - id: S8-10
+        title: "Say in SECURITY.md that Copilot's direct-plugin path sends telemetry without showing the notice"
+        priority: Low
+        status: backlog
+        target: telemetry
+        description: "Deferred from S8-05 I-9 at the 2.5.0 ship: when Copilot loads the Claude plugin directly, session_start events are sent every session but the first-run notice is never shown on that path (plugin/hooks/telemetry.mjs:125). Either show the notice there or state it in SECURITY.md."
   - id: E9
     stories:
       - id: S9-05
@@ -163,6 +169,12 @@ epics:
         status: backlog
         target: site
         description: "Deferred from S6-04 I-9: only the README and the Gemini adapter README tell individual Google users (free, AI Pro, AI Ultra) that Gemini CLI moved them to Antigravity CLI and that Archflow support is planned; the site, the Studio guide and the CHANGELOG only say '(enterprise/API)'. Marketing-copy decision; pairs with S7-11."
+      - id: S9-10
+        title: "Drop the total agent count from the homepage"
+        priority: Low
+        status: backlog
+        target: site
+        description: "Deferred from S9-04 I-2 at the 2.5.0 ship: docs/index.html:405 says '17 specialized agents', which marketing guardrail 6 forbids (no total agent counts)."
   - id: E10
     stories:
       - id: S10-03

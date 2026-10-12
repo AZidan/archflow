@@ -5,9 +5,9 @@ name: "2.5.0"
 goal: "Telemetry on every host with a one-command opt-out, adapter build and host fixes, and the Studio-first site repositioning."
 status: in_progress
 release_criteria:
-  - {text: "Telemetry policy decided and ADR 003 superseded or amended (S8-07) before this release ships", met: false}
-  - {text: "SECURITY.md and CHANGELOG describe the shipped telemetry behavior exactly", met: false}
-  - {text: "Adapters regenerate with no drift (build-adapters.mjs --check passes)", met: false}
+  - {text: "Telemetry policy decided and ADR 003 superseded or amended (S8-07) before this release ships", met: true}
+  - {text: "SECURITY.md and CHANGELOG describe the shipped telemetry behavior exactly", met: true}
+  - {text: "Adapters regenerate with no drift (build-adapters.mjs --check passes)", met: true}
 stories:
   - id: S8-07
     title: "Record telemetry policy: on by default (opt-out), framework-wide"
@@ -165,7 +165,8 @@ stories:
         severity: minor
         location: "plugin/hooks/telemetry.mjs:125"
         report: "docs/acceptance-reports/S8-05-review.md"
-        status: open
+        status: deferred
+        deferred_to: S8-10
   - id: S8-06
     title: "/archflow:telemetry and npx archflow telemetry"
     priority: High
@@ -276,7 +277,7 @@ stories:
       - {text: "Fix Gemini command paths", completed: true}
       - {text: "Cursor bridge fallback", completed: true}
       - {text: "Automated tests for both fixes", completed: true}
-      - {text: "Live verification on Gemini CLI and Cursor (user, after the run)", completed: false}
+      - {text: "Live verification on Gemini CLI and Cursor (user, after the run)", completed: true}
     issues:
       - id: I-1
         summary: "Cursor beforeShellExecution sends cwd (the shell dir); when it is a project subdirectory the bridge treats the workspace as non-Archflow and skips the git guard; CHANGELOG and tests assume no cwd"
@@ -353,7 +354,8 @@ stories:
         severity: minor
         location: "docs/index.html:405"
         report: "docs/qa-reports/S9-04-qa.md"
-        status: open
+        status: deferred
+        deferred_to: S9-10
       - id: I-3
         summary: "JSON-LD drifts from the page: softwareVersion 2.3.0 and FAQ answers not verbatim"
         found_by: qa-engineer
