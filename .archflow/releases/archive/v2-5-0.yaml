@@ -3,7 +3,9 @@
 id: v2-5-0
 name: "2.5.0"
 goal: "Telemetry on every host with a one-command opt-out, adapter build and host fixes, and the Studio-first site repositioning."
-status: in_progress
+status: released
+version: v2.5.0
+released_at: "2026-10-13"
 release_criteria:
   - {text: "Telemetry policy decided and ADR 003 superseded or amended (S8-07) before this release ships", met: true}
   - {text: "SECURITY.md and CHANGELOG describe the shipped telemetry behavior exactly", met: true}

@@ -1,6 +1,6 @@
 # Archflow for OpenCode
 
-Generated from Archflow 2.4.0 by `scripts/build-adapters.mjs`. Do not edit here.
+Generated from Archflow 2.5.0 by `scripts/build-adapters.mjs`. Do not edit here.
 
 ## Install
 

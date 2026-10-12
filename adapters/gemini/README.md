@@ -1,6 +1,6 @@
 # Archflow for Gemini CLI
 
-Generated from Archflow 2.4.0 by `scripts/build-adapters.mjs`. Do not edit here.
+Generated from Archflow 2.5.0 by `scripts/build-adapters.mjs`. Do not edit here.
 
 Gemini CLI serves Gemini Code Assist Standard/Enterprise and paid Gemini API users. Google now points individual users (free, AI Pro, AI Ultra) to its Antigravity CLI; Archflow support for Antigravity CLI is planned.
 

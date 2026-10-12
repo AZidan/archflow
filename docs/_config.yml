@@ -29,3 +29,5 @@ exclude:
   # Archflow's own per-story QA and acceptance reports — repo records, not site pages
   - qa-reports
   - acceptance-reports
+  # Archflow's own per-release notes — repo records, not site pages
+  - releases
