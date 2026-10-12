@@ -22,7 +22,8 @@ Then load the current phase: read `.archflow/current-phase.yaml` → `phase_file
 `.archflow/phases/phase-{current}-{name}.md`.
 
 ## Commands
-- `/archflow:status` — status + available commands
+- `/archflow:status` — where the project stands, and what to run next
+- `/archflow:help` — every command with a one-line usage note, and how Archflow works
 - `/archflow:init` / `/archflow:onboard` — set up a new / existing project
 - `/archflow:migrate` — upgrade a v1.0 project to schema v2.0
 - `/archflow:mode [quick|full]` — show/switch ceremony mode
@@ -37,6 +38,7 @@ Then load the current phase: read `.archflow/current-phase.yaml` → `phase_file
 - `/archflow:doctor [--validate] [--fix]` — check environment + project state; `--fix` repairs drift
   between the project and an upgraded plugin
 - `/archflow:studio [stop|status|port <n>]` — open Archflow Studio, a local web workspace (beta)
+- `/archflow:telemetry [on|off|status]` — show or change anonymous usage telemetry (on by default)
 - `/archflow:setup-mcp [tool]` — connect an external tool via MCP
 
 All commands are namespaced (`/archflow:<name>`) and live in `plugin/commands/*.md`. There is no

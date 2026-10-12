@@ -1,6 +1,6 @@
 # Archflow for OpenAI Codex
 
-Generated from Archflow 2.4.0 by `scripts/build-adapters.mjs`. Do not edit here; edit `plugin/` and rebuild.
+Generated from Archflow 2.5.0 by `scripts/build-adapters.mjs`. Do not edit here; edit `plugin/` and rebuild.
 
 ## Install
 
@@ -22,7 +22,8 @@ Node.js 18+ is required for the hooks.
 | `agents/*.md` sub-agents | `.codex/agents/*.toml` custom agents via `spawn_agent` |
 | Plugin hooks (`hooks.json`) | `.codex/hooks.json` — same events; needs the `hooks` feature (default on) |
 | `SessionStart` injects `instructions.md` | Same hook, plus an AGENTS.md instruction as a fallback |
-| `/archflow:studio` | Not available — Studio drives the `claude` binary |
+| `/archflow:studio` | `$archflow-studio` in forward mode: Studio runs no agent, its chat composes the command and you paste it into this host's session. Its server bundle goes in `.codex/archflow/server` and `.codex/archflow/dist`: `npx archflow@latest install` puts it there, or by hand copy the Archflow package's `plugin/server/` and `plugin/dist/` |
+| Telemetry: `UserPromptExpansion` names the command | `UserPromptSubmit` counts a prompt that starts with `$archflow-<cmd>` |
 | `memory: user` agent memory | Not available |
 
 The `.archflow/` state files, schemas, phases, design systems and stack profiles are identical across hosts, so a project can be worked on from both Claude Code and Codex.

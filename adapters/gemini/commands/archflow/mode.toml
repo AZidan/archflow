@@ -1,6 +1,7 @@
 # Generated from plugin/commands/mode.md — do not edit.
 description = "Show or switch ceremony mode: quick (solo, light gates) or full (team, strict gates)"
 prompt = '''
+<!-- archflow-command: mode -->
 # /archflow:mode — Show or switch the ceremony mode (quick | full)
 
 Argument (`{{args}}`): optional target mode `quick` or `full`. Empty → show the current mode.

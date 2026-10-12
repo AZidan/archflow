@@ -18,6 +18,30 @@
           "ARCHFLOW_HOST": "copilot"
         },
         "timeoutSec": 6
+      },
+      {
+        "type": "command",
+        "bash": "node .github/archflow/hooks/telemetry.mjs",
+        "cwd": ".",
+        "env": {
+          "CLAUDE_PLUGIN_ROOT": ".github/archflow",
+          "CLAUDE_PROJECT_DIR": ".",
+          "ARCHFLOW_HOST": "copilot"
+        },
+        "timeoutSec": 3
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "type": "command",
+        "bash": "node .github/archflow/hooks/telemetry.mjs --prompt",
+        "cwd": ".",
+        "env": {
+          "CLAUDE_PLUGIN_ROOT": ".github/archflow",
+          "CLAUDE_PROJECT_DIR": ".",
+          "ARCHFLOW_HOST": "copilot"
+        },
+        "timeoutSec": 3
       }
     ],
     "PreToolUse": [

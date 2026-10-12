@@ -24,7 +24,7 @@
 
 Getting AI to write code stopped being the hard part. Keeping it coherent is. Sessions end and take their context with them. The frontend drifts from the backend. Two weeks in, nobody can say what's actually finished.
 
-Archflow is a **phase-based AI development framework** for your coding agent that fixes this structurally, with 17 specialized agents working from product strategy through to production deployment. It runs on Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode, from the same files in your repo; see [Hosts](#hosts).
+Archflow is a **phase-based AI development framework** for your coding agent that fixes this structurally, with 17 specialized agents working from product strategy through to production deployment. It runs on Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI (enterprise/API) and OpenCode, from the same files in your repo; see [Hosts](#hosts).
 
 Instead of one AI doing everything, each task goes to an agent with deep expertise in its domain. A `product-strategist` defines business goals. A `ux-designer` creates the design system. An `api-contract-architect` locks down API specs. Then `ui-engineer` and `api-engineer` build frontend and backend in parallel against that same contract, so they can't quietly disagree. Handoffs happen through files, not chat, so context outlives the session that created it.
 
@@ -49,7 +49,7 @@ npx archflow install
 ```
 
 It detects the coding agents on your machine and sets Archflow up for each one: Claude Code, OpenAI
-Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode. Everything it writes lands in your repo, so
+Codex, GitHub Copilot CLI, Cursor, Gemini CLI (enterprise/API) and OpenCode. Everything it writes lands in your repo, so
 teammates get it on clone. Pass `--host codex,cursor` to choose, or `--dry-run` to see the plan first.
 
 On Claude Code the plugin marketplace works too, and is what `npx archflow install` runs for you there:
@@ -83,16 +83,21 @@ version of the installer npx has cached, and a session-start check tells you whe
 
 | Host | What you get | Sub-agents | Hooks |
 |---|---|---|---|
-| Claude Code | The plugin, via the marketplace. Studio lives here | yes | yes |
+| Claude Code | The plugin, via the marketplace. Studio's chat runs the agent in its panel | yes | yes |
 | OpenAI Codex | `.codex/` agents and `$archflow-<cmd>` skills | yes | yes |
 | GitHub Copilot CLI | `.github/` agents, skills and hooks; VS Code agent mode reads the same tree | yes | yes |
 | Cursor | `.cursor/` agents, commands, rules and hooks; also a Cursor Plugin | yes | yes |
-| Gemini CLI | An extension, installed per user | preview | yes |
+| Gemini CLI (enterprise/API) | An extension, installed per user | preview | yes |
 | OpenCode | `.opencode/` agents, commands and a plugin for hooks | yes | primary agent only |
 | Anything with `AGENTS.md` + Agent Skills | Skills only; roles run serially; the git guard is the safety net | no | no |
 
-What does not port: `/archflow:studio` drives the `claude` binary, and `memory: user` agent memory
-has no equivalent elsewhere. Each adapter's README under `adapters/<host>/` lists that host's limits.
+Google now points individual users (free, AI Pro, AI Ultra) to its Antigravity CLI; Gemini CLI serves
+Gemini Code Assist Standard/Enterprise and paid Gemini API users. Archflow support for Antigravity CLI is planned.
+
+Studio runs on every host. Off Claude Code it runs in forward mode: its chat composes the command
+and you paste it into your own terminal session, and `npx archflow@latest install` puts its bundle in
+that host's install (`@latest`: an installer npx cached before 2.5.0 brings the adapters without it). What does not port: Studio's companion mode, which forks a Claude Code session, and
+`memory: user` agent memory, which has no equivalent elsewhere. Each adapter's README under `adapters/<host>/` lists that host's limits.
 Something off on your host? [Open an issue](https://github.com/AZidan/archflow/issues).
 Contributors regenerate the adapters after changing `plugin/` with `node scripts/build-adapters.mjs`;
 CI fails on drift.
@@ -195,7 +200,7 @@ Everything lands on one branch. **Autopilot never merges to `main`, never opens 
 
 ```
 /archflow:autopilot --plan     # interview + show the queue, don't start
-/archflow:autopilot resume     # answer the parked questions, pick up where it stopped
+/archflow:autopilot resume     # answer the parked questions and build those stories, even after a run finished or was aborted
 ```
 
 ---
@@ -214,14 +219,21 @@ the same approval gates, driven from a button instead of a prompt. A project sti
 gets a one-button migration to v2.0, backup included. After the plugin install, the terminal is
 optional.
 
-**Its chat is your session, forked.** Open Studio from a running Claude Code session and its chat
-starts with that conversation's history on a branch, so you don't re-explain the project to a second
-assistant. Nothing you type in Studio lands back in your terminal. If no session context is found it
-falls back to its own `claude` process and says so.
+**Its chat runs your host, or feeds it.** On Claude Code, Studio's chat runs its own `claude`
+process; opt in with `STUDIO_MODE=companion` and it starts from your running session's history, on a
+branch, so you don't re-explain the project to a second assistant. On Codex, Copilot CLI, Cursor,
+Gemini CLI (enterprise/API), OpenCode and any `AGENTS.md` + Agent Skills agent it runs in forward mode: you compose in the panel, Studio spells the command
+the way your host expects, and you paste it into the terminal session you already have open.
+`/archflow:studio status` says which host Studio resolved and what its chat does.
 
 **Local, and only local.** Binds to `127.0.0.1` with an origin allowlist covering the WebSocket
-upgrade. No cloud service, no telemetry, no account. Your code and your Claude credentials never
-leave the machine.
+upgrade. No cloud service and no account. Your code and your Claude credentials never leave the
+machine. The coding-agent sessions Studio drives — Claude Code or any other supported host — send
+the same anonymous usage telemetry as any other session (see [What Archflow runs on your
+machine](#what-archflow-runs-on-your-machine)). Studio itself sends its own anonymous events too
+(which views are opened, by route template only, and which actions run); on a host without a native
+adapter, a command copied from Studio and pasted into that host's own session is reported by that
+host, not by Studio.
 
 The server is detached on purpose, so it outlives the session that started it and you can leave it
 open beside your work.
@@ -330,6 +342,7 @@ Every command is namespaced `/archflow:<name>`. You'll use three of them regular
 | Command | What it does |
 |---------|-------------|
 | `/archflow:status` | Current phase, active release, progress, and what to run next |
+| `/archflow:help` | Every command with a one-line usage note, and how Archflow works |
 | `/archflow:feature` | Add a story: to the backlog, or straight into the active release with a branch |
 | `/archflow:groom` | Detail or refine a story: a backlog stub into `ready`, or one already in a release with its gates re-derived |
 | `/archflow:contract` | The API contract architecture, or one story's endpoints |
@@ -344,8 +357,9 @@ Every command is namespaced `/archflow:<name>`. You'll use three of them regular
 | `/archflow:release` | Inspect and manage releases (`new`, `start`, `ship`) |
 | `/archflow:mode` | Show or switch ceremony mode (`quick` \| `full`) |
 | `/archflow:autopilot` | Build the release's queued stories unattended on one branch |
+| `/archflow:telemetry` | Show or change anonymous usage telemetry (on by default; `off` opts out) |
 
-Run `/archflow:status` any time you've lost the thread: it reports where the project stands and what's sensible to do next.
+Run `/archflow:status` any time you've lost the thread: it reports where the project stands and what's sensible to do next. Run `/archflow:help` for every command and a short primer on how Archflow works.
 
 ---
 
@@ -428,6 +442,7 @@ archflow/
 │   ├── agents/                      # 17 specialized agent definitions (the ONLY agents tree)
 │   ├── commands/                    # Slash commands (namespaced /archflow:<name>)
 │   │   ├── status.md                # /archflow:status
+│   │   ├── help.md                  # /archflow:help
 │   │   ├── init.md                  # /archflow:init
 │   │   ├── onboard.md               # /archflow:onboard
 │   │   ├── migrate.md               # /archflow:migrate
@@ -441,6 +456,7 @@ archflow/
 │   │   ├── issue.md                 # /archflow:issue
 │   │   ├── doctor.md                # /archflow:doctor
 │   │   ├── studio.md                # /archflow:studio
+│   │   ├── telemetry.md             # /archflow:telemetry
 │   │   └── setup-mcp.md             # /archflow:setup-mcp
 │   ├── scripts/migrate.py           # v1.0 → v2.0 migration engine (used by /archflow:migrate)
 │   ├── server/server.mjs            # Archflow Studio server bundle (built elsewhere, see below)
@@ -508,7 +524,7 @@ These integrations are primarily used during `/archflow:onboard` to pull existin
 
 | Tool | Why | Used by |
 |---|---|---|
-| One of the supported coding agents: Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI and OpenCode (see [Hosts](#hosts)) | Archflow runs inside it | Everything |
+| One of the supported coding agents: Claude Code, OpenAI Codex, GitHub Copilot CLI, Cursor, Gemini CLI (enterprise/API) and OpenCode (see [Hosts](#hosts)) | Archflow runs inside it | Everything |
 | Git | Branch-per-story workflow, release tags, the ship ritual | All phases |
 | Node.js 18+ | Archflow Studio and the `SessionStart` hook that ships with the plugin; some MCP servers too | Studio, hooks |
 
@@ -583,17 +599,22 @@ Archflow drives your coding agent, Claude Code or one of the other hosts, so eve
   while an unattended `/archflow:autopilot` run is live. In any other repo it exits immediately and
   changes nothing. A `Stop` hook warns when state files have drifted from their schemas. Both fail
   open, so a bug in a guard can never break your session.
+- **Anonymous usage telemetry, on by default.** On every host and in `npx archflow install`,
+  Archflow sends session starts, which Archflow commands run, and the host, project type, version,
+  phase and mode, with a random id generated on your machine. It never sends project names, file
+  paths, file contents, prompts or command arguments. The first run says so once. Turn it off with
+  `/archflow:telemetry off` (your host's spelling of it) or `npx archflow telemetry off`, or set
+  `DO_NOT_TRACK=1`. It is off in CI. Turning it off with the command sends one last event recording
+  the opt-out, and nothing after; `DO_NOT_TRACK` and CI send nothing at all. The setting lives in
+  `~/.archflow/config.json` and applies to every project and every host.
 
 External code it can install is listed under [Supply chain](#supply-chain), and nothing there
 installs without asking you first.
 
-Archflow Studio additionally needs the `claude` binary on your `PATH`, which you already have if
-Claude Code works, and a project on schema v2.0. A v1.0 project opens read-only until you take the
-one-button migration Studio offers.
-
-Archflow Studio additionally needs the `claude` binary on your `PATH`, which you already have if
-Claude Code works, and a project on schema v2.0. A v1.0 project opens read-only until you take the
-one-button migration Studio offers.
+Archflow Studio needs Node.js 18+ and a project on schema v2.0. On Claude Code its chat also needs
+the `claude` binary on your `PATH`, which you already have if Claude Code works; forward mode on the
+other hosts needs nothing more. A v1.0 project opens read-only until you take the one-button
+migration Studio offers.
 
 ---
 

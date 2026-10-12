@@ -1,11 +1,11 @@
 ---
 description: "[Beta] Start (or stop) Archflow Studio for the current project and open it in the browser"
 argument-hint: "[stop | status | port <n>]"
-allowed-tools: Bash(curl:*), Bash(lsof:*), Bash(kill:*), Bash(node:*), Bash(nohup:*), Bash(mkdir:*), Bash(cat:*), Bash(tail:*), Bash(open:*), Bash(xdg-open:*), Bash(sleep:*), Bash(nc:*), Bash(printf:*)
+allowed-tools: Bash(curl:*), Bash(lsof:*), Bash(kill:*), Bash(node:*), Bash(nohup:*), Bash(mkdir:*), Bash(cat:*), Bash(tail:*), Bash(test:*), Bash(open:*), Bash(xdg-open:*), Bash(sleep:*), Bash(nc:*), Bash(printf:*)
 disable-model-invocation: true
 ---
 
-# Archflow Studio companion
+# Archflow Studio
 
 Arguments: `$ARGUMENTS`
 
@@ -16,17 +16,24 @@ report, never a second server and never an error for work already done.
 
 Keep the conversation short: one status line per step, then the URL.
 
+Studio runs on every host Archflow supports. What its chat panel does depends on the host it
+resolves for the project; see [Hosts and chat](#hosts-and-chat). This command is the same
+everywhere: it starts, reports on and stops the server.
+
 ## Settings
 
 - `PORT` = the number after `port` in the arguments, otherwise `3456`.
 - `URL` = `http://localhost:${PORT}`
-- Server bundle: `${CLAUDE_PLUGIN_ROOT}/server/server.mjs`
-- `LOG` = `$HOME/.archflow/studio/logs/studio-${PORT}.log` — where a detached server's output
+- `BUNDLE` = `${CLAUDE_PLUGIN_ROOT}/server/server.mjs`, the server, with the web UI it serves in
+  `${CLAUDE_PLUGIN_ROOT}/dist` beside it. Both ship with this host's Archflow install.
+- `LOG` = `$HOME/.archflow/studio/logs/studio-${PORT}.log`, where a detached server's output
   goes, since a detached process cannot write to this session's terminal.
-- Session context: `${STUDIO_SESSION_CONTEXT:-$HOME/.archflow/studio/session-context.json}` —
-  written by this plugin's `SessionStart` hook. Always handed to the server, but it only matters
-  when the session has opted into companion mode. See [Companion mode](#companion-mode).
-- Project root: the current working directory of this session (`$PWD` in Bash).
+- Session context: `${STUDIO_SESSION_CONTEXT:-$HOME/.archflow/studio/session-context.json}`.
+  Always handed to the server; it only matters for companion mode on the `claude` host. See
+  [Companion mode](#companion-mode).
+- Project root: the current working directory of this session (`$PWD` in Bash). Run every command
+  below from it.
+- This host's id, `claude`: how Studio names the host this command is running in.
 
 ## The probe
 
@@ -53,6 +60,26 @@ Compare `path` to `$PWD` literally after resolving symlinks if they differ only 
 **FOREIGN is never killed.** Not by `start`, not by `stop`. Report what is there
 (`lsof -iTCP:${PORT} -sTCP:LISTEN` names the process) and suggest `/archflow:studio port <n+1>`.
 
+## The chat line
+
+`status` and `start` both report which host Studio resolved and what its chat does. Read it from
+one call:
+
+```bash
+curl -s --max-time 2 "http://127.0.0.1:${PORT}/api/chat/session"
+```
+
+- `host` — the host Studio resolved for this project.
+- `chat` — derived, never guessed:
+  - `chatPolicy.reasonCode` is `FORWARD_TO_TERMINAL` → **forward**
+  - `chatPolicy.reasonCode` is `CHAT_DISABLED` → **off**
+  - otherwise → the `mode` field: **full** or **companion**
+
+Report them as `host <host>, chat <chat>`. If `host` is not this host's id (see
+[Settings](#settings)), add one line: Studio resolved another host for this project, and the host
+picker in Studio's settings changes it (the choice is saved per project), or setting
+`STUDIO_HOST=<id>` before starting forces it for that launch.
+
 ## `stop`
 
 1. Probe.
@@ -73,10 +100,8 @@ Compare `path` to `$PWD` literally after resolving symlinks if they differ only 
    `/archflow:studio port <n+1>` would start one for this project.
 5. **FOREIGN** → `Port ${PORT} is held by another program, not Archflow Studio.`
 
-For STUDIO-HERE or STUDIO-ELSEWHERE, also run
-`curl -s --max-time 2 "http://127.0.0.1:${PORT}/api/chat/session"` and report the `mode`
-(`companion` or `full`) in the same line, so the user can see whether the handoff worked without
-opening the browser.
+For STUDIO-HERE or STUDIO-ELSEWHERE, append [the chat line](#the-chat-line) to the same report, so
+the user can see what the chat panel will do without opening the browser.
 
 ## start (no arguments, or `port <n>`)
 
@@ -89,12 +114,19 @@ opening the browser.
    - **FOREIGN** → say another program owns the port, name it, suggest `/archflow:studio port
      <n+1>`. Stop; **never kill it**.
    - **FREE** → continue.
-2. **Bundle present?** If `${CLAUDE_PLUGIN_ROOT}/server/server.mjs` does not exist, stop and tell
-   the user to run `npm run build:plugin && npm run sync:plugin` in the archflow-studio repo. Do
-   not try to build it from here.
-3. **Start it DETACHED.** Not with the Bash tool's `run_in_background`: that keeps the server a
-   child of this session, so it dies when the session does. The studio has to outlive the
-   conversation that started it — that is the whole point of a companion studio you can leave open.
+2. **Bundle present?**
+
+   ```bash
+   test -f "${CLAUDE_PLUGIN_ROOT}/server/server.mjs" && echo bundle=ok || echo bundle=missing
+   ```
+
+   If it is missing, stop and tell the user the Studio bundle did not reach this install: running
+   `npx archflow@latest install` from the project root puts it where this command looks
+   (`@latest`, because a cached older installer brings the adapters without the bundle). Do not
+   try to build or fetch it from here.
+3. **Start it DETACHED.** Not as a background task of this session: that keeps the server a child
+   of the session, so it dies when the session does. The studio has to outlive the conversation
+   that started it — that is the whole point of a studio you can leave open.
 
    ```bash
    mkdir -p "$HOME/.archflow/studio/logs"
@@ -104,8 +136,8 @@ opening the browser.
      > "$HOME/.archflow/studio/logs/studio-${PORT}.log" 2>&1 < /dev/null &
    ```
 
-   Run it as an ORDINARY foreground Bash call — it returns immediately because of the trailing `&`.
-   Each part earns its place:
+   Run it as an ORDINARY foreground shell command — it returns immediately because of the trailing
+   `&`. Each part earns its place:
 
    - `nohup` — ignores the `SIGHUP` sent when the session's terminal goes away.
    - `> "$LOG" 2>&1` — a detached process has no terminal to write to, and an inherited pipe with
@@ -113,12 +145,13 @@ opening the browser.
    - `< /dev/null` — nothing to read, so it cannot be stopped waiting on a stdin that has gone.
    - `&` — the launching shell exits immediately and the server is reparented to `init`/`launchd`.
 
-   `--session-context` hands the server this session's handoff file. For now the server starts
-   in **full** mode regardless of that file — full is the finished mode, companion is opt-in (see
-   below) — so passing it changes nothing today. It stays on the command line deliberately: it is
-   the same path the server would have guessed, stating it keeps the handoff visible, it can be
-   pointed elsewhere by setting `STUDIO_SESSION_CONTEXT` in the session, and when the default
-   flips back to companion later the change is one line in the server, not in this command.
+   The command passes no host. Studio resolves it itself, in this order: `--host` or
+   `STUDIO_HOST`, then the choice saved from Studio's host picker for this project, then detection
+   of the Archflow installs it finds (this host's install is one of them). Leaving the host off is
+   what keeps a choice made in the picker in force on the next launch.
+
+   `--session-context` hands the server the companion handoff file. It is harmless everywhere and
+   only read for companion mode; see [Companion mode](#companion-mode).
 
 4. **Wait for it.** Poll until the port answers (up to ~10 s):
 
@@ -131,32 +164,70 @@ opening the browser.
    ```
 
    If it never answers, `cat "$LOG"` and stop — that file is the only place a detached server's
-   output goes. The startup log's `[mode]` line says which mode it resolved and, when it degraded,
-   why.
+   output goes. The startup log's `[host]` line says which host it resolved and from where, and its
+   `[mode]` line says which mode it resolved and, when it degraded, why.
 
-5. **Report.** Print exactly one line: `Archflow Studio is running at ${URL}` followed by the
-   project name from `/api/project`. `mode: "full"` from `/api/chat/session` is the expected
-   answer for now. Only if the session set `STUDIO_MODE=companion` and the studio still reports
-   `full`, add the degrade reason from `tail -5 "$LOG"`'s `[mode]` line — a degrade is normal and
-   explained, not a fault to debug.
+   **Sandboxed shells.** Some hosts run commands in a sandbox (Codex's `workspace-write`, for
+   one) that can block what steps 1–4 need: writing under `$HOME/.archflow`, listening on and
+   curling `127.0.0.1`, or a detached child outliving its command. A failed `mkdir`, no log file,
+   or `bundle=ok` with a port that never answers on such a host points at the sandbox, not Studio.
+   Re-run the start and probe with the host's approval to run outside the sandbox (or with network
+   and write access granted), or give the user step 3's command, values filled in, to run in their
+   own terminal from the project root.
+
+5. **Report.** Print one line: `Archflow Studio is running at ${URL}`, the project name from
+   `/api/project`, and [the chat line](#the-chat-line). Only if the session set
+   `STUDIO_MODE=companion` and the chat is not `companion`, add the reason from `tail -5 "$LOG"`'s
+   `[mode]` line — a degrade is normal and explained, not a fault to debug.
 6. **Open it.** Ask the user whether to open it in the browser. If yes (or if the user's request
    already said "open"), run `open "${URL}"` on macOS (`xdg-open` on Linux). Mention that
    `/archflow:studio stop` shuts it down.
 
+## Hosts and chat
+
+The board, releases, stories, files and design views work the same on every host: they read the
+project's `.archflow/` files. What differs is the chat panel, which depends on the host Studio
+resolved (`host` in the chat line):
+
+| Host Studio resolved | Chat | What the panel does |
+|---|---|---|
+| `claude` | **full** (the default) | Runs its own `claude` process, unrelated to this session. Needs the `claude` binary on `PATH`. |
+| `claude`, with `STUDIO_MODE=companion` | **companion** | Runs `claude --resume <session-id> --fork-session` against the session that wrote the handoff file. See [Companion mode](#companion-mode). |
+| `codex`, `copilot`, `cursor`, `gemini`, `opencode`, `generic` | **forward** | Studio runs no agent. You compose in the panel, Studio spells the command the way that host expects, and Send copies it for you to paste into your own terminal session. No permission prompts, interrupt or session switching in the panel: the terminal owns the session. |
+| any, with `--chat-policy off` or `STUDIO_CHAT_POLICY=off` | **off** | No chat panel. Studio reports the reason rather than failing. |
+
+`--chat-policy forward` (or `STUDIO_CHAT_POLICY=forward`) puts the `claude` host in forward mode
+too, for a user who would rather paste into the session they already have than have Studio run a
+second one. Forward mode needs nothing beyond Node: no hook, no handoff file, no `claude` binary.
+
+Studio detects a host by its Archflow install: `.claude/settings.json` (or the user-level one)
+enabling the plugin for `claude`; `.codex/archflow`, `.cursor/archflow`, `.opencode/archflow` or
+`.github/archflow` in the project for `codex`, `cursor`, `opencode` and `copilot`;
+`$HOME/.gemini/extensions/archflow` for `gemini`; `.agents/archflow` for `generic`, or Archflow's
+block in `AGENTS.md` when nothing else matched. When several are installed, detection ranks them:
+the `claude` plugin enabled in the project, then the project's own `codex`, `cursor`, `opencode` or
+`copilot` install, then the `claude` plugin enabled for the user, then `gemini`, then `generic`. The
+host picker in Studio switches between the detected hosts.
+
 ## Companion mode
 
-This plugin ships a `SessionStart` hook — `hooks/studio-session-context.mjs`, registered alongside
-archflow's existing instructions hook — that writes the current session's id, transcript path and
-cwd to:
+Companion applies only when Studio's host is `claude`. On every other host there is no session for
+Studio to fork, so a companion request runs in forward mode, and Studio says so.
+
+The Archflow plugin for the `claude` host ships a `SessionStart` hook,
+`hooks/studio-session-context.mjs`, that writes the current session's id, transcript path and cwd
+to:
 
 ```
 ${STUDIO_SESSION_CONTEXT:-~/.archflow/studio/session-context.json}
 ```
 
-Step 3 hands that file to the server with `--session-context`. **Full is the mode for now:** the
-server reads the file and keeps it, but its presence does not select companion, so a fresh file
-still starts a full-mode studio whose chat spawns its own `claude`. Companion — Studio's chat
-talking to *this* session rather than an unrelated one — is **opt-in**. To get it, set
+No other host's install has that hook, so nothing else writes the file.
+
+Start hands that file to the server with `--session-context`. **Full is the default:** the server
+reads the file and keeps it, but its presence does not select companion, so a fresh file still
+starts a full-mode studio whose chat spawns its own `claude`. Companion — Studio's chat starting
+from *this* session's history rather than an unrelated one — is **opt-in**. To get it, set
 `STUDIO_MODE=companion` in the session *before* running this command:
 
 ```bash
@@ -165,8 +236,7 @@ export STUDIO_MODE=companion
 
 The server's own precedence is `--mode` flag, then `STUDIO_MODE`, then the default `full`, and
 step 3 inherits the session's environment, so the exported variable is honoured without any change
-to the command line above. Nothing here needs a new flag. The handoff file is passed either way,
-which is what makes flipping the default back to companion later a one-line change in the server.
+to the command line above.
 
 - The file is rewritten on every session start, resume, clear and compact.
 - Nothing deletes it when a session ends. The server ignores it once it is more than 12 hours old,
@@ -178,6 +248,9 @@ which is what makes flipping the default back to companion later a one-line chan
   startup line and runs in **full** mode instead. That is a degrade, never a crash — Studio still
   works, its chat just isn't wired to your terminal's session. Without the opt-in the file's state
   is irrelevant: full was chosen, nothing degraded, and the `[mode]` line names source `default`.
+- In companion mode you get this conversation's history on a **branch**: nothing you type in
+  Studio lands back in this terminal. Studio states that itself, so there is no need to warn the
+  user separately.
 
 ## Notes for you
 
@@ -186,21 +259,12 @@ which is what makes flipping the default back to companion later a one-line chan
 - **The server outlives this session, by design.** Step 3 detaches it, so ending the conversation
   — or closing the terminal — leaves Studio running. That is deliberate: a studio that vanished
   with the session could not be left open beside it. `/archflow:studio stop` is how it ends, and
-  `stop` works from any session because it kills by the pid the probe finds, not by parentage.
+  `stop` works from any session, on any host, because it kills by the pid the probe finds, not by
+  parentage.
 - A consequence worth stating rather than discovering: a studio from an EARLIER session is
   STUDIO-HERE to this one, and step 1 will adopt it silently rather than start a second. That is
-  the idempotent case working, not a stale server. In full mode its chat is its own spawned
-  `claude`; if that earlier session had opted into companion, its chat is still wired to whichever
-  session owned `session-context.json` when it started — `/api/chat/session` says which.
-- **What Studio's chat panel does depends on the mode it resolved**, and Studio reports it at
-  `/api/chat/session`:
-  - **full** (the mode for now: the default on every launch, and where companion degrades to) —
-    chat spawns its own `claude` process, unrelated to this session. Expected; no warning needed
-    unless the user asked for continuity with this conversation, in which case point them at the
-    `STUDIO_MODE=companion` opt-in above.
-  - **companion** (opt-in: `STUDIO_MODE=companion` set in the session before running this
-    command) — chat runs `claude --resume <session-id> --fork-session` against *this* session. You
-    get this conversation's history on a **branch**; nothing you type in Studio lands back in this
-    terminal. Studio states that itself, so there is no need to warn the user separately.
-  - **no chat** — with `--chat-policy off`, or `--chat-policy forward` in companion mode
-    (forwarding to your terminal is not built yet). Studio reports the reason rather than failing.
+  the idempotent case working, not a stale server. Its host and chat are the ones it resolved when
+  it started; [the chat line](#the-chat-line) says which. Stop and start it to pick up a new
+  `STUDIO_HOST`, `STUDIO_MODE` or chat policy.
+- In forward mode a command copied from Studio and pasted into this session is an ordinary prompt
+  here: run it as you would any other.

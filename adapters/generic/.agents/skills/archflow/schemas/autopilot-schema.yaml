@@ -41,8 +41,12 @@ run:
       description: >
         preflight — interview done, queue written, not started (--plan). Resumable.
         running   — the loop is live (or the session died mid-run). Resumable.
-        finished  — the run reached a stop condition and reported.
-        aborted   — the user aborted; branches and commits left intact.
+        finished  — the run reached a stop condition and reported. The ledger itself is never
+        resumed or reopened, but its still-parked stories can be picked up by
+        `resume` in a follow-on run (`resumes`).
+        aborted   — the user aborted; branches and commits left intact. Never resumed or
+        reopened and its queue is never continued, but its still-parked stories can
+        be picked up by `resume` in a follow-on run (`resumes`).
     base_branch:
       type: string
       description: "Branch the run branch was cut from — the active feature branch, else the release slug's branch."
@@ -55,6 +59,17 @@ run:
       type: string
       description: "Slug of the release the queued stories belong to."
       example: "checkout-redesign"
+    resumes:
+      type: string
+      required: false
+      pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$"
+      description: >
+        Set on a follow-on run that `$archflow-autopilot resume` started to pick up parked
+        stories left by FINISHED or ABORTED runs: the run id of its source run (`resume` rule 2:
+        the newest run whose branch it builds on, else the newest that parked a story it queues).
+        Omitted when it has none. That ledger is never reopened and keeps its status; it stays a
+        record, and this field links it.
+      example: "2026-08-24-1"
     mode_at_start:
       type: string
       enum: [quick, full]

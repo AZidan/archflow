@@ -12,6 +12,7 @@ Commands:
 - `/archflow:doctor` — Check the environment and project state — what Archflow needs, what is missing, and how to fix it
 - `/archflow:feature` — Add a story (name or description), or pull a backlog story into the active release
 - `/archflow:groom` — Detail or refine a story: acceptance criteria, subtasks, gates. Works on a backlog stub or a story already in a release
+- `/archflow:help` — Every Archflow command with a one-line usage note, and a short primer on how Archflow works
 - `/archflow:init` — Set up Archflow in a NEW, empty project — creates .archflow/ and starts at Phase 1
 - `/archflow:issue` — Record a defect against a story in the active release, list what is open, or defer a minor one to the backlog
 - `/archflow:migrate` — Upgrade a v1.0 archflow-onboarded project (sprints) to schema v2.0 (releases) — dry-run first, then apply
@@ -20,6 +21,8 @@ Commands:
 - `/archflow:release` — Release pipeline: see status, cut a new release, start building it, or ship it
 - `/archflow:setup-mcp` — Connect an external tool via MCP (Jira, Notion, Linear, GitHub, SuperDesign, ...)
 - `/archflow:status` — Where the project stands: phase, mode, active release, and what to run next
+- `/archflow:studio` — [Beta] Start (or stop) Archflow Studio for the current project and open it in the browser
+- `/archflow:telemetry` — Show or change anonymous usage telemetry (on by default; this is how to opt out)
 
 Specialised sub-agents ship with the extension (`agents/`). Phase 3 delegates to `ui-engineer` and `api-engineer` against the same API contract; if sub-agents are unavailable, run them serially in that order.
 

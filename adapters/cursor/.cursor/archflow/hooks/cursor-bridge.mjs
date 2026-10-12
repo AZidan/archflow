@@ -3,7 +3,8 @@
 // Translates Cursor hook JSON <-> the Claude-Code-shaped payloads Archflow's hook scripts expect.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { homedir } from "node:os";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const event = process.argv[2];
@@ -11,22 +12,61 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
 let input = {};
 try { input = JSON.parse(readFileSync(0, "utf8") || "{}"); } catch {}
-const cwd = input.cwd || process.cwd();
-const isArchflow = existsSync(join(cwd, ".archflow"));
+if (!input || typeof input !== "object") input = {};
+
+// Which project the event is about. Every Cursor payload carries workspace_roots; only some events
+// (beforeShellExecution among them) carry cwd, the shell's working directory, which may be a
+// subdirectory of the project. ~/.archflow is the telemetry config dir, never a project.
+const isProject = (d) => d !== homedir() && existsSync(join(d, ".archflow"));
+const inside = (d, r) => { const rel = relative(r, d); return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel)); };
+const roots = Array.isArray(input.workspace_roots)
+  ? input.workspace_roots.filter((r) => typeof r === "string" && r).map((r) => resolve(r))
+  : [];
+function projectDir() {
+  const at = typeof input.cwd === "string" && input.cwd ? resolve(input.cwd) : null;
+  if (at) {
+    // The workspace root cwd is in (the innermost, if roots nest). The walk stops there: a repo
+    // opened as the workspace is judged on its own, even when it sits inside an Archflow project.
+    const bound = roots.filter((r) => inside(at, r)).sort((a, b) => b.length - a.length)[0];
+    // 1. The nearest directory from cwd up to that root (or, outside every root, up to the
+    //    filesystem root) that is an Archflow project.
+    for (let d = at; ; d = dirname(d)) {
+      if (isProject(d)) return d;
+      if (d === bound || dirname(d) === d) break;
+    }
+    // 2. cwd inside a workspace root that is not an Archflow project: the command is about that
+    //    repo, which never opted in, so it is treated as a plain workspace.
+    if (bound) return bound;
+  }
+  // 3. No cwd, or cwd outside every root: the first Archflow root, else the first root.
+  return roots.find(isProject) || roots[0] || at || process.cwd();
+}
+const cwd = projectDir();
+const isArchflow = isProject(cwd);
 const env = { ...process.env, CLAUDE_PLUGIN_ROOT: root, CLAUDE_PROJECT_DIR: cwd, ARCHFLOW_HOST: "cursor" };
-const run = (script, payload) =>
-  spawnSync("node", [join(here, script)], { cwd, env, input: JSON.stringify(payload), encoding: "utf8", timeout: 6000 });
+const run = (script, payload, args = []) =>
+  spawnSync("node", [join(here, script), ...args], { cwd, env, input: JSON.stringify(payload), encoding: "utf8", timeout: 6000 });
 const out = (o) => { process.stdout.write(JSON.stringify(o)); process.exit(0); };
 
-if (!isArchflow) out({});
-
+// Telemetry runs in every workspace, like the Claude Code plugin; the rest only in Archflow projects.
+if (event === "beforeSubmitPrompt") {
+  // Observation only: always continue, whatever the telemetry script does.
+  run("telemetry.mjs", { prompt: input.prompt, cwd }, ["--prompt"]);
+  out({ continue: true });
+}
 if (event === "sessionStart") {
   const parts = [];
-  try { parts.push(readFileSync(join(cwd, ".archflow", "instructions.md"), "utf8")); } catch {}
-  const r = run("check-upgrade.mjs", { hook_event_name: "SessionStart", cwd });
-  if (r.stdout?.trim()) parts.push(r.stdout.trim());
+  const t = run("telemetry.mjs", { hook_event_name: "SessionStart", cwd });
+  if (t.stdout?.trim()) parts.push(t.stdout.trim());
+  if (isArchflow) {
+    try { parts.push(readFileSync(join(cwd, ".archflow", "instructions.md"), "utf8")); } catch {}
+    const r = run("check-upgrade.mjs", { hook_event_name: "SessionStart", cwd });
+    if (r.stdout?.trim()) parts.push(r.stdout.trim());
+  }
   out(parts.length ? { additional_context: parts.join("\n\n") } : {});
 }
+if (!isArchflow) out({});
+
 if (event === "beforeShellExecution") {
   const r = run("guard-git.mjs", { hook_event_name: "PreToolUse", tool_name: "Bash", tool_input: { command: input.command }, cwd });
   if (r.status === 2) {
@@ -37,7 +77,10 @@ if (event === "beforeShellExecution") {
 }
 if (event === "stop") {
   const r = run("check-state.mjs", { hook_event_name: "Stop", cwd });
-  if (r.stdout?.trim()) console.error(r.stdout.trim()); // advisory; Cursor's stop output is only for follow-ups
+  // Advisory: check-state reports drift on stderr, and anything it prints goes to our stderr too,
+  // because Cursor reads the stop hook's stdout as JSON for follow-ups.
+  const msg = [r.stderr, r.stdout].map((x) => (x || "").trim()).filter(Boolean).join("\n");
+  if (msg) console.error(msg);
   out({});
 }
 out({});

@@ -128,7 +128,7 @@ In v2.0 stories are NOT in `roadmap.yaml` (that's the story-less index). Existin
 5. User picks one:
    - **Already in the active release** → skip to Step 3 (git workflow).
    - **A backlog stub** → this is a pull-forward: promote/MOVE it into the active release, then Step 3.
-     If the stub is not yet groomed (`status: backlog`), run `.opencode/archflow/commands/groom.md` FIRST to detail it —
+     If the stub is not yet groomed (`status: backlog`), run `.opencode/commands/archflow-groom.md` FIRST to detail it —
      don't detail it inline here. A stub that is already `ready` is promotable as-is. Then MOVE the
      groomed story into the release file with `status: spec_ready` and `pulled_from: backlog`
      (`spec_ready` is set by this promotion, never by grooming). If no release is `in_progress`, tell

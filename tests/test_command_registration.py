@@ -6,7 +6,7 @@ caught a miss. These tests are that check.
 
 The surfaces are not redundant — each is read by a different audience at a different
 moment. `instructions.md` is injected into every session; `SKILL.md` is what the skill
-itself advertises; `status.md` is what a user sees when they ask what to run; the README
+itself advertises; `help.md` is what a user sees when they ask what they can run; the README
 and CLAUDE.md are what someone reads before they have a project at all.
 
 Two further surfaces are guarded elsewhere, so do not read this list as the whole set:
@@ -25,7 +25,7 @@ SURFACES = [
     (REPO / ".archflow" / "instructions.md",                       "`{name}`"),
     (REPO / "plugin" / "skills" / "archflow" / "instructions.md",  "`{name}`"),
     (REPO / "plugin" / "skills" / "archflow" / "SKILL.md",         "/archflow:{name}"),
-    (REPO / "plugin" / "commands" / "status.md",                   "/archflow:{name}"),
+    (REPO / "plugin" / "commands" / "help.md",                     "/archflow:{name}"),
     (REPO / "CLAUDE.md",                                           "/archflow:{name}"),
     (REPO / "README.md",                                           "/archflow:{name}"),
 ]
@@ -64,6 +64,63 @@ def test_no_surface_lists_a_command_that_does_not_exist():
             if found not in names and found != "archflow":
                 stale.append(f"{path.relative_to(REPO)} lists /archflow:{found}, which has no command file")
     assert not stale, "\n".join(stale)
+
+
+def help_command_list():
+    """The commands /archflow:help prints: the `/archflow:<name>` at the start of each line in
+    its fenced command block. Line-anchored, so the usage notes and the primer's own mentions
+    do not count; a command is listed only when it has its own line."""
+    import re
+    body = (COMMANDS / "help.md").read_text()
+    section = body[body.index("## Commands"):body.index("## How Archflow works")]
+    block = section[section.index("```"):section.rindex("```")]
+    return re.findall(r"^\s+/archflow:([a-z][a-z-]*)\s", block, re.M)
+
+
+def test_help_lists_exactly_the_shipped_commands():
+    """/archflow:help is the command reference. Exactly one line per command file: none missing,
+    none stale, none listed twice, so the list cannot drift from plugin/commands/."""
+    listed = help_command_list()
+    assert sorted(listed) == sorted(set(listed)), f"help lists a command twice: {listed}"
+    assert set(listed) == set(shipped()), (
+        f"help.md and plugin/commands/ disagree. "
+        f"Missing from help: {sorted(set(shipped()) - set(listed))}. "
+        f"In help with no command file: {sorted(set(listed) - set(shipped()))}."
+    )
+
+
+def test_help_explains_how_archflow_works():
+    body = (COMMANDS / "help.md").read_text()
+    primer = body[body.index("## How Archflow works"):]
+    for concept in ("Phases", "Releases", "backlog", "spec_ready", "done", "approve", "quick", "full"):
+        assert concept in primer, f"the help primer does not cover {concept!r}"
+
+
+HELP_POINTER = "All commands, and how Archflow works: /archflow:help"
+
+
+def test_status_drops_the_command_list_and_points_at_help():
+    """Status answers "where am I"; help answers "what can I do". Status keeps only the commands
+    it suggests as a next step, so it never carries a second copy of the list, whole or partial.
+    The checks are structural (code block, bullet, numbered or table item starting with a command),
+    not a count, so naming one more command in prose is not a failure."""
+    import re
+    body = (COMMANDS / "status.md").read_text()
+    assert "Available commands" not in body
+    fences = re.findall(r"^```[^\n]*\n(.*?)^```", body, re.M | re.S)
+    listed = [line for block in fences for line in block.splitlines()
+              if re.match(r"\s*/archflow:[a-z]", line)]
+    assert not listed, f"status.md has a command list in a code block (help.md owns it): {listed}"
+    bullets = re.findall(r"^\s*(?:[-*]|\d+\.)\s+`?/archflow:([a-z][a-z-]*)", body, re.M)
+    assert not bullets, f"status.md has a bulleted command list (help.md owns it): {bullets}"
+    rows = re.findall(r"^\s*\|\s*`?/archflow:([a-z][a-z-]*)", body, re.M)
+    assert not rows, f"status.md has a command table (help.md owns it): {rows}"
+    assert fences and fences[-1].strip() == HELP_POINTER, (
+        "status.md must close with the pointer to /archflow:help as its last code block"
+    )
+    assert not body[body.rindex(HELP_POINTER):].split("```", 1)[1].strip(), (
+        "nothing may follow the /archflow:help pointer in status.md"
+    )
 
 
 def test_every_command_has_a_description():

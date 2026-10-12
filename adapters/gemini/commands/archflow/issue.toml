@@ -1,6 +1,7 @@
 # Generated from plugin/commands/issue.md — do not edit.
 description = "Record a defect against a story in the active release, list what is open, or defer a minor one to the backlog"
 prompt = '''
+<!-- archflow-command: issue -->
 # /archflow:issue — Review findings a human found
 
 `qa-engineer`, `pm-reviewer` and the `story_review` agents write their findings into a story's

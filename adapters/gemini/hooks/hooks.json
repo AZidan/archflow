@@ -22,6 +22,29 @@
             "timeout": 6000
           }
         ]
+      },
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "name": "archflow-telemetry",
+            "type": "command",
+            "command": "CLAUDE_PLUGIN_ROOT=\"${extensionPath}\" CLAUDE_PROJECT_DIR=\"${workspacePath}\" ARCHFLOW_HOST=gemini node \"${extensionPath}/hooks/telemetry.mjs\"",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "BeforeAgent": [
+      {
+        "hooks": [
+          {
+            "name": "archflow-telemetry-command",
+            "type": "command",
+            "command": "CLAUDE_PLUGIN_ROOT=\"${extensionPath}\" CLAUDE_PROJECT_DIR=\"${workspacePath}\" ARCHFLOW_HOST=gemini node \"${extensionPath}/hooks/telemetry.mjs\" --prompt; printf '{}'",
+            "timeout": 3000
+          }
+        ]
       }
     ],
     "BeforeTool": [

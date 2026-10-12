@@ -1,0 +1,94 @@
+# Backfilled at onboarding (2026-09-23) from CHANGELOG.md and git tags.
+id: v2-4
+name: "2.4 Multi-host distribution"
+goal: "Run Archflow on hosts beyond Claude Code with a one-command installer. Includes the post-2.4.0 site work deployed from main."
+status: released
+version: v2.4.0
+released_at: "2026-09-12"
+stories:
+  - id: S7-01
+    title: "Generated host adapters"
+    priority: Critical
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: devops-engineer
+    description: "scripts/build-adapters.mjs generates host-native packages for Codex, Copilot CLI, Cursor, Gemini CLI, OpenCode and a generic AGENTS.md package; CI fails on drift."
+    acceptance_criteria:
+      - {text: "Adapters generated into adapters/<host>/ with a README each", met: true}
+      - {text: "build-adapters.mjs --check fails CI on drift", met: true}
+    subtasks:
+      - {text: "Write build-adapters.mjs", completed: true}
+      - {text: "Add CI drift check", completed: true}
+  - id: S7-02
+    title: "npx archflow install"
+    priority: Critical
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: devops-engineer
+    description: "npm package archflow (alias archflowai) detects hosts, copies adapters, merges AGENTS.md markers and host configs, installs the git guard; fetches adapters from the latest GitHub release with --dry-run, --version and --bundled."
+    acceptance_criteria:
+      - {text: "Installer never deletes a user's file and re-running upgrades in place", met: true}
+      - {text: "--dry-run shows the plan", met: true}
+      - {text: "Release workflow attaches the packed installer and checks package.json against the tag", met: true}
+    subtasks:
+      - {text: "Write scripts/archflow.mjs", completed: true}
+      - {text: "Publish archflow and archflowai packages", completed: true}
+  - id: S7-03
+    title: "Newer-release session-start notice"
+    priority: Medium
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "Upgrade hook compares installed version with a daily-refreshed cache of the latest release tag; off with update_check: false."
+    acceptance_criteria:
+      - {text: "Network check runs detached at most once a day", met: true}
+      - {text: "update_check: false disables it", met: true}
+    subtasks:
+      - {text: "Extend upgrade hook", completed: true}
+  - id: S8-04
+    title: "git pre-push guard"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "archflow-pre-push.sh gives hosts without PreToolUse the same main protection; doctor --fix offers to install it, chaining existing hooks."
+    acceptance_criteria:
+      - {text: "No force-push to main/master and no push to main during a live autopilot run", met: true}
+      - {text: "Existing pre-push hooks are chained", met: true}
+    subtasks:
+      - {text: "Write pre-push script", completed: true}
+      - {text: "Add doctor --fix step", completed: true}
+  - id: S2-04
+    title: "init/onboard write AGENTS.md section"
+    priority: Medium
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "init and onboard write the Archflow section to AGENTS.md as well as CLAUDE.md, between archflow:start/end markers."
+    acceptance_criteria:
+      - {text: "AGENTS.md section written between markers", met: true}
+      - {text: "Re-running replaces only the marked block", met: true}
+    subtasks:
+      - {text: "Update init and onboard", completed: true}
+  - id: S9-02
+    title: "Compare pages: BMAD and gstack"
+    priority: Medium
+    status: done
+    gates: {needs_design: true, needs_contract: false}
+    assigned: doc-writer
+    description: "Site compare pages Archflow vs BMAD and Archflow vs gstack. Shipped on main after the 2.4.0 tag."
+    acceptance_criteria:
+      - {text: "Both compare pages published on the site", met: true}
+    subtasks:
+      - {text: "Write compare pages", completed: true}
+  - id: S9-03
+    title: "Daily traffic-metrics workflow"
+    priority: Low
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: devops-engineer
+    description: "GitHub Actions workflow that snapshots repository traffic daily into metrics/. Shipped on main after the 2.4.0 tag."
+    acceptance_criteria:
+      - {text: "traffic-metrics.yml commits a daily snapshot to metrics/", met: true}
+    subtasks:
+      - {text: "Write traffic-metrics workflow", completed: true}

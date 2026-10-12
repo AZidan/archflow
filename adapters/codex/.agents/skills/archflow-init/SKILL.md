@@ -59,7 +59,7 @@ Archflow is already initialized in this project.
 Current phase: [N] ([Phase Name])
 Project type: [type]
 
-Run $archflow-status to see available commands.
+Run $archflow-status to see what to run next, or $archflow-help for every command.
 ```
 Done — exit the command.
 
@@ -84,7 +84,7 @@ For existing codebases, use the full onboarding wizard which analyzes
 your code, imports context from external tools, and determines the
 correct development phase.
 ```
-Then load and follow `.codex/archflow/commands/onboard.md`.
+Then load and follow `.agents/skills/archflow-onboard/SKILL.md`.
 
 ---
 
@@ -251,7 +251,7 @@ Skip this step entirely if the user says the project has no UI (a library, a CLI
 service). Write no `design-system.yaml` in that case.
 
 1. **Ask the platform**, then run the picker. Both live in one place: read
-   `.codex/archflow/commands/design.md` and follow **Step 3 — `pick`** inline. It asks the
+   `.agents/skills/archflow-design/SKILL.md` and follow **Step 3 — `pick`** inline. It asks the
    platform, filters `.archflow/design-systems/*.md` by that platform's compatibility (frontmatter
    `platforms` map — a hard gate, so e.g. Liquid Glass is never offered for a web target), shows
    each surviving file's section 1 as the option text, always offers
@@ -293,7 +293,8 @@ This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based
   `.archflow/design-systems/{design_system}.md` before producing any UI output
 
 Commands:
-- `$archflow-status` — Show status and available commands
+- `$archflow-status` — Show where the project stands and what to run next
+- `$archflow-help` — Every command, and how Archflow works
 - `$archflow-feature` — Start a new feature from the roadmap
 - `$archflow-design` — Show or change the project's design system
 ```
@@ -311,7 +312,8 @@ This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based
   `.archflow/design-systems/{design_system}.md` before producing any UI output
 
 Commands:
-- `$archflow-status` — Show status and available commands
+- `$archflow-status` — Show where the project stands and what to run next
+- `$archflow-help` — Every command, and how Archflow works
 - `$archflow-feature` — Start a new feature from the roadmap
 - `$archflow-design` — Show or change the project's design system
 ```

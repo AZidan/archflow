@@ -1,0 +1,208 @@
+# Backfilled at onboarding (2026-09-23) from CHANGELOG.md and git tags.
+id: v2-3
+name: "2.3 Hardening and quality gates"
+goal: "Security hardening, schema v2.1, review findings as state, stack-agnostic agents, and a context budget."
+status: released
+version: v2.3.2
+released_at: "2026-09-10"
+stories:
+  - id: S8-01
+    title: "Security hardening and SECURITY.md"
+    priority: Critical
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: devops-engineer
+    description: "Moved test accounts to gitignored .archflow/test-accounts.yaml, removed a hardcoded home path and another project's credentials, pinned codemap and superdesign installs, added SECURITY.md."
+    acceptance_criteria:
+      - {text: "No credentials or absolute home paths in shipped files", met: true}
+      - {text: "External installs pinned to a tag or commit", met: true}
+      - {text: "SECURITY.md covers pinning, untrusted content, shell surface and reporting", met: true}
+    subtasks:
+      - {text: "Add test-accounts.example.yaml", completed: true}
+      - {text: "Pin codemap and superdesign", completed: true}
+      - {text: "Write SECURITY.md", completed: true}
+  - id: S8-02
+    title: "Untrusted external content fencing"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "Onboarding imports from Jira, Notion, Confluence, GitHub, Drive, Slack, Trello and URLs are wrapped in <untrusted_external_content> and treated as data."
+    acceptance_criteria:
+      - {text: "Imported text is fenced in untrusted_external_content delimiters", met: true}
+      - {text: "Directives found inside are surfaced, not acted on", met: true}
+    subtasks:
+      - {text: "Fence imports in onboarding phase file", completed: true}
+      - {text: "State the rule in consuming prompts", completed: true}
+  - id: S8-03
+    title: "Guard hooks"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "PreToolUse hook blocks force-push to main and main-touching git ops while autopilot runs; Stop hook warns on schema drift. Both scoped to Archflow projects and fail open."
+    acceptance_criteria:
+      - {text: "Force-push to main is blocked in an Archflow project", met: true}
+      - {text: "Hooks exit immediately outside Archflow projects", met: true}
+      - {text: "Hooks fail open on error", met: true}
+    subtasks:
+      - {text: "Write guard-git.mjs", completed: true}
+      - {text: "Write schema-drift Stop hook", completed: true}
+  - id: S1-05
+    title: "Schema v2.1: cursor / settings split"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "project_type, stack, api_contract_path and optional_agents moved from current-phase.yaml into project-settings.yaml; mode stays in the cursor. Breaking change."
+    acceptance_criteria:
+      - {text: "project-settings-schema.yaml exists and owns the moved keys", met: true}
+      - {text: "/archflow:doctor --fix walks the user through the split", met: true}
+    subtasks:
+      - {text: "Write project-settings-schema.yaml", completed: true}
+      - {text: "Update readers of the moved keys", completed: true}
+  - id: S3-01
+    title: "issues[] review findings and /archflow:issue"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "Review findings are story state (ADR 004). Validator enforces: no done story with an open blocking issue; deferred requires deferred_to. /archflow:issue records, lists and defers."
+    acceptance_criteria:
+      - {text: "qa-engineer and pm-reviewer write issues[] into the release file", met: true}
+      - {text: "Validator rejects done-with-open-blocking and deferred-without-target", met: true}
+      - {text: "Only a human can defer via /archflow:issue", met: true}
+    subtasks:
+      - {text: "Add issue shape to release schema", completed: true}
+      - {text: "Write /archflow:issue", completed: true}
+      - {text: "Add validator invariants", completed: true}
+  - id: S3-02
+    title: "optional_agents with four hook points"
+    priority: Medium
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "Per-project setting for which non-core agents run automatically at design, story_review, release_quality and pre_ship."
+    acceptance_criteria:
+      - {text: "optional_agents asked at init/onboard and reported by doctor", met: true}
+      - {text: "Autopilot runs the story_review hook", met: true}
+    subtasks:
+      - {text: "Add optional_agents to settings schema", completed: true}
+      - {text: "Wire hook points into phase files", completed: true}
+  - id: S2-03
+    title: "/archflow:contract and /archflow:design {story-id}"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "Verbs for contract architecture and per-story endpoint specs, and per-story screen design; contract_endpoints pointer on stories (ADR 002)."
+    acceptance_criteria:
+      - {text: "/archflow:contract {story-id} clears needs_contract and writes contract_endpoints", met: true}
+      - {text: "/archflow:design {story-id} clears needs_design", met: true}
+    subtasks:
+      - {text: "Write contract and design commands", completed: true}
+      - {text: "Add contract_endpoints to release schema", completed: true}
+  - id: S4-02
+    title: "/archflow:doctor"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "Checks tooling, e2e tooling, project state and repo hygiene; --validate runs schema validation. Reports only."
+    acceptance_criteria:
+      - {text: "doctor reports without editing state", met: true}
+      - {text: "--validate runs validate_archflow.py", met: true}
+    subtasks:
+      - {text: "Write doctor command", completed: true}
+  - id: S3-03
+    title: "Design systems with enforced anti-patterns"
+    priority: Medium
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "shadcn, Material 3, Fluent 2, Liquid Glass and custom tokens, each with a component vocabulary, scales, rules and anti-patterns enforced by qa-engineer and code-reviewer."
+    acceptance_criteria:
+      - {text: "Five design systems ship under design-systems/", met: true}
+      - {text: "qa-engineer and code-reviewer treat anti-patterns as blocking", met: true}
+    subtasks:
+      - {text: "Author design-system files", completed: true}
+      - {text: "Wire gates into qa and review agents", completed: true}
+  - id: S3-04
+    title: "Stack profiles and technology-agnostic agents"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "stacks/*.yaml profiles; every agent reads stack: and works in what it names. A null field is a question, never a default. Breaking change."
+    acceptance_criteria:
+      - {text: "No agent hardcodes a stack", met: true}
+      - {text: "A null stack field makes the agent ask", met: true}
+    subtasks:
+      - {text: "Write stack profiles", completed: true}
+      - {text: "Rewrite ten stack-specific agents", completed: true}
+  - id: S3-05
+    title: "pm-reviewer replaces the Maestro-only acceptance agent"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "Acceptance agent is tool-agnostic, discovers the project's e2e tooling, never installs one, and adds a BLOCKED verdict. Breaking change."
+    acceptance_criteria:
+      - {text: "pm-reviewer uses the project's existing e2e tooling", met: true}
+      - {text: "BLOCKED verdict halts the story", met: true}
+    subtasks:
+      - {text: "Rename and rewrite the agent", completed: true}
+      - {text: "doctor --fix renames old references", completed: true}
+  - id: S10-01
+    title: "Schema validator and CI"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: devops-engineer
+    description: "validate_archflow.py (PyYAML only), current-phase-schema.yaml, and CI with YAML/frontmatter parsing, a mirror check, a validator self-check and 60 tests."
+    acceptance_criteria:
+      - {text: "validate_archflow.py validates every state file against its schema", met: true}
+      - {text: "CI fails when mirrored framework files diverge", met: true}
+    subtasks:
+      - {text: "Write validator", completed: true}
+      - {text: "Add CI workflow and tests", completed: true}
+  - id: S10-02
+    title: "Context budget"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "instructions.md split into core and reference (~81% cut), agent descriptions compressed (13.5k -> 3.7k chars), onboarding split into a router plus per-stage sections."
+    acceptance_criteria:
+      - {text: "A test enforces the instructions.md core token budget", met: true}
+      - {text: "A test asserts every agent, command and rule is findable in core or reference", met: true}
+    subtasks:
+      - {text: "Split instructions.md", completed: true}
+      - {text: "Rewrite agent descriptions", completed: true}
+      - {text: "Split onboarding", completed: true}
+  - id: S4-03
+    title: "doctor --fix completes the stack"
+    priority: Medium
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "doctor --fix detects the stack from manifests and lockfiles and fills null stack fields after showing the diff; stack-detection.md is the single definition."
+    acceptance_criteria:
+      - {text: "Null stack fields are filled only with values the repo evidences", met: true}
+      - {text: "A set field that disagrees is asked, never overwritten", met: true}
+    subtasks:
+      - {text: "Write stack-detection.md", completed: true}
+      - {text: "Add stack repair to doctor --fix", completed: true}
+  - id: S4-04
+    title: "doctor --fix refreshes stale framework files"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "doctor --fix compares content of shipped framework files and refreshes what is behind, backing up originals; user-authored files and post-upgrade edits are left alone."
+    acceptance_criteria:
+      - {text: "Stale framework files are refreshed with a backup", met: true}
+      - {text: "Files the plugin does not ship are never touched", met: true}
+    subtasks:
+      - {text: "Content comparison in upgrade_archflow.py", completed: true}
+      - {text: "Test the shipped-file list", completed: true}

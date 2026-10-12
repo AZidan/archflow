@@ -1,0 +1,189 @@
+# Unscheduled scope as stubs. Proposed items (from onboarding review) are marked (proposed).
+epics:
+  - id: E1
+    stories:
+      - id: S1-06
+        title: "Fold design-system.yaml into project settings"
+        priority: Low
+        status: backlog
+        target: settings
+        description: "Move .archflow/design-system.yaml into project-settings.yaml (deferred in 2.3.0: 88 refs across 35 files)."
+      - id: S1-07
+        title: "Growth-signal detection offering full mode"
+        priority: Medium
+        status: backlog
+        target: modes
+        description: "Offer full mode on a second release, second contributor or size threshold; verify it works end to end."
+  - id: E2
+    stories:
+      - id: S2-05
+        title: "Contract foundation mode and autopilot design/contract calls"
+        priority: Medium
+        status: backlog
+        target: contract
+        description: "/archflow:contract creates the architecture section when absent; decide whether autopilot calls the design/contract commands (ADR 002 open questions)."
+  - id: E3
+    stories:
+      - id: S3-06
+        title: "OpenAPI 3.1 contract-format ADR and contract schema"
+        priority: Medium
+        status: backlog
+        target: contract
+        description: "Write the ADR 002 carve-out ADR and add a contract schema to .archflow/schemas/."
+      - id: S3-07
+        title: "Release-level issues and tombstone pruning"
+        priority: Low
+        status: backlog
+        description: "Release-level issues[] for performance-optimizer findings; pruning policy for deferred-issue tombstones (ADR 004 open questions)."
+      - id: S3-08
+        title: "Token/cost reporting per story and autopilot run"
+        priority: Low
+        status: backlog
+        description: "Report token and cost per story and per autopilot run (proposed)."
+  - id: E4
+    stories:
+      - id: S4-05
+        title: "init writes api_contract_path"
+        priority: Medium
+        status: backlog
+        target: contract
+        description: "init writes api_contract_path to project settings (AF-39, ADR 002)."
+      - id: S4-06
+        title: "Onboard benchmark suite"
+        priority: Medium
+        status: backlog
+        description: "Fixture repos (brownfield, prototype, monorepo) scoring reconciliation accuracy and gap-report precision in CI (proposed)."
+  - id: E5
+    stories:
+      - id: S5-03
+        title: "A fresh autopilot run respects parked stories on other run branches"
+        priority: Medium
+        status: backlog
+        target: autopilot
+        description: "Deferred from S5-02 I-47: /archflow:autopilot started on base_branch after a run re-queues that run's parked story as ready (its park lives only on the unmerged run branch) and rebuilds it beside its WIP branch. Step 1 should point at the run branch, as resume and status do."
+  - id: E6
+    stories:
+      - id: S6-02
+        title: "Studio beta to GA"
+        priority: High
+        status: backlog
+        target: studio
+        description: "Close user-reported gaps; retire natural-language workarounds now that design/contract verbs exist."
+      - id: S6-03
+        title: "Optional Studio install"
+        priority: Medium
+        status: backlog
+        target: studio
+        description: "Split the ~5.6 MB Studio bundle out of the default plugin and fetch it on first /archflow:studio (proposed)."
+  - id: E7
+    stories:
+      - id: S7-06
+        title: "Reconcile ADR 001 with generated adapters"
+        priority: Medium
+        status: backlog
+        target: host-parity
+        description: "Mark ADR 001 superseded or schedule role-contract thin bindings (roles/<role>.md)."
+      - id: S7-07
+        title: "Agent Plugins 1.0 layout"
+        priority: Medium
+        status: backlog
+        target: host-parity
+        description: "plugin.json + mcp.json generated from mcp-registry.yaml (ADR 001 decision 2)."
+      - id: S7-08
+        title: "Host capability probe with reduced-mode declaration"
+        priority: Medium
+        status: backlog
+        target: host-parity
+        description: "Probe host capabilities and declare reduced mode explicitly (ADR 001 step 3)."
+      - id: S7-09
+        title: "Track upstream host limits"
+        priority: Low
+        status: backlog
+        target: host-parity
+        description: "Follow OpenCode subagent hooks (#5894) and Gemini subagents preview; adopt when available."
+      - id: S7-10
+        title: "Spec Kit / BMAD import in onboard"
+        priority: Low
+        status: backlog
+        description: "Onboard reads existing constitution/spec/PRD files into project-context and backlog (proposed)."
+      - id: S7-11
+        title: "Antigravity CLI host adapter"
+        priority: High
+        status: backlog
+        target: adapters
+        description: "Google moved individual Gemini CLI users to Antigravity CLI (agy) on 2026-06-18; Gemini CLI now serves enterprise/API users only. Add an agy adapter: plugins (agy plugin install / /plugin install, the rebrand of Gemini extensions), its command/hook format and paths, installer support incl. the Studio bundle, and a check of `agy plugin import gemini` on an existing Archflow Gemini extension. Test against the real agy. FINDING (user, 2026-10-11): `agy plugin import gemini` imported the Archflow Gemini extension fine, and /archflow:help ran in agy and correctly explained how to create a story (commands work after import) — first decide whether a documented import path is enough (still verify hooks, telemetry host id and the Studio bundle survive the import) before building a separate adapter. MORE FINDINGS (2026-10-11): (a) agy turns each command into a skill with an UNQUOTED YAML description, so groom, mode, release, status (\": \" in the description) and studio (leading \"[Beta]\") fail to parse and are not registered (cli.log: Failed to parse skill file); fix by rewording those descriptions. (b) agy hard-codes absolute paths into the imported hooks: the instructions hook cats THIS repo\x27s .archflow/instructions.md, CLAUDE_PROJECT_DIR is fixed to the import-time project, and ARCHFLOW_HOST=gemini — so in other projects agy injects the wrong instructions and telemetry reports the wrong project and host. A documented import alone is not enough."
+      - id: S7-12
+        title: "Gemini installer: survive Ctrl-C during an upgrade"
+        priority: Low
+        status: backlog
+        target: installer
+        description: "Deferred from S6-04 I-8 (user downgraded to minor): Ctrl-C at a Gemini prompt during an upgrade kills the installer after it moves the extension to ~/.gemini/archflow-extension.previous and before the restore; a re-run and accept recovers, but the .previous copy (~4.8 MB) is never removed. Restore on SIGINT and clean up a leftover .previous on the next run."
+  - id: E8
+    stories:
+      - id: S8-08
+        title: "Activation funnel instrumentation"
+        priority: Medium
+        status: backlog
+        target: telemetry
+        description: "install -> first command -> onboard completed -> first story accepted -> release shipped, within the agreed allow-list (proposed; policy decided in S8-07: opt-out)."
+      - id: S8-09
+        title: "Enterprise controls"
+        priority: Low
+        status: backlog
+        target: telemetry
+        description: "Central telemetry disable and a policy file for allowed hosts/MCP servers (proposed)."
+      - id: S8-10
+        title: "Say in SECURITY.md that Copilot's direct-plugin path sends telemetry without showing the notice"
+        priority: Low
+        status: backlog
+        target: telemetry
+        description: "Deferred from S8-05 I-9 at the 2.5.0 ship: when Copilot loads the Claude plugin directly, session_start events are sent every session but the first-run notice is never shown on that path (plugin/hooks/telemetry.mjs:125). Either show the notice there or state it in SECURITY.md."
+  - id: E9
+    stories:
+      - id: S9-05
+        title: "Publish telemetry page on the site"
+        priority: High
+        status: backlog
+        target: telemetry
+        description: "archflowai.dev/telemetry: field/event allow-list and how to opt out (ADR 003 implementation order)."
+      - id: S9-06
+        title: "CHANGELOG hygiene"
+        priority: Medium
+        status: backlog
+        target: docs-hygiene
+        description: "Fix stack location text (project-settings.yaml), add compare links 2.3.1-2.4.0, point Unreleased at 2.4.0."
+      - id: S9-07
+        title: "README hygiene"
+        priority: Medium
+        status: backlog
+        target: docs-hygiene
+        description: "Remove duplicated Studio-requirements paragraph, fix mcp-registry path, commands-table paren, '10 files' vs 'eight phase files'."
+      - id: S9-08
+        title: "Compare pages vs Spec Kit and Kiro, brownfield showcase"
+        priority: Low
+        status: backlog
+        description: "Compare pages vs GitHub Spec Kit and Kiro; public before/after onboard showcase on real OSS repos (proposed)."
+      - id: S9-09
+        title: "Point individual Gemini users to Antigravity on the site and Studio guide"
+        priority: Low
+        status: backlog
+        target: site
+        description: "Deferred from S6-04 I-9: only the README and the Gemini adapter README tell individual Google users (free, AI Pro, AI Ultra) that Gemini CLI moved them to Antigravity CLI and that Archflow support is planned; the site, the Studio guide and the CHANGELOG only say '(enterprise/API)'. Marketing-copy decision; pairs with S7-11."
+      - id: S9-10
+        title: "Drop the total agent count from the homepage"
+        priority: Low
+        status: backlog
+        target: site
+        description: "Deferred from S9-04 I-2 at the 2.5.0 ship: docs/index.html:405 says '17 specialized agents', which marketing guardrail 6 forbids (no total agent counts)."
+  - id: E10
+    stories:
+      - id: S10-03
+        title: "Studio sync provenance check"
+        priority: Low
+        status: backlog
+        description: "CI check that plugin/dist and plugin/server match a tagged archflow-studio commit (proposed)."
+      - id: S10-04
+        title: "ADR hygiene"
+        priority: Low
+        status: backlog
+        description: "ADR index with statuses, renumbering rule, and a test flagging stale Proposed ADRs (proposed)."

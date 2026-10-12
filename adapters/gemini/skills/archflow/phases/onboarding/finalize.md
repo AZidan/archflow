@@ -90,12 +90,12 @@ status: "onboarded"
 ```
 
 2. **Copy workflow.md, phases, schemas and design-systems into the project's `.archflow/`:**
-   - Copy `~/.gemini/extensions/archflow/skills/archflow/workflow.md` → `.archflow/workflow.md`
-   - Copy `~/.gemini/extensions/archflow/skills/archflow/phases/` → `.archflow/phases/` (skip files that already exist)
-   - Copy `~/.gemini/extensions/archflow/skills/archflow/schemas/` → `.archflow/schemas/` (skip files that already exist)
-   - Copy `~/.gemini/extensions/archflow/skills/archflow/design-systems/` → `.archflow/design-systems/` (skip files that already exist; skip the whole directory for `backend_only`)
-   - Copy `~/.gemini/extensions/archflow/skills/archflow/stacks/` → `.archflow/stacks/` (skip files that already exist)
-   - Copy `~/.gemini/extensions/archflow/skills/archflow/test-accounts.example.yaml` → `.archflow/` (skip if present)
+   - Copy `$HOME/.gemini/extensions/archflow/skills/archflow/workflow.md` → `.archflow/workflow.md`
+   - Copy `$HOME/.gemini/extensions/archflow/skills/archflow/phases/` → `.archflow/phases/` (skip files that already exist)
+   - Copy `$HOME/.gemini/extensions/archflow/skills/archflow/schemas/` → `.archflow/schemas/` (skip files that already exist)
+   - Copy `$HOME/.gemini/extensions/archflow/skills/archflow/design-systems/` → `.archflow/design-systems/` (skip files that already exist; skip the whole directory for `backend_only`)
+   - Copy `$HOME/.gemini/extensions/archflow/skills/archflow/stacks/` → `.archflow/stacks/` (skip files that already exist)
+   - Copy `$HOME/.gemini/extensions/archflow/skills/archflow/test-accounts.example.yaml` → `.archflow/` (skip if present)
    - These files define the git branching strategy, the canonical formats and the design-system references. They MUST be in the project repo so Phase 3+ agents can read them from the repo context regardless of plugin cache state.
 
 2a2. **Ask about optional review steps** and write `optional_agents` into `project-settings.yaml`.
@@ -153,7 +153,8 @@ This project uses the [Archflow](https://github.com/AZidan/archflow) phase-based
   `.archflow/design-systems/{design_system}.md` before producing any UI output
 
 Commands:
-- `/archflow:status` — Show status and available commands
+- `/archflow:status` — Show where the project stands and what to run next
+- `/archflow:help` — Every command, and how Archflow works
 - `/archflow:feature` — Start a new feature from the roadmap
 ```
 

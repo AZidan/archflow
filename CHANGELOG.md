@@ -12,6 +12,110 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 Nothing yet.
 
+## [2.5.0] — 2026-10-13
+
+### Added
+
+- Anonymous usage telemetry, on by default (opt-out), on every host. Archflow previously sent
+  nothing; `SECURITY.md` now documents what is sent and how to turn it off, and ADR 005 records the
+  decision. Sessions send `session_start` and
+  Archflow commands send `command_run` with the command name only; `npx archflow install` sends
+  `cli_install`. Session and command events carry host, entrypoint, Studio, project type,
+  version, phase and mode; `cli_install` carries the version, the installed hosts and the install
+  source. None carries
+  project names, paths, contents, prompts or arguments (full list in `SECURITY.md`). A one-time notice announces it.
+- How commands are detected: Claude Code's `UserPromptExpansion` hook and OpenCode's
+  `command.executed` event name the command directly. Codex, Copilot, Cursor and Gemini read the
+  prompt locally and count it only when it starts with an Archflow command. The generic
+  AGENTS.md package reports session starts only, when the agent runs the script AGENTS.md names.
+- `/archflow:telemetry [on|off|status]` and `npx archflow telemetry [on|off|status]` to opt out, on every host.
+  Opting out sends one final `telemetry_opted_out` event and nothing after; opting back in sends
+  `telemetry_opted_in`. `DO_NOT_TRACK`, `CI` and `ARCHFLOW_TELEMETRY_DISABLED` also turn it off,
+  and send nothing. The choice is stored in `~/.archflow/config.json` and applies to every project
+  on the machine. With no argument it shows the setting and since when: the last time it was
+  turned on or off, else when the notice was shown. If the choice cannot be saved, nothing is
+  changed or sent and the command says so.
+- `scripts/build-adapters.mjs` copies the hook runtime through one helper, so a new hook is one
+  entry in `HOOK_SCRIPTS` rather than an edit per host.
+- **Archflow Studio on every host.** `/archflow:studio` now ships in every adapter: OpenAI Codex
+  (`$archflow-studio`), GitHub Copilot CLI, Cursor, OpenCode (`/archflow-studio`), Gemini CLI
+  (enterprise/API, `/archflow:studio`) and the generic AGENTS.md package. This supersedes 2.4.0's "`/archflow:studio`
+  stays Claude Code only". Off Claude Code, Studio runs in **forward mode**: the board, releases,
+  stories and files work as they do on Claude Code, and its chat panel runs no agent. You compose
+  there, Studio spells the command the way your host expects, and Send copies it for you to paste
+  into your own terminal session. On Claude Code nothing changes: full mode by default, companion
+  opt-in. The command reports which host Studio resolved and what its chat does
+  (`host codex, chat forward`), and Studio's host picker changes the host per project.
+- Studio's bundle (server and web UI, about 6.5 MB) ships once. The npm package carries the
+  plugin's copy, not one per adapter, and `npx archflow install` places it in each host's own
+  install: `.codex/archflow/`, `.github/archflow/`, `.cursor/archflow/`, `.opencode/archflow/`,
+  `.agents/archflow/` or `~/.gemini/extensions/archflow/`. In a project it adds a `.gitignore`
+  there so the bundle stays out of your commits; a teammate gets it by running
+  `npx archflow@latest install` (`@latest`, since an installer npx cached before 2.5.0 brings the
+  adapters but not the bundle). A re-run replaces it whole, so old builds do not pile up. The package grows by about 1.7 MB
+  compressed, where six copies would have added about 10 MB.
+- On Gemini CLI, `npx archflow install` runs `gemini extensions install` in your terminal, so you
+  answer Gemini's own trust and confirm prompts; it then checks the extension really landed before
+  saying so. A declined upgrade keeps the extension you had. With no terminal (CI, piped) it prints
+  the command to run instead and exits 1.
+- `/archflow:help`: every command with a one-line usage note, and a short primer on how Archflow
+  works (phases, releases, the story pipeline, gates, modes and a typical flow). `/archflow:help
+  <command>` prints just that command's line. Generated for every host adapter. A test checks that
+  it lists exactly the files in `plugin/commands/`, so the reference cannot drift.
+
+### Changed
+
+- `/archflow:status` no longer prints the command list. It reports where the project stands, ends
+  with the command or two to run next, and points at `/archflow:help` for everything else. Status
+  answers "where am I"; help answers "what can I do".
+
+### Fixed
+
+- Parked stories left by a finished autopilot run had no way back. The end-of-run report and
+  `/archflow:status` said to answer them and run `/archflow:autopilot resume`, but `resume` only
+  continued a run still planned or running. `resume` now asks the questions of the stories parked
+  on the branch you are on, whether the run that parked them finished or was aborted, and builds
+  the ones you answer. It names any other run branch that may hold parked work, never restarts a
+  finished run or continues an aborted one, and asks which to pick up if a planned run is also
+  waiting.
+- `/archflow:autopilot abort` printed the end-of-run report, whose last step set the run
+  `finished`, so an aborted run did not stay `aborted`. `abort` and `report` now skip that write.
+- `/archflow:autopilot resume` on a run planned with `--plan` stopped because the run branch did
+  not exist yet. It now creates the branch and starts the planned run, and refuses if that branch
+  already exists locally or on `origin`.
+- Autopilot left its ledger writes uncommitted (the `--plan` ledger, the closing `finished`,
+  `abort`'s `aborted`), so `resume`, which needs a clean tree, stopped on the run's own change.
+  Every ledger and release-file write is now committed, on the run branch (or, for a `--plan`
+  ledger, the base branch), never on `main`, and a parked story's state is carried onto the run
+  branch.
+- Gemini commands that quote the plugin path, such as `/archflow:doctor`, pointed at
+  `"~/.gemini/..."`, which the shell does not expand. They now use `$HOME`.
+- Gemini commands, agents and skills that tell the model to follow another command, such as
+  `/archflow:init` handing off to onboard, pointed at `commands/<name>.md`, which the Gemini
+  extension does not ship. They now point at `commands/archflow/<name>.toml`.
+- The same pointers were dead on Codex, Copilot, Cursor, OpenCode and the generic package too:
+  they named `<host>/archflow/commands/<name>.md`, which no adapter generates. They now point at
+  the file each host really ships the command as, such as `.agents/skills/archflow-groom/SKILL.md`
+  on Codex or `.cursor/commands/archflow-groom.md` on Cursor. A test checks that every path built
+  from the plugin root, in every adapter, exists.
+- Each host's `/archflow:help` lists exactly the commands that host ships, and a test holds it
+  there. (With Studio now on every host, that list is the same everywhere.)
+- The Cursor hook bridge found the project from `cwd`, which Cursor sends only with some events,
+  such as before a shell command, and then as the shell's directory. So session start, prompt and
+  stop hooks fell back to whatever directory the hook ran in, and a shell in a subdirectory of the
+  project, as in a monorepo, skipped the git guard, letting a force push to `main` through. The
+  bridge now uses the nearest directory at or above `cwd`, up to its workspace root, that is an
+  Archflow project. A shell in a workspace root that is not an Archflow project is left alone,
+  even when that root sits inside an Archflow project. A `cwd` outside every workspace root is
+  walked up without that limit. Without a `cwd`, or when that finds no project, it uses the first
+  workspace root that is an Archflow project, else the first workspace root.
+- On Cursor, the stop hook's warning about `.archflow/` files that no longer match their schemas
+  was never shown, because the bridge relayed only stdout and the warning is written to stderr.
+  The bridge now relays both.
+- `/archflow:migrate` ran `python3 <plugin path>/scripts/migrate.py` without quotes, so it failed
+  when that path contains a space, as it does on Gemini CLI with a home directory such as
+  `/Users/Jane Doe`. The path is now quoted on every host.
+
 ## [2.4.0] — 2026-09-12
 
 ### Added

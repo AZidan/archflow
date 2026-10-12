@@ -1,6 +1,7 @@
 # Generated from plugin/commands/groom.md — do not edit.
 description = "Detail or refine a story: acceptance criteria, subtasks, gates. Works on a backlog stub or a story already in a release"
 prompt = '''
+<!-- archflow-command: groom -->
 # /archflow:groom — Detail or refine a story
 
 Argument (`{{args}}`): optional story id (e.g. `S2-11`). Empty → list stubs and ask which to groom.

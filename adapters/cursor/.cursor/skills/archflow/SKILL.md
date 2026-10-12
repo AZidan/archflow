@@ -17,6 +17,7 @@ Every Archflow action is a namespaced slash command — there is no argument-sty
 
 ```
 /archflow-status                    → Where the project stands: phase, mode, active release, what's next
+/archflow-help [command]            → Every command with a one-line usage note, and how Archflow works
 /archflow-init                      → Set up a NEW, empty project (creates .archflow/, Phase 1)
 /archflow-onboard                   → Set up an EXISTING codebase (audit, import context, pick phase)
 /archflow-migrate                   → Upgrade a v1.0 archflow-onboarded project (sprints) → v2.0 (releases); dry-run then apply
@@ -31,9 +32,10 @@ Every Archflow action is a namespaced slash command — there is no argument-sty
 /archflow-issue [story-id|defer ...] → Record a defect on a story in the active release, or defer a minor one
 /archflow-doctor [--validate|--fix]  → Environment + project health check; --fix repairs upgrade drift
 /archflow-studio [stop|status|port n] → Local web workspace over the same files; onboards and migrates from the UI (beta)
+/archflow-telemetry [on|off|status]  → Show or change anonymous usage telemetry (on by default)
 ```
 
-Command bodies live in `.cursor/archflow/commands/<name>.md`. When you need to run one from
+Command bodies live in `.cursor/commands/archflow-<name>.md`. When you need to run one from
 inside another flow (e.g. onboarding calls setup-mcp), read that file and follow it inline.
 
 ## Framework files (shipped with the plugin)
@@ -55,7 +57,7 @@ inside another flow (e.g. onboarding calls setup-mcp), read that file and follow
 ## When this skill is invoked directly
 
 If the user runs this skill on its own (`/archflow-archflow`), behave exactly like
-`/archflow-status`: read and follow `.cursor/archflow/commands/status.md`.
+`/archflow-status`: read and follow `.cursor/commands/archflow-status.md`.
 
 ## Working in an Archflow project
 

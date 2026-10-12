@@ -1,0 +1,87 @@
+# Backfilled at onboarding (2026-09-23) from CHANGELOG.md and git tags.
+id: v2-0
+name: "2.0 Release model"
+goal: "Replace phases and sprints with releases as the outer loop, a per-story readiness pipeline, and namespaced commands."
+status: released
+version: v2.0.2
+released_at: "2026-08-17"
+stories:
+  - id: S1-02
+    title: "Schema v2.0: releases as the outer loop"
+    priority: Critical
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "roadmap.yaml became a small index; detailed stories live in releases/{slug}.yaml, unscheduled scope in backlog.yaml, shipped intent in history.yaml. Breaking change."
+    acceptance_criteria:
+      - {text: "roadmap.yaml holds only project meta, epic labels, the release pipeline and the shipped ledger", met: true}
+      - {text: "Stories live in exactly one of backlog.yaml, a release file, or releases/archive/", met: true}
+      - {text: "No phases: or sprints: keys remain in any schema", met: true}
+    subtasks:
+      - {text: "Write roadmap, backlog, release and history schemas", completed: true}
+      - {text: "Update phase files and agents to read release files", completed: true}
+  - id: S1-03
+    title: "Per-story readiness pipeline with gates"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "Story status is a readiness ladder (backlog -> spec_ready -> design_ready -> contract_ready -> ready -> in_progress -> review -> done) with needs_design / needs_contract gates derived from scope."
+    acceptance_criteria:
+      - {text: "Stories carry gates {needs_design, needs_contract}", met: true}
+      - {text: "A gate set false is skipped in the ladder", met: true}
+    subtasks:
+      - {text: "Define status enum and gates in release-schema.yaml", completed: true}
+      - {text: "Teach phase files the ladder", completed: true}
+  - id: S1-04
+    title: "quick / full ceremony modes"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "Two ceremony profiles over the same schema, switched in place with /archflow:mode without a data rewrite."
+    acceptance_criteria:
+      - {text: "/archflow:mode shows and switches quick|full", met: true}
+      - {text: "Switching mode rewrites no story data", met: true}
+    subtasks:
+      - {text: "Add mode to roadmap and current-phase", completed: true}
+      - {text: "Write /archflow:mode command", completed: true}
+  - id: S4-01
+    title: "/archflow:migrate v1.0 -> v2.0"
+    priority: Critical
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "plugin/scripts/migrate.py upgrades a v1.0 (sprints) project to schema v2.0 with a dry-run first."
+    acceptance_criteria:
+      - {text: "Dry-run shows the planned rewrite before any file changes", met: true}
+      - {text: "Migrated detailed stories land in the backlog as ready, detail preserved", met: true}
+    subtasks:
+      - {text: "Write migrate.py", completed: true}
+      - {text: "Write /archflow:migrate command", completed: true}
+  - id: S2-01
+    title: "/archflow:groom"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "Details a backlog stub into a ready story with acceptance criteria, subtasks and gates."
+    acceptance_criteria:
+      - {text: "A groomed story has {text, met} ACs, {text, completed} subtasks and derived gates", met: true}
+      - {text: "Grooming sets status ready, never spec_ready", met: true}
+    subtasks:
+      - {text: "Write groom command", completed: true}
+      - {text: "Document gate derivation", completed: true}
+  - id: S2-02
+    title: "Namespaced commands"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "Commands are namespaced as /archflow:<name> in plugin/commands/; the argument style /archflow <sub> is retired. Breaking change."
+    acceptance_criteria:
+      - {text: "Every command lives in plugin/commands/*.md and is invoked as /archflow:<name>", met: true}
+      - {text: "No documentation suggests /archflow <sub>", met: true}
+    subtasks:
+      - {text: "Split router into per-command files", completed: true}
+      - {text: "Update README and guides", completed: true}

@@ -229,7 +229,7 @@ is not fragile, but it is not finished either.
 | Merging to `main` | Never by the agent; a hook enforces it | `/land-and-deploy` merges, waits for CI, verifies production |
 | Maturity | v2.4.0, six months, 26 stars | v1.84.1.0, six months, ~132k stars |
 | Writes during setup | Proposes, then waits for approval | Clones to `~/.claude/skills/`, builds a browser, adds a section to `CLAUDE.md`, registers a Stop hook; team mode commits `.claude/` |
-| Telemetry | None | Opt-in, default off, every send receipted |
+| Telemetry | Anonymous, on by default; `/archflow:telemetry off` or `DO_NOT_TRACK` turns it off | Opt-in, default off, every send receipted |
 
 ---
 

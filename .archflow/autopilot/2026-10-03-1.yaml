@@ -1,0 +1,119 @@
+run_id: "2026-10-03-1"
+started_at: "2026-10-03T16:08:03Z"
+finished_at: "2026-10-03T23:46:14Z"
+status: finished
+base_branch: v2.5.0
+run_branch: v2.5.0-autopilot
+release: v2-5-0
+mode_at_start: full   # run borrows quick-mode gate semantics; mode is NOT switched
+parked_policy: blocks_release
+envelope:
+  merge_to_run_branch: true
+  merge_to_main: false
+  open_pr: false
+  run_qa: true
+  run_acceptance: true
+stop_conditions:
+  max_consecutive_parks: 2
+  max_qa_retries: 2
+decisions:
+  - id: D1
+    question: "Stop condition?"
+    answer: "Run the whole queue"
+    applies_to: ["all"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D2
+    question: "Parked stories — block the release or flag as open questions?"
+    answer: "Block the release until resolved"
+    applies_to: ["all"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D3
+    question: "Run branch?"
+    answer: "v2.5.0-autopilot, cut from v2.5.0"
+    applies_to: ["all"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D4
+    question: "The 2 pre-existing failures in tests/test_site_publishing.py?"
+    answer: >-
+      Fix them in this repo, inside the run, as PRE-EXISTING-FAILURE (queue item 1). Resolved from
+      artifacts: docs/compare/ pages are deliberately published (linked from docs/index.html since
+      commit f7ef778), so add "compare" to PUBLISHED_MD rather than hiding them. docs/internal is a
+      symlink into archflow-internal and is already untracked; make the gitignore guard accept the
+      pattern that actually ignores it (keep docs/internal content out of git). Do not touch
+      archflow-internal for this.
+    applies_to: ["PRE-EXISTING-FAILURE"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D5
+    question: "S9-04 Q1 — is multi-host Studio shipped?"
+    answer: >-
+      Yes, Studio runs on every supported host. Keep the banner and the hero host list; fix the
+      contradicting line ("In-panel agents are Claude Code today. Codex is next, then OpenCode, then
+      the rest.", index-next.html ~L602). The CHANGELOG 2.4.0 entry is historical; the page must be
+      consistent with the multi-host claim.
+    applies_to: ["S9-04"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D6
+    question: "S9-04 Q2 — 'Free while in beta' wording?"
+    answer: "Replace with 'Free and MIT' (hero badge and meta description). No pricing hints."
+    applies_to: ["S9-04"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D7
+    question: "S9-04 Q3 — 'Codex is next, then OpenCode, then the rest' ordering?"
+    answer: "Drop the ordering; say more agents are coming. No public sequence commitment."
+    applies_to: ["S9-04"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D8
+    question: "S9-04 Q4 — proof numbers?"
+    answer: >-
+      Update from metrics instead: use unique cloners, phrased as projects (1 project per unique
+      clone). Sum of daily clone_uniques in metrics/traffic.csv on origin/main (2026-08-16 →
+      2026-10-02) = 1,131 → "running on 1,100+ projects". Replace the "5 production codebases /
+      250+ stories / 6 months / 8 releases and 71 stories" proof figures with this one number where
+      they act as proof; do not invent other figures. Note in the report: daily uniques double-count
+      repeat cloners, so this is an upper bound.
+    applies_to: ["S9-04"]
+    asked_at: "2026-10-03T16:05:00Z"
+  - id: D9
+    question: "Telemetry tests and the real PostHog key (agent decision, not asked)"
+    answer: "All telemetry tests stub the network; no test may send an event to the real PostHog host."
+    applies_to: ["S8-05", "S8-06"]
+  - id: D10
+    question: "S9-04 parked: the hero's npx archflow studio does not exist in this repo"
+    answer: "Replace it with npx archflow install, then /archflow:studio"
+    applies_to: ["S9-04"]
+    asked_at: "2026-10-03T23:31:43Z"
+  - id: D11
+    question: "S9-04: multi-host Studio claim vs this repo's Claude-only Studio and CHANGELOG"
+    answer: "Keep the every-host claim on the page; do NOT edit the CHANGELOG. The user syncs the Studio build and CHANGELOG before shipping."
+    applies_to: ["S9-04"]
+    asked_at: "2026-10-03T23:31:43Z"
+  - id: D12
+    question: "S9-04: 'Free and MIT' on the Studio badge vs marketing guardrails"
+    answer: "Studio badge says 'Beta' only; 'Free and MIT' belongs to the framework. Supersedes D6 for the Studio badge. Guardrails unchanged."
+    applies_to: ["S9-04"]
+    asked_at: "2026-10-03T23:31:43Z"
+queue:
+  - {story_id: PRE-EXISTING-FAILURE, title: "Fix 2 failing tests in tests/test_site_publishing.py", order: 1, state: done, branch: v2.5.0-autopilot, commits: 1, review_risk: low, finished_at: "2026-10-03T16:09:39Z"}
+  - {story_id: S8-07, title: "Record telemetry policy: on by default (opt-out), framework-wide", order: 2, state: done, branch: telemetry/policy-adr, commits: 6, review_risk: medium, finished_at: "2026-10-03T16:25:02Z"}
+  - {story_id: S7-04, title: "build-adapters HOOK_SCRIPTS helper", order: 3, state: done, branch: adapters/hook-scripts-helper, commits: 5, review_risk: low, finished_at: "2026-10-03T16:43:14Z"}
+  - {story_id: S8-05, title: "Framework-wide anonymous telemetry", order: 4, state: done, branch: telemetry/framework-events, started_at: "2026-10-03T18:53:50Z", commits: 5, review_risk: high, finished_at: "2026-10-03T19:47:49Z"}
+  - {story_id: S8-06, title: "/archflow:telemetry and npx archflow telemetry", order: 5, state: done, branch: telemetry/opt-out-command, started_at: "2026-10-03T19:48:00Z", commits: 5, review_risk: high, finished_at: "2026-10-03T20:28:17Z"}
+  - {story_id: S7-05, title: "Gemini $HOME path and Cursor workspace-root fixes", order: 6, state: done, branch: adapters/gemini-cursor-fixes, started_at: "2026-10-03T20:28:27Z", commits: 5, review_risk: high, finished_at: "2026-10-03T21:09:18Z"}
+  - {story_id: S9-04, title: "Studio-first site repositioning", order: 7, state: done, branch: site/studio-first-homepage, started_at: "2026-10-03T21:09:35Z", commits: 7, review_risk: medium, finished_at: "2026-10-03T23:46:14Z"}
+events:
+  - {at: "2026-10-03T16:08:03Z", event: started, detail: "queue order: pre-existing failures, then dependency (S8-07 before S8-05; S7-04 helper before telemetry adapters; S8-07 policy before S9-04 privacy copy), then priority, then id"}
+  - {at: "2026-10-03T16:09:39Z", story: PRE-EXISTING-FAILURE, event: merged, detail: "compare/ added to PUBLISHED_MD; gitignore guard accepts the docs/internal symlink rule; autopilot/ ledgers excluded from mirror checks (test + CI). Suite 288 passed."}
+  - {at: "2026-10-03T16:25:02Z", story: S8-07, event: merged, detail: "ACCEPTED. QA I-1/I-2, code-review I-3..I-6, pm I-7 all fixed. ADR 005 + ADR 003 status left UNCOMMITTED in archflow-internal (report this)."}
+  - {at: "2026-10-03T16:25:02Z", story: S8-05, event: started, detail: "CARRY-OVER for S8-05 from S8-07 reviews: (a) no allow-list enforcement/tests; (b) project_type/phase/mode/session_source sent unvalidated — validate against enums; (c) OpenCode reports any archflow-* command without checking the shipped list; (d) notice text in plugin/lib/telemetry.mjs omits project type, entrypoint, Studio; (e) prompt hooks firing before session_start send distinct_id 'anonymous' and no notice."}
+  - {at: "2026-10-03T16:25:02Z", story: S8-06, event: started, detail: "CARRY-OVER for S8-06: telemetry.md says notice fires when config.json is missing, code checks noticeShownAt; --status after opt-out shows 'since' notice time, not opt-out time."}
+  - {at: "2026-10-03T16:43:14Z", story: S7-04, event: merged, detail: "ACCEPTED. QA I-1, code-review I-2..I-4 fixed. Suite 296 passed; --check clean."}
+  - {at: "2026-10-03T16:43:14Z", event: stopped, detail: "Paused by the user after S7-04. Status left running so /archflow:autopilot resume continues at S8-05 (see the S8-05/S8-06 carry-over notes above)."}
+  - {at: "2026-10-03T18:53:50Z", event: started, detail: "Resumed by the user; branch HEAD 361527e matches origin; no parked stories to re-ask."}
+  - {at: "2026-10-03T19:47:49Z", story: S8-05, event: merged, detail: "ACCEPTED. QA I-1(blocking)/I-2, code-review I-3(blocking)..I-6, pm I-7/I-8 fixed. I-9 (minor) OPEN for user decision: Copilot loading the Claude plugin directly sends session events but cannot show the notice; documented in SECURITY.md; options: send nothing until notice shown / dual-format notice / keep documented gap. Also out of scope, report it: Copilot+Gemini plain-text SessionStart entries (cat instructions.md, check-upgrade) are dropped by those hosts. Suite 448."}
+  - {at: "2026-10-03T20:28:17Z", story: S8-06, event: merged, detail: "ACCEPTED. QA I-1, code-review I-2(blocking: opt-out not persisted but reported)/I-3, pm I-4 fixed. Suite 505."}
+  - {at: "2026-10-03T21:09:18Z", story: S7-05, event: merged, detail: "ACCEPTED. code-review I-1 (blocking: Cursor git guard skipped from project subdirectory) + I-2/I-3, pm I-4 fixed. Extra fixes: Cursor root preference, stop stderr relay, Gemini command refs, quoted migrate path. Live Gemini/Cursor checks remain the user's (subtask left open). Out of scope, report: Codex/Copilot/Cursor/OpenCode/generic reference <root>/commands/<name>.md files they don't ship. Suite 720."}
+  - {at: "2026-10-03T21:21:47Z", story: S9-04, event: parked, detail: "npx archflow studio missing; multi-host Studio not in repo/CHANGELOG; Free and MIT vs guardrails. WIP pushed on site/studio-first-homepage, not merged."}
+  - {at: "2026-10-03T21:21:59Z", event: stopped, detail: "Queue exhausted: 6 done (incl. PRE-EXISTING-FAILURE), 1 parked, 0 failed."}
+  - {at: "2026-10-03T23:31:43Z", story: S9-04, event: started, detail: "Resumed by the user with D10-D12 answered; run reopened (status running)."}
+  - {at: "2026-10-03T23:46:14Z", story: S9-04, event: merged, detail: "ACCEPTED. QA I-1,I-3..I-5, code-review I-6/I-7 fixed. I-2 (17 agents vs guardrail 6) open for the user. Pending user sync per D11: CHANGELOG + plugin/commands/studio.md still say Studio is Claude Code only."}
+  - {at: "2026-10-03T23:46:14Z", event: stopped, detail: "Queue exhausted: 6 stories done + PRE-EXISTING-FAILURE, 0 parked, 0 failed."}

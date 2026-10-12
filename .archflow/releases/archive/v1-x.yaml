@@ -1,0 +1,21 @@
+# Backfilled at onboarding (2026-09-23) from CHANGELOG.md and git tags.
+id: v1-x
+name: "1.x Phases and sprints"
+goal: "The original phase-based framework: product phases, sprints, specialized agents and approval gates."
+status: released
+version: v1.2.8
+released_at: "2026-03-30"
+stories:
+  - id: S1-01
+    title: "Phase-based framework (v1)"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: "Pre-v2 Archflow: product phases with sprints, phase files loaded per phase, specialized agents and mandatory approval gates. Detail lives in git history (tags before 2.0)."
+    acceptance_criteria:
+      - {text: "Phase files load per current phase from current-phase.yaml", met: true}
+      - {text: "Roadmap tracks phases and sprints with required story status", met: true}
+    subtasks:
+      - {text: "Phase instruction files", completed: true}
+      - {text: "Roadmap v1.0 schema with sprints", completed: true}

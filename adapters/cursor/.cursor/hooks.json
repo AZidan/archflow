@@ -7,6 +7,12 @@
         "timeout": 8
       }
     ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "node .cursor/archflow/hooks/cursor-bridge.mjs beforeSubmitPrompt",
+        "timeout": 5
+      }
+    ],
     "beforeShellExecution": [
       {
         "command": "node .cursor/archflow/hooks/cursor-bridge.mjs beforeShellExecution",

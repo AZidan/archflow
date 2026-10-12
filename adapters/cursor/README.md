@@ -1,6 +1,6 @@
 # Archflow for Cursor
 
-Generated from Archflow 2.4.0 by `scripts/build-adapters.mjs`. Do not edit here.
+Generated from Archflow 2.5.0 by `scripts/build-adapters.mjs`. Do not edit here.
 
 ## Install
 
@@ -18,9 +18,10 @@ Node.js 18+ is required for the hooks.
 |---|---|
 | `/archflow:<cmd>` | `/archflow-<cmd>` (`.cursor/commands/`) |
 | `agents/*.md` sub-agents | `.cursor/agents/*.md` (`model: inherit`; reviewers `readonly: true`) |
-| Plugin hooks | `.cursor/hooks.json` (`sessionStart` / `beforeShellExecution` / `stop`) via a small bridge script |
+| Plugin hooks | `.cursor/hooks.json` (`sessionStart` / `beforeSubmitPrompt` / `beforeShellExecution` / `stop`) via a small bridge script |
 | `CLAUDE.md` section | `.cursor/rules/archflow.mdc` (`alwaysApply`) |
-| `/archflow:studio` | Not available |
+| Telemetry: `UserPromptExpansion` names the command | `beforeSubmitPrompt` counts a prompt that starts with `/archflow-<cmd>` |
+| `/archflow:studio` | `/archflow-studio` in forward mode: Studio runs no agent, its chat composes the command and you paste it into this host's session. Its server bundle goes in `.cursor/archflow/server` and `.cursor/archflow/dist`: `npx archflow@latest install` puts it there, or by hand copy the Archflow package's `plugin/server/` and `plugin/dist/` |
 | `memory: user` | Not available |
 
 Project hooks also run in Cursor cloud agents.

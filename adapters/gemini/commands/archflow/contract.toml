@@ -1,6 +1,7 @@
 # Generated from plugin/commands/contract.md — do not edit.
 description = "The release's API contract architecture, and per-story endpoint specs that clear a story's contract gate"
 prompt = '''
+<!-- archflow-command: contract -->
 # /archflow:contract — API contract architecture and per-story endpoints
 
 API architecture splits into two kinds of work, exactly as `phase-2.5-api-architecture.md` defines

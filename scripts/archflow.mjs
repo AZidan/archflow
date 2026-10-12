@@ -11,7 +11,8 @@
  *   npx archflow install                      # detect hosts, install for each
  *   npx archflow install --host codex,cursor  # explicit hosts
  *   npx archflow install --dry-run            # show the plan only
- *   npx archflow                              # same as `install`, the only command today
+ *   npx archflow                              # same as `install`, the default command
+ *   npx archflow telemetry [on|off|status]    # show, or change, anonymous usage telemetry (on by default)
  *   npx archflowai ...                        # alias package, identical
  *
  * Options:
@@ -33,13 +34,17 @@
  * Claude Code is the reference host: `--host claude` installs the marketplace plugin at
  * project scope (`.claude/settings.json`), so the choice is committed with the repo.
  *
+ * Archflow Studio's prebuilt bundle (server + web UI, ~6.5 MB) ships ONCE in this package, under
+ * plugin/server and plugin/dist, not in every adapter. Each non-Claude host gets its own copy at
+ * install time, in the root its studio command launches from (see installStudio).
+ *
  * Local testing without publishing:
  *   node /path/to/archflow/scripts/archflow.mjs --host codex
  *   or `npm link` in the archflow checkout, then `archflow install` anywhere.
  */
 
 import {
-  chmodSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync,
+  chmodSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync,
   rmSync, statSync, symlinkSync, writeFileSync,
 } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -47,6 +52,7 @@ import { createInterface } from "node:readline";
 import { homedir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { CONFIG_UNREADABLE_NOTE, CONFIG_UNWRITABLE_NOTE, NOTICE, OPT_OUT_CONFIRMATION, OPT_OUT_SENT_NOTE, capture, disabledByEnv, hasSeenNotice, isConfigUnreadable, isEnabled, loadConfig, optInConfirmation, recordNoticeShown, setConsent, statusLine } from "../plugin/lib/telemetry.mjs";
 
 const PKG = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = "AZidan/archflow";
@@ -54,6 +60,8 @@ const REPO = "AZidan/archflow";
 // Where the adapters come from. Default: the latest GitHub release, cached per tag
 // under ~/.cache/archflow. Falls back to the copy bundled with this package.
 let SRC, ADAPTERS, PRE_PUSH, VERSION;
+/** Archflow Studio's bundle: [path in the package, path under a host's plugin root]. */
+const STUDIO_BUNDLE = [["plugin/server/server.mjs", "server/server.mjs"], ["plugin/dist", "dist"]];
 function useSource(root, origin) {
   SRC = { root, origin };
   ADAPTERS = join(root, "adapters");
@@ -114,7 +122,9 @@ async function resolveSource(opts) {
 // Host table. `copy` are adapter-relative paths copied into the project.
 // `hookRoot` is what the hooks see as CLAUDE_PLUGIN_ROOT; it must contain
 // skills/archflow, which the adapter provides as a relative symlink. npm drops
-// symlinks when packing, so `ensureLink` recreates it after the copy.
+// symlinks when packing, so `ensureLink` recreates it after the copy. It is also
+// where Studio's bundle goes (installStudio), since each host's studio command
+// launches <hookRoot>/server/server.mjs.
 // ---------------------------------------------------------------------------
 const MARKETPLACE_REPO = "AZidan/archflow";
 
@@ -191,7 +201,7 @@ process.stdout.on("error", (e) => { if (e.code === "EPIPE") process.exit(0); thr
 
 function parseArgs(argv) {
   const o = { hosts: [], dir: process.cwd(), dryRun: false, guard: true, yes: false, marketplace: MARKETPLACE_REPO, version: null, bundled: false };
-  if (argv[0] === "install") argv = argv.slice(1); // the default and, today, only command
+  if (argv[0] === "install") argv = argv.slice(1); // the default install command (telemetry is handled before this)
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--host") o.hosts.push(...argv[++i].split(",").map((s) => s.trim()).filter(Boolean));
@@ -222,6 +232,21 @@ async function confirm(question) {
 }
 
 /**
+ * Telemetry is on by default. The first time this installer (or the
+ * SessionStart hook, for Claude Code users who never run it directly) sees no
+ * ~/.archflow/config.json yet, it prints a one-time notice — not a question —
+ * and starts sending. Both write the same config file, so the notice shows
+ * once per machine, not once per project.
+ */
+function maybeNoticeTelemetry(dry) {
+  const config = loadConfig();
+  if (isConfigUnreadable(config)) { log(`note  ${CONFIG_UNREADABLE_NOTE}\n`); return; }
+  if (dry || hasSeenNotice(config) || !isEnabled(config)) return;
+  log(NOTICE + "Turn it off any time: npx archflow telemetry off\n");
+  recordNoticeShown();
+}
+
+/**
  * Copy a file or tree over the destination. Overwrites our files, never deletes theirs.
  * Symlinks are skipped on purpose: Node's cpSync rewrites a relative link to an absolute
  * path into THIS package, which is wrong once the package is gone. ensureLink recreates
@@ -235,6 +260,46 @@ function copyInto(src, dst, dry) {
     force: true,
     filter: (s) => !s.endsWith(".DS_Store") && !lstatSync(s).isSymbolicLink(),
   });
+}
+
+/**
+ * Put Archflow Studio's bundle under a host's plugin root: <root>/server/server.mjs and <root>/dist,
+ * where that host's studio command launches it. One copy ships in the package (or the release),
+ * so adapters/ never holds six. dist/ is replaced, not merged: its asset names are content hashes,
+ * and an upgrade merged over an old copy would pile up every previous build. `label` is the root as
+ * the user should read it. `ignore` adds a .gitignore beside it, for project overlays a team
+ * commits: the bundle is build output, and a teammate gets it by running this installer.
+ */
+function installStudio(root, label, dry, { ignore = false } = {}) {
+  const missing = STUDIO_BUNDLE.filter(([from]) => !existsSync(join(SRC.root, from)));
+  if (missing.length) return [`skip  Archflow Studio bundle (not in ${SRC.origin}; /archflow:studio will say it is missing)`];
+  const actions = [`copy  ${label}/server/server.mjs, ${label}/dist/ (Archflow Studio)`];
+  if (ignore) actions.push(`${ensureIgnored(root, dry)} ${label}/.gitignore (Studio's bundle is build output)`);
+  if (dry) return actions;
+  for (const [from, to] of STUDIO_BUNDLE) {
+    const dst = join(root, to);
+    rmSync(dst, { recursive: true, force: true });
+    copyInto(join(SRC.root, from), dst, false);
+  }
+  return actions;
+}
+
+/**
+ * Add the bundle's paths to <root>/.gitignore, keeping whatever else is there. Returns the verb the
+ * run takes (write, merge or keep). A dry run works out the same verb and writes nothing.
+ */
+function ensureIgnored(root, dry = false) {
+  const file = join(root, ".gitignore");
+  const lines = ["/server/", "/dist/"];
+  const text = existsSync(file) ? readFileSync(file, "utf8") : "";
+  const have = new Set(text.split(/\r?\n/).map((l) => l.trim()));
+  const add = lines.filter((l) => !have.has(l));
+  if (!add.length) return "keep ";
+  if (dry) return text ? "merge" : "write";
+  mkdirSync(root, { recursive: true });
+  const head = text ? text.replace(/\s*$/, "\n") : "# Archflow Studio's bundle: build output, placed by `npx archflow install`.\n";
+  writeFileSync(file, head + add.join("\n") + "\n");
+  return text ? "merge" : "write";
 }
 
 /** (Re)create hookRoot/skills/archflow → skillTree as a relative link inside the project. */
@@ -442,29 +507,179 @@ function writeClaudeSettings(project, source, dry) {
   return [`${existsSync(file) ? "merge" : "create"} .claude/settings.json (+ ${changed.join(", ")})`];
 }
 
-/** Gemini: a per-user extension. Prefer the CLI; fall back to copying into ~/.gemini/extensions. */
+/**
+ * Gemini: a per-user extension. Prefer the CLI; with no `gemini` on PATH, copy into ~/.gemini/extensions.
+ * The extension is installed from a staged copy of adapters/gemini plus Studio's bundle, kept
+ * under ~/.cache/archflow (not a temp dir), because Gemini remembers where an extension came from.
+ * Older staged copies are pruned only once the staged copy (bundle included) is confirmed to be the
+ * installed extension; an install that did not land leaves everything as it was.
+ */
 function installGemini(dry) {
-  const src = join(ADAPTERS, "gemini");
-  if (onPath("gemini")) {
-    if (dry) return [`run   gemini extensions install ${src}`];
-    const r = spawnSync("gemini", ["extensions", "install", src], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-    if (r.status === 0) return [`run   gemini extensions install → ${(r.stdout || "").trim().split("\n").pop() || "ok"}`];
-    const msg = (r.stderr || r.stdout || "").trim().split("\n").pop();
-    if (/already/i.test(msg)) {
-      const u = spawnSync("gemini", ["extensions", "update", "archflow"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-      if (u.status === 0) return [`run   gemini extensions update archflow → ${(u.stdout || "").trim().split("\n").pop() || "ok"}`];
-    }
-    log(`      gemini CLI install failed (${msg}); copying the extension directly`);
+  const cache = join(homedir(), ".cache", "archflow", "gemini-extension");
+  const staged = join(cache, VERSION, "archflow");
+  if (!dry) {
+    rmSync(staged, { recursive: true, force: true });
+    copyInto(join(ADAPTERS, "gemini"), staged, false);
   }
-  const dst = join(homedir(), ".gemini", "extensions", "archflow");
-  if (!dry) copyInto(src, dst, false);
-  return [`copy  ${dst} (Gemini extension)`];
+  const studio = installStudio(staged, staged, dry);
+  const bundled = studio.some((a) => a.startsWith("copy"));
+  const { actions, via } = installGeminiFrom(staged, dry, bundled);
+  const landed = via === "install" || via === "reinstall" || via === "copy";
+  return [...studio, ...actions, ...(landed ? pruneStaged(cache, VERSION, dry) : [])];
+}
+
+const GEMINI_EXT = () => join(homedir(), ".gemini", "extensions", "archflow");
+/** Where an existing extension waits while the new one installs; outside extensions/ so Gemini does not load it. */
+const GEMINI_PREV = () => join(homedir(), ".gemini", "archflow-extension.previous");
+/** Hosts whose install did not complete; main() reports them instead of "Installed." and exits 1. */
+const incomplete = [];
+
+/**
+ * Gemini asks its own questions on `extensions install` (trust the source folder? trust this
+ * workspace? continue?) and exits 0 when they are declined or unanswered. Those answers are the
+ * user's, so the install runs with the terminal passed through, and only when there is a terminal.
+ * ARCHFLOW_TEST_STDIN_TTY (1/0) overrides the check, for the test suite only.
+ */
+function stdinIsTTY() {
+  const o = process.env.ARCHFLOW_TEST_STDIN_TTY;
+  if (o === "1" || o === "0") return o === "1";
+  return Boolean(process.stdin.isTTY);
+}
+
+/** True when ~/.gemini/extensions/archflow is the staged copy: same manifest, and the same server bundle when there is one. */
+function geminiExtMatches(src) {
+  const dst = GEMINI_EXT();
+  const same = (rel) => {
+    try { return readFileSync(join(src, rel)).equals(readFileSync(join(dst, rel))); } catch { return false; }
+  };
+  if (!same("gemini-extension.json")) return false;
+  return !existsSync(join(src, "server", "server.mjs")) || same(join("server", "server.mjs"));
+}
+
+/**
+ * Make `src` (the staged adapter + Studio bundle) the installed extension. Returns the actions taken
+ * and `via`:
+ *   install    first install through `gemini extensions install`, confirmed afterwards
+ *   reinstall  it was already installed: the old copy is moved aside, `src` installed, the old copy
+ *              removed once the new one is confirmed (or put back when it is not)
+ *   copy       no `gemini` CLI on PATH: copied straight into ~/.gemini/extensions/archflow
+ *   pending    not installed: no terminal to answer Gemini's prompts, or Gemini's install did not
+ *              land (declined, cancelled, failed). The previous extension, if any, is left in place.
+ * The exit code of `gemini extensions install` is never trusted: a declined prompt exits 0. Success
+ * means `gemini extensions list` names archflow and the extension directory holds the staged copy.
+ * `gemini extensions uninstall` and `update` are never used: update re-copies from the source Gemini
+ * recorded at the first install (for 2.4.0, adapters/gemini without the bundle), and an uninstall
+ * before an install that then stops at a prompt would leave the user with no extension.
+ */
+function installGeminiFrom(src, dry, bundled) {
+  const what = bundled ? "adapter + Studio bundle" : "adapter";
+  const label = "~/.gemini/extensions/archflow";
+  const cmd = `gemini extensions install ${src}`;
+  const ext = GEMINI_EXT();
+  const had = existsSync(ext);
+  if (onPath("gemini")) {
+    const tty = stdinIsTTY();
+    const askNote = "note  Gemini asks you to trust the extension folder (and this workspace) and to confirm; answer yes, or Studio's bundle is not installed";
+    if (!tty) {
+      const why = "no terminal to answer Gemini's trust and consent prompts";
+      incomplete.push(`Gemini CLI: extension not installed (${why}). In a terminal, run \`${cmd}\` and accept Gemini's prompts, or re-run \`npx archflow@latest install --host gemini\` there.`);
+      return { actions: [
+        `skip  ${cmd} (${why}${had ? "; the installed extension is left as it is" : ""})`,
+        `todo  run in a terminal: ${cmd}`,
+      ], via: "pending" };
+    }
+    if (dry) {
+      return { actions: [
+        ...(had ? [`move  ${label} → ~/.gemini/archflow-extension.previous (already installed; restored if the new install does not land)`] : []),
+        `run   ${cmd} → ${label} (${what}; interactive)`,
+        askNote,
+        ...(had ? ["remove ~/.gemini/archflow-extension.previous (once the new install is confirmed)"] : []),
+      ], via: had ? "reinstall" : "install" };
+    }
+    const prev = GEMINI_PREV();
+    if (had) {
+      rmSync(prev, { recursive: true, force: true });
+      renameSync(ext, prev); // same directory tree under ~/.gemini, so a rename, not a copy
+    }
+    log(`      Running \`${cmd}\`. Gemini asks you to trust the extension folder (and this workspace) and to confirm;`);
+    log(`      answer yes, or Studio's bundle is not installed.`);
+    const r = spawnSync("gemini", ["extensions", "install", src], { stdio: "inherit" });
+    const list = spawnSync("gemini", ["extensions", "list"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    const listed = /\barchflow\b/.test(`${list.stdout || ""}\n${list.stderr || ""}`);
+    if (listed && geminiExtMatches(src)) {
+      if (had) rmSync(prev, { recursive: true, force: true });
+      return { actions: [
+        ...(had ? [`move  ${label} → ~/.gemini/archflow-extension.previous (already installed)`] : []),
+        `run   ${cmd} → installed, confirmed in \`gemini extensions list\` and ${label} (${what})`,
+        ...(had ? ["remove ~/.gemini/archflow-extension.previous (the new install is confirmed)"] : []),
+      ], via: had ? "reinstall" : "install" };
+    }
+    // Not landed. Put the previous extension back, so a declined upgrade changes nothing.
+    let restored = "";
+    if (had) {
+      if (!existsSync(ext)) { renameSync(prev, ext); restored = "; the previous extension is back in place"; }
+      else restored = `; Gemini left a partial ${label}, the previous one is kept at ~/.gemini/archflow-extension.previous`;
+    }
+    const why = r.error ? `gemini could not run: ${r.error.message}` : r.status === 0 ? "declined or cancelled" : `gemini exited ${r.status}`;
+    incomplete.push(`Gemini CLI: install not completed (${why}); Studio bundle not installed. Re-run \`npx archflow@latest install --host gemini\` and accept Gemini's prompts, or run \`${cmd}\` yourself.`);
+    return { actions: [`fail  ${cmd} (${why}; not in \`gemini extensions list\` with the staged copy${restored})`], via: "pending" };
+  }
+  const dst = ext;
+  if (!dry) {
+    rmSync(join(dst, "dist"), { recursive: true, force: true }); // hashed assets: replace, never merge
+    rmSync(join(dst, "server"), { recursive: true, force: true });
+    copyInto(src, dst, false);
+  }
+  return { actions: [`copy  ${src} → ${label} (Gemini extension: ${what}; no gemini CLI on PATH)`], via: "copy" };
+}
+
+/**
+ * Remove staged Gemini extension copies (~11 MB each) left by earlier versions, keeping `keep`.
+ * Only real directories directly under `cache` go; a symlink (the cache dir itself, or an entry in
+ * it) is never followed or removed. A dry run lists what it would remove and removes nothing.
+ */
+function pruneStaged(cache, keep, dry) {
+  let entries;
+  try {
+    if (!lstatSync(cache).isDirectory()) return [];
+    entries = readdirSync(cache, { withFileTypes: true });
+  } catch { return []; }
+  const out = [];
+  for (const e of entries) {
+    if (e.name === keep || !e.isDirectory() || e.isSymbolicLink()) continue;
+    const dir = join(cache, e.name);
+    if (!dry) {
+      try { rmSync(dir, { recursive: true, force: true }); } catch (err) { out.push(`note  could not remove ${dir} (${err.code || err.message})`); continue; }
+    }
+    out.push(`remove ${dir} (an older version's staged Gemini extension)`);
+  }
+  return out;
+}
+
+/** `archflow telemetry [on|off|status]` — status with no argument (or `status`), otherwise change it. */
+function runTelemetry(arg) {
+  if (arg === "on" || arg === "off") {
+    const { sentOptOut, unreadable, saved } = setConsent(arg === "on", { via: "cli", host: "cli", archflow_version: VERSION });
+    if (unreadable) { log(`Nothing was changed. ${CONFIG_UNREADABLE_NOTE}`); return; }
+    if (!saved) { console.error(CONFIG_UNWRITABLE_NOTE); process.exit(1); }
+    log(arg === "on" ? optInConfirmation() : `${OPT_OUT_CONFIRMATION}${sentOptOut ? OPT_OUT_SENT_NOTE : ""}`);
+    return;
+  }
+  if (arg && arg !== "status") { console.error(`Unknown telemetry option: ${arg}. Try "on", "off" or "status".`); process.exit(2); }
+  const config = loadConfig();
+  if (isConfigUnreadable(config)) { log(`Anonymous usage telemetry is OFF for now: ${CONFIG_UNREADABLE_NOTE}`); return; }
+  // Same line as /archflow:telemetry's --status: on/off, and since when (or which variable disabled it).
+  // While an environment variable disables it, `on` cannot take effect, so suggest nothing.
+  const on = isEnabled(config);
+  const hint = disabledByEnv() ? "" : ` \`npx archflow telemetry ${on ? "off" : "on"}\` to turn it ${on ? "off" : "on"}.`;
+  log(`Anonymous usage telemetry: ${statusLine(config)}.${hint}`);
 }
 
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 async function main() {
+  if (process.argv[2] === "telemetry") { runTelemetry(process.argv[3]); return; }
   const opts = parseArgs(process.argv.slice(2));
   const project = opts.dir;
   if (!existsSync(project) || !statSync(project).isDirectory()) {
@@ -494,6 +709,7 @@ async function main() {
     log(`Archflow ${VERSION} (${SRC.origin}) — hosts: ${hosts.join(", ")}\nProject: ${project}\n`);
   }
   if (opts.dryRun) log("DRY RUN — nothing will be written.\n");
+  maybeNoticeTelemetry(opts.dryRun);
 
   const nextSteps = [];
   const blocks = [];
@@ -518,6 +734,7 @@ async function main() {
       }
       const linked = ensureLink(project, host, opts.dryRun);
       if (linked) actions.push(linked);
+      actions.push(...installStudio(join(project, host.hookRoot), host.hookRoot, opts.dryRun, { ignore: true }));
       if (host.agentsBlock) blocks.push({ label: host.label, text: readFileSync(join(src, host.agentsBlock), "utf8") });
       if (host.codexConfig) actions.push(mergeToml(join(project, ".codex", "config.toml"), readFileSync(join(src, host.codexConfig), "utf8"), opts.dryRun));
     }
@@ -536,10 +753,17 @@ async function main() {
     log(`    ${installGuard(project, opts.dryRun)}\n`);
   }
 
-  log(opts.dryRun ? "Dry run complete." : "Installed.");
+  if (opts.dryRun) log("Dry run complete.");
+  else if (incomplete.length) {
+    log("Not fully installed:");
+    for (const m of incomplete) log(`  ${m}`);
+    process.exitCode = 1;
+  } else log("Installed.");
   log("\nNext:");
   for (const [label, steps] of nextSteps) for (const s of steps) log(`  ${label}: ${s}`);
   log("\nRe-run this command after upgrading Archflow; it updates in place and never deletes your files.");
+
+  if (!opts.dryRun) capture("cli_install", { host: "cli", archflow_version: VERSION, installed_hosts: hosts, source: SRC.origin });
 }
 
 main().catch((err) => { console.error(`archflow: ${err?.message ?? err}`); process.exit(1); });

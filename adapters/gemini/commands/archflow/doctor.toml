@@ -1,6 +1,7 @@
 # Generated from plugin/commands/doctor.md — do not edit.
 description = "Check the environment and project state — what Archflow needs, what is missing, and how to fix it"
 prompt = '''
+<!-- archflow-command: doctor -->
 # /archflow:doctor — Environment and project health check
 
 Arguments (`{{args}}`): `--validate` also validates every `.archflow/` state file against its
@@ -125,7 +126,7 @@ that is a valid state, and also what a project set up before the setting existed
 Run the validator that ships with the plugin. Do not re-implement the checks here.
 
 ```bash
-python3 "~/.gemini/extensions/archflow/scripts/validate_archflow.py" .
+python3 "$HOME/.gemini/extensions/archflow/scripts/validate_archflow.py" .
 ```
 
 It validates every `.archflow/` state file against its schema and exits 0 for clean, 1 for
@@ -158,8 +159,8 @@ on and nothing reconciles the two, so a project onboarded months ago runs agains
 longer match. Report this every run; it is the most common cause of "it used to work".
 
 ```bash
-python3 "~/.gemini/extensions/archflow/scripts/upgrade_archflow.py" . \
-  --plugin-root "~/.gemini/extensions/archflow"
+python3 "$HOME/.gemini/extensions/archflow/scripts/upgrade_archflow.py" . \
+  --plugin-root "$HOME/.gemini/extensions/archflow"
 ```
 
 It reports and changes nothing. Exit 1 means drift was found, which is a **WARN**, not a FAIL — the
@@ -222,8 +223,8 @@ Apply? [Apply / Cancel]
 On approval:
 
 ```bash
-python3 "~/.gemini/extensions/archflow/scripts/upgrade_archflow.py" . \
-  --plugin-root "~/.gemini/extensions/archflow" --apply
+python3 "$HOME/.gemini/extensions/archflow/scripts/upgrade_archflow.py" . \
+  --plugin-root "$HOME/.gemini/extensions/archflow" --apply
 ```
 
 Then report what it did, name the backup directory, and repeat anything it flagged as needing a
@@ -258,7 +259,7 @@ that file.
 
 ### What it does
 
-1. **Detect**, following `~/.gemini/extensions/archflow/skills/archflow/stack-detection.md`. That file is the
+1. **Detect**, following `$HOME/.gemini/extensions/archflow/skills/archflow/stack-detection.md`. That file is the
    procedure — the evidence sources, the field mapping, and the rule that anything the evidence does
    not support is written `null`. `/archflow:onboard` runs the same one, which is why neither
    restates it.
@@ -313,7 +314,7 @@ covers the human's own terminal. Report **WARN** if `.git/hooks/pre-push` does n
 `archflow-pre-push`; with `--fix`, ask, then run:
 
 ```bash
-sh "~/.gemini/extensions/archflow/scripts/archflow-install-git-guard.sh"
+sh "$HOME/.gemini/extensions/archflow/scripts/archflow-install-git-guard.sh"
 ```
 
 It chains any existing `pre-push` hook rather than replacing it. Skip silently when the project is

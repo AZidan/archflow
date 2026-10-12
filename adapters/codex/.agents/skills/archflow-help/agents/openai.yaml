@@ -1,0 +1,5 @@
+interface:
+  display_name: "Archflow: help"
+  short_description: "Every Archflow command with a one-line usage note, and a short primer on how Archflow works"
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Archflow: telemetry"
+  short_description: "Show or change anonymous usage telemetry (on by default; this is how to opt out)"
+policy:
+  allow_implicit_invocation: false

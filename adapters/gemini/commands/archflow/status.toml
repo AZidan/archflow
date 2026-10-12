@@ -1,7 +1,8 @@
 # Generated from plugin/commands/status.md — do not edit.
 description = "Where the project stands: phase, mode, active release, and what to run next"
 prompt = '''
-# /archflow:status — Project status + available commands
+<!-- archflow-command: status -->
+# /archflow:status — Project status and what to run next
 
 ## Step 1 — Project status
 
@@ -16,61 +17,43 @@ Read `.archflow/current-phase.yaml` and `.archflow/project-settings.yaml` if the
   `status: open` and `severity: blocking`, as `{story-id} — {n} open blocking`. Omit the line when
   there are none. These are review findings that stop a story reaching `done`, and nothing else
   surfaces them.
-- what is sensible to run next (see the command list below)
+- what is sensible to run next (see Step 2)
 
 Edge cases:
 - If `.archflow/roadmap.yaml` is v1.0 (has `phases:` / no `schema_version`): suggest `/archflow:migrate`.
 - If `.archflow/current-phase.yaml` is missing: `No project onboarded. Run /archflow:onboard (existing codebase) or /archflow:init (new project) to get started.`
 
-## Step 2 — Available commands
+## Step 2 — Next step
+
+End with the command (or two) that moves the project forward from where it stands, each with one
+line on why. Read it off the state above. The cases are in priority order: suggest from the first
+one that applies, and add a second only if it is independent of the first.
+1. state looks inconsistent → `/archflow:doctor`
+2. an open blocking issue → fix it on that story first (`/archflow:issue {story-id}` lists them).
+   It stops the story reaching `done`
+3. a `parked` story, or a line `resume` would print under its *Other run branches* rule → print
+   each parked story's `parked.question` and those lines, then `/archflow:autopilot resume`. Count
+   parked stories as resume does: the active release file on this checkout only, minus any it says
+   were picked up. Resume asks the questions and builds the stories answered, whether the run that
+   parked them is still open, has finished, or was aborted. Its own rules cover a run that is also
+   waiting. A parked story blocks shipping the release by default
+4. a story `in_progress` → carry on building it on its branch; it goes to `review` when every
+   subtask is complete
+5. a story in `review` → finish its gate: qa-engineer, then pm-reviewer, then the user's approval
+6. a story waiting on its design or contract gate → `/archflow:design {story-id}` or
+   `/archflow:contract {story-id}`
+7. a `ready` story → `/archflow:feature {story-id}` to branch and build it; several queued →
+   `/archflow:autopilot`
+8. a backlog stub is next up but not detailed → `/archflow:groom {story-id}`
+9. the active release has no stories → `/archflow:feature` (add a story). In `full` mode with no
+   release in progress, `/archflow:release new` (or `/archflow:release start {slug}` for one
+   already planned). `quick` mode has a single implicit release, so never suggest `release new`
+   there
+10. every story in the active release `done` → `/archflow:release ship`
+
+Do not print the command list. Close with this line, as is:
 
 ```
-Archflow — Phase-Based Development Workflow
-
-  /archflow:status        This screen — current phase, active release, what to run next
-
-  /archflow:init          Initialize Archflow in a new project
-                          (creates .archflow/ state files, sets Phase 1)
-
-  /archflow:onboard       Onboard an existing codebase to the phase framework
-                          (detect project type, import context, audit, set phase)
-
-  /archflow:migrate       Migrate a v1.0 project to schema v2.0
-                          (releases replace phases, sprints retired, multi-file split)
-
-  /archflow:mode          Show or switch the ceremony mode (quick | full)
-
-  /archflow:release       Inspect / manage releases (status, new, start, ship)
-
-  /archflow:setup-mcp     Configure MCP servers for external tools
-                          (Jira, Notion, Linear, GitHub, SuperDesign, etc.)
-
-  /archflow:groom         Detail or refine a story — a backlog stub, or one already in a
-                          release (re-derives its gates)
-                          (acceptance criteria, subtasks, gates — stays in the backlog)
-
-  /archflow:feature       Add a story — to the backlog, or straight into the active release
-                          (from description, external tool link, or existing backlog stub)
-
-  /archflow:autopilot     Run queued release stories unattended on one branch
-                          (blocker interview first, then silent; one report at the end)
-
-  /archflow:design        The project's design system, or one story's screens
-                          (/archflow:design S7-20 clears that story's design gate)
-                          (chosen once per project; every UI agent builds against it)
-
-  /archflow:contract      The API contract architecture, or one story's endpoints
-                          (/archflow:contract S7-20 clears that story's contract gate)
-
-  /archflow:issue         Record a defect on a story being built, list what is open, or
-                          defer a minor one to the backlog
-                          (the only sanctioned way to defer — no agent may)
-
-  /archflow:doctor        Check the environment and project state — what is missing and
-                          how to fix it (--validate checks state files against schemas,
-                          --fix repairs drift after a plugin upgrade)
-
-  /archflow:studio        Open Archflow Studio, a local web workspace over these files
-                          (beta — stop | status | port <n>)
+All commands, and how Archflow works: /archflow:help
 ```
 '''

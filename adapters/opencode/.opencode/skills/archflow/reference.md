@@ -244,6 +244,7 @@ All namespaced as `/archflow-<name>`. There is no `/archflow <sub>` argument for
 | Command | Does |
 |---|---|
 | `/archflow-status` | Where the project stands, and what to run next |
+| `/archflow-help [command]` | Every command with a one-line usage note, and a short primer on how Archflow works |
 | `/archflow-init` | Set up Archflow in a NEW project. Creates `.archflow/`, asks for the stack and design system, starts at Phase 1 in `quick` mode |
 | `/archflow-onboard` | Set up Archflow in an EXISTING codebase. Audits, detects the stack, imports context, picks the phase |
 | `/archflow-migrate` | Upgrade a v1.0 project to schema v2.0. Dry-run first, then apply |
@@ -258,6 +259,7 @@ All namespaced as `/archflow-<name>`. There is no `/archflow <sub>` argument for
 | `/archflow-autopilot` | Run queued stories unattended on one branch after a blocker interview |
 | `/archflow-setup-mcp [tool]` | Connect an external tool over MCP (Jira, Notion, Linear, GitHub, SuperDesign) |
 | `/archflow-studio [stop\|status\|port n]` | Archflow Studio, a local web workspace over the same files (beta) |
+| `/archflow-telemetry [on\|off\|status]` | Show or change anonymous usage telemetry. On by default; `off` opts out on every project on the machine |
 
 ## Project types
 

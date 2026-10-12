@@ -1,6 +1,6 @@
 # Archflow for GitHub Copilot CLI
 
-Generated from Archflow 2.4.0 by `scripts/build-adapters.mjs`. Do not edit here.
+Generated from Archflow 2.5.0 by `scripts/build-adapters.mjs`. Do not edit here.
 
 ## Install
 
@@ -28,5 +28,6 @@ Node.js 18+ is required for the hooks. The same `.github/` tree is read by VS Co
 | `/archflow:<cmd>` | `archflow-<cmd>` skills (`.github/skills/`), invoked by name |
 | `agents/*.md` sub-agents | `.github/agents/*.agent.md` custom agents (`disable-model-invocation: true`, so only Archflow dispatches them) |
 | Plugin hooks | `.github/hooks/archflow.json` using PascalCase events, which give Claude-compatible payloads |
-| `/archflow:studio` | Not available |
+| Telemetry: `UserPromptExpansion` names the command | `UserPromptSubmit` counts a prompt that starts with `/archflow-<cmd>`. Loading the Claude plugin directly should report session starts only, as `host: claude` (Copilot lists no `UserPromptExpansion` event) |
+| `/archflow:studio` | `/archflow-studio` in forward mode: Studio runs no agent, its chat composes the command and you paste it into this host's session. Its server bundle goes in `.github/archflow/server` and `.github/archflow/dist`: `npx archflow@latest install` puts it there, or by hand copy the Archflow package's `plugin/server/` and `plugin/dist/` |
 | `memory: user` | Not available |

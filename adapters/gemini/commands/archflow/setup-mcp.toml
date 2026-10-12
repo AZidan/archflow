@@ -1,6 +1,7 @@
 # Generated from plugin/commands/setup-mcp.md — do not edit.
 description = "Connect an external tool via MCP (Jira, Notion, Linear, GitHub, SuperDesign, ...)"
 prompt = '''
+<!-- archflow-command: setup-mcp -->
 # /archflow:setup-mcp — MCP Server Setup Helper
 
 Argument (`{{args}}`): optional tool name (e.g. `jira`, `notion`). Empty → list the registry.
@@ -14,7 +15,7 @@ Configure external tool MCP servers for use with Gemini CLI.
 ```
 
 ## Registry
-The curated MCP registry is stored in `~/.gemini/extensions/archflow/skills/archflow/mcp-registry.yaml`. Read that file to look up tool details. Edit it to add or update MCP servers.
+The curated MCP registry is stored in `$HOME/.gemini/extensions/archflow/skills/archflow/mcp-registry.yaml`. Read that file to look up tool details. Edit it to add or update MCP servers.
 
 ## Invocation
 When the user runs `/archflow:setup-mcp`, follow this flow exactly.
@@ -39,7 +40,7 @@ If not found, proceed to Step 2.
 
 ### Step 2: Lookup in Registry
 
-Read `~/.gemini/extensions/archflow/skills/archflow/mcp-registry.yaml` and search for the tool name (case-insensitive). If found, show:
+Read `$HOME/.gemini/extensions/archflow/skills/archflow/mcp-registry.yaml` and search for the tool name (case-insensitive). If found, show:
 > "[Tool] MCP uses [command/url] via [transport] transport."
 > Purpose: [purpose]
 
@@ -117,7 +118,7 @@ claude mcp add --transport stdio [tool-name] -- npx -y [package-name]
 
 ## Listing Available MCPs
 
-When invoked without arguments (`/archflow:setup-mcp`), read `~/.gemini/extensions/archflow/skills/archflow/mcp-registry.yaml` and show the registry as a table:
+When invoked without arguments (`/archflow:setup-mcp`), read `$HOME/.gemini/extensions/archflow/skills/archflow/mcp-registry.yaml` and show the registry as a table:
 
 ```
 Available MCP Servers:
