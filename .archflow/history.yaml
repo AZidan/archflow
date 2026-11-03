@@ -539,3 +539,28 @@
   - build-adapters.mjs --check passes and tests cover the shipped bundle per host
   - CHANGELOG supersedes the 2.4.0 'Claude Code only' line; the site's host claims match
   archive: releases/archive/v2-5-0.yaml
+- story: S6-05
+  release: v2-6-0
+  version: v2.6.0
+  shipped_at: "2026-11-03"
+  summary: "Sync Archflow Studio v1.0.0 bundle into the plugin - Tappable questions in Studio chat through an ask_user MCP server, Design view grouping, collections, canvas and design system picker. Retroactive record: no story gates or Phase 4 regression ran"
+  touched:
+    files:
+    - .claude-plugin/marketplace.json
+    - CHANGELOG.md
+    - README.md
+    - adapters/**
+    - docs/index.html
+    - package.json
+    - packages/archflowai/package.json
+    - plugin/.claude-plugin/plugin.json
+    - plugin/dist/**
+    - plugin/server/askUserServer.mjs
+    - plugin/server/server.mjs
+  acceptance_criteria:
+  - plugin/server/server.mjs is byte-identical to the Studio repo's built copy
+  - pytest tests passes on the PR head
+  - The extracted plugin boots with no node_modules and completes an ask_user round trip against a fake claude CLI
+  - npm pack lists plugin/server/askUserServer.mjs
+  - CI passes on PR 35
+  archive: releases/archive/v2-6-0.yaml

@@ -65,6 +65,9 @@ This release syncs Archflow Studio's `design-view-enhancement` work (Studio v1.0
   of an hour hasn't been run.
 - The tappable-question work is verified on Claude Code 2.1.316 in Chromium. Other CLI versions, Firefox,
   WebKit, Windows and screen readers are untested.
+- Studio's design system example screens resolve only on Claude Code, Codex marketplace and Gemini
+  installs. On other hosts, and on Codex installed only through `npx archflow install`, Studio reports
+  no install found and shows no example images.
 
 ## [2.5.0] — 2026-10-13
 
