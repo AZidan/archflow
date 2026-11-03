@@ -20,12 +20,14 @@ stories:
       release: qa-engineer, pm-reviewer, a Phase 4 regression, a real claude CLI session, the compiled
       UI in a browser, Studio restart adoption, and Windows. The user reviewed the code-reviewer
       findings on PR 35 and chose to ship with them open.
+    # verified_by allows only pm-reviewer, qa-engineer or manual. Who checked: the code-reviewer agent on
+    # PR 35 for the first four (pytest: 957 passed), and GitHub Actions (Framework checks, Markdown lint) for the last.
     acceptance_criteria:
-      - {text: "plugin/server/server.mjs is byte-identical to the Studio repo's built copy", met: true, verified_by: "code-reviewer, PR 35"}
-      - {text: "pytest tests passes on the PR head", met: true, verified_by: "code-reviewer, PR 35 (957 passed)"}
-      - {text: "The extracted plugin boots with no node_modules and completes an ask_user round trip against a fake claude CLI", met: true, verified_by: "code-reviewer, PR 35"}
-      - {text: "npm pack lists plugin/server/askUserServer.mjs", met: true, verified_by: "code-reviewer, PR 35"}
-      - {text: "CI passes on PR 35", met: true, verified_by: "GitHub Actions: Framework checks, Markdown lint"}
+      - {text: "plugin/server/server.mjs is byte-identical to the Studio repo's built copy", met: true, verified_by: manual}
+      - {text: "pytest tests passes on the PR head", met: true, verified_by: manual}
+      - {text: "The extracted plugin boots with no node_modules and completes an ask_user round trip against a fake claude CLI", met: true, verified_by: manual}
+      - {text: "npm pack lists plugin/server/askUserServer.mjs", met: true, verified_by: manual}
+      - {text: "CI passes on PR 35", met: true, verified_by: manual}
     subtasks:
       - {text: "Sync the Studio bundle", completed: true}
       - {text: "Bump manifests to 2.6.0 and add the changelog section", completed: true}
