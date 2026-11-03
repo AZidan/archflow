@@ -460,6 +460,7 @@ archflow/
 │   │   └── setup-mcp.md             # /archflow:setup-mcp
 │   ├── scripts/migrate.py           # v1.0 → v2.0 migration engine (used by /archflow:migrate)
 │   ├── server/server.mjs            # Archflow Studio server bundle (built elsewhere, see below)
+│   ├── server/askUserServer.mjs     # Stdio MCP server behind Studio's question cards (built elsewhere)
 │   ├── dist/                        # Archflow Studio web UI (built elsewhere, see below)
 │   └── skills/archflow/             # Framework knowledge + assets copied into projects
 │       ├── SKILL.md                 # Overview skill (what Archflow is, where things live)

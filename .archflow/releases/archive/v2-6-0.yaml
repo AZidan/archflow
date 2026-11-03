@@ -1,0 +1,31 @@
+# Retroactive record, written at ship on 2026-11-03. 2.6.0 was prepared on release-2-6-0 without a
+# release file, so it never had an active_release, story gates or a Phase 4 regression. The user
+# chose this record at ship. The acceptance criteria below list only what was actually checked.
+id: v2-6-0
+name: "2.6.0"
+goal: "Sync Archflow Studio v1.0.0 (design-view-enhancement) into the plugin."
+status: released
+version: v2.6.0
+released_at: "2026-11-03"
+stories:
+  - id: S6-05
+    title: "Sync Archflow Studio v1.0.0 bundle into the plugin"
+    priority: High
+    status: done
+    gates: {needs_design: false, needs_contract: false}
+    assigned: api-engineer
+    description: >-
+      Bundle sync from the archflow-studio repo, plus the 2.6.0 version bump and changelog (PR 35).
+      Studio's source and its own acceptance report (S3-28) live in that repo. Not run for this
+      release: qa-engineer, pm-reviewer, a Phase 4 regression, a real claude CLI session, the compiled
+      UI in a browser, Studio restart adoption, and Windows. The user reviewed the code-reviewer
+      findings on PR 35 and chose to ship with them open.
+    acceptance_criteria:
+      - {text: "plugin/server/server.mjs is byte-identical to the Studio repo's built copy", met: true, verified_by: "code-reviewer, PR 35"}
+      - {text: "pytest tests passes on the PR head", met: true, verified_by: "code-reviewer, PR 35 (957 passed)"}
+      - {text: "The extracted plugin boots with no node_modules and completes an ask_user round trip against a fake claude CLI", met: true, verified_by: "code-reviewer, PR 35"}
+      - {text: "npm pack lists plugin/server/askUserServer.mjs", met: true, verified_by: "code-reviewer, PR 35"}
+      - {text: "CI passes on PR 35", met: true, verified_by: "GitHub Actions: Framework checks, Markdown lint"}
+    subtasks:
+      - {text: "Sync the Studio bundle", completed: true}
+      - {text: "Bump manifests to 2.6.0 and add the changelog section", completed: true}

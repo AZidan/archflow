@@ -21,3 +21,4 @@ shipped:
   - {id: v2-3, name: "2.3 Hardening and quality gates", version: v2.3.2, released_at: "2026-09-10", file: releases/archive/v2-3.yaml}
   - {id: v2-4, name: "2.4 Multi-host distribution", version: v2.4.0, released_at: "2026-09-12", file: releases/archive/v2-4.yaml}
   - {id: v2-5-0, name: "2.5 Telemetry, help and Studio on every host", version: v2.5.0, released_at: "2026-10-13", file: releases/archive/v2-5-0.yaml}
+  - {id: v2-6-0, name: "2.6.0 Studio v1.0.0 sync", version: v2.6.0, released_at: "2026-11-03", file: releases/archive/v2-6-0.yaml}

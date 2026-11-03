@@ -12,6 +12,63 @@ Entries before 2.2.1 were reconstructed from git history and are less detailed t
 
 Nothing yet.
 
+## [2.6.0] — 2026-11-03
+
+This release syncs Archflow Studio's `design-view-enhancement` work (Studio v1.0.0) into the plugin.
+
+### Added
+
+- **Tappable questions in Studio's chat.** Claude Code doesn't offer `AskUserQuestion` to a session
+  Studio runs, so interviews used to arrive as prose. Studio now serves its own tool,
+  `mcp__archflow-studio__ask_user`, through a small stdio MCP server,
+  `plugin/server/askUserServer.mjs`. Agents and subagents use it without any change to their
+  commands, because Studio's startup prompt tells them to, both when an instruction names
+  `AskUserQuestion` and for their own questions. The answer returns as the tool's result, so it
+  reaches the agent that asked. The card names a subagent that asks, and questions from several
+  agents queue in order. A pending question survives a browser reload and a Studio restart. This
+  applies to full-mode chat on Claude Code only; companion and forward modes are unchanged.
+- Question cards with options offer a free-text **Other** row.
+- **Design view: find what's new.** Designs are grouped by release and story, with a "New since you
+  looked" ribbon at the top and a "Needed" row for stories waiting on a design. A design written
+  while the view is open appears without a reload. Seen state stays in the browser.
+- **Design collections**, your own groups of designs across stories, saved in
+  `design-artifacts/collections.yaml` and shared through git.
+- **An opened design sits on a canvas** with the conversation beside it, so you can ask for changes
+  while looking at it.
+- **A design system picker in Studio.** The list is filtered to the project's platform, and each
+  system has a detail view with its overview and example screens.
+- **A running agents strip** above the chat input. One click opens an agent's view. The in-chat agent
+  card stays as the record.
+
+### Changed
+
+- A Bash tool card leads with the plain-language description the agent gave, with the command beneath
+  it. A Pending card shows its whole command, because that's what you're approving. A call with no
+  description looks as it did.
+- Read-only Bash rows in the activity strip show the description, and opening a row shows the command.
+- A question card refuses input until you've been quiet for 500 ms, so a double-click or a keystroke
+  meant for something else can't answer a question you haven't read. From the chat input, Enter no
+  longer picks the first option until you press Tab or a digit.
+
+### Fixed
+
+- A Pending read-only Bash call collapsed into the activity strip with no Approve or Deny, and a
+  denied one read as if it had run. Both now stay full cards.
+
+### Known issues
+
+- A reconnect while a question card is showing moves focus to its first option, so Enter or Space
+  can answer it, and in-progress input is lost.
+- After a browser reload with a turn still running, Stop isn't offered. A pending question can still
+  be answered, and a new chat clears it.
+- A real question call was measured waiting 615 seconds. The configured limit is 4 hours, and a wait
+  of an hour hasn't been run.
+- The tappable-question work is verified on Claude Code 2.1.316 in Chromium. Other CLI versions, Firefox,
+  WebKit, Windows and screen readers are untested.
+- Studio's design system example screens resolve only on Claude Code, Codex marketplace and Gemini
+  installs. On other hosts, and on Codex installed only through `npx archflow install`, Studio reports
+  no install found and shows no example images.
+
 ## [2.5.0] — 2026-10-13
 
 ### Added
