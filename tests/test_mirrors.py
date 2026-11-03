@@ -35,6 +35,9 @@ def _relevant(root, skip=SHIPPED_ONLY):
         rel = p.relative_to(root)
         if str(rel) in skip or rel.parts[0] in skip:
             continue
+        # Doctor's gitignored backups (.archflow/backup-upgrade-{timestamp}/) aren't framework files.
+        if rel.parts[0].startswith("backup"):
+            continue
         out[str(rel)] = p.read_bytes()
     return out
 
