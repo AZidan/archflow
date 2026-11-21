@@ -7,24 +7,24 @@ GitHub retains only 14 days of traffic data, so these snapshots are the permanen
 record. Clone counts are the closest available proxy for plugin installs: a
 `/plugin marketplace add` is a `git clone`, and Anthropic publishes no install stats.
 
-Last updated: 2026-11-20 · window shown: 2026-10-21 → 2026-11-19
+Last updated: 2026-11-21 · window shown: 2026-10-22 → 2026-11-20
 
 ## Unique cloners per day
 
 ```mermaid
 xychart-beta
     title "Unique cloners per day"
-    x-axis ["10-21", "10-22", "10-23", "10-24", "10-25", "10-26", "10-27", "10-28", "10-29", "10-30", "10-31", "11-01", "11-02", "11-03", "11-04", "11-05", "11-06", "11-07", "11-08", "11-09", "11-10", "11-11", "11-12", "11-13", "11-14", "11-15", "11-16", "11-17", "11-18", "11-19"]
-    y-axis "Unique cloners" 0 --> 67
-    line [55, 33, 35, 37, 46, 40, 41, 35, 41, 43, 39, 41, 40, 51, 46, 34, 42, 37, 39, 43, 48, 50, 30, 48, 26, 12, 15, 13, 23, 10]
+    x-axis ["10-22", "10-23", "10-24", "10-25", "10-26", "10-27", "10-28", "10-29", "10-30", "10-31", "11-01", "11-02", "11-03", "11-04", "11-05", "11-06", "11-07", "11-08", "11-09", "11-10", "11-11", "11-12", "11-13", "11-14", "11-15", "11-16", "11-17", "11-18", "11-19", "11-20"]
+    y-axis "Unique cloners" 0 --> 62
+    line [33, 35, 37, 46, 40, 41, 35, 41, 43, 39, 41, 40, 51, 46, 34, 42, 37, 39, 43, 48, 50, 30, 48, 26, 12, 15, 13, 23, 10, 16]
 ```
 
 ## Totals
 
 | Window | Clones | Unique cloners |
 |---|---:|---:|
-| Last 7 days | 231 | 147 |
-| Last 30 days | 2033 | 1093 |
+| Last 7 days | 179 | 115 |
+| Last 30 days | 1943 | 1054 |
 
 Unique cloners is a *per-day* figure, so these column totals double-count anyone
 who cloned on more than one day — read them as an upper bound, not a headcount.
